@@ -1,0 +1,27 @@
+{
+    "name": "zero-to-prod/thryds",
+    "description": "An AI integrated social media site.",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "ZeroToProd\\Thryds\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ZeroToProd\\Thryds\\Tests\\": "tests/",
+            "Utils\\Rector\\Rector\\": "utils/rector/src/",
+            "Utils\\Rector\\Tests\\": "utils/rector/tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "David Smith",
+            "email": "dasmith@zero-to-prod.com"
+        }
+    ],
+    "require-dev": {
+        "rector/rector": "^2.3",
+        "phpunit/phpunit": "^13.0"
+    }
+}

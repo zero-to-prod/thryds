@@ -1,0 +1,6 @@
+.env
+.phpunit.cache
+.idea
+docs/repos
+logs/
+vendor/
