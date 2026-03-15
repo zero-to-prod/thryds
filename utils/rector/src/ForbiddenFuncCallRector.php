@@ -12,6 +12,7 @@ use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
+
 final class ForbiddenFuncCallRector extends AbstractRector implements ConfigurableRectorInterface
 {
     /**

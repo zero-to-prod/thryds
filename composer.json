@@ -2,6 +2,9 @@
     "name": "zero-to-prod/thryds",
     "description": "An AI integrated social media site.",
     "type": "project",
+    "require": {
+        "php": "^8.5"
+    },
     "autoload": {
         "psr-4": {
             "ZeroToProd\\Thryds\\": "src/"
@@ -22,6 +25,7 @@
     ],
     "require-dev": {
         "rector/rector": "^2.3",
-        "phpunit/phpunit": "^13.0"
+        "phpunit/phpunit": "^13.0",
+        "friendsofphp/php-cs-fixer": "^3.94"
     }
 }
