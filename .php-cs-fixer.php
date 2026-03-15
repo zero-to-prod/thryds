@@ -25,4 +25,6 @@ return (new Config())
         'ordered_imports' => ['sort_algorithm' => 'alpha'],
         'single_quote' => true,
         'trailing_comma_in_multiline' => true,
+        'new_expression_parentheses' => true,
+        'use_arrow_functions' => true,
     ]);
