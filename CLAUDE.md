@@ -19,6 +19,7 @@ It does this via 2 main features: a web UI and an api backend.
   - ./compose.yaml
   - Dockerfile
 - FrankenPHP: (Caddy-based PHP app server) in Docker, PHP 8.5
+  - logs/frankenphp/caddy.log
   - docs: docs/repos/php/frankenphp/docs
 - Rector: (PHP code refactoring tool) in Docker
   - rector.php
