@@ -10,9 +10,9 @@ $options = [
 <?php
 
 $options = [
-    // TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value 'cache' on the appropriate class.
+    // TODO: Replace magic string key 'cache' with a class constant
     'cache' => '/tmp',
-    // TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value 'debug' on the appropriate class.
+    // TODO: Replace magic string key 'debug' with a class constant
     'debug' => true,
 ];
 

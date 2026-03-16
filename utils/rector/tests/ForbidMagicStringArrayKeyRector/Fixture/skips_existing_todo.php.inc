@@ -1,8 +1,8 @@
 <?php
 
 $options = [
-    // TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value 'cache' on the appropriate class.
+    // TODO: Replace magic string key 'cache' with a class constant
     'cache' => '/tmp',
 ];
-// TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value 'APP_ENV' on the appropriate class.
+// TODO: Replace magic string key 'APP_ENV' with a class constant
 $value = $_ENV['APP_ENV'];

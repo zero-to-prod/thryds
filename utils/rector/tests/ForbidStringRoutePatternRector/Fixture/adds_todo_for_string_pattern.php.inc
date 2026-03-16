@@ -7,9 +7,9 @@ $Router->map('POST', '/login', $handler);
 -----
 <?php
 
-// TODO: [ForbidStringRoutePatternRector] Route patterns must be class constant references, not inline strings. Extract '/posts/{post}' to a Route class constant.
+// TODO: Extract route pattern '/posts/{post}' to a class constant
 $Router->map('GET', '/posts/{post}', $handler);
-// TODO: [ForbidStringRoutePatternRector] Route patterns must be class constant references, not inline strings. Extract '/login' to a Route class constant.
+// TODO: Extract route pattern '/login' to a class constant
 $Router->map('POST', '/login', $handler);
 
 ?>

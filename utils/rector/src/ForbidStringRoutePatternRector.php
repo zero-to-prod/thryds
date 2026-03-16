@@ -21,6 +21,8 @@ final class ForbidStringRoutePatternRector extends AbstractRector implements Con
 
     private int $argPosition = 1;
 
+    private string $message = "TODO: Extract route pattern '%s' to a class constant";
+
     public function configure(array $configuration): void
     {
         if (isset($configuration['methods'])) {
@@ -29,6 +31,10 @@ final class ForbidStringRoutePatternRector extends AbstractRector implements Con
 
         if (isset($configuration['argPosition'])) {
             $this->argPosition = $configuration['argPosition'];
+        }
+
+        if (isset($configuration['message'])) {
+            $this->message = $configuration['message'];
         }
     }
 
@@ -42,7 +48,7 @@ final class ForbidStringRoutePatternRector extends AbstractRector implements Con
 $Router->map('GET', '/posts/{post}', $handler);
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: [ForbidStringRoutePatternRector] Route patterns must be class constant references, not inline strings. Extract '/posts/{post}' to a Route class constant.
+// TODO: Extract route pattern '/posts/{post}' to a class constant
 $Router->map('GET', '/posts/{post}', $handler);
 CODE_SAMPLE,
                     ['methods' => ['map'], 'argPosition' => 1]
@@ -86,16 +92,15 @@ CODE_SAMPLE,
             return null;
         }
 
+        $marker = strstr($this->message, '%', true) ?: $this->message;
         foreach ($node->getComments() as $comment) {
-            if (str_contains($comment->getText(), '[ForbidStringRoutePatternRector]')) {
+            if (str_contains($comment->getText(), $marker)) {
                 return null;
             }
         }
 
         $value = $patternArg->value;
-        $todoComment = new Comment(
-            "// TODO: [ForbidStringRoutePatternRector] Route patterns must be class constant references, not inline strings. Extract '{$value}' to a Route class constant."
-        );
+        $todoComment = new Comment('// ' . sprintf($this->message, $value));
 
         $existingComments = $node->getComments();
         array_unshift($existingComments, $todoComment);

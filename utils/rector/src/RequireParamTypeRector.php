@@ -37,7 +37,7 @@ final class RequireParamTypeRector extends AbstractRector implements Configurabl
 
     private bool $useDocblocks = true;
 
-    private string $todoMessage = 'TODO: Add param type';
+    private string $message = 'TODO: Add param type';
 
     public function __construct(
         private readonly StaticTypeMapper $staticTypeMapper,
@@ -48,7 +48,7 @@ final class RequireParamTypeRector extends AbstractRector implements Configurabl
         $this->skipVariadic = $configuration['skipVariadic'] ?? true;
         $this->skipClosures = $configuration['skipClosures'] ?? false;
         $this->useDocblocks = $configuration['useDocblocks'] ?? true;
-        $this->todoMessage = $configuration['todoMessage'] ?? 'TODO: Add param type';
+        $this->message = $configuration['message'] ?? 'TODO: Add param type';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -346,13 +346,13 @@ CODE_SAMPLE,
         foreach ($paramNames as $name) {
             $alreadyPresent = false;
             foreach ($existingComments as $comment) {
-                if (str_contains($comment->getText(), $this->todoMessage . ' for $' . $name)) {
+                if (str_contains($comment->getText(), $this->message . ' for $' . $name)) {
                     $alreadyPresent = true;
                     break;
                 }
             }
             if (!$alreadyPresent) {
-                $newComments[] = new Comment('// ' . $this->todoMessage . ' for $' . $name);
+                $newComments[] = new Comment('// ' . $this->message . ' for $' . $name);
             }
         }
 

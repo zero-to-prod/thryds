@@ -11,7 +11,7 @@ function foo(): void
 
 function foo(): void
 {
-    // TODO: [opcache] global keyword prevents scope-level optimization
+    // TODO: Global keyword prevents scope-level optimization
     global $config;
 }
 

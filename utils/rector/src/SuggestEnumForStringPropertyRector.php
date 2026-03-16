@@ -34,8 +34,9 @@ final class SuggestEnumForStringPropertyRector extends AbstractRector implements
     /** @var string[] */
     private array $describeAttrs = [];
 
-    private const TODO_MARKER = '[SuggestEnumForStringPropertyRector]';
-    private const CALL_SITE_MARKER = '[SuggestEnumForStringPropertyRector]';
+    private string $message = 'TODO: $%s has known values: %s — consider extracting to an enum';
+
+    private string $callSiteMessage = 'TODO: %s is a value of %s::$%s — consider replacing with an enum case';
 
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,
@@ -45,6 +46,8 @@ final class SuggestEnumForStringPropertyRector extends AbstractRector implements
     {
         $this->dataModelTraits = $configuration['dataModelTraits'] ?? [];
         $this->describeAttrs = $configuration['describeAttrs'] ?? [];
+        $this->message = $configuration['message'] ?? 'TODO: $%s has known values: %s — consider extracting to an enum';
+        $this->callSiteMessage = $configuration['callSiteMessage'] ?? 'TODO: %s is a value of %s::$%s — consider replacing with an enum case';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -73,7 +76,7 @@ class Config
 {
     use DataModel;
 
-    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. $appEnv has values: 'production'. Extract to a backed enum.
+    // TODO: $appEnv has known values: 'production' — consider extracting to an enum
     #[Describe(['default' => 'production'])]
     public string $appEnv;
 }
@@ -224,7 +227,7 @@ CODE_SAMPLE,
             $valuesStr = implode(', ', $quotedValues);
 
             $comment = new Comment(
-                "// TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. {$valuesStr} is a value of {$this->resolveShortClassName($className)}::\${$propName}. Replace with enum case."
+                '// ' . sprintf($this->callSiteMessage, $valuesStr, $this->resolveShortClassName($className), $propName)
             );
 
             $existingComments = $item->getComments();
@@ -291,8 +294,9 @@ CODE_SAMPLE,
 
     private function hasCallSiteTodoComment(ArrayItem $item): bool
     {
+        $marker = strstr($this->callSiteMessage, '%', true) ?: $this->callSiteMessage;
         foreach ($item->getComments() as $comment) {
-            if (str_contains($comment->getText(), self::CALL_SITE_MARKER)) {
+            if (str_contains($comment->getText(), $marker)) {
                 return true;
             }
         }
@@ -342,8 +346,9 @@ CODE_SAMPLE,
 
     private function hasExistingTodoComment(Property $property): bool
     {
+        $marker = strstr($this->message, '%', true) ?: $this->message;
         foreach ($property->getComments() as $comment) {
-            if (str_contains($comment->getText(), self::TODO_MARKER)) {
+            if (str_contains($comment->getText(), $marker)) {
                 return true;
             }
         }
@@ -469,7 +474,7 @@ CODE_SAMPLE,
         $quotedValues = array_map(static fn(string $v): string => "'{$v}'", $values);
         $valuesStr = implode(', ', $quotedValues);
 
-        $text = "// TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. \${$propName} has values: {$valuesStr}. Extract to a backed enum.";
+        $text = '// ' . sprintf($this->message, $propName, $valuesStr);
 
         $comment = new Comment($text);
         $existingComments = $property->getComments();

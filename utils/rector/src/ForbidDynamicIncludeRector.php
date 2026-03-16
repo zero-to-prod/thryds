@@ -12,29 +12,34 @@ use PhpParser\Node\Scalar\MagicConst\Dir;
 use PhpParser\Node\Scalar\MagicConst\File;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Expression;
+use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Rector\AbstractRector;
-use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
+use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-final class ForbidDynamicIncludeRector extends AbstractRector
+final class ForbidDynamicIncludeRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    private const TODO_MARKER = '[opcache]';
+    private string $message = 'TODO: Dynamic include prevents compile-time optimization';
 
-    private const TODO_TEXT = '// TODO: [opcache] dynamic include prevents OPcache optimization';
+    public function configure(array $configuration): void
+    {
+        $this->message = $configuration['message'] ?? $this->message;
+    }
 
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
             'Add a TODO comment to flag dynamic include/require statements where the path cannot be resolved at compile time',
             [
-                new CodeSample(
+                new ConfiguredCodeSample(
                     <<<'CODE_SAMPLE'
 require $path;
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: [opcache] dynamic include prevents OPcache optimization
+// TODO: Dynamic include prevents compile-time optimization
 require $path;
-CODE_SAMPLE
+CODE_SAMPLE,
+                    ['message' => 'TODO: Dynamic include prevents compile-time optimization']
                 ),
             ]
         );
@@ -62,12 +67,12 @@ CODE_SAMPLE
         }
 
         foreach ($node->getComments() as $comment) {
-            if (str_contains($comment->getText(), self::TODO_MARKER)) {
+            if (str_contains($comment->getText(), $this->message)) {
                 return null;
             }
         }
 
-        $todoComment = new Comment(self::TODO_TEXT);
+        $todoComment = new Comment('// ' . $this->message);
         $existingComments = $node->getComments();
         array_unshift($existingComments, $todoComment);
         $node->setAttribute('comments', $existingComments);

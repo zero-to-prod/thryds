@@ -25,12 +25,15 @@ final class ForbidMagicStringArrayKeyRector extends AbstractRector implements Co
     /** @var string[] */
     private array $excludedClasses = [];
 
+    private string $message = "TODO: Replace magic string key '%s' with a class constant";
+
     /** @var array<int, true> */
     private array $excludedItemIds = [];
 
     public function configure(array $configuration): void
     {
-        $this->excludedClasses = $configuration;
+        $this->excludedClasses = $configuration['excludedClasses'] ?? [];
+        $this->message = $configuration['message'] ?? "TODO: Replace magic string key '%s' with a class constant";
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -47,12 +50,12 @@ Log::error('fail', ['exception' => $e::class]);
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
 $options = [
-    // TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value 'cache' on the appropriate class.
+    // TODO: Replace magic string key 'cache' with a class constant
     'cache' => '/tmp',
 ];
 Log::error('fail', ['exception' => $e::class]);
 CODE_SAMPLE,
-                    ['App\\Log']
+                    ['excludedClasses' => ['App\\Log']]
                 ),
             ]
         );
@@ -120,8 +123,10 @@ CODE_SAMPLE,
             return null;
         }
 
+        $marker = strstr($this->message, '%', true) ?: $this->message;
+
         foreach ($node->getComments() as $comment) {
-            if (str_contains($comment->getText(), '[ForbidMagicStringArrayKeyRector]')) {
+            if (str_contains($comment->getText(), $marker)) {
                 return null;
             }
         }
@@ -129,9 +134,7 @@ CODE_SAMPLE,
         $existingComments = $node->getComments();
 
         foreach (array_unique($magicStrings) as $keyValue) {
-            array_unshift($existingComments, new Comment(
-                "// TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value '{$keyValue}' on the appropriate class."
-            ));
+            array_unshift($existingComments, new Comment('// ' . sprintf($this->message, $keyValue)));
         }
 
         $node->setAttribute('comments', $existingComments);
@@ -192,15 +195,15 @@ CODE_SAMPLE,
      */
     private function addTodoComment(Node $node, string $keyValue): ?Node
     {
+        $marker = strstr($this->message, '%', true) ?: $this->message;
+
         foreach ($node->getComments() as $comment) {
-            if (str_contains($comment->getText(), '[ForbidMagicStringArrayKeyRector]')) {
+            if (str_contains($comment->getText(), $marker)) {
                 return null;
             }
         }
 
-        $todoComment = new Comment(
-            "// TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value '{$keyValue}' on the appropriate class."
-        );
+        $todoComment = new Comment('// ' . sprintf($this->message, $keyValue));
 
         $existingComments = $node->getComments();
         array_unshift($existingComments, $todoComment);

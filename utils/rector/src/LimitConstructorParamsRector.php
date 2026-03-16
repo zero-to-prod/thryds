@@ -26,14 +26,14 @@ final class LimitConstructorParamsRector extends AbstractRector implements Confi
 
     private string $dtoOutputDir = '';
 
-    private string $todoMessage = 'TODO: Too many constructor parameters';
+    private string $message = 'TODO: Too many constructor parameters';
 
     public function configure(array $configuration): void
     {
         $this->maxParams = $configuration['maxParams'] ?? 5;
         $this->dtoSuffix = $configuration['dtoSuffix'] ?? 'Deps';
         $this->dtoOutputDir = $configuration['dtoOutputDir'] ?? '';
-        $this->todoMessage = $configuration['todoMessage'] ?? 'TODO: Too many constructor parameters';
+        $this->message = $configuration['message'] ?? 'TODO: Too many constructor parameters';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -458,10 +458,10 @@ CODE_SAMPLE,
 
     private function addTodo(Class_ $class, ClassMethod $constructor, int $paramCount): ?Node
     {
-        $message = $this->todoMessage . ' (current: ' . $paramCount . ', max: ' . $this->maxParams . ')';
+        $message = $this->message . ' (current: ' . $paramCount . ', max: ' . $this->maxParams . ')';
 
         foreach ($constructor->getComments() as $comment) {
-            if (str_contains($comment->getText(), $this->todoMessage)) {
+            if (str_contains($comment->getText(), $this->message)) {
                 return null;
             }
         }

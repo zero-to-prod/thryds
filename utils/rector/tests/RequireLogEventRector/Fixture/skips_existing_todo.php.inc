@@ -9,7 +9,7 @@ class Log
     public static function error(string $message, array $context = []): void {}
 }
 
-// TODO: [RequireLogEventRector] Log calls need a durable event id. Add `Log::event => Log::<event_label>` to the context array.
+// TODO: Add a durable event identifier — `Log::event => Log::<event_label>`
 Log::error('Something failed', [
     Log::exception => 'RuntimeException',
 ]);

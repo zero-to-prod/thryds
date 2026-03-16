@@ -7,6 +7,6 @@ readonly class HomeRoute
 
 readonly class LandingRoute
 {
-    // TODO: [ForbidDuplicateRoutePatternRector] Duplicate route pattern '/'. This pattern is already defined in HomeRoute::pattern. Remove or rename this constant.
+    // TODO: Duplicate route pattern '/' — already defined in HomeRoute::pattern
     public const string pattern = '/';
 }

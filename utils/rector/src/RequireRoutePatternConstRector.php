@@ -19,6 +19,8 @@ final class RequireRoutePatternConstRector extends AbstractRector implements Con
 
     private string $constName = 'pattern';
 
+    private string $message = "TODO: Route class '%s' is missing a '%s' constant — define: public const string %s = '/...';";
+
     /** @var string[] */
     private array $excludedClasses = [];
 
@@ -35,6 +37,10 @@ final class RequireRoutePatternConstRector extends AbstractRector implements Con
         if (isset($configuration['excludedClasses'])) {
             $this->excludedClasses = $configuration['excludedClasses'];
         }
+
+        if (isset($configuration['message'])) {
+            $this->message = $configuration['message'];
+        }
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -50,7 +56,7 @@ readonly class PostRoute
 }
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: [RequireRoutePatternConstRector] Route class 'PostRoute' is missing a 'pattern' constant. Define: public const string pattern = '/...';
+// TODO: Route class 'PostRoute' is missing a 'pattern' constant — define: public const string pattern = '/...';
 readonly class PostRoute
 {
     public const string post = 'post';
@@ -97,15 +103,14 @@ CODE_SAMPLE,
             return null;
         }
 
+        $marker = strstr($this->message, '%', true) ?: $this->message;
         foreach ($node->getComments() as $comment) {
-            if (str_contains($comment->getText(), '[RequireRoutePatternConstRector]')) {
+            if (str_contains($comment->getText(), $marker)) {
                 return null;
             }
         }
 
-        $todoComment = new Comment(
-            "// TODO: [RequireRoutePatternConstRector] Route class '{$className}' is missing a '{$this->constName}' constant. Define: public const string {$this->constName} = '/...';"
-        );
+        $todoComment = new Comment('// ' . sprintf($this->message, $className, $this->constName, $this->constName));
 
         $existingComments = $node->getComments();
         array_unshift($existingComments, $todoComment);

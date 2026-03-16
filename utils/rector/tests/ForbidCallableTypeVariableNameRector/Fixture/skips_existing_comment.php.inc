@@ -1,6 +1,6 @@
 <?php
 
-// TODO: [ForbidCallableTypeVariableNameRector] rename $Closure to describe its behaviour
+// TODO: Rename $Closure to describe its behaviour
 $Closure = static function (): void {};
 
 ?>

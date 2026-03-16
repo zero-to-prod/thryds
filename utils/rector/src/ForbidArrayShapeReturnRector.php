@@ -38,7 +38,7 @@ final class ForbidArrayShapeReturnRector extends AbstractRector implements Confi
 
     private bool $allowMixed = false;
 
-    private string $todoMessage = 'TODO: Replace array return with a typed class';
+    private string $message = 'TODO: Replace array return with a typed class';
 
     public function __construct(
         private readonly BetterNodeFinder $betterNodeFinder,
@@ -53,7 +53,7 @@ final class ForbidArrayShapeReturnRector extends AbstractRector implements Confi
         $this->outputDir = $configuration['outputDir'] ?? '';
         $this->dataModelTrait = $configuration['dataModelTrait'] ?? '';
         $this->allowMixed = $configuration['allowMixed'] ?? false;
-        $this->todoMessage = $configuration['todoMessage'] ?? 'TODO: Replace array return with a typed class';
+        $this->message = $configuration['message'] ?? 'TODO: Replace array return with a typed class';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -410,7 +410,7 @@ CODE_SAMPLE,
     private function hasTodoComment(Node $node): bool
     {
         foreach ($node->getComments() as $comment) {
-            if (str_contains($comment->getText(), $this->todoMessage)) {
+            if (str_contains($comment->getText(), $this->message)) {
                 return true;
             }
         }
@@ -420,7 +420,7 @@ CODE_SAMPLE,
 
     private function addTodoComment(Node $node): void
     {
-        $todoComment = new Comment('// ' . $this->todoMessage);
+        $todoComment = new Comment('// ' . $this->message);
         $existingComments = $node->getComments();
         array_unshift($existingComments, $todoComment);
         $node->setAttribute('comments', $existingComments);

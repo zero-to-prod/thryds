@@ -12,7 +12,7 @@ $c = setHeader('text/html');
 
 namespace Fixture;
 
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'text/html' (used 3x) to a single source of truth. Consts name things, enums limit choices, attributes define properties.
+// TODO: Refactor duplicate string 'text/html' (used 3x) to a constant
 $a = doSomething('text/html');
 $b = getHeader('text/html');
 $c = setHeader('text/html');

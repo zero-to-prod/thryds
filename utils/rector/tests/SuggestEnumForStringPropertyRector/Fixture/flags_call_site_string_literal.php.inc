@@ -30,13 +30,13 @@ class WebConfig
 
     public const string env = 'env';
 
-    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. $env has values: 'production'. Extract to a backed enum.
+    // TODO: $env has known values: 'production' — consider extracting to an enum
     #[Describe(['default' => 'production'])]
     public string $env;
 }
 
 $WebConfig = WebConfig::from([
-    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. 'production' is a value of WebConfig::$env. Replace with enum case.
+    // TODO: 'production' is a value of WebConfig::$env — consider replacing with an enum case
     WebConfig::env => $_ENV['APP_ENV'] ?? 'production',
 ]);
 

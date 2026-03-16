@@ -26,7 +26,7 @@ class ServerConfig
 {
     use DataModel;
 
-    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. $mode has values: 'development', 'production'. Extract to a backed enum.
+    // TODO: $mode has known values: 'development', 'production' — consider extracting to an enum
     #[Describe(['default' => 'production'])]
     public string $mode;
 

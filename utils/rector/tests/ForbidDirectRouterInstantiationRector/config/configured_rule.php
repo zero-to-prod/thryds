@@ -7,6 +7,6 @@ use Utils\Rector\Rector\ForbidDirectRouterInstantiationRector;
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(ForbidDirectRouterInstantiationRector::class, [
-        'League\\Route\\Router',
+        'forbiddenClasses' => ['League\\Route\\Router'],
     ]);
 };

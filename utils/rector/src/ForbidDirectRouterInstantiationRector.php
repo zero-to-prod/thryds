@@ -15,14 +15,15 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 final class ForbidDirectRouterInstantiationRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    private const TODO_MARKER = '[ForbidDirectRouterInstantiationRector]';
-
     /** @var string[] */
     private array $forbiddenClasses = [];
 
+    private string $message = 'TODO: Avoid direct instantiation of %s — use a cached router instead';
+
     public function configure(array $configuration): void
     {
-        $this->forbiddenClasses = $configuration;
+        $this->forbiddenClasses = $configuration['forbiddenClasses'] ?? [];
+        $this->message = $configuration['message'] ?? 'TODO: Avoid direct instantiation of %s — use a cached router instead';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -35,10 +36,10 @@ final class ForbidDirectRouterInstantiationRector extends AbstractRector impleme
 $router = new League\Route\Router();
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: [ForbidDirectRouterInstantiationRector] Use League\Route\Cache\Router instead of instantiating League\Route\Router directly. Direct instantiation bypasses route caching.
+// TODO: Avoid direct instantiation of League\Route\Router — use a cached router instead
 $router = new League\Route\Router();
 CODE_SAMPLE,
-                    ['League\\Route\\Router']
+                    ['forbiddenClasses' => ['League\\Route\\Router']]
                 ),
             ]
         );
@@ -81,17 +82,15 @@ CODE_SAMPLE,
             return null;
         }
 
+        $marker = strstr($this->message, '%', true) ?: $this->message;
+
         foreach ($node->getComments() as $comment) {
-            if (str_contains($comment->getText(), self::TODO_MARKER)) {
+            if (str_contains($comment->getText(), $marker)) {
                 return null;
             }
         }
 
-        $todoComment = new Comment(
-            '// TODO: [ForbidDirectRouterInstantiationRector] Use League\Route\Cache\Router instead of instantiating '
-            . $matchedClassName
-            . ' directly. Direct instantiation bypasses route caching.'
-        );
+        $todoComment = new Comment('// ' . sprintf($this->message, $matchedClassName));
 
         $existingComments = $node->getComments();
         array_unshift($existingComments, $todoComment);

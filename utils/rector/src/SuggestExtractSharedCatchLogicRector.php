@@ -9,20 +9,26 @@ use PhpParser\Node;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Stmt\TryCatch;
 use PhpParser\NodeFinder;
+use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Rector\AbstractRector;
-use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
+use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-final class SuggestExtractSharedCatchLogicRector extends AbstractRector
+final class SuggestExtractSharedCatchLogicRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    private const TODO_MARKER = '[SuggestExtractSharedCatchLogicRector]';
+    private string $message = 'TODO: Multiple catch blocks instantiate the same classes (%s) — consider extracting shared logic';
+
+    public function configure(array $configuration): void
+    {
+        $this->message = $configuration['message'] ?? 'TODO: Multiple catch blocks instantiate the same classes (%s) — consider extracting shared logic';
+    }
 
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
             'Add a TODO comment when multiple catch blocks instantiate the same classes, suggesting extraction of shared logic',
             [
-                new CodeSample(
+                new ConfiguredCodeSample(
                     <<<'CODE_SAMPLE'
 try {
     run();
@@ -33,7 +39,7 @@ try {
 }
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: [SuggestExtractSharedCatchLogicRector] Multiple catch blocks instantiate the same classes (Emitter, Response). Consider extracting the shared logic.
+// TODO: Multiple catch blocks instantiate the same classes (Emitter, Response) — consider extracting shared logic
 try {
     run();
 } catch (FooException $e) {
@@ -42,6 +48,9 @@ try {
     new Emitter()->emit(new Response('error'));
 }
 CODE_SAMPLE,
+                    [
+                        'message' => 'TODO: Multiple catch blocks instantiate the same classes (%s) — consider extracting shared logic',
+                    ]
                 ),
             ]
         );
@@ -61,8 +70,9 @@ CODE_SAMPLE,
             return null;
         }
 
+        $marker = strstr($this->message, '%', true) ?: $this->message;
         foreach ($node->getComments() as $comment) {
-            if (str_contains($comment->getText(), self::TODO_MARKER)) {
+            if (str_contains($comment->getText(), $marker)) {
                 return null;
             }
         }
@@ -95,9 +105,7 @@ CODE_SAMPLE,
 
         $shortNames = array_map(static fn(string $fqcn): string => substr(strrchr($fqcn, '\\') ?: "\\{$fqcn}", 1), $sharedClasses);
         $sharedList = implode(', ', $shortNames);
-        $todoComment = new Comment(
-            '// TODO: ' . self::TODO_MARKER . " Multiple catch blocks instantiate the same classes ({$sharedList}). Consider extracting the shared logic."
-        );
+        $todoComment = new Comment('// ' . sprintf($this->message, $sharedList));
 
         $existingComments = $node->getComments();
         array_unshift($existingComments, $todoComment);

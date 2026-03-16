@@ -7,6 +7,6 @@ use Utils\Rector\Rector\ForbidMagicStringArrayKeyRector;
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(ForbidMagicStringArrayKeyRector::class, [
-        'Fixture\Log',
+        'excludedClasses' => ['Fixture\\Log'],
     ]);
 };

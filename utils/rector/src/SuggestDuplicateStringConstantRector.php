@@ -12,32 +12,41 @@ use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\Const_;
 use PhpParser\Node\Stmt\Namespace_;
+use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\PhpParser\Node\FileNode;
 use Rector\Rector\AbstractRector;
-use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
+use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-final class SuggestDuplicateStringConstantRector extends AbstractRector
+final class SuggestDuplicateStringConstantRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    private const TODO_MARKER = '[SuggestDuplicateStringConstantRector]';
-
     private const MIN_LENGTH = 3;
+
+    private string $message = "TODO: Refactor duplicate string '%s' (used %dx) to a constant";
+
+    public function configure(array $configuration): void
+    {
+        $this->message = $configuration['message'] ?? "TODO: Refactor duplicate string '%s' (used %dx) to a constant";
+    }
 
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
             'Detect string literals that appear 2 or more times in a file and add a TODO comment on the first occurrence suggesting refactoring to a single source of truth',
             [
-                new CodeSample(
+                new ConfiguredCodeSample(
                     <<<'CODE_SAMPLE'
 $a = doSomething('application/json');
 $b = getHeader('application/json');
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'application/json' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties.
+// TODO: Refactor duplicate string 'application/json' (used 2x) to a constant
 $a = doSomething('application/json');
 $b = getHeader('application/json');
-CODE_SAMPLE
+CODE_SAMPLE,
+                    [
+                        'message' => "TODO: Refactor duplicate string '%s' (used %dx) to a constant",
+                    ]
                 ),
             ]
         );
@@ -107,9 +116,10 @@ CODE_SAMPLE
             $firstStmt = $occurrences[0]['stmt'];
 
             // Idempotent: skip if the TODO comment is already present on the statement.
+            $marker = strstr($this->message, '%', true) ?: $this->message;
             $alreadyAnnotated = false;
             foreach ($firstStmt->getComments() as $comment) {
-                if (str_contains($comment->getText(), self::TODO_MARKER)
+                if (str_contains($comment->getText(), $marker)
                     && str_contains($comment->getText(), "'{$value}'")) {
                     $alreadyAnnotated = true;
                     break;
@@ -120,12 +130,7 @@ CODE_SAMPLE
                 continue;
             }
 
-            $todoText = sprintf(
-                "// TODO: %s Refactor duplicate string '%s' (used %dx) to a single source of truth. Consts name things, enums limit choices, attributes define properties.",
-                self::TODO_MARKER,
-                $value,
-                $count
-            );
+            $todoText = '// ' . sprintf($this->message, $value, $count);
 
             $existingComments = $firstStmt->getComments();
             array_unshift($existingComments, new Comment($todoText));

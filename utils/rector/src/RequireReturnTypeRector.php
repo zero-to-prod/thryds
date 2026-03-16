@@ -27,7 +27,7 @@ final class RequireReturnTypeRector extends AbstractRector implements Configurab
 
     private bool $skipClosures = false;
 
-    private string $todoMessage = 'TODO: Add return type';
+    private string $message = 'TODO: Add return type';
 
     private const MAGIC_METHODS = [
         '__construct',
@@ -59,7 +59,7 @@ final class RequireReturnTypeRector extends AbstractRector implements Configurab
     {
         $this->skipMagicMethods = $configuration['skipMagicMethods'] ?? true;
         $this->skipClosures = $configuration['skipClosures'] ?? false;
-        $this->todoMessage = $configuration['todoMessage'] ?? 'TODO: Add return type';
+        $this->message = $configuration['message'] ?? 'TODO: Add return type';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -138,7 +138,7 @@ CODE_SAMPLE,
     private function hasTodoComment(Node $node): bool
     {
         foreach ($node->getComments() as $comment) {
-            if (str_contains($comment->getText(), $this->todoMessage)) {
+            if (str_contains($comment->getText(), $this->message)) {
                 return true;
             }
         }
@@ -234,7 +234,7 @@ CODE_SAMPLE,
 
     private function addTodoComment(Node $node): void
     {
-        $todoComment = new Comment('// ' . $this->todoMessage);
+        $todoComment = new Comment('// ' . $this->message);
         $existingComments = $node->getComments();
         array_unshift($existingComments, $todoComment);
         $node->setAttribute('comments', $existingComments);

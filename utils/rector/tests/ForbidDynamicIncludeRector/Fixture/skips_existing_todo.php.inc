@@ -1,7 +1,7 @@
 <?php
 
 $path = 'foo.php';
-// TODO: [opcache] dynamic include prevents OPcache optimization
+// TODO: Dynamic include prevents compile-time optimization
 require $path;
 
 ?>

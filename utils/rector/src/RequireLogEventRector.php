@@ -19,9 +19,9 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 final class RequireLogEventRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    private const TODO_MARKER = '[RequireLogEventRector]';
-
     private string $logClass = '';
+
+    private string $message = 'TODO: Add a durable event identifier — `%s::%s => %s::<event_label>`';
 
     private string $eventKey = 'event';
 
@@ -37,6 +37,7 @@ final class RequireLogEventRector extends AbstractRector implements Configurable
         $this->logClass = $configuration['logClass'];
         $this->eventKey = $configuration['eventKey'] ?? 'event';
         $this->methods = $configuration['methods'] ?? ['debug', 'info', 'warn', 'error'];
+        $this->message = $configuration['message'] ?? 'TODO: Add a durable event identifier — `%s::%s => %s::<event_label>`';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -51,7 +52,7 @@ Log::error('fail', [
 ]);
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: [RequireLogEventRector] Log calls need a durable event id. Add `Log::event => Log::<event_label>` to the context array.
+// TODO: Add a durable event identifier — `Log::event => Log::<event_label>`
 Log::error('fail', [
     'exception' => $e::class,
 ]);
@@ -104,16 +105,15 @@ CODE_SAMPLE,
             return null;
         }
 
+        $marker = strstr($this->message, '%', true) ?: $this->message;
         foreach ($node->getComments() as $comment) {
-            if (str_contains($comment->getText(), self::TODO_MARKER)) {
+            if (str_contains($comment->getText(), $marker)) {
                 return null;
             }
         }
 
         $shortName = $this->getShortClassName($this->logClass);
-        $todoComment = new Comment(
-            '// TODO: ' . self::TODO_MARKER . " Log calls need a durable event id. Add `{$shortName}::{$this->eventKey} => {$shortName}::<event_label>` to the context array."
-        );
+        $todoComment = new Comment('// ' . sprintf($this->message, $shortName, $this->eventKey, $shortName));
 
         $existingComments = $node->getComments();
         array_unshift($existingComments, $todoComment);

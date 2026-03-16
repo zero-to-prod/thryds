@@ -23,6 +23,8 @@ final class ForbidDuplicateRoutePatternRector extends AbstractRector implements 
 
     private string $scanDir = '';
 
+    private string $message = "TODO: Duplicate route pattern '%s' — already defined in %s::%s";
+
     /**
      * Map of pattern value => first class name that defines it.
      * Built from scanDir on configure(), then extended at runtime.
@@ -36,6 +38,7 @@ final class ForbidDuplicateRoutePatternRector extends AbstractRector implements 
         $this->classSuffix = $configuration['classSuffix'] ?? 'Route';
         $this->constNames = $configuration['constNames'] ?? ['pattern'];
         $this->scanDir = $configuration['scanDir'] ?? '';
+        $this->message = $configuration['message'] ?? "TODO: Duplicate route pattern '%s' — already defined in %s::%s";
 
         $this->patternMap = [];
 
@@ -69,7 +72,7 @@ readonly class HomeRoute
 
 readonly class LandingRoute
 {
-    // TODO: [ForbidDuplicateRoutePatternRector] Duplicate route pattern '/'. This pattern is already defined in HomeRoute::pattern. Remove or rename this constant.
+    // TODO: Duplicate route pattern '/' — already defined in HomeRoute::pattern
     public const string pattern = '/';
 }
 CODE_SAMPLE,
@@ -144,9 +147,10 @@ CODE_SAMPLE,
                 }
 
                 // Already has a TODO comment for this rule — idempotent
+                $marker = strstr($this->message, '%', true) ?: $this->message;
                 $alreadyAnnotated = false;
                 foreach ($stmt->getComments() as $comment) {
-                    if (str_contains($comment->getText(), '[ForbidDuplicateRoutePatternRector]')) {
+                    if (str_contains($comment->getText(), $marker)) {
                         $alreadyAnnotated = true;
                         break;
                     }
@@ -156,12 +160,7 @@ CODE_SAMPLE,
                     continue;
                 }
 
-                $todoText = sprintf(
-                    "// TODO: [ForbidDuplicateRoutePatternRector] Duplicate route pattern '%s'. This pattern is already defined in %s::%s. Remove or rename this constant.",
-                    $patternValue,
-                    $firstClass,
-                    $constName
-                );
+                $todoText = '// ' . sprintf($this->message, $patternValue, $firstClass, $constName);
 
                 $existingComments = $stmt->getComments();
                 array_unshift($existingComments, new Comment($todoText));

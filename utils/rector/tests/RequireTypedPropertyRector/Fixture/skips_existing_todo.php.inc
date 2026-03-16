@@ -2,7 +2,7 @@
 
 class User
 {
-    // TODO: [opcache] add a type declaration to improve OPcache optimization
+    // TODO: Add a type declaration to improve optimization
     public $name;
 }
 

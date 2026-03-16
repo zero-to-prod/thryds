@@ -84,13 +84,15 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RequireLogEventRector::class, [
         'logClass' => Log::class,
         'eventKey' => 'event',
+        'message' => 'TODO: [RequireLogEventRector] Log calls need a durable event id. Add `%s::%s => %s::<event_label>` to the context array.',
     ]);
     $rectorConfig->ruleWithConfiguration(UseLogContextConstRector::class, [
         'logClass' => Log::class,
         'keys' => ['exception', 'file', 'line'],
     ]);
     $rectorConfig->ruleWithConfiguration(ForbidMagicStringArrayKeyRector::class, [
-        Log::class,
+        'excludedClasses' => [Log::class],
+        'message' => "TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value '%s' on the appropriate class.",
     ]);
     $rectorConfig->ruleWithConfiguration(SuggestEnumForStringPropertyRector::class, [
         'dataModelTraits' => [
@@ -101,6 +103,8 @@ return static function (RectorConfig $rectorConfig): void {
             Describe::class,
             \ZeroToProd\Thryds\Helpers\Describe::class,
         ],
+        'message' => 'TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. $%s has values: %s. Extract to a backed enum.',
+        'callSiteMessage' => 'TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. %s is a value of %s::$%s. Replace with enum case.',
     ]);
     $rectorConfig->ruleWithConfiguration(ExtractRepeatedExpressionToVariableRector::class, [
         'dirname',
@@ -131,6 +135,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(ForbidStringRoutePatternRector::class, [
         'methods' => ['map'],
         'argPosition' => 1,
+        'message' => "TODO: [ForbidStringRoutePatternRector] Route patterns must be class constant references, not inline strings. Extract '%s' to a Route class constant.",
     ]);
     $rectorConfig->ruleWithConfiguration(ExtractRoutePatternToRouteClassRector::class, [
         'methods' => ['map'],
@@ -146,30 +151,48 @@ return static function (RectorConfig $rectorConfig): void {
         'classSuffix' => 'Route',
         'constName' => 'pattern',
         'excludedClasses' => ['WebRoutes'],
+        'message' => "TODO: [RequireRoutePatternConstRector] Route class '%s' is missing a '%s' constant. Define: public const string %s = '/...';",
     ]);
     $rectorConfig->ruleWithConfiguration(ForbidDuplicateRoutePatternRector::class, [
         'classSuffix' => 'Route',
         'constNames' => ['pattern'],
         'scanDir' => __DIR__ . '/src/Routes',
+        'message' => "TODO: [ForbidDuplicateRoutePatternRector] Duplicate route pattern '%s'. This pattern is already defined in %s::%s. Remove or rename this constant.",
     ]);
     $rectorConfig->ruleWithConfiguration(ForbidDirectRouterInstantiationRector::class, [
-        'League\\Route\\Router',
+        'forbiddenClasses' => ['League\\Route\\Router'],
+        'message' => 'TODO: [ForbidDirectRouterInstantiationRector] Use League\\Route\\Cache\\Router instead of instantiating %s directly. Direct instantiation bypasses route caching.',
     ]);
     $rectorConfig->rule(ForbidEvalRector::class);
     $rectorConfig->rule(ForbidExitInSourceRector::class);
-    $rectorConfig->rule(ForbidDynamicIncludeRector::class);
-    $rectorConfig->ruleWithConfiguration(ForbidCallableTypeVariableNameRector::class, [
-        'Closure',
-        'Callable',
-        'Callback',
-        'Function',
-        'Func',
+    $rectorConfig->ruleWithConfiguration(ForbidDynamicIncludeRector::class, [
+        'message' => 'TODO: [opcache] dynamic include prevents OPcache optimization',
     ]);
-    $rectorConfig->rule(RequireTypedPropertyRector::class);
-    $rectorConfig->rule(ForbidVariableVariablesRector::class);
-    $rectorConfig->rule(ForbidErrorSuppressionRector::class);
-    $rectorConfig->rule(ForbidGlobalKeywordRector::class);
-    $rectorConfig->rule(SuggestExtractSharedCatchLogicRector::class);
+    $rectorConfig->ruleWithConfiguration(ForbidCallableTypeVariableNameRector::class, [
+        'forbiddenNames' => [
+            'Closure',
+            'Callable',
+            'Callback',
+            'Function',
+            'Func',
+        ],
+        'message' => 'TODO: [ForbidCallableTypeVariableNameRector] rename $%s to describe its behaviour',
+    ]);
+    $rectorConfig->ruleWithConfiguration(RequireTypedPropertyRector::class, [
+        'message' => 'TODO: [opcache] add a type declaration to improve OPcache optimization',
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidVariableVariablesRector::class, [
+        'message' => 'TODO: [opcache] variable variables prevent compile-time variable resolution',
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidErrorSuppressionRector::class, [
+        'message' => 'TODO: [opcache] @ error suppression adds per-call overhead — handle errors explicitly',
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidGlobalKeywordRector::class, [
+        'message' => 'TODO: [opcache] global keyword prevents scope-level optimization',
+    ]);
+    $rectorConfig->ruleWithConfiguration(SuggestExtractSharedCatchLogicRector::class, [
+        'message' => 'TODO: [SuggestExtractSharedCatchLogicRector] Multiple catch blocks instantiate the same classes (%s). Consider extracting the shared logic.',
+    ]);
     $rectorConfig->ruleWithConfiguration(RequireReturnTypeRector::class, [
         'skipMagicMethods' => true,
         'skipClosures' => false,
@@ -178,7 +201,9 @@ return static function (RectorConfig $rectorConfig): void {
         'skipVariadic' => true,
         'useDocblocks' => true,
     ]);
-    $rectorConfig->rule(SuggestDuplicateStringConstantRector::class);
+    $rectorConfig->ruleWithConfiguration(SuggestDuplicateStringConstantRector::class, [
+        'message' => "TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string '%s' (used %dx) to a single source of truth. Consts name things, enums limit choices, attributes define properties.",
+    ]);
     $rectorConfig->ruleWithConfiguration(ForbidLongClosureRector::class, [
         'maxStatements' => 5,
         'skipArrowFunctions' => true,

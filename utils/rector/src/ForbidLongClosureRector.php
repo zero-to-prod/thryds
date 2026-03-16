@@ -34,13 +34,13 @@ final class ForbidLongClosureRector extends AbstractRector implements Configurab
 
     private bool $skipArrowFunctions = true;
 
-    private string $todoMessage = 'TODO: Extract closure to a named function or method';
+    private string $message = 'TODO: Extract closure to a named function or method';
 
     public function configure(array $configuration): void
     {
         $this->maxStatements = $configuration['maxStatements'] ?? 5;
         $this->skipArrowFunctions = $configuration['skipArrowFunctions'] ?? true;
-        $this->todoMessage = $configuration['todoMessage'] ?? 'TODO: Extract closure to a named function or method';
+        $this->message = $configuration['message'] ?? 'TODO: Extract closure to a named function or method';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -427,13 +427,13 @@ CODE_SAMPLE,
 
     private function addTodoComment(Expression $stmt, ?string $reason = null): bool
     {
-        $message = $this->todoMessage;
+        $message = $this->message;
         if ($reason !== null) {
             $message .= ' (' . $reason . ')';
         }
 
         foreach ($stmt->getComments() as $comment) {
-            if (str_contains($comment->getText(), $this->todoMessage)) {
+            if (str_contains($comment->getText(), $this->message)) {
                 return false;
             }
         }

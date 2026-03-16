@@ -16,19 +16,17 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 final class ForbidCallableTypeVariableNameRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    private const TODO_MARKER = '[ForbidCallableTypeVariableNameRector]';
-
     /**
      * @var string[]
      */
     private array $forbiddenNames = [];
 
-    /**
-     * @param string[] $configuration
-     */
+    private string $message = 'TODO: Rename $%s to describe its behaviour';
+
     public function configure(array $configuration): void
     {
-        $this->forbiddenNames = $configuration;
+        $this->forbiddenNames = $configuration['forbiddenNames'] ?? [];
+        $this->message = $configuration['message'] ?? 'TODO: Rename $%s to describe its behaviour';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -41,10 +39,10 @@ final class ForbidCallableTypeVariableNameRector extends AbstractRector implemen
 $Closure = static function (): void {};
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: [ForbidCallableTypeVariableNameRector] rename $Closure to describe its behaviour
+// TODO: Rename $Closure to describe its behaviour
 $Closure = static function (): void {};
 CODE_SAMPLE,
-                    ['Closure', 'Callable', 'Callback', 'Function', 'Func']
+                    ['forbiddenNames' => ['Closure', 'Callable', 'Callback', 'Function', 'Func']]
                 ),
             ]
         );
@@ -83,15 +81,15 @@ CODE_SAMPLE,
             return null;
         }
 
+        $marker = strstr($this->message, '%', true) ?: $this->message;
+
         foreach ($node->getComments() as $comment) {
-            if (str_contains($comment->getText(), self::TODO_MARKER)) {
+            if (str_contains($comment->getText(), $marker)) {
                 return null;
             }
         }
 
-        $todoComment = new Comment(
-            '// TODO: ' . self::TODO_MARKER . " rename \${$varName} to describe its behaviour"
-        );
+        $todoComment = new Comment('// ' . sprintf($this->message, $varName));
 
         $existingComments = $node->getComments();
         array_unshift($existingComments, $todoComment);

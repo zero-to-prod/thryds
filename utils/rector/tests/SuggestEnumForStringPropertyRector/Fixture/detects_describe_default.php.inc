@@ -21,7 +21,7 @@ class AppConfig
 {
     use DataModel;
 
-    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. $env has values: 'production'. Extract to a backed enum.
+    // TODO: $env has known values: 'production' — consider extracting to an enum
     #[Describe(['default' => 'production'])]
     public string $env;
 }

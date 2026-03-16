@@ -40,7 +40,7 @@ class Response
 
 class FooException extends \Exception {}
 
-// TODO: [SuggestExtractSharedCatchLogicRector] Multiple catch blocks instantiate the same classes (Emitter, Response). Consider extracting the shared logic.
+// TODO: Multiple catch blocks instantiate the same classes (Emitter, Response) — consider extracting shared logic
 try {
     run();
 } catch (FooException $FooException) {
