@@ -21,14 +21,14 @@ use ZeroToProd\Thryds\Routes\WebRoutes;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 $Config = Config::from([
-    Config::appEnv => $_ENV[Config::APP_ENV] ?? AppEnv::production->value,
-    Config::bladeCacheDir => $baseDir . '/var/cache/blade',
-    Config::templateDir => $baseDir . '/templates',
+    Config::AppEnv => $_ENV[Config::APP_ENV] ?? AppEnv::production->value,
+    Config::blade_cache_dir => $baseDir . '/var/cache/blade',
+    Config::template_dir => $baseDir . '/templates',
 ]);
 
 $Container = new BladeContainer();
 Container::setInstance(container: $Container);
-$Blade = new Blade(viewPaths: $Config->templateDir, cachePath: $Config->bladeCacheDir, container: $Container);
+$Blade = new Blade(viewPaths: $Config->template_dir, cachePath: $Config->blade_cache_dir, container: $Container);
 
 $ServerRequestInterface = ServerRequestFactory::fromGlobals(server: $_SERVER, query: $_GET, body: $_POST, cookies: $_COOKIE, files: $_FILES);
 

@@ -27,6 +27,8 @@ use Utils\Rector\Rector\SuggestEnumForStringPropertyRector;
 use Utils\Rector\Rector\UseClassConstArrayKeyForDataModelRector;
 use Utils\Rector\Rector\RequireLogEventRector;
 use Utils\Rector\Rector\RenameEnumCaseToMatchValueRector;
+use Utils\Rector\Rector\RenamePrimitivePropertyToSnakeCaseRector;
+use Utils\Rector\Rector\RenamePropertyToMatchTypeNameRector;
 use Utils\Rector\Rector\UseLogContextConstRector;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
@@ -79,6 +81,8 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
     $rectorConfig->rule(MakeClassReadonlyRector::class);
     $rectorConfig->rule(RenameEnumCaseToMatchValueRector::class);
+    $rectorConfig->rule(RenamePrimitivePropertyToSnakeCaseRector::class);
+    $rectorConfig->rule(RenamePropertyToMatchTypeNameRector::class);
     $rectorConfig->ruleWithConfiguration(MigrateArrayToDataModelRector::class, [
         [
             'methodName' => 'make',

@@ -12,24 +12,24 @@ readonly class Config
     use DataModel;
 
     public const string APP_ENV = 'APP_ENV';
-    /** @see $appEnv */
-    public const string appEnv = 'appEnv';
+    /** @see $AppEnv */
+    public const string AppEnv = 'AppEnv';
     #[Describe([Describe::default => AppEnv::production])]
-    public AppEnv $appEnv;
+    public AppEnv $AppEnv;
 
-    /** @see $bladeCacheDir */
-    public const string bladeCacheDir = 'bladeCacheDir';
-    /** @see $templateDir */
-    public const string templateDir = 'templateDir';
+    /** @see $blade_cache_dir */
+    public const string blade_cache_dir = 'blade_cache_dir';
+    /** @see $template_dir */
+    public const string template_dir = 'template_dir';
 
     #[Describe([Describe::default => '/app/var/cache/blade'])]
-    public string $bladeCacheDir;
+    public string $blade_cache_dir;
 
     #[Describe([Describe::default => '/app/templates'])]
-    public string $templateDir;
+    public string $template_dir;
 
     public function isProduction(): bool
     {
-        return $this->appEnv === AppEnv::production;
+        return $this->AppEnv === AppEnv::production;
     }
 }
