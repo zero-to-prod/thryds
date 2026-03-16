@@ -40,6 +40,7 @@ use Utils\Rector\Rector\RenamePrimitivePropertyToSnakeCaseRector;
 use Utils\Rector\Rector\RenamePrimitiveVarToSnakeCaseRector;
 use Utils\Rector\Rector\RenamePropertyToMatchTypeNameRector;
 use Utils\Rector\Rector\RequireMethodAnnotationForDataModelRector;
+use Utils\Rector\Rector\SuggestDuplicateStringConstantRector;
 use Utils\Rector\Rector\SuggestExtractSharedCatchLogicRector;
 use Utils\Rector\Rector\UseLogContextConstRector;
 use Zerotoprod\DataModel\DataModel;
@@ -154,6 +155,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->rule(ForbidErrorSuppressionRector::class);
     $rectorConfig->rule(ForbidGlobalKeywordRector::class);
     $rectorConfig->rule(SuggestExtractSharedCatchLogicRector::class);
+    $rectorConfig->rule(SuggestDuplicateStringConstantRector::class);
     $rectorConfig->rule(RequireMethodAnnotationForDataModelRector::class);
     $rectorConfig->ruleWithConfiguration(ReplaceFullyQualifiedNameRector::class, [
         DataModel::class => \ZeroToProd\Thryds\Helpers\DataModel::class,

@@ -16,7 +16,7 @@ readonly class WebRoutes
     public static function register(Router $Router, Blade $Blade): void
     {
         $Router->map(
-            'GET',
+            HTTP_METHOD::GET->value,
             HomeRoute::pattern,
             fn(): ResponseInterface => new HtmlResponse(
                 html: $Blade->make(view: View::home)->render(),
@@ -24,7 +24,7 @@ readonly class WebRoutes
         );
 
         $Router->map(
-            'GET',
+            HTTP_METHOD::GET->value,
             AboutRoute::pattern,
             fn(): ResponseInterface => new HtmlResponse(
                 html: $Blade->make(view: View::about)->render(),
@@ -32,7 +32,7 @@ readonly class WebRoutes
         );
 
         $Router->map(
-            'GET',
+            HTTP_METHOD::GET->value,
             OpcacheStatusRoute::pattern,
             static function (): ResponseInterface {
                 $status = opcache_get_status(false);
@@ -47,7 +47,7 @@ readonly class WebRoutes
         );
 
         $Router->map(
-            'GET',
+            HTTP_METHOD::GET->value,
             OpcacheStatusRoute::scripts_pattern,
             static function (): ResponseInterface {
                 $status = opcache_get_status(true);

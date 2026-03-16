@@ -13,6 +13,7 @@ use ZeroToProd\Thryds\Helpers\View;
 
 final class BladeCacheTest extends TestCase
 {
+    private const string php_glob = '/*.php';
     private string $cache_dir;
     private string $template_dir;
 
@@ -26,7 +27,7 @@ final class BladeCacheTest extends TestCase
     protected function tearDown(): void
     {
         // Clean up cached files
-        foreach (glob($this->cache_dir . '/*.php') as $file) {
+        foreach (glob($this->cache_dir . self::php_glob) as $file) {
             unlink(filename: $file);
         }
         rmdir($this->cache_dir);
@@ -39,10 +40,10 @@ final class BladeCacheTest extends TestCase
         Container::setInstance(container: $Container);
         $Blade = new Blade(viewPaths: $this->template_dir, cachePath: $this->cache_dir, container: $Container);
 
-        $this->assertSame([], glob($this->cache_dir . '/*.php'), 'Cache dir should start empty');
+        $this->assertSame([], glob($this->cache_dir . self::php_glob), 'Cache dir should start empty');
 
         $Blade->make(view: View::home)->render();
-        $cached_files = glob($this->cache_dir . '/*.php');
+        $cached_files = glob($this->cache_dir . self::php_glob);
 
         $this->assertNotEmpty(actual: $cached_files, message: 'Compiled templates should be written to cache dir');
     }
@@ -56,7 +57,7 @@ final class BladeCacheTest extends TestCase
 
         // First render — compiles and caches
         $first_html = $Blade->make(view: View::home)->render();
-        $cached_files = glob($this->cache_dir . '/*.php');
+        $cached_files = glob($this->cache_dir . self::php_glob);
         $mtimes = [];
         foreach ($cached_files as $file) {
             $mtimes[$file] = filemtime(filename: $file);
