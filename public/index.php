@@ -5,7 +5,9 @@ $baseDir = dirname(__DIR__);
 
 require $baseDir . '/vendor/autoload.php';
 
+use Illuminate\Container\Container;
 use Jenssegers\Blade\Blade;
+use Jenssegers\Blade\Container as BladeContainer;
 use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\ServerRequestFactory;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
@@ -16,6 +18,7 @@ use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Helpers\View;
 use ZeroToProd\Thryds\Log;
+use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 $Config = Config::from([
     Config::appEnv => $_ENV[Config::APP_ENV] ?? AppEnv::Production->value,
@@ -23,7 +26,9 @@ $Config = Config::from([
     Config::templateDir => $baseDir . '/templates',
 ]);
 
-$Blade = new Blade(viewPaths: $Config->templateDir, cachePath: $Config->bladeCacheDir);
+$Container = new BladeContainer();
+Container::setInstance(container: $Container);
+$Blade = new Blade(viewPaths: $Config->templateDir, cachePath: $Config->bladeCacheDir, container: $Container);
 
 $ServerRequestInterface = ServerRequestFactory::fromGlobals(server: $_SERVER, query: $_GET, body: $_POST, cookies: $_COOKIE, files: $_FILES);
 
@@ -36,21 +41,22 @@ try {
 } catch (HttpException $HttpException) {
     $HtmlResponse = new HtmlResponse(
         html: $Blade->make(view: View::error, data: [
-            'status_code' => $HttpException->getStatusCode(),
-            'message' => $HttpException->getMessage(),
+            class_basename(ErrorViewModel::class) => ErrorViewModel::from([
+                ErrorViewModel::message => $HttpException->getMessage(),
+                ErrorViewModel::status_code => $HttpException->getStatusCode(),
+            ]),
         ])->render(),
         status: $HttpException->getStatusCode(),
     );
 } catch (Throwable $Throwable) {
     Log::error($Throwable->getMessage(), [
-        'exception' => $Throwable::class,
-        'file' => $Throwable->getFile(),
-        'line' => $Throwable->getLine()]);
+        Log::event => Log::unhandled_exception,
+        Log::exception => $Throwable::class,
+        Log::file => $Throwable->getFile(),
+        Log::line => $Throwable->getLine()
+    ]);
     $HtmlResponse = new HtmlResponse(
-        html: $Blade->make(view: View::error, data: [
-            'status_code' => 500,
-            'message' => $Config->isProduction ? 'Internal Server Error' : $Throwable->getMessage(),
-        ])->render(),
+        html: $Blade->make(view: View::error, data: [class_basename(ErrorViewModel::class) => ErrorViewModel::from([ErrorViewModel::status_code => 500, ErrorViewModel::message => $Config->isProduction() ? 'Internal Server Error' : $Throwable->getMessage()])])->render(),
         status: 500,
     );
 }

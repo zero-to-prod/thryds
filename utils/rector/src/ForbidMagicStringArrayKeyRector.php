@@ -6,36 +6,53 @@ namespace Utils\Rector\Rector;
 
 use PhpParser\Comment;
 use PhpParser\Node;
+use PhpParser\Node\Arg;
+use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\ArrayItem;
+use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Expression;
+use Rector\Contract\Rector\ConfigurableRectorInterface;
+use Rector\PhpParser\Node\FileNode;
 use Rector\Rector\AbstractRector;
-use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
+use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-final class ForbidMagicStringArrayKeyRector extends AbstractRector
+final class ForbidMagicStringArrayKeyRector extends AbstractRector implements ConfigurableRectorInterface
 {
+    /** @var string[] */
+    private array $excludedClasses = [];
+
+    /** @var array<int, true> */
+    private array $excludedItemIds = [];
+
+    public function configure(array $configuration): void
+    {
+        $this->excludedClasses = $configuration;
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
             'Add a TODO comment above array items with magic string keys, prompting replacement with a class constant or enum',
             [
-                new CodeSample(
+                new ConfiguredCodeSample(
                     <<<'CODE_SAMPLE'
 $options = [
     'cache' => '/tmp',
 ];
-$value = $_ENV['APP_ENV'];
+Log::error('fail', ['exception' => $e::class]);
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
 $options = [
     // TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value 'cache' on the appropriate class.
     'cache' => '/tmp',
 ];
-// TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value 'APP_ENV' on the appropriate class.
-$value = $_ENV['APP_ENV'];
-CODE_SAMPLE
+Log::error('fail', ['exception' => $e::class]);
+CODE_SAMPLE,
+                    ['App\\Log']
                 ),
             ]
         );
@@ -46,14 +63,24 @@ CODE_SAMPLE
      */
     public function getNodeTypes(): array
     {
-        return [ArrayItem::class, Expression::class];
+        return [FileNode::class, ArrayItem::class, Expression::class];
     }
 
     /**
-     * @param ArrayItem|Expression $node
+     * @param FileNode|ArrayItem|Expression $node
      */
     public function refactor(Node $node): ?Node
     {
+        if ($node instanceof FileNode) {
+            $this->excludedItemIds = [];
+
+            if ($this->excludedClasses !== []) {
+                $this->collectExcludedItems($node->stmts);
+            }
+
+            return null;
+        }
+
         if ($node instanceof ArrayItem) {
             return $this->refactorArrayItem($node);
         }
@@ -68,6 +95,10 @@ CODE_SAMPLE
     private function refactorArrayItem(ArrayItem $node): ?ArrayItem
     {
         if (!$node->key instanceof String_) {
+            return null;
+        }
+
+        if (isset($this->excludedItemIds[spl_object_id($node)])) {
             return null;
         }
 
@@ -106,6 +137,52 @@ CODE_SAMPLE
         $node->setAttribute('comments', $existingComments);
 
         return $node;
+    }
+
+    /**
+     * @param array<Node|mixed> $nodes
+     */
+    private function collectExcludedItems(array $nodes): void
+    {
+        foreach ($nodes as $node) {
+            if (!$node instanceof Node) {
+                continue;
+            }
+
+            if (($node instanceof StaticCall || $node instanceof MethodCall) && $this->isExcludedCall($node)) {
+                foreach ($node->args as $arg) {
+                    if (!$arg instanceof Arg || !$arg->value instanceof Array_) {
+                        continue;
+                    }
+
+                    foreach ($arg->value->items as $item) {
+                        if ($item !== null) {
+                            $this->excludedItemIds[spl_object_id($item)] = true;
+                        }
+                    }
+                }
+            }
+
+            foreach ($node->getSubNodeNames() as $name) {
+                $subNode = $node->{$name};
+                if ($subNode instanceof Node) {
+                    $this->collectExcludedItems([$subNode]);
+                } elseif (is_array($subNode)) {
+                    $this->collectExcludedItems($subNode);
+                }
+            }
+        }
+    }
+
+    private function isExcludedCall(StaticCall|MethodCall $node): bool
+    {
+        if ($node instanceof StaticCall) {
+            $className = $this->getName($node->class);
+        } else {
+            $className = $this->getName($node->var);
+        }
+
+        return $className !== null && in_array($className, $this->excludedClasses, true);
     }
 
     /**

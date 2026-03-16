@@ -34,6 +34,10 @@ Documents the rule with before/after code samples using `CodeSample`.
 
 ## Configurable Rules
 
+Any implementation that binds to this project MUST be configurable.
+
+This means that the rule can be configured in `rector.php` config file.
+
 When a rule accepts configuration, implement `ConfigurableRectorInterface`:
 
 ```php

@@ -6,6 +6,12 @@ namespace ZeroToProd\Thryds;
 
 class Log
 {
+    public const string event = 'event';
+    public const string exception = 'exception';
+    public const string file = 'file';
+    public const string line = 'line';
+    public const string unhandled_exception = 'unhandled_exception';
+
     private static array $context = [];
 
     public static function withContext(array $context): void

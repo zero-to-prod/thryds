@@ -1,8 +1,12 @@
+@php
+use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
+/** @var ErrorViewModel $ErrorViewModel */
+        @endphp
 @extends('base')
 
-@section('title', $status_code . ' - Thryds')
+@section('title', $ErrorViewModel->status_code . ' - Thryds')
 
 @section('body')
-    <h1>{{ $status_code }}</h1>
-    <p>{{ $message }}</p>
+    <h1>{{ $ErrorViewModel->status_code }}</h1>
+    <p>{{ $ErrorViewModel->message }}</p>
 @endsection

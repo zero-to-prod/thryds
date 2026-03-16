@@ -2,24 +2,29 @@
 
 declare(strict_types=1);
 
-use Zerotoprod\DataModel\DataModel;
-use Zerotoprod\DataModel\Describe;
-use ZeroToProd\Thryds\Log;
 use Rector\Config\RectorConfig;
-use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodParameterRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPublicMethodParameterRector;
-use Utils\Rector\Rector\ForbiddenFuncCallRector;
-use Utils\Rector\Rector\FrankenPhpLogToLogClassRector;
+use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Utils\Rector\Rector\AddNamedArgWhenVarMismatchesParamRector;
+use Utils\Rector\Rector\ExtractRepeatedExpressionToVariableRector;
+use Utils\Rector\Rector\ForbiddenFuncCallRector;
+use Utils\Rector\Rector\ForbidMagicStringArrayKeyRector;
+use Utils\Rector\Rector\FrankenPhpLogToLogClassRector;
+use Utils\Rector\Rector\MakeClassReadonlyRector;
+use Utils\Rector\Rector\MigrateArrayToDataModelRector;
 use Utils\Rector\Rector\RenameParamToMatchTypeNameRector;
 use Utils\Rector\Rector\RenameVarToMatchReturnTypeRector;
 use Utils\Rector\Rector\ReplaceFullyQualifiedNameRector;
-use Utils\Rector\Rector\ExtractRepeatedExpressionToVariableRector;
-use Utils\Rector\Rector\ForbidMagicStringArrayKeyRector;
-use Utils\Rector\Rector\SuggestEnumForStringPropertyRector;
 use Utils\Rector\Rector\StringArgToClassConstRector;
+use Utils\Rector\Rector\SuggestEnumForStringPropertyRector;
 use Utils\Rector\Rector\UseClassConstArrayKeyForDataModelRector;
+use Utils\Rector\Rector\RequireLogEventRector;
+use Utils\Rector\Rector\UseLogContextConstRector;
+use Zerotoprod\DataModel\DataModel;
+use Zerotoprod\DataModel\Describe;
+use ZeroToProd\Thryds\Helpers\View;
+use ZeroToProd\Thryds\Log;
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->paths([
@@ -41,16 +46,38 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->rule(RemoveUnusedPublicMethodParameterRector::class);
     $rectorConfig->rule(UseClassConstArrayKeyForDataModelRector::class);
     $rectorConfig->rule(StringClassNameToClassConstantRector::class);
-    $rectorConfig->rule(ForbidMagicStringArrayKeyRector::class);
+    $rectorConfig->ruleWithConfiguration(RequireLogEventRector::class, [
+        'logClass' => Log::class,
+        'eventKey' => 'event',
+    ]);
+    $rectorConfig->ruleWithConfiguration(UseLogContextConstRector::class, [
+        'logClass' => Log::class,
+        'keys' => ['exception', 'file', 'line'],
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidMagicStringArrayKeyRector::class, [
+        Log::class,
+    ]);
     $rectorConfig->rule(SuggestEnumForStringPropertyRector::class);
     $rectorConfig->ruleWithConfiguration(ExtractRepeatedExpressionToVariableRector::class, [
         'dirname',
     ]);
     $rectorConfig->ruleWithConfiguration(StringArgToClassConstRector::class, [
         [
-            'class' => \ZeroToProd\Thryds\Helpers\View::class,
+            'class' => View::class,
             'methodName' => 'make',
             'paramName' => 'view',
+        ],
+    ]);
+    $rectorConfig->rule(MakeClassReadonlyRector::class);
+    $rectorConfig->ruleWithConfiguration(MigrateArrayToDataModelRector::class, [
+        [
+            'methodName' => 'make',
+            'dataParam' => 'data',
+            'viewParam' => 'view',
+            'viewModelNamespace' => 'ZeroToProd\\Thryds\\ViewModels',
+            'viewModelDir' => __DIR__ . '/src/ViewModels',
+            'templateDir' => __DIR__ . '/templates',
+            'dataModelTrait' => 'Zerotoprod\\DataModel\\DataModel',
         ],
     ]);
     $rectorConfig->ruleWithConfiguration(ReplaceFullyQualifiedNameRector::class, [

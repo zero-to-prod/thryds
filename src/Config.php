@@ -21,8 +21,6 @@ readonly class Config
     public const string bladeCacheDir = 'bladeCacheDir';
     /** @see $templateDir */
     public const string templateDir = 'templateDir';
-    /** @see $isProduction */
-    public const string isProduction = 'isProduction';
 
     #[Describe([Describe::default => '/app/var/cache/blade'])]
     public string $bladeCacheDir;
@@ -30,11 +28,8 @@ readonly class Config
     #[Describe([Describe::default => '/app/templates'])]
     public string $templateDir;
 
-    #[Describe([Describe::cast => [self::class, 'isProduction']])]
-    public bool $isProduction;
-
-    public static function isProduction(mixed $value, array $context): bool
+    public function isProduction(): bool
     {
-        return ($context[self::appEnv] ?? AppEnv::Production->value) === AppEnv::Production->value;
+        return $this->appEnv === AppEnv::Production;
     }
 }
