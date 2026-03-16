@@ -5,25 +5,49 @@ declare(strict_types=1);
 /**
  * OPcache optimization audit.
  *
- * CLI:  docker compose exec php php /app/scripts/opcache-audit.php
- * HTTP: Register the /_opcache route (see WebRoutes), then curl http://localhost:8888/_opcache
+ * Usage: docker compose exec php php /app/scripts/opcache-audit.php
+ * Via Composer: ./run opcache
+ *
+ * Generates HTTP traffic to warm the worker's OPcache, then fetches
+ * runtime metrics from the /_opcache/status endpoint (worker process).
+ * Config checks use ini_get() (same ini for CLI and worker).
  */
 
-// Re-exec with opcache.enable_cli=1 if needed
-if (PHP_SAPI === 'cli' && !ini_get('opcache.enable_cli')) {
-    $args = array_map('escapeshellarg', $argv);
-    $exitCode = 0;
-    passthru(PHP_BINARY . ' -d opcache.enable_cli=1 ' . implode(' ', $args), $exitCode);
-    exit($exitCode);
-}
-
 $isDev = (bool) ini_get('opcache.validate_timestamps');
+$base_url = 'http://localhost:' . ltrim(getenv('SERVER_NAME') ?: ':80', ':');
 
-$result = opcacheAudit($isDev);
+// Warm the cache, then measure hit rate from a clean baseline
+warmRoutes($base_url, requests_per_route: 5);
+$before = fetchWorkerStatus($base_url);
+warmRoutes($base_url, requests_per_route: 50);
+$after = fetchWorkerStatus($base_url);
+
+$result = opcacheAudit($isDev, $after, $before);
 echo $result;
 exit(str_contains($result, '[FAIL]') ? 1 : 0);
 
-function opcacheAudit(bool $isDev = false): string
+function warmRoutes(string $base_url, int $requests_per_route = 20): void
+{
+    $routes = ['/', '/about'];
+
+    foreach ($routes as $route) {
+        for ($i = 0; $i < $requests_per_route; $i++) {
+            @file_get_contents($base_url . $route);
+        }
+    }
+}
+
+function fetchWorkerStatus(string $base_url): array|false
+{
+    $json = @file_get_contents($base_url . '/_opcache/status');
+    if ($json === false) {
+        return false;
+    }
+
+    return json_decode($json, true);
+}
+
+function opcacheAudit(bool $isDev, array|false $worker_status, array|false $baseline = false): string
 {
     $failures = [];
     $warnings = [];
@@ -39,12 +63,9 @@ function opcacheAudit(bool $isDev = false): string
     }
     $passes[] = 'opcache.enable is ON';
 
-    // 2. Get runtime status
-    $status = opcache_get_status(false);
-    if ($status === false) {
-        $failures[] = 'opcache_get_status() returned false — OPcache may not be running';
-
-        return formatReport($failures, $warnings, $passes, $devNotes, $isDev);
+    // 2. Check worker status endpoint
+    if ($worker_status === false) {
+        $warnings[] = '/_opcache/status unreachable — runtime metrics unavailable (is the server running?)';
     }
 
     // 3. Check preloading
@@ -56,7 +77,7 @@ function opcacheAudit(bool $isDev = false): string
             $failures[] = 'opcache.preload is empty — no scripts are preloaded into shared memory';
         }
     } else {
-        $preloadCount = $status['preload_statistics']['scripts'] ?? [];
+        $preloadCount = $worker_status['preload_statistics']['scripts'] ?? [];
         $passes[] = sprintf('opcache.preload is set (%s) — %d scripts preloaded', $preload, count($preloadCount));
     }
 
@@ -88,11 +109,10 @@ function opcacheAudit(bool $isDev = false): string
         $passes[] = sprintf('opcache.jit_buffer_size=%dM', $jitBuffer / 1048576);
     }
 
-    // 6. Count all PHP files in the project vs what's cached
+    // 6. Count all PHP files in the project vs max_accelerated_files
     $appFiles = countPhpFiles('/app/src');
     $vendorFiles = countPhpFiles('/app/vendor');
     $totalFiles = $appFiles + $vendorFiles;
-    $cachedScripts = $status['opcache_statistics']['num_cached_scripts'] ?? 0;
     $maxFiles = (int) ini_get('opcache.max_accelerated_files');
 
     if ($totalFiles > $maxFiles) {
@@ -111,54 +131,56 @@ function opcacheAudit(bool $isDev = false): string
         );
     }
 
-    // 7. Cache hit rate (skip in CLI — only meaningful under real HTTP traffic)
-    $hits = $status['opcache_statistics']['hits'] ?? 0;
-    $misses = $status['opcache_statistics']['misses'] ?? 0;
-    $totalRequests = $hits + $misses;
-    if (PHP_SAPI !== 'cli' && $totalRequests > 100) {
-        $hitRate = ($hits / $totalRequests) * 100;
-        if ($hitRate < 95 && !$isDev) {
-            $failures[] = sprintf('Cache hit rate: %.1f%% (%d hits / %d misses) — should be >95%%', $hitRate, $hits, $misses);
-        } else {
-            $passes[] = sprintf('Cache hit rate: %.1f%% (%d hits / %d misses)', $hitRate, $hits, $misses);
+    // Runtime checks — require worker status
+    if ($worker_status !== false) {
+        // 7. Cache hit rate (delta: after warm-up traffic only)
+        $hits = ($worker_status['opcache_statistics']['hits'] ?? 0) - ($baseline ? ($baseline['opcache_statistics']['hits'] ?? 0) : 0);
+        $misses = ($worker_status['opcache_statistics']['misses'] ?? 0) - ($baseline ? ($baseline['opcache_statistics']['misses'] ?? 0) : 0);
+        $totalRequests = $hits + $misses;
+        if ($totalRequests > 0) {
+            $hitRate = ($hits / $totalRequests) * 100;
+            if ($hitRate < 95 && !$isDev) {
+                $failures[] = sprintf('Cache hit rate: %.1f%% (%d hits / %d misses) — should be >95%%', $hitRate, $hits, $misses);
+            } else {
+                $passes[] = sprintf('Cache hit rate: %.1f%% (%d hits / %d misses)', $hitRate, $hits, $misses);
+            }
+        }
+
+        // 8. Cached scripts and preload coverage
+        $cachedScripts = $worker_status['opcache_statistics']['num_cached_scripts'] ?? 0;
+        $preloadScripts = count($worker_status['preload_statistics']['scripts'] ?? []);
+        if ($cachedScripts > 0) {
+            $nonPreloaded = $cachedScripts - $preloadScripts;
+            if ($nonPreloaded > 0 && !empty($preload)) {
+                $warnings[] = sprintf(
+                    '%d scripts cached, but only %d via preload — %d scripts are compiled on first request (add them to preload.php)',
+                    $cachedScripts,
+                    $preloadScripts,
+                    $nonPreloaded,
+                );
+            } else {
+                $passes[] = sprintf('%d scripts cached (%d via preload)', $cachedScripts, $preloadScripts);
+            }
+        } else if (!$isDev) {
+            $failures[] = '0 scripts cached — OPcache is not caching anything';
+        }
+
+        // 9. Memory usage
+        $memUsed = $worker_status['memory_usage']['used_memory'] ?? 0;
+        $memFree = $worker_status['memory_usage']['free_memory'] ?? 0;
+        $memWasted = $worker_status['memory_usage']['wasted_memory'] ?? 0;
+        $memTotal = $memUsed + $memFree + $memWasted;
+        if ($memTotal > 0) {
+            $wastedPct = ($memWasted / $memTotal) * 100;
+            $usedPct = ($memUsed / $memTotal) * 100;
+            if ($wastedPct > 5) {
+                $warnings[] = sprintf('%.1f%% memory wasted (fragmentation) — consider restarting or increasing memory', $wastedPct);
+            }
+            $passes[] = sprintf('Memory: %.1fM used / %.1fM total (%.1f%% utilized, %.1f%% wasted)', $memUsed / 1048576, $memTotal / 1048576, $usedPct, $wastedPct);
         }
     }
 
-    // 8. Cached scripts and preload coverage
-    $preloadScripts = count($status['preload_statistics']['scripts'] ?? []);
-    if ($cachedScripts > 0) {
-        $nonPreloaded = $cachedScripts - $preloadScripts;
-        if ($nonPreloaded > 0 && !empty($preload)) {
-            $warnings[] = sprintf(
-                '%d scripts cached, but only %d via preload — %d scripts are compiled on first request (add them to preload.php)',
-                $cachedScripts,
-                $preloadScripts,
-                $nonPreloaded,
-            );
-        } else {
-            $passes[] = sprintf('%d scripts cached (%d via preload)', $cachedScripts, $preloadScripts);
-        }
-    } else if (!$isDev) {
-        $failures[] = '0 scripts cached — OPcache is not caching anything';
-    } else {
-        $warnings[] = '0 scripts cached — expected in dev without preloading';
-    }
-
-    // 9. Memory usage
-    $memUsed = $status['memory_usage']['used_memory'] ?? 0;
-    $memFree = $status['memory_usage']['free_memory'] ?? 0;
-    $memWasted = $status['memory_usage']['wasted_memory'] ?? 0;
-    $memTotal = $memUsed + $memFree + $memWasted;
-    if ($memTotal > 0) {
-        $wastedPct = ($memWasted / $memTotal) * 100;
-        $usedPct = ($memUsed / $memTotal) * 100;
-        if ($wastedPct > 5) {
-            $warnings[] = sprintf('%.1f%% memory wasted (fragmentation) — consider restarting or increasing memory', $wastedPct);
-        }
-        $passes[] = sprintf('Memory: %.1fM used / %.1fM total (%.1f%% utilized, %.1f%% wasted)', $memUsed / 1048576, $memTotal / 1048576, $usedPct, $wastedPct);
-    }
-
-    // 10. save_comments — check if actually needed
+    // 10. save_comments
     $saveComments = ini_get('opcache.save_comments');
     if ($saveComments === '1') {
         $warnings[] = 'opcache.save_comments=1 — annotations are stored in memory. Only needed if your app uses reflection on doc comments at runtime.';

@@ -6,6 +6,7 @@ namespace ZeroToProd\Thryds\Routes;
 
 use Jenssegers\Blade\Blade;
 use Laminas\Diactoros\Response\HtmlResponse;
+use Laminas\Diactoros\Response\JsonResponse;
 use League\Route\Router;
 use Psr\Http\Message\ResponseInterface;
 use ZeroToProd\Thryds\Helpers\View;
@@ -28,6 +29,21 @@ readonly class WebRoutes
             fn(): ResponseInterface => new HtmlResponse(
                 html: $Blade->make(view: View::about)->render(),
             ),
+        );
+
+        $Router->map(
+            'GET',
+            OpcacheStatusRoute::pattern,
+            static function (): ResponseInterface {
+                $status = opcache_get_status(false);
+
+                return new JsonResponse(
+                    data: json_decode(
+                        json_encode($status, JSON_PARTIAL_OUTPUT_ON_ERROR),
+                        true,
+                    ),
+                );
+            },
         );
     }
 }
