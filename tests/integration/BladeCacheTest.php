@@ -19,9 +19,9 @@ final class BladeCacheTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->cache_dir = sys_get_temp_dir() . '/blade_cache_test_' . uniqid('', true);
+        $this->cache_dir = sys_get_temp_dir() . '/blade_cache_test_' . uniqid('', more_entropy: true);
         $this->template_dir = dirname(__DIR__, 2) . '/templates';
-        mkdir($this->cache_dir, 0o755, true);
+        mkdir($this->cache_dir, 0o755, recursive: true);
     }
 
     protected function tearDown(): void

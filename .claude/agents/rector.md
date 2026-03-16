@@ -34,24 +34,101 @@ Documents the rule with before/after code samples using `CodeSample`.
 
 ## Configurable Rules
 
-Any implementation that binds to this project MUST be configurable.
+**All** custom rules MUST implement `ConfigurableRectorInterface` and support `mode` and `message`.
 
-This means that the rule can be configured in `rector.php` config file.
+### `mode` and `message`
 
-When a rule accepts configuration, implement `ConfigurableRectorInterface`:
+Every rule has two standard config keys:
+
+- **`mode`** (`'auto'` | `'warn'`) — controls what the rule does.
+  - `'auto'` — the rule transforms code automatically.
+  - `'warn'` — the rule adds a `// TODO:` comment using `message`.
+- **`message`** (string) — the TODO comment text. Only used when `mode` is `'warn'`.
+
+There are three rule categories:
+
+| Category | Default `mode` | `'auto'` behaviour | `'warn'` behaviour |
+|---|---|---|---|
+| **Pure auto-fix** (e.g. removes nodes, renames) | `'auto'` | Transforms code | Adds TODO instead of transforming |
+| **Pure warn** (flags issues it can't fix) | `'warn'` | No-op (returns null) | Adds TODO comment |
+| **Auto-fix + warn fallback** (fixes what it can) | `'warn'` | Auto-fixes only, skips TODO fallback | Auto-fixes when possible, adds TODO when it can't |
+
+### Implementation pattern
 
 ```php
 use Rector\Contract\Rector\ConfigurableRectorInterface;
 
 final class MyRule extends AbstractRector implements ConfigurableRectorInterface
 {
-    private array $items = [];
+    private string $mode = 'auto'; // or 'warn' for warn/auto+warn rules
+
+    private string $message = '';  // or 'TODO: ...' default for warn rules
 
     public function configure(array $configuration): void
     {
-        $this->items = $configuration;
+        $this->mode = $configuration['mode'] ?? 'auto';
+        $this->message = $configuration['message'] ?? '';
+        // ... other config keys ...
+    }
+
+    public function refactor(Node $node): ?Node
+    {
+        // ... detection logic ...
+
+        // For pure auto-fix rules: guard before transformation
+        if ($this->mode !== 'auto') {
+            return $this->addMessageComment($node);
+        }
+
+        // ... transformation logic ...
+    }
+
+    private function addMessageComment(Node $node): ?Node
+    {
+        foreach ($node->getComments() as $comment) {
+            if (str_contains($comment->getText(), $this->message)) {
+                return null;
+            }
+        }
+        $comments = $node->getComments();
+        array_unshift($comments, new Comment('// ' . $this->message));
+        $node->setAttribute('comments', $comments);
+        return $node;
     }
 }
+```
+
+For **pure warn** rules, add an early return at the top of `refactor()`:
+```php
+if ($this->mode === 'auto') {
+    return null;
+}
+```
+
+For **auto-fix + warn** rules, guard the private addTodo method:
+```php
+private function addTodo(Node $node): ?Node
+{
+    if ($this->mode === 'auto') {
+        return null;
+    }
+    // ... add TODO comment ...
+}
+```
+
+### Configuration in `rector.php`
+
+```php
+// Auto-fix rule
+$rectorConfig->ruleWithConfiguration(ForbidEvalRector::class, [
+    'mode' => 'auto',
+]);
+
+// Warn rule
+$rectorConfig->ruleWithConfiguration(ForbidErrorSuppressionRector::class, [
+    'mode' => 'warn',
+    'message' => 'TODO: [opcache] @ error suppression adds per-call overhead',
+]);
 ```
 
 - Use `$rectorConfig->ruleWithConfiguration(MyRule::class, [...])` in config files.
@@ -80,7 +157,7 @@ public function refactor(Node $node): ?Node
 
 ### Removing a statement
 
-To remove an entire statement (e.g. a function call), target `Expression` (the statement wrapper), not the inner expression node. Return `NodeVisitor::REMOVE_NODE`:
+To remove an entire statement (e.g. a function call), target `Expression` (the statement wrapper), not the inner expression node. Return `NodeVisitor::REMOVE_NODE`. Use `null|int|Node` return type to support both auto (remove) and warn (comment) modes:
 
 ```php
 public function getNodeTypes(): array
@@ -88,7 +165,7 @@ public function getNodeTypes(): array
     return [Expression::class];
 }
 
-public function refactor(Node $node): ?int
+public function refactor(Node $node): null|int|Node
 {
     if (!$node->expr instanceof FuncCall) {
         return null;
@@ -98,11 +175,13 @@ public function refactor(Node $node): ?int
         return null;
     }
 
+    if ($this->mode !== 'auto') {
+        return $this->addMessageComment($node);
+    }
+
     return NodeVisitor::REMOVE_NODE;
 }
 ```
-
-Note the return type is `?int` when returning `NodeVisitor::REMOVE_NODE`.
 
 ### Multiple node types
 Handle branching with `instanceof` checks inside `refactor()`.

@@ -13,6 +13,8 @@ use ZeroToProd\Thryds\Helpers\View;
 
 readonly class WebRoutes
 {
+    public const string scripts = 'scripts';
+
     public static function register(Router $Router, Blade $Blade): void
     {
         $Router->map(
@@ -40,7 +42,7 @@ readonly class WebRoutes
                 return new JsonResponse(
                     data: json_decode(
                         json_encode(value: $status, flags: JSON_PARTIAL_OUTPUT_ON_ERROR),
-                        true,
+                        associative: true,
                     ),
                 );
             },
@@ -53,7 +55,7 @@ readonly class WebRoutes
                 $status = opcache_get_status(true);
 
                 return new JsonResponse(
-                    data: array_keys($status['scripts'] ?? []),
+                    data: array_keys($status[WebRoutes::scripts] ?? []),
                 );
             },
         );

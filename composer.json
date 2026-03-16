@@ -56,6 +56,13 @@
         "opcache": "php scripts/opcache-audit.php",
         "preload:generate": "php scripts/generate-preload.php",
         "route-cache:verify": "php scripts/verify-route-cache.php",
+        "lint:blade-routes": "php scripts/lint-blade-routes.php",
+        "lint:all": [
+            "@lint",
+            "@rector",
+            "@lint:blade-routes",
+            "@test"
+        ],
         "production:checklist": "php scripts/production-checklist.php"
     }
 }

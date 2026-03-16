@@ -9,34 +9,34 @@ It does this via 2 main features: a web UI and an api backend.
 ## Technologies
 
 - Git
-  - .gitignore
-  - docs: docs/repos/git/htmldocs
+    - .gitignore
+    - docs: docs/repos/git/htmldocs
 - PHP 8.5
-  - docs: 
-    - docs/repos/php/doc-en/language
-    - docs/repos/php/doc-en/reference
+    - docs:
+        - docs/repos/php/doc-en/language
+        - docs/repos/php/doc-en/reference
 - Composer
-  - composer.json
-  - docs: docs/repos/composer/composer/doc
+    - composer.json
+    - docs: docs/repos/composer/composer/doc
 - Docker
-  - docs: docs/repos/docker/docs
-  - ./compose.yaml
-  - Dockerfile
+    - docs: docs/repos/docker/docs
+    - ./compose.yaml
+    - Dockerfile
 - FrankenPHP: (Caddy-based PHP app server) in Docker, PHP 8.5
-  - logs/frankenphp/caddy.log
-  - docs: docs/repos/php/frankenphp/docs
+    - logs/frankenphp/caddy.log
+    - docs: docs/repos/php/frankenphp/docs
 - Rector: (PHP code refactoring tool) in Docker
-  - rector.php
-  - docs: docs/repos/rectorphp/rector/stubs-rector, templates, rules, config
+    - rector.php
+    - docs: docs/repos/rectorphp/rector/stubs-rector, templates, rules, config
 - PHP CS Fixer: (PHP code style enforcer) in Docker
-  - .php-cs-fixer.php
-  - docs: docs/repos/PHP-CS-Fixer/PHP-CS-Fixer/doc
+    - .php-cs-fixer.php
+    - docs: docs/repos/PHP-CS-Fixer/PHP-CS-Fixer/doc
 - PhpUnit: (PHP unit testing framework) in Docker
-  - phpunit.xml.dist
-  - docs: docs/repos/sebastianbergmann
+    - phpunit.xml.dist
+    - docs: docs/repos/sebastianbergmann
 - Blade: (Laravel Blade template engine, standalone) in Docker
-  - docs/repos/jenssegers/blade
-  - docs/repos/laravel/docs/blade.md
+    - docs/repos/jenssegers/blade
+    - docs/repos/laravel/docs/blade.md
 
 ## Commands
 
@@ -47,6 +47,7 @@ It does this via 2 main features: a web UI and an api backend.
 ### Running commands in Docker
 
 The `./run` script wraps `docker compose exec php composer` (requires dev server running):
+
 - `./run <command>` — run any Composer command
 - `./run test` — run all tests
 - `./run test:unit` — run unit tests
@@ -59,77 +60,23 @@ The `./run` script wraps `docker compose exec php composer` (requires dev server
 - `./run opcache` — audit OPcache config (exits non-zero on failures)
 - `./run preload:generate` — regenerate preload.php from the worker's runtime script list
 - `./run route-cache:verify` — verify route caching works in production mode
+- `./run lint:blade-routes` — check Blade templates for hardcoded route paths
+- `./run lint:all` — **run this after every change** — fixes code style, applies Rector, checks Blade routes, runs tests
 - `./run production:checklist` — run all production readiness checks (exits non-zero on failures)
 
 Fallback when the dev server is not running (slower, starts a new container):
+
 - `docker compose run --rm composer sh` — run a shell inside a container
 - `docker compose run --rm composer composer <command>` — run any Composer command
 
 ## Logs
+
 - logs/frankenphp/caddy.log
 
 ## Rules
 
 - ALWAYS use Docker to interact with the app. Never run PHP, Composer, or any app tooling directly on the host.
-
-## Error Handling
-
-Error handling lives in `public/index.php` as a try/catch around `$Router->dispatch()`.
-
-- **HTTP errors** (404, 405, etc.): League\Route throws `League\Route\Http\Exception` subclasses. These are caught and rendered via `templates/error.blade.php` with the correct status code.
-- **Unexpected errors**: Caught as `\Throwable`. Logged via `Log::error()` with exception context. In production, the user sees a generic "Internal Server Error". In development, the actual message is shown.
-- **Never** use `try/catch` inside route handlers to suppress errors. Let exceptions propagate to the top-level handler.
-- **Never** use `error_log()` or `frankenphp_log()` directly. Use `Log::error()`, `Log::warn()`, `Log::info()`, or `Log::debug()`.
-
-### Throwing HTTP errors in route handlers
-
-Use League\Route's built-in HTTP exceptions to signal error responses:
-```php
-use League\Route\Http\Exception\NotFoundException;
-use League\Route\Http\Exception\BadRequestException;
-use League\Route\Http\Exception\UnauthorizedException;
-use League\Route\Http\Exception\ForbiddenException;
-use League\Route\Http\Exception\UnprocessableEntityException;
-
-// In a route handler:
-throw new NotFoundException('User not found');
-throw new BadRequestException('Missing required field: email');
-```
-
-### API routes (JSON responses)
-
-When adding API routes, use League\Route's `JsonStrategy` on a route group. It automatically returns JSON error responses for HTTP exceptions:
-```php
-use Laminas\Diactoros\ResponseFactory;
-use League\Route\Strategy\JsonStrategy;
-
-$JsonStrategy = new JsonStrategy(responseFactory: new ResponseFactory());
-$Router->group('/api', function ($RouteGroup) {
-    $RouteGroup->map('GET', '/users', $handler);
-})->setStrategy(strategy: $JsonStrategy);
-```
-API route handlers can return arrays or `JsonSerializable` objects directly — `JsonStrategy` encodes them automatically.
-
-## Request Validation
-
-- Validate at the boundary: inside route handlers, before any business logic.
-- For invalid input, throw `BadRequestException` (malformed) or `UnprocessableEntityException` (well-formed but semantically invalid).
-- Do not create validation middleware or framework abstractions until there are enough routes to justify it.
-
-## Response Formatting
-
-- **Web routes**: Return `HtmlResponse` with a Blade-rendered template.
-- **API routes**: Return arrays, `JsonSerializable` objects, or `JsonResponse` from handlers using `JsonStrategy`.
-- **Error pages**: Rendered via `templates/error.blade.php` (receives `status_code` and `message`).
-
-## Documentation Repos
-
-`docs.sh` manages cloned GitHub repos in `docs/repos/` for offline reference.
-
-- Composer packages: automatically resolved from `composer.json` + `composer.lock` source URLs.
-- Arbitrary repos: added to the `EXTRA_REPOS` array in `docs.sh`.
-- `./docs.sh install` — clones missing repos (`--depth 1`), skips already cloned.
-- `./docs.sh update` — pulls latest for all cloned repos (`--ff-only`).
+- ALWAYS run **`./run lint:all` — **run before completing** — fixes code style, applies Rector, checks Blade routes, runs tests**
 
 ## Production Readiness
 
@@ -138,11 +85,6 @@ Run `./run production:checklist` to verify the app is production ready. This exi
 1. **Route caching** — `League\Route\Cache\Router` serializes the prepared router to `var/cache/route.cache` in production, skipping route compilation on subsequent worker boots. Disabled in development so changes take effect immediately.
 2. **OPcache** — ini settings, preload coverage, JIT, hit rate, memory.
 3. **Template caching** — Blade compiles templates to `var/cache/blade/` and reuses them without recompilation.
-
-Individual checks can be run separately:
-- `./run route-cache:verify` — route caching only
-- `./run opcache` — OPcache only
-- `./run preload:generate` — regenerate preload.php locally (for dev/testing)
 
 ### Route caching
 
@@ -153,10 +95,7 @@ Routes are registered inside a builder callable passed to `League\Route\Cache\Ro
 `preload.php` is auto-generated at build time (`RUN php scripts/generate-preload.php` in Dockerfile). It boots the app, renders all templates, simulates a request dispatch, then uses `get_included_files()` to discover every script needed at runtime. No manual maintenance required.
 
 Key config files:
+
 - `docker/php/opcache.ini` — production settings (preload, no timestamps, JIT)
 - `docker/php/opcache-dev.ini` — dev overrides (timestamps on, no preload)
 - `preload.php` — auto-generated, preloaded into shared memory in production
-
-
-## Non-negotiable Design Decisions
-1.

@@ -17,10 +17,9 @@ opcache_compile_file(__DIR__ . '/src/Config.php');
 opcache_compile_file(__DIR__ . '/src/AppEnv.php');
 
 // Routes
+opcache_compile_file(__DIR__ . '/src/Routes/Route.php');
+opcache_compile_file(__DIR__ . '/src/Routes/RenderedRoute.php');
 opcache_compile_file(__DIR__ . '/src/Routes/WebRoutes.php');
-opcache_compile_file(__DIR__ . '/src/Routes/HomeRoute.php');
-opcache_compile_file(__DIR__ . '/src/Routes/AboutRoute.php');
-opcache_compile_file(__DIR__ . '/src/Routes/OpcacheStatusRoute.php');
 
 // ViewModels
 opcache_compile_file(__DIR__ . '/src/ViewModels/ErrorViewModel.php');

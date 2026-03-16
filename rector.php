@@ -9,13 +9,12 @@ use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPublicMethodParameterRector;
 use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Utils\Rector\Rector\AddNamedArgWhenVarMismatchesParamRector;
 use Utils\Rector\Rector\ExtractRepeatedExpressionToVariableRector;
-use Utils\Rector\Rector\ExtractRoutePatternToRouteClassRector;
 use Utils\Rector\Rector\ForbidArrayShapeReturnRector;
 use Utils\Rector\Rector\ForbidCallableTypeVariableNameRector;
 use Utils\Rector\Rector\ForbidDeepNestingRector;
 use Utils\Rector\Rector\ForbiddenFuncCallRector;
 use Utils\Rector\Rector\ForbidDirectRouterInstantiationRector;
-use Utils\Rector\Rector\ForbidDuplicateRoutePatternRector;
+use Utils\Rector\Rector\ForbidStringRoutePatternRector;
 use Utils\Rector\Rector\ForbidDynamicIncludeRector;
 use Utils\Rector\Rector\ForbidErrorSuppressionRector;
 use Utils\Rector\Rector\ForbidEvalRector;
@@ -23,7 +22,6 @@ use Utils\Rector\Rector\ForbidExitInSourceRector;
 use Utils\Rector\Rector\ForbidGlobalKeywordRector;
 use Utils\Rector\Rector\ForbidLongClosureRector;
 use Utils\Rector\Rector\ForbidMagicStringArrayKeyRector;
-use Utils\Rector\Rector\ForbidStringRoutePatternRector;
 use Utils\Rector\Rector\ForbidVariableVariablesRector;
 use Utils\Rector\Rector\FrankenPhpLogToLogClassRector;
 use Utils\Rector\Rector\LimitConstructorParamsRector;
@@ -40,11 +38,11 @@ use Utils\Rector\Rector\ReplaceFullyQualifiedNameRector;
 use Utils\Rector\Rector\RequireLogEventRector;
 use Utils\Rector\Rector\RequireMethodAnnotationForDataModelRector;
 use Utils\Rector\Rector\RequireNamedArgForBoolParamRector;
+use Utils\Rector\Rector\ForbidHardcodedRouteStringRector;
+use Utils\Rector\Rector\RequireRouteEnumInMapCallRector;
 use Utils\Rector\Rector\RequireParamTypeRector;
 use Utils\Rector\Rector\RequireReturnTypeRector;
-use Utils\Rector\Rector\RequireRoutePatternConstRector;
 use Utils\Rector\Rector\RequireTypedPropertyRector;
-use Utils\Rector\Rector\RouteParamNameMustBeConstRector;
 use Utils\Rector\Rector\StringArgToClassConstRector;
 use Utils\Rector\Rector\SuggestDuplicateStringConstantRector;
 use Utils\Rector\Rector\SuggestEnumForStringPropertyRector;
@@ -168,42 +166,16 @@ return static function (RectorConfig $rectorConfig): void {
         ],
         'mode' => 'auto',
     ]);
-    $rectorConfig->ruleWithConfiguration(ForbidStringRoutePatternRector::class, [
-        'methods' => ['map'],
-        'argPosition' => 1,
-        'mode' => 'warn',
-        'message' => "TODO: [ForbidStringRoutePatternRector] Route patterns must be class constant references, not inline strings. Extract '%s' to a Route class constant.",
-    ]);
-    $rectorConfig->ruleWithConfiguration(ExtractRoutePatternToRouteClassRector::class, [
-        'methods' => ['map'],
-        'argPosition' => 1,
-        'namespace' => 'ZeroToProd\\Thryds\\Routes',
-        'outputDir' => __DIR__ . '/src/Routes',
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->ruleWithConfiguration(RouteParamNameMustBeConstRector::class, [
-        'classSuffix' => 'Route',
-        'constName' => 'pattern',
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->ruleWithConfiguration(RequireRoutePatternConstRector::class, [
-        'classSuffix' => 'Route',
-        'constName' => 'pattern',
-        'excludedClasses' => ['WebRoutes'],
-        'mode' => 'warn',
-        'message' => "TODO: [RequireRoutePatternConstRector] Route class '%s' is missing a '%s' constant. Define: public const string %s = '/...';",
-    ]);
-    $rectorConfig->ruleWithConfiguration(ForbidDuplicateRoutePatternRector::class, [
-        'classSuffix' => 'Route',
-        'constNames' => ['pattern'],
-        'scanDir' => __DIR__ . '/src/Routes',
-        'mode' => 'warn',
-        'message' => "TODO: [ForbidDuplicateRoutePatternRector] Duplicate route pattern '%s'. This pattern is already defined in %s::%s. Remove or rename this constant.",
-    ]);
     $rectorConfig->ruleWithConfiguration(ForbidDirectRouterInstantiationRector::class, [
         'forbiddenClasses' => [Router::class],
         'mode' => 'warn',
         'message' => 'TODO: [ForbidDirectRouterInstantiationRector] Use League\\Route\\Cache\\Router instead of instantiating %s directly. Direct instantiation bypasses route caching.',
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidStringRoutePatternRector::class, [
+        'methods' => ['map'],
+        'argPosition' => 1,
+        'mode' => 'warn',
+        'message' => "TODO: [ForbidStringRoutePatternRector] Replace inline string '%s' with a Route enum case reference (e.g. Route::case->value).",
     ]);
     $rectorConfig->ruleWithConfiguration(ForbidEvalRector::class, [
         'mode' => 'auto',
@@ -298,5 +270,17 @@ return static function (RectorConfig $rectorConfig): void {
         'skipBuiltinFunctions' => false,
         'skipWhenOnlyArg' => true,
         'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(RequireRouteEnumInMapCallRector::class, [
+        'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
+        'methods' => ['map'],
+        'argPosition' => 1,
+        'mode' => 'warn',
+        'message' => "TODO: [RequireRouteEnumInMapCallRector] Route pattern must use Route::case->value. Found '%s' instead.",
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidHardcodedRouteStringRector::class, [
+        'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
+        'mode' => 'warn',
+        'message' => "TODO: [ForbidHardcodedRouteStringRector] Use Route::%s->value instead of hardcoded '%s'.",
     ]);
 };

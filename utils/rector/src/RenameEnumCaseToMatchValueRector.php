@@ -88,6 +88,10 @@ CODE_SAMPLE
             return null;
         }
 
+        if (! preg_match('/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/', $value)) {
+            return null;
+        }
+
         if ($this->mode !== 'auto') {
             return $this->addMessageComment($node);
         }
@@ -137,6 +141,10 @@ CODE_SAMPLE
         $backingValue = $backingType->getValue();
 
         if ($caseName === $backingValue) {
+            return null;
+        }
+
+        if (! preg_match('/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/', $backingValue)) {
             return null;
         }
 
