@@ -3,7 +3,7 @@
 declare(strict_types=1);
 $baseDir = dirname(__DIR__);
 
-require $baseDir.'/vendor/autoload.php';
+require $baseDir . '/vendor/autoload.php';
 
 use Illuminate\Container\Container;
 use Jenssegers\Blade\Blade;
@@ -22,8 +22,8 @@ use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 $Config = Config::from([
     Config::appEnv => $_ENV[Config::APP_ENV] ?? AppEnv::Production->value,
-    Config::bladeCacheDir => $baseDir.'/var/cache/blade',
-    Config::templateDir => $baseDir.'/templates',
+    Config::bladeCacheDir => $baseDir . '/var/cache/blade',
+    Config::templateDir => $baseDir . '/templates',
 ]);
 
 $Container = new BladeContainer();
@@ -34,7 +34,7 @@ $ServerRequestInterface = ServerRequestFactory::fromGlobals(server: $_SERVER, qu
 
 $Router = new Router();
 
-$Router->map('GET', '/', fn (): ResponseInterface => new HtmlResponse(html: $Blade->make(view: View::home)->render()));
+$Router->map('GET', '/', fn(): ResponseInterface => new HtmlResponse(html: $Blade->make(view: View::home)->render()));
 
 try {
     new SapiEmitter()->emit(response: $Router->dispatch(request: $ServerRequestInterface));
@@ -63,9 +63,9 @@ try {
                 class_basename(ErrorViewModel::class) => ErrorViewModel::from(
                     [
                         ErrorViewModel::status_code => 500,
-                        ErrorViewModel::message => $Config->isProduction() ? 'Internal Server Error' : $Throwable->getMessage()
+                        ErrorViewModel::message => $Config->isProduction() ? 'Internal Server Error' : $Throwable->getMessage(),
                     ]
-                )
+                ),
             ])->render(),
             status: 500,
         )
