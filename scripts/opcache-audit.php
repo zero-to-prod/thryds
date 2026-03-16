@@ -19,8 +19,9 @@ if (PHP_SAPI === 'cli' && !ini_get('opcache.enable_cli')) {
 
 $isDev = (bool) ini_get('opcache.validate_timestamps');
 
-echo opcacheAudit($isDev);
-exit(0);
+$result = opcacheAudit($isDev);
+echo $result;
+exit(str_contains($result, '[FAIL]') ? 1 : 0);
 
 function opcacheAudit(bool $isDev = false): string
 {
@@ -110,19 +111,17 @@ function opcacheAudit(bool $isDev = false): string
         );
     }
 
-    // 7. Cache hit rate
+    // 7. Cache hit rate (skip in CLI — only meaningful under real HTTP traffic)
     $hits = $status['opcache_statistics']['hits'] ?? 0;
     $misses = $status['opcache_statistics']['misses'] ?? 0;
     $totalRequests = $hits + $misses;
-    if ($totalRequests > 100) {
+    if (PHP_SAPI !== 'cli' && $totalRequests > 100) {
         $hitRate = ($hits / $totalRequests) * 100;
         if ($hitRate < 95 && !$isDev) {
             $failures[] = sprintf('Cache hit rate: %.1f%% (%d hits / %d misses) — should be >95%%', $hitRate, $hits, $misses);
         } else {
             $passes[] = sprintf('Cache hit rate: %.1f%% (%d hits / %d misses)', $hitRate, $hits, $misses);
         }
-    } else {
-        $warnings[] = sprintf('Only %d OPcache lookups recorded — not enough data for hit rate (need >100)', $totalRequests);
     }
 
     // 8. Cached scripts and preload coverage

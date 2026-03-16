@@ -56,6 +56,7 @@ The `./run` script wraps `docker compose exec php composer` (requires dev server
 - `./run lint:check` — preview code style changes
 - `./run rector` — apply Rector changes
 - `./run rector:check` — preview Rector changes
+- `./run opcache` — audit OPcache config (exits non-zero on failures)
 
 Fallback when the dev server is not running (slower, starts a new container):
 - `docker compose run --rm composer sh` — run a shell inside a container
@@ -126,6 +127,20 @@ API route handlers can return arrays or `JsonSerializable` objects directly — 
 - Arbitrary repos: added to the `EXTRA_REPOS` array in `docs.sh`.
 - `./docs.sh install` — clones missing repos (`--depth 1`), skips already cloned.
 - `./docs.sh update` — pulls latest for all cloned repos (`--ff-only`).
+
+## OPcache
+
+The app is optimized for OPcache. Run `./run opcache` to verify. This exits non-zero on failures.
+
+When adding new PHP files that are loaded on every request (src/ classes, new vendor packages used at runtime):
+- Add them to `preload.php` using `opcache_compile_file()`.
+- Order matters: parent classes/interfaces/traits must appear before classes that extend/use them.
+- After changes, run `./run opcache` to verify nothing is broken.
+
+Key config files:
+- `docker/php/opcache.ini` — production settings (preload, no timestamps, JIT)
+- `docker/php/opcache-dev.ini` — dev overrides (timestamps on, no preload)
+- `preload.php` — scripts preloaded into shared memory in production
 
 ## Non-negotiable Design Decisions
 1.

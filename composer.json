@@ -46,6 +46,7 @@
         "lint": "./vendor/bin/php-cs-fixer fix",
         "lint:check": "./vendor/bin/php-cs-fixer fix --dry-run --diff",
         "rector": "./vendor/bin/rector process",
-        "rector:check": "./vendor/bin/rector process --dry-run"
+        "rector:check": "./vendor/bin/rector process --dry-run",
+        "opcache": "php scripts/opcache-audit.php"
     }
 }
