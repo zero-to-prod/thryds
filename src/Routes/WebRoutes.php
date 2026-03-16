@@ -39,7 +39,7 @@ readonly class WebRoutes
 
                 return new JsonResponse(
                     data: json_decode(
-                        json_encode($status, JSON_PARTIAL_OUTPUT_ON_ERROR),
+                        json_encode(value: $status, flags: JSON_PARTIAL_OUTPUT_ON_ERROR),
                         true,
                     ),
                 );
