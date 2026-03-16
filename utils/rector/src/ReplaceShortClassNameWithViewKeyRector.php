@@ -9,7 +9,9 @@ use PhpParser\Node;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Name;
+use PhpParser\Node\Scalar\String_;
 use PHPStan\Reflection\ReflectionProvider;
 use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Rector\AbstractRector;
@@ -88,36 +90,60 @@ CODE_SAMPLE,
                 continue;
             }
 
-            if (!$item->key instanceof FuncCall) {
-                continue;
-            }
+            // Case 1: short_class_name(SomeClass::class) => ...
+            if ($item->key instanceof FuncCall) {
+                $funcCall = $item->key;
 
-            $funcCall = $item->key;
+                if (!$this->isShortClassNameCall($funcCall)) {
+                    continue;
+                }
 
-            if (!$this->isShortClassNameCall($funcCall)) {
-                continue;
-            }
+                $className = $this->extractClassNameFromArg($funcCall);
+                if ($className === null) {
+                    continue;
+                }
 
-            $className = $this->extractClassNameFromArg($funcCall);
-            if ($className === null) {
-                continue;
-            }
+                if (!$this->classHasViewKeyConst($className)) {
+                    continue;
+                }
 
-            if (!$this->classHasViewKeyConst($className)) {
-                continue;
-            }
+                if ($this->mode !== 'auto') {
+                    $this->addMessageComment($item->key);
+                    $hasChanged = true;
+                    continue;
+                }
 
-            if ($this->mode !== 'auto') {
-                $this->addMessageComment($item->key);
+                $item->key = new ClassConstFetch(
+                    new Name\FullyQualified($className),
+                    self::VIEW_KEY_CONST,
+                );
                 $hasChanged = true;
                 continue;
             }
 
-            $item->key = new ClassConstFetch(
-                new Name\FullyQualified($className),
-                self::VIEW_KEY_CONST,
-            );
-            $hasChanged = true;
+            // Case 2: 'string_key' => SomeClass::from([...])
+            if ($item->key instanceof String_ && $item->value instanceof StaticCall) {
+                $className = $this->extractClassNameFromStaticCall($item->value);
+                if ($className === null) {
+                    continue;
+                }
+
+                if (!$this->classHasViewKeyConst($className)) {
+                    continue;
+                }
+
+                if ($this->mode !== 'auto') {
+                    $this->addMessageComment($item->key);
+                    $hasChanged = true;
+                    continue;
+                }
+
+                $item->key = new ClassConstFetch(
+                    new Name\FullyQualified($className),
+                    self::VIEW_KEY_CONST,
+                );
+                $hasChanged = true;
+            }
         }
 
         if (!$hasChanged) {
@@ -170,6 +196,11 @@ CODE_SAMPLE,
         }
 
         return $this->getName($classConstFetch->class);
+    }
+
+    private function extractClassNameFromStaticCall(StaticCall $staticCall): ?string
+    {
+        return $this->getName($staticCall->class);
     }
 
     private function classHasViewKeyConst(string $className): bool

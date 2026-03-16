@@ -81,6 +81,8 @@ $handler = static function () use ($Router, $Config, $emit_error_page): void {
     }
 };
 
+// FrankenPHP worker loop: frankenphp_handle_request() blocks until a request arrives,
+// invokes $handler, then returns true to continue or false to stop the worker.
 $max_requests = (int) ($_SERVER[Config::MAX_REQUESTS] ?? 0);
 for ($nb_requests = 0; !$max_requests || $nb_requests < $max_requests; ++$nb_requests) {
     $keep_running = frankenphp_handle_request(callback: $handler);

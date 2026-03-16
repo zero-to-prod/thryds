@@ -220,7 +220,33 @@ CODE_SAMPLE,
             return null;
         }
 
-        return $this->getName($property->type) ?? $this->printNodeType($property->type);
+        $type = $this->getName($property->type) ?? $this->printNodeType($property->type);
+
+        $backingType = $this->getBackedEnumType($type);
+        if ($backingType !== null) {
+            return "{$type}|{$backingType}";
+        }
+
+        return $type;
+    }
+
+    private function getBackedEnumType(string $type): ?string
+    {
+        if (!$this->reflectionProvider->hasClass($type)) {
+            return null;
+        }
+
+        $classReflection = $this->reflectionProvider->getClass($type);
+        if (!$classReflection->isEnum()) {
+            return null;
+        }
+
+        $nativeReflection = $classReflection->getNativeReflection();
+        if (!$nativeReflection instanceof \ReflectionEnum || !$nativeReflection->isBacked()) {
+            return null;
+        }
+
+        return $nativeReflection->getBackingType()?->getName();
     }
 
     private function printNodeType(Node $node): string

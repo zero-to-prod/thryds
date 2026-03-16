@@ -13,6 +13,7 @@ use ZeroToProd\Thryds\Helpers\View;
 
 readonly class WebRoutes
 {
+    /** OPcache status array key for cached scripts. @see opcache_get_status() */
     public const string scripts = 'scripts';
 
     public static function register(Router $Router, Blade $Blade): void

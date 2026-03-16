@@ -27,7 +27,6 @@ use Utils\Rector\Rector\ForbidVariableVariablesRector;
 use Utils\Rector\Rector\FrankenPhpLogToLogClassRector;
 use Utils\Rector\Rector\LimitConstructorParamsRector;
 use Utils\Rector\Rector\MakeClassReadonlyRector;
-use Utils\Rector\Rector\MigrateArrayToDataModelRector;
 use Utils\Rector\Rector\RemoveNamedArgWhenVarMatchesParamRector;
 use Utils\Rector\Rector\RenameEnumCaseToMatchValueRector;
 use Utils\Rector\Rector\RenameParamToMatchTypeNameRector;
@@ -165,20 +164,6 @@ return static function (RectorConfig $rectorConfig): void {
         'mode' => 'auto',
     ]);
     $rectorConfig->ruleWithConfiguration(RenamePropertyToMatchTypeNameRector::class, [
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->ruleWithConfiguration(MigrateArrayToDataModelRector::class, [
-        'mappings' => [
-            [
-                'methodName' => 'make',
-                'dataParam' => 'data',
-                'viewParam' => 'view',
-                'viewModelNamespace' => 'ZeroToProd\\Thryds\\ViewModels',
-                'viewModelDir' => __DIR__ . '/src/ViewModels',
-                'templateDir' => __DIR__ . '/templates',
-                'dataModelTrait' => 'Zerotoprod\\DataModel\\DataModel',
-            ],
-        ],
         'mode' => 'auto',
     ]);
     $rectorConfig->ruleWithConfiguration(ForbidDirectRouterInstantiationRector::class, [

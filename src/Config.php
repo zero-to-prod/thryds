@@ -8,7 +8,7 @@ use ZeroToProd\Thryds\Helpers\DataModel;
 use ZeroToProd\Thryds\Helpers\Describe;
 
 /**
- * @method static self from(array{APP_ENV?: APP_ENV, blade_cache_dir?: string, template_dir?: string} $data)
+ * @method static self from(array{APP_ENV?: APP_ENV|string, blade_cache_dir?: string, template_dir?: string} $data)
  */
 readonly class Config
 {

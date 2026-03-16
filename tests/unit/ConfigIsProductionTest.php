@@ -19,13 +19,6 @@ final class ConfigIsProductionTest extends TestCase
     }
 
     #[Test]
-    public function trueWhenAppEnvIsMissing(): void
-    {
-        $Config = Config::from([Config::APP_ENV => APP_ENV::production->value]);
-        $this->assertTrue($Config->isProduction());
-    }
-
-    #[Test]
     public function falseWhenAppEnvIsNotProduction(): void
     {
         $Config = Config::from([Config::APP_ENV => APP_ENV::development->value]);

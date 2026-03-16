@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
+/** Backed by constants defined by ext-frankenphp. @see https://frankenphp.dev */
 enum LogLevel: int
 {
     case Debug = FRANKENPHP_LOG_LEVEL_DEBUG;
