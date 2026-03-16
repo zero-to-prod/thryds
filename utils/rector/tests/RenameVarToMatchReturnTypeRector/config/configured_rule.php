@@ -6,5 +6,7 @@ use Rector\Config\RectorConfig;
 use Utils\Rector\Rector\RenameVarToMatchReturnTypeRector;
 
 return static function (RectorConfig $rectorConfig): void {
-    $rectorConfig->rule(RenameVarToMatchReturnTypeRector::class);
+    $rectorConfig->ruleWithConfiguration(RenameVarToMatchReturnTypeRector::class, [
+        'skipNames' => ['Closure'],
+    ]);
 };

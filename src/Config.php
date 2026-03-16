@@ -7,6 +7,9 @@ namespace ZeroToProd\Thryds;
 use ZeroToProd\Thryds\Helpers\DataModel;
 use ZeroToProd\Thryds\Helpers\Describe;
 
+/**
+ * @method static self from(array{AppEnv?: AppEnv, blade_cache_dir?: string, template_dir?: string} $data)
+ */
 readonly class Config
 {
     use DataModel;

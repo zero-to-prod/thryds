@@ -9,23 +9,38 @@ use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\Expression;
 use PHPStan\Type\TypeWithClassName;
+use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\PhpParser\Enum\NodeGroup;
 use Rector\Rector\AbstractRector;
-use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
+use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-final class RenameVarToMatchReturnTypeRector extends AbstractRector
+final class RenameVarToMatchReturnTypeRector extends AbstractRector implements ConfigurableRectorInterface
 {
+    /**
+     * @var string[]
+     */
+    private array $skipNames = [];
+
+    /**
+     * @param array{skipNames?: string[]} $configuration
+     */
+    public function configure(array $configuration): void
+    {
+        $this->skipNames = $configuration['skipNames'] ?? [];
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition('Rename variables to exactly match the return type of the assigned call', [
-            new CodeSample(
+            new ConfiguredCodeSample(
                 <<<'CODE_SAMPLE'
 $response = $router->dispatch($request);
 CODE_SAMPLE,
                 <<<'CODE_SAMPLE'
 $ResponseInterface = $router->dispatch($request);
-CODE_SAMPLE
+CODE_SAMPLE,
+                ['skipNames' => ['Closure']]
             ),
         ]);
     }
@@ -93,6 +108,10 @@ CODE_SAMPLE
             $expectedName = $this->resolveShortName($className);
 
             if ($currentName === $expectedName) {
+                continue;
+            }
+
+            if (in_array($expectedName, $this->skipNames, strict: true)) {
                 continue;
             }
 

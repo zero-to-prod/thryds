@@ -3,7 +3,7 @@
 declare(strict_types=1);
 $base_dir = dirname(__DIR__);
 
-require $base_dir . '/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 use Illuminate\Container\Container;
 use Jenssegers\Blade\Blade;
@@ -23,6 +23,7 @@ use ZeroToProd\Thryds\Log;
 use ZeroToProd\Thryds\Routes\WebRoutes;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
+// Boot phase — runs once per worker
 $Config = Config::from([
     Config::AppEnv => $_ENV[Config::APP_ENV] ?? AppEnv::production->value,
     Config::blade_cache_dir => $base_dir . '/var/cache/blade',
@@ -33,13 +34,11 @@ $Container = new BladeContainer();
 Container::setInstance(container: $Container);
 $Blade = new Blade(viewPaths: $Config->template_dir, cachePath: $Config->blade_cache_dir, container: $Container);
 
-$ServerRequestInterface = ServerRequestFactory::fromGlobals(server: $_SERVER, query: $_GET, body: $_POST, cookies: $_COOKIE, files: $_FILES);
-
 $Router = new Router();
 
 WebRoutes::register($Router, $Blade);
 
-$Closure = static function (string $message, int $status_code) use ($Blade): void {
+$emit_error_page = static function (string $message, int $status_code) use ($Blade): void {
     new SapiEmitter()->emit(
         response: new HtmlResponse(
             html: $Blade->make(view: View::error, data: [
@@ -53,19 +52,35 @@ $Closure = static function (string $message, int $status_code) use ($Blade): voi
     );
 };
 
-try {
-    new SapiEmitter()->emit(response: $Router->dispatch(request: $ServerRequestInterface));
-} catch (HttpException $HttpException) {
-    $Closure($HttpException->getMessage(), $HttpException->getStatusCode());
-} catch (Throwable $Throwable) {
-    Log::error($Throwable->getMessage(), [
-        Log::event => Log::unhandled_exception,
-        Log::exception => $Throwable::class,
-        Log::file => $Throwable->getFile(),
-        Log::line => $Throwable->getLine(),
-    ]);
-    $Closure(
-        $Config->isProduction() ? 'Internal Server Error' : $Throwable->getMessage(),
-        500,
-    );
+// Request handler — called for each incoming request
+$handler = static function () use ($Router, $Config, $emit_error_page): void {
+    $ServerRequestInterface = ServerRequestFactory::fromGlobals(server: $_SERVER, query: $_GET, body: $_POST, cookies: $_COOKIE, files: $_FILES);
+
+    try {
+        new SapiEmitter()->emit(response: $Router->dispatch(request: $ServerRequestInterface));
+    } catch (HttpException $HttpException) {
+        $emit_error_page($HttpException->getMessage(), $HttpException->getStatusCode());
+    } catch (Throwable $Throwable) {
+        Log::error($Throwable->getMessage(), [
+            Log::event => Log::unhandled_exception,
+            Log::exception => $Throwable::class,
+            Log::file => $Throwable->getFile(),
+            Log::line => $Throwable->getLine(),
+        ]);
+        $emit_error_page(
+            $Config->isProduction() ? 'Internal Server Error' : $Throwable->getMessage(),
+            500,
+        );
+    }
+};
+
+$max_requests = (int) ($_SERVER['MAX_REQUESTS'] ?? 0);
+for ($nb_requests = 0; !$max_requests || $nb_requests < $max_requests; ++$nb_requests) {
+    $keep_running = frankenphp_handle_request($handler);
+
+    gc_collect_cycles();
+
+    if (!$keep_running) {
+        break;
+    }
 }

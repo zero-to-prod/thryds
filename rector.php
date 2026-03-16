@@ -59,7 +59,9 @@ return static function (RectorConfig $rectorConfig): void {
         'logClass' => Log::class,
     ]);
     $rectorConfig->rule(RenameParamToMatchTypeNameRector::class);
-    $rectorConfig->rule(RenameVarToMatchReturnTypeRector::class);
+    $rectorConfig->ruleWithConfiguration(RenameVarToMatchReturnTypeRector::class, [
+        'skipNames' => ['Closure'],
+    ]);
     $rectorConfig->rule(AddNamedArgWhenVarMismatchesParamRector::class);
     $rectorConfig->rule(RemoveNamedArgWhenVarMatchesParamRector::class);
     $rectorConfig->rule(RemoveUnusedPrivateMethodParameterRector::class);

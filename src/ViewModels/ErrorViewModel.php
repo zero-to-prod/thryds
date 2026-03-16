@@ -6,6 +6,9 @@ namespace ZeroToProd\Thryds\ViewModels;
 
 use ZeroToProd\Thryds\Helpers\DataModel;
 
+/**
+ * @method static self from(array{message: string, status_code: int} $data)
+ */
 readonly class ErrorViewModel
 {
     use DataModel;

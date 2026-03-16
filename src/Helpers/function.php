@@ -11,7 +11,7 @@ namespace ZeroToProd\Thryds\Helpers;
  */
 function short_class_name(object|string $class): string
 {
-    $class = is_object($class) ? $class::class : $class;
+    $class = is_object(value: $class) ? $class::class : $class;
 
-    return basename(str_replace('\\', '/', $class));
+    return basename(str_replace('\\', '/', subject: $class));
 }
