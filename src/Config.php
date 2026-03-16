@@ -12,23 +12,20 @@ readonly class Config
     use DataModel;
 
     public const string APP_ENV = 'APP_ENV';
-    public const string TWIG_CACHE = 'cache';
-    public const string TWIG_AUTO_RELOAD = 'auto_reload';
-
     /** @see $appEnv */
     public const string appEnv = 'appEnv';
     #[Describe([Describe::default => AppEnv::Production])]
     public AppEnv $appEnv;
 
-    /** @see $twigCacheDir */
-    public const string twigCacheDir = 'twigCacheDir';
+    /** @see $bladeCacheDir */
+    public const string bladeCacheDir = 'bladeCacheDir';
     /** @see $templateDir */
     public const string templateDir = 'templateDir';
     /** @see $isProduction */
     public const string isProduction = 'isProduction';
 
-    #[Describe([Describe::default => '/app/var/cache/twig'])]
-    public string $twigCacheDir;
+    #[Describe([Describe::default => '/app/var/cache/blade'])]
+    public string $bladeCacheDir;
 
     #[Describe([Describe::default => '/app/templates'])]
     public string $templateDir;

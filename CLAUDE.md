@@ -34,12 +34,14 @@ It does this via 2 main features: a web UI and an api backend.
 - PhpUnit: (PHP unit testing framework) in Docker
   - phpunit.xml.dist
   - docs: docs/repos/sebastianbergmann
-- Twig: (PHP template engine) in Docker
-  - docs: docs/repos/twigphp/Twig/doc
+- Blade: (Laravel Blade template engine, standalone) in Docker
+  - docs/repos/jenssegers/blade
+  - docs/repos/laravel/docs/blade.md
 
 ## Commands
 
-- `sh update-docs.sh` - update docs/repos/
+- `./docs.sh install` — clone docs/repos/ (skips already cloned)
+- `./docs.sh update` — pull latest for docs/repos/
 - `docker compose up -d` — start dev server
 
 ### Running commands in Docker
@@ -70,7 +72,7 @@ Fallback when the dev server is not running (slower, starts a new container):
 
 Error handling lives in `public/index.php` as a try/catch around `$Router->dispatch()`.
 
-- **HTTP errors** (404, 405, etc.): League\Route throws `League\Route\Http\Exception` subclasses. These are caught and rendered via `templates/error.html.twig` with the correct status code.
+- **HTTP errors** (404, 405, etc.): League\Route throws `League\Route\Http\Exception` subclasses. These are caught and rendered via `templates/error.blade.php` with the correct status code.
 - **Unexpected errors**: Caught as `\Throwable`. Logged via `Log::error()` with exception context. In production, the user sees a generic "Internal Server Error". In development, the actual message is shown.
 - **Never** use `try/catch` inside route handlers to suppress errors. Let exceptions propagate to the top-level handler.
 - **Never** use `error_log()` or `frankenphp_log()` directly. Use `Log::error()`, `Log::warn()`, `Log::info()`, or `Log::debug()`.
@@ -112,9 +114,18 @@ API route handlers can return arrays or `JsonSerializable` objects directly — 
 
 ## Response Formatting
 
-- **Web routes**: Return `HtmlResponse` with a Twig-rendered template.
+- **Web routes**: Return `HtmlResponse` with a Blade-rendered template.
 - **API routes**: Return arrays, `JsonSerializable` objects, or `JsonResponse` from handlers using `JsonStrategy`.
-- **Error pages**: Rendered via `templates/error.html.twig` (receives `status_code` and `message`).
+- **Error pages**: Rendered via `templates/error.blade.php` (receives `status_code` and `message`).
+
+## Documentation Repos
+
+`docs.sh` manages cloned GitHub repos in `docs/repos/` for offline reference.
+
+- Composer packages: automatically resolved from `composer.json` + `composer.lock` source URLs.
+- Arbitrary repos: added to the `EXTRA_REPOS` array in `docs.sh`.
+- `./docs.sh install` — clones missing repos (`--depth 1`), skips already cloned.
+- `./docs.sh update` — pulls latest for all cloned repos (`--ff-only`).
 
 ## Non-negotiable Design Decisions
 1.

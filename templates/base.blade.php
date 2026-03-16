@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Thryds{% endblock %}</title>
-    {% block head %}{% endblock %}
+    <title>@yield('title', 'Thryds')</title>
+    @yield('head')
 </head>
 <body>
-    {% block body %}{% endblock %}
+    @yield('body')
 </body>
 </html>

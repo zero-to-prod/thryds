@@ -18,6 +18,7 @@ use Utils\Rector\Rector\ReplaceFullyQualifiedNameRector;
 use Utils\Rector\Rector\ExtractRepeatedExpressionToVariableRector;
 use Utils\Rector\Rector\ForbidMagicStringArrayKeyRector;
 use Utils\Rector\Rector\SuggestEnumForStringPropertyRector;
+use Utils\Rector\Rector\StringArgToClassConstRector;
 use Utils\Rector\Rector\UseClassConstArrayKeyForDataModelRector;
 
 return static function (RectorConfig $rectorConfig): void {
@@ -44,6 +45,13 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->rule(SuggestEnumForStringPropertyRector::class);
     $rectorConfig->ruleWithConfiguration(ExtractRepeatedExpressionToVariableRector::class, [
         'dirname',
+    ]);
+    $rectorConfig->ruleWithConfiguration(StringArgToClassConstRector::class, [
+        [
+            'class' => \ZeroToProd\Thryds\Helpers\View::class,
+            'methodName' => 'make',
+            'paramName' => 'view',
+        ],
     ]);
     $rectorConfig->ruleWithConfiguration(ReplaceFullyQualifiedNameRector::class, [
         DataModel::class => \ZeroToProd\Thryds\Helpers\DataModel::class,

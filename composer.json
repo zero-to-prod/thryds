@@ -7,7 +7,7 @@
         "league/route": "^6.2",
         "laminas/laminas-diactoros": "^3.8",
         "laminas/laminas-httphandlerrunner": "^2.13",
-        "twig/twig": "^3.23",
+        "jenssegers/blade": "^2",
         "zero-to-prod/data-model": "^81.14"
     },
     "autoload": {
@@ -40,7 +40,7 @@
         "test:rector": "./vendor/bin/phpunit utils",
         "lint": "./vendor/bin/php-cs-fixer fix",
         "lint:check": "./vendor/bin/php-cs-fixer fix --dry-run --diff",
-        "rector": "./vendor/bin/rector process src",
-        "rector:check": "./vendor/bin/rector process src --dry-run"
+        "rector": "./vendor/bin/rector process",
+        "rector:check": "./vendor/bin/rector process --dry-run"
     }
 }
