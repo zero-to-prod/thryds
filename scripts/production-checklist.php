@@ -29,8 +29,6 @@ use Jenssegers\Blade\Container as BladeContainer;
 use ZeroToProd\Thryds\Helpers\View;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
-use function ZeroToProd\Thryds\Helpers\short_class_name;
-
 $base_dir = dirname(__DIR__);
 $overall_exit = 0;
 
@@ -131,7 +129,7 @@ function verifyTemplateCache(string $base_dir): int
         View::home => [],
         View::about => [],
         View::error => [
-            short_class_name(ErrorViewModel::class) => ErrorViewModel::from([
+            ErrorViewModel::view_key => ErrorViewModel::from([
                 ErrorViewModel::message => 'test',
                 ErrorViewModel::status_code => 200,
             ]),

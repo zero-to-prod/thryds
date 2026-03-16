@@ -23,8 +23,6 @@ use Jenssegers\Blade\Container as BladeContainer;
 use ZeroToProd\Thryds\APP_ENV;
 use ZeroToProd\Thryds\Config;
 
-use function ZeroToProd\Thryds\Helpers\short_class_name;
-
 use ZeroToProd\Thryds\Helpers\View;
 use ZeroToProd\Thryds\Routes\WebRoutes;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
@@ -57,7 +55,7 @@ echo "Rendering templates...\n";
 $Blade->make(view: View::home)->render();
 $Blade->make(view: View::about)->render();
 $Blade->make(view: View::error, data: [
-    short_class_name(ErrorViewModel::class) => ErrorViewModel::from([
+    ErrorViewModel::view_key => ErrorViewModel::from([
         ErrorViewModel::message => 'test',
         ErrorViewModel::status_code => 500,
     ]),

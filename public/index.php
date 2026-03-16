@@ -17,9 +17,6 @@ use League\Route\Http\Exception as HttpException;
 use League\Route\Router;
 use ZeroToProd\Thryds\APP_ENV;
 use ZeroToProd\Thryds\Config;
-
-use function ZeroToProd\Thryds\Helpers\short_class_name;
-
 use ZeroToProd\Thryds\Helpers\View;
 use ZeroToProd\Thryds\Log;
 use ZeroToProd\Thryds\Routes\WebRoutes;
@@ -52,7 +49,7 @@ $emit_error_page = static function (string $message, int $status_code) use ($Bla
     new SapiEmitter()->emit(
         response: new HtmlResponse(
             html: $Blade->make(view: View::error, data: [
-                short_class_name(ErrorViewModel::class) => ErrorViewModel::from([
+                ErrorViewModel::view_key => ErrorViewModel::from([
                     ErrorViewModel::message => $message,
                     ErrorViewModel::status_code => $status_code,
                 ]),

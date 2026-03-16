@@ -7,6 +7,7 @@ use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodParameterRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPublicMethodParameterRector;
 use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
+use Utils\Rector\Rector\AddViewKeyConstantRector;
 use Utils\Rector\Rector\AddNamedArgWhenVarMismatchesParamRector;
 use Utils\Rector\Rector\ExtractRepeatedExpressionToVariableRector;
 use Utils\Rector\Rector\ForbidArrayShapeReturnRector;
@@ -38,6 +39,7 @@ use Utils\Rector\Rector\ReplaceFullyQualifiedNameRector;
 use Utils\Rector\Rector\RequireLogEventRector;
 use Utils\Rector\Rector\RequireMethodAnnotationForDataModelRector;
 use Utils\Rector\Rector\ForbidDuplicateRouteRegistrationRector;
+use Utils\Rector\Rector\ReplaceShortClassNameWithViewKeyRector;
 use Utils\Rector\Rector\RequireAllRouteCasesRegisteredRector;
 use Utils\Rector\Rector\RequireNamedArgForBoolParamRector;
 use Utils\Rector\Rector\ForbidHardcodedRouteStringRector;
@@ -93,6 +95,17 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->rule(RemoveUnusedPrivateMethodParameterRector::class);
     $rectorConfig->rule(RemoveUnusedPublicMethodParameterRector::class);
     $rectorConfig->ruleWithConfiguration(UseClassConstArrayKeyForDataModelRector::class, [
+        'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(AddViewKeyConstantRector::class, [
+        'dataModelTraits' => [
+            \ZeroToProd\Thryds\Helpers\DataModel::class,
+        ],
+        'viewModelAttribute' => \ZeroToProd\Thryds\Helpers\ViewModel::class,
+        'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(ReplaceShortClassNameWithViewKeyRector::class, [
+        'shortClassNameFunction' => 'ZeroToProd\\Thryds\\Helpers\\short_class_name',
         'mode' => 'auto',
     ]);
     $rectorConfig->rule(StringClassNameToClassConstantRector::class);

@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\ViewModels;
 
 use ZeroToProd\Thryds\Helpers\DataModel;
+use ZeroToProd\Thryds\Helpers\ViewModel;
 
 /**
  * @method static self from(array{message: string, status_code: int} $data)
  */
+#[ViewModel]
 readonly class ErrorViewModel
 {
     use DataModel;
+    public const string view_key = 'ErrorViewModel';
 
     /** @see $message */
     public const string message = 'message';
