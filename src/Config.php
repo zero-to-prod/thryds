@@ -14,6 +14,7 @@ readonly class Config
 {
     use DataModel;
 
+    public const string MAX_REQUESTS = 'MAX_REQUESTS';
     public const string APP_ENV = 'APP_ENV';
     /** @see $AppEnv */
     public const string AppEnv = 'AppEnv';
