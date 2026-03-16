@@ -45,6 +45,7 @@ use Utils\Rector\Rector\SuggestDuplicateStringConstantRector;
 use Utils\Rector\Rector\SuggestExtractSharedCatchLogicRector;
 use Utils\Rector\Rector\RequireParamTypeRector;
 use Utils\Rector\Rector\RequireReturnTypeRector;
+use Utils\Rector\Rector\ForbidArrayShapeReturnRector;
 use Utils\Rector\Rector\ForbidDeepNestingRector;
 use Utils\Rector\Rector\LimitConstructorParamsRector;
 use Utils\Rector\Rector\UseLogContextConstRector;
@@ -195,6 +196,10 @@ return static function (RectorConfig $rectorConfig): void {
             DataModel::class,
             \ZeroToProd\Thryds\Helpers\DataModel::class,
         ],
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidArrayShapeReturnRector::class, [
+        'minKeys' => 2,
+        'classSuffix' => 'Result',
     ]);
     $rectorConfig->ruleWithConfiguration(ReplaceFullyQualifiedNameRector::class, [
         DataModel::class => \ZeroToProd\Thryds\Helpers\DataModel::class,

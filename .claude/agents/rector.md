@@ -202,3 +202,59 @@ After adding new files, run `docker compose run --rm composer composer dump-auto
 - Always include a test with fixture files for every rule.
 - Do not import scoped/prefixed vendor classes (e.g. `RectorPrefix*\...`) — they are internal to Rector's PHAR and will break in custom rules.
 - **Rules MUST be isolated from the rest of the codebase.** A rule must never import or reference classes, constants, enums, or any other symbols from the application (`src/`, `public/`, `tests/`). All project-specific values (class names, trait FQNs, method names, etc.) must be passed in via configuration. This keeps rules reusable and testable without coupling them to the application.
+
+## Confirmed Patterns
+
+Patterns learned from `LimitConstructorParamsRector` and other rules in this codebase.
+
+### Namespace resolution for `Class_` nodes
+
+Do NOT use `$node->getAttribute('parent')` — the `parent` attribute is unreliable during Rector traversal. Use `$class->namespacedName`, which PhpParser's `NameResolver` visitor populates automatically before Rector runs:
+
+```php
+private function resolveNamespace(Class_ $class): ?string
+{
+    if ($class->namespacedName !== null) {
+        $parts = $class->namespacedName->getParts();
+        if (count($parts) > 1) {
+            array_pop($parts);
+            return implode('\\', $parts);
+        }
+    }
+    return null;
+}
+```
+
+### Accessing the current file path
+
+`AbstractRector` exposes a `protected` property `$this->file` of type `Rector\ValueObject\Application\File`. Use `$this->file->getFilePath()` to get the absolute path of the file being processed. Useful for rules that write new files alongside the source (e.g. generating a DTO next to the class that uses it).
+
+### Extract count vs excess count
+
+When extracting N params into a new DTO class, the DTO param itself occupies one slot in the remaining list. The formula is:
+
+```
+extractCount = excessCount + 1
+```
+
+Example: 6 params, maxParams=4 → excess=2, but extract 3 so that 3 remaining + 1 DTO param = 4.
+
+### Test config: `dtoOutputDir` with `sys_get_temp_dir()`
+
+Rules that generate files as a side effect should accept a configurable output directory. Test configs should point to `sys_get_temp_dir()` so generated files do not accumulate inside the test directory:
+
+```php
+$rectorConfig->ruleWithConfiguration(MyRule::class, [
+    'outputDir' => sys_get_temp_dir(),
+]);
+```
+
+The fixture file only validates AST transformations; the generated file is a side effect verified separately.
+
+### Co-occurrence grouping pitfall
+
+Grouping params by which methods use them together (co-occurrence) can backfire: "core" dependencies that are used everywhere score highest and end up selected for extraction, which is the opposite of the desired outcome. Prefer type-name prefix grouping first; fall back to positional selection (last N params) rather than co-occurrence when a semantic grouping cannot be found.
+
+### `importNames()` and `FullyQualified` nodes
+
+`rector.php` enables `$rectorConfig->importNames()`. When rules create nodes with `FullyQualified` types, Rector automatically adds the corresponding `use` statements. There is no need to manually insert imports in rule code.
