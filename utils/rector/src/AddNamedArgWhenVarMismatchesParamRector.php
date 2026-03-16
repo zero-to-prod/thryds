@@ -59,19 +59,12 @@ CODE_SAMPLE
         $parameters = ParametersAcceptorSelector::combineAcceptors($reflection->getVariants())->getParameters();
 
         $hasChanged = false;
+        $namedArgSeen = false;
 
         foreach ($node->args as $position => $arg) {
-            // Skip if already a named argument
+            // Track if we've seen any named argument (pre-existing or just added)
             if ($arg->name !== null) {
-                continue;
-            }
-
-            if (! $arg->value instanceof Variable) {
-                continue;
-            }
-
-            $varName = $this->getName($arg->value);
-            if ($varName === null) {
+                $namedArgSeen = true;
                 continue;
             }
 
@@ -83,13 +76,15 @@ CODE_SAMPLE
 
             $paramName = $paramReflection->getName();
 
-            // No change if variable name matches the parameter name
-            if ($varName === $paramName) {
-                continue;
-            }
+            $isVariable = $arg->value instanceof Variable;
+            $varName = $isVariable ? $this->getName($arg->value) : null;
 
-            $arg->name = new Identifier($paramName);
-            $hasChanged = true;
+            // Add named arg if: variable name mismatches param, or a prior named arg forces it
+            if ($namedArgSeen || ($isVariable && $varName !== null && $varName !== $paramName)) {
+                $arg->name = new Identifier($paramName);
+                $namedArgSeen = true;
+                $hasChanged = true;
+            }
         }
 
         if (! $hasChanged) {

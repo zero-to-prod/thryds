@@ -45,5 +45,18 @@ readonly class WebRoutes
                 );
             },
         );
+
+        // TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value 'scripts' on the appropriate class.
+        $Router->map(
+            'GET',
+            OpcacheStatusRoute::scripts_pattern,
+            static function (): ResponseInterface {
+                $status = opcache_get_status(true);
+
+                return new JsonResponse(
+                    data: array_keys($status['scripts'] ?? []),
+                );
+            },
+        );
     }
 }

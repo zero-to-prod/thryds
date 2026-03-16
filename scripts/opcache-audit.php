@@ -22,7 +22,7 @@ $before = fetchWorkerStatus($base_url);
 warmRoutes($base_url, requests_per_route: 50);
 $after = fetchWorkerStatus($base_url);
 
-$result = opcacheAudit($isDev, $after, $before);
+$result = opcacheAudit($isDev, $base_url, $after, $before);
 echo $result;
 exit(str_contains($result, '[FAIL]') ? 1 : 0);
 
@@ -47,7 +47,7 @@ function fetchWorkerStatus(string $base_url): array|false
     return json_decode($json, true);
 }
 
-function opcacheAudit(bool $isDev, array|false $worker_status, array|false $baseline = false): string
+function opcacheAudit(bool $isDev, string $base_url, array|false $worker_status, array|false $baseline = false): string
 {
     $failures = [];
     $warnings = [];
@@ -150,16 +150,21 @@ function opcacheAudit(bool $isDev, array|false $worker_status, array|false $base
         $cachedScripts = $worker_status['opcache_statistics']['num_cached_scripts'] ?? 0;
         $preloadScripts = count($worker_status['preload_statistics']['scripts'] ?? []);
         if ($cachedScripts > 0) {
-            $nonPreloaded = $cachedScripts - $preloadScripts;
+            // Scripts that are expected to not be preloaded:
+            // blade cache (generated at runtime), dev vendor bootstraps,
+            // $PRELOAD$ internal marker, preload.php itself
+            $expected_non_preloaded = countExpectedNonPreloaded($base_url);
+            $nonPreloaded = $cachedScripts - $preloadScripts - $expected_non_preloaded;
             if ($nonPreloaded > 0 && !empty($preload)) {
                 $warnings[] = sprintf(
-                    '%d scripts cached, but only %d via preload — %d scripts are compiled on first request (add them to preload.php)',
+                    '%d scripts cached, %d via preload, %d expected runtime — %d unexpected scripts not preloaded (run ./run preload:generate)',
                     $cachedScripts,
                     $preloadScripts,
+                    $expected_non_preloaded,
                     $nonPreloaded,
                 );
             } else {
-                $passes[] = sprintf('%d scripts cached (%d via preload)', $cachedScripts, $preloadScripts);
+                $passes[] = sprintf('%d scripts cached (%d via preload, %d expected runtime)', $cachedScripts, $preloadScripts, $expected_non_preloaded);
             }
         } else if (!$isDev) {
             $failures[] = '0 scripts cached — OPcache is not caching anything';
@@ -193,6 +198,43 @@ function opcacheAudit(bool $isDev, array|false $worker_status, array|false $base
     }
 
     return formatReport($failures, $warnings, $passes, $devNotes, $isDev);
+}
+
+/**
+ * Counts scripts that are cached but should not be preloaded:
+ * blade cache (runtime-generated), dev vendor bootstraps,
+ * $PRELOAD$ marker, preload.php itself.
+ */
+function countExpectedNonPreloaded(string $base_url): int
+{
+    $json = @file_get_contents($base_url . '/_opcache/scripts');
+    if ($json === false) {
+        return 0;
+    }
+
+    $scripts = json_decode($json, true);
+    $count = 0;
+
+    foreach ($scripts as $path) {
+        if (str_contains($path, '/var/cache/')
+            || str_contains($path, '/tests/')
+            || str_contains($path, '/utils/')
+            || str_contains($path, '/vendor/phpunit/')
+            || str_contains($path, '/vendor/phpstan/')
+            || str_contains($path, '/vendor/rector/')
+            || str_contains($path, '/vendor/friendsofphp/')
+            || str_contains($path, '/vendor/myclabs/')
+            || str_contains($path, '/vendor/sebastian/')
+            || str_contains($path, '/vendor/theseer/')
+            || str_contains($path, '/vendor/nikic/php-parser/')
+            || $path === '/app/preload.php'
+            || $path === '$PRELOAD$'
+        ) {
+            $count++;
+        }
+    }
+
+    return $count;
 }
 
 function parseBytes(string $value): int

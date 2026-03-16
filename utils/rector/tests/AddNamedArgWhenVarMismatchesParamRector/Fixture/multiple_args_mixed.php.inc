@@ -28,6 +28,6 @@ class LogWriter {
 $LogWriter = new LogWriter();
 $LogEntry = new LogEntry();
 $channel = 'main';
-$LogWriter->write(entry: $LogEntry, $channel);
+$LogWriter->write(entry: $LogEntry, channel: $channel);
 
 ?>

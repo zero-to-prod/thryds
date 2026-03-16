@@ -57,6 +57,7 @@ The `./run` script wraps `docker compose exec php composer` (requires dev server
 - `./run rector` — apply Rector changes
 - `./run rector:check` — preview Rector changes
 - `./run opcache` — audit OPcache config (exits non-zero on failures)
+- `./run preload:generate` — regenerate preload.php from the worker's runtime script list
 
 Fallback when the dev server is not running (slower, starts a new container):
 - `docker compose run --rm composer sh` — run a shell inside a container
@@ -132,15 +133,15 @@ API route handlers can return arrays or `JsonSerializable` objects directly — 
 
 The app is optimized for OPcache. Run `./run opcache` to verify. This exits non-zero on failures.
 
-When adding new PHP files that are loaded on every request (src/ classes, new vendor packages used at runtime):
-- Add them to `preload.php` using `opcache_compile_file()`.
-- Order matters: parent classes/interfaces/traits must appear before classes that extend/use them.
-- After changes, run `./run opcache` to verify nothing is broken.
+`preload.php` is auto-generated at build time (`RUN php scripts/generate-preload.php` in Dockerfile). It boots the app, renders all templates, simulates a request dispatch, then uses `get_included_files()` to discover every script needed at runtime. No manual maintenance required.
+
+- `./run preload:generate` — regenerate locally (for dev/testing)
+- `./run opcache` — verify OPcache config (exits non-zero on failures)
 
 Key config files:
 - `docker/php/opcache.ini` — production settings (preload, no timestamps, JIT)
 - `docker/php/opcache-dev.ini` — dev overrides (timestamps on, no preload)
-- `preload.php` — scripts preloaded into shared memory in production
+- `preload.php` — auto-generated, preloaded into shared memory in production
 
 ## Non-negotiable Design Decisions
 1.
