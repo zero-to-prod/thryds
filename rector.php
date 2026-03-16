@@ -42,6 +42,7 @@ use Utils\Rector\Rector\RenamePropertyToMatchTypeNameRector;
 use Utils\Rector\Rector\RequireMethodAnnotationForDataModelRector;
 use Utils\Rector\Rector\SuggestDuplicateStringConstantRector;
 use Utils\Rector\Rector\SuggestExtractSharedCatchLogicRector;
+use Utils\Rector\Rector\RequireParamTypeRector;
 use Utils\Rector\Rector\RequireReturnTypeRector;
 use Utils\Rector\Rector\UseLogContextConstRector;
 use Zerotoprod\DataModel\DataModel;
@@ -168,6 +169,10 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RequireReturnTypeRector::class, [
         'skipMagicMethods' => true,
         'skipClosures' => false,
+    ]);
+    $rectorConfig->ruleWithConfiguration(RequireParamTypeRector::class, [
+        'skipVariadic' => true,
+        'useDocblocks' => true,
     ]);
     $rectorConfig->rule(SuggestDuplicateStringConstantRector::class);
     $rectorConfig->ruleWithConfiguration(RequireMethodAnnotationForDataModelRector::class, [
