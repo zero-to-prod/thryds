@@ -3,7 +3,7 @@
 declare(strict_types=1);
 $baseDir = dirname(__DIR__);
 
-require $baseDir . '/vendor/autoload.php';
+require $baseDir.'/vendor/autoload.php';
 
 use Illuminate\Container\Container;
 use Jenssegers\Blade\Blade;
@@ -22,8 +22,8 @@ use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 $Config = Config::from([
     Config::appEnv => $_ENV[Config::APP_ENV] ?? AppEnv::Production->value,
-    Config::bladeCacheDir => $baseDir . '/var/cache/blade',
-    Config::templateDir => $baseDir . '/templates',
+    Config::bladeCacheDir => $baseDir.'/var/cache/blade',
+    Config::templateDir => $baseDir.'/templates',
 ]);
 
 $Container = new BladeContainer();
@@ -34,19 +34,21 @@ $ServerRequestInterface = ServerRequestFactory::fromGlobals(server: $_SERVER, qu
 
 $Router = new Router();
 
-$Router->map('GET', '/', fn(): ResponseInterface => new HtmlResponse(html: $Blade->make(view: View::home)->render()));
+$Router->map('GET', '/', fn (): ResponseInterface => new HtmlResponse(html: $Blade->make(view: View::home)->render()));
 
 try {
-    $ResponseInterface = $Router->dispatch(request: $ServerRequestInterface);
+    new SapiEmitter()->emit(response: $Router->dispatch(request: $ServerRequestInterface));
 } catch (HttpException $HttpException) {
-    $HtmlResponse = new HtmlResponse(
-        html: $Blade->make(view: View::error, data: [
-            class_basename(ErrorViewModel::class) => ErrorViewModel::from([
-                ErrorViewModel::message => $HttpException->getMessage(),
-                ErrorViewModel::status_code => $HttpException->getStatusCode(),
-            ]),
-        ])->render(),
-        status: $HttpException->getStatusCode(),
+    new SapiEmitter()->emit(
+        response: new HtmlResponse(
+            html: $Blade->make(view: View::error, data: [
+                class_basename(ErrorViewModel::class) => ErrorViewModel::from([
+                    ErrorViewModel::message => $HttpException->getMessage(),
+                    ErrorViewModel::status_code => $HttpException->getStatusCode(),
+                ]),
+            ])->render(),
+            status: $HttpException->getStatusCode(),
+        )
     );
 } catch (Throwable $Throwable) {
     Log::error($Throwable->getMessage(), [
@@ -55,10 +57,17 @@ try {
         Log::file => $Throwable->getFile(),
         Log::line => $Throwable->getLine(),
     ]);
-    $HtmlResponse = new HtmlResponse(
-        html: $Blade->make(view: View::error, data: [class_basename(ErrorViewModel::class) => ErrorViewModel::from([ErrorViewModel::status_code => 500, ErrorViewModel::message => $Config->isProduction() ? 'Internal Server Error' : $Throwable->getMessage()])])->render(),
-        status: 500,
+    new SapiEmitter()->emit(
+        response: new HtmlResponse(
+            html: $Blade->make(view: View::error, data: [
+                class_basename(ErrorViewModel::class) => ErrorViewModel::from(
+                    [
+                        ErrorViewModel::status_code => 500,
+                        ErrorViewModel::message => $Config->isProduction() ? 'Internal Server Error' : $Throwable->getMessage()
+                    ]
+                )
+            ])->render(),
+            status: 500,
+        )
     );
 }
-
-new SapiEmitter()->emit(response: $ResponseInterface);
