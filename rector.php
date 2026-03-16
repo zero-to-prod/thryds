@@ -86,7 +86,16 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(ForbidMagicStringArrayKeyRector::class, [
         Log::class,
     ]);
-    $rectorConfig->rule(SuggestEnumForStringPropertyRector::class);
+    $rectorConfig->ruleWithConfiguration(SuggestEnumForStringPropertyRector::class, [
+        'dataModelTraits' => [
+            DataModel::class,
+            \ZeroToProd\Thryds\Helpers\DataModel::class,
+        ],
+        'describeAttrs' => [
+            Describe::class,
+            \ZeroToProd\Thryds\Helpers\Describe::class,
+        ],
+    ]);
     $rectorConfig->ruleWithConfiguration(ExtractRepeatedExpressionToVariableRector::class, [
         'dirname',
     ]);
@@ -156,7 +165,12 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->rule(ForbidGlobalKeywordRector::class);
     $rectorConfig->rule(SuggestExtractSharedCatchLogicRector::class);
     $rectorConfig->rule(SuggestDuplicateStringConstantRector::class);
-    $rectorConfig->rule(RequireMethodAnnotationForDataModelRector::class);
+    $rectorConfig->ruleWithConfiguration(RequireMethodAnnotationForDataModelRector::class, [
+        'dataModelTraits' => [
+            DataModel::class,
+            \ZeroToProd\Thryds\Helpers\DataModel::class,
+        ],
+    ]);
     $rectorConfig->ruleWithConfiguration(ReplaceFullyQualifiedNameRector::class, [
         DataModel::class => \ZeroToProd\Thryds\Helpers\DataModel::class,
         Describe::class => \ZeroToProd\Thryds\Helpers\Describe::class,

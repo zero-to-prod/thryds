@@ -19,8 +19,8 @@ class UserProfile
 
 namespace Test;
 
-use ZeroToProd\Thryds\Helpers\DataModel;
-use ZeroToProd\Thryds\Helpers\Describe;
+use Fixture\Helpers\DataModel;
+use Fixture\Helpers\Describe;
 
 class UserProfile
 {

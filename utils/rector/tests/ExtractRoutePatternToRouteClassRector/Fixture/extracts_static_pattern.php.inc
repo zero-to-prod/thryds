@@ -6,6 +6,6 @@ $Router->map('GET', '/about', $handler);
 -----
 <?php
 
-$Router->map('GET', \ZeroToProd\Thryds\Routes\AboutRoute::pattern, $handler);
+$Router->map('GET', \Fixture\Routes\AboutRoute::pattern, $handler);
 
 ?>

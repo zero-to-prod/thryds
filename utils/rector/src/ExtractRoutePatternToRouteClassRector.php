@@ -44,12 +44,12 @@ final class ExtractRoutePatternToRouteClassRector extends AbstractRector impleme
 $Router->map('GET', '/posts/{post}', $handler);
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-$Router->map('GET', \ZeroToProd\Thryds\Routes\PostsRoute::pattern, $handler);
+$Router->map('GET', \App\Routes\PostsRoute::pattern, $handler);
 CODE_SAMPLE,
                     [
                         'methods' => ['map'],
                         'argPosition' => 1,
-                        'namespace' => 'ZeroToProd\\Thryds\\Routes',
+                        'namespace' => 'App\\Routes',
                         'outputDir' => __DIR__ . '/src/Routes',
                     ]
                 ),

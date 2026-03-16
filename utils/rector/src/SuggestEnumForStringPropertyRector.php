@@ -21,21 +21,18 @@ use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Property;
 use PHPStan\Reflection\ReflectionProvider;
+use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Rector\AbstractRector;
-use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
+use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-final class SuggestEnumForStringPropertyRector extends AbstractRector
+final class SuggestEnumForStringPropertyRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    private const DATAMODEL_TRAITS = [
-        'Zerotoprod\DataModel\DataModel',
-        'ZeroToProd\Thryds\Helpers\DataModel',
-    ];
+    /** @var string[] */
+    private array $dataModelTraits = [];
 
-    private const DESCRIBE_ATTRS = [
-        'Zerotoprod\DataModel\Describe',
-        'ZeroToProd\Thryds\Helpers\Describe',
-    ];
+    /** @var string[] */
+    private array $describeAttrs = [];
 
     private const TODO_MARKER = '[SuggestEnumForStringPropertyRector]';
     private const CALL_SITE_MARKER = '[SuggestEnumForStringPropertyRector]';
@@ -44,12 +41,18 @@ final class SuggestEnumForStringPropertyRector extends AbstractRector
         private readonly ReflectionProvider $reflectionProvider,
     ) {}
 
+    public function configure(array $configuration): void
+    {
+        $this->dataModelTraits = $configuration['dataModelTraits'] ?? [];
+        $this->describeAttrs = $configuration['describeAttrs'] ?? [];
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
             'Detect string properties on DataModel classes that should likely be enums, and add a TODO comment with detected values',
             [
-                new CodeSample(
+                new ConfiguredCodeSample(
                     <<<'CODE_SAMPLE'
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
@@ -74,7 +77,11 @@ class Config
     #[Describe(['default' => 'production'])]
     public string $appEnv;
 }
-CODE_SAMPLE
+CODE_SAMPLE,
+                    [
+                        'dataModelTraits' => ['Zerotoprod\DataModel\DataModel'],
+                        'describeAttrs' => ['Zerotoprod\DataModel\Describe'],
+                    ]
                 ),
             ]
         );
@@ -90,6 +97,10 @@ CODE_SAMPLE
 
     public function refactor(Node $node): ?Node
     {
+        if ($this->dataModelTraits === []) {
+            return null;
+        }
+
         if ($node instanceof StaticCall) {
             return $this->refactorStaticCall($node);
         }
@@ -158,8 +169,15 @@ CODE_SAMPLE
 
         $classReflection = $this->reflectionProvider->getClass($className);
 
-        if (!$classReflection->hasTraitUse('Zerotoprod\DataModel\DataModel')
-            && !$classReflection->hasTraitUse('ZeroToProd\Thryds\Helpers\DataModel')) {
+        $usesDataModel = false;
+        foreach ($this->dataModelTraits as $trait) {
+            if ($classReflection->hasTraitUse($trait)) {
+                $usesDataModel = true;
+                break;
+            }
+        }
+
+        if (!$usesDataModel) {
             return null;
         }
 
@@ -294,7 +312,7 @@ CODE_SAMPLE
         foreach ($node->getTraitUses() as $traitUse) {
             foreach ($traitUse->traits as $trait) {
                 $traitName = $this->getName($trait);
-                if (in_array($traitName, self::DATAMODEL_TRAITS, true)) {
+                if (in_array($traitName, $this->dataModelTraits, true)) {
                     return true;
                 }
             }
@@ -359,7 +377,7 @@ CODE_SAMPLE
         foreach ($property->attrGroups as $attrGroup) {
             foreach ($attrGroup->attrs as $attr) {
                 $attrName = $this->getName($attr->name);
-                if (!in_array($attrName, self::DESCRIBE_ATTRS, true)) {
+                if (!in_array($attrName, $this->describeAttrs, true)) {
                     continue;
                 }
 

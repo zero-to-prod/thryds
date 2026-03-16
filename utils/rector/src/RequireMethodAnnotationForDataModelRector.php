@@ -9,28 +9,33 @@ use PhpParser\Node;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Property;
 use PHPStan\Reflection\ReflectionProvider;
+use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Rector\AbstractRector;
-use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
+use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-final class RequireMethodAnnotationForDataModelRector extends AbstractRector
+final class RequireMethodAnnotationForDataModelRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    private const DATAMODEL_TRAITS = [
-        'Zerotoprod\DataModel\DataModel',
-        'ZeroToProd\Thryds\Helpers\DataModel',
-    ];
+    /** @var string[] */
+    private array $dataModelTraits = [];
+
     private const DESCRIBE_ATTRIBUTE = 'Describe';
 
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,
     ) {}
 
+    public function configure(array $configuration): void
+    {
+        $this->dataModelTraits = $configuration['dataModelTraits'] ?? [];
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
             'Add @method static self from() PHPDoc annotation to classes using the DataModel trait',
             [
-                new CodeSample(
+                new ConfiguredCodeSample(
                     <<<'CODE_SAMPLE'
 use Zerotoprod\DataModel\DataModel;
 
@@ -55,7 +60,10 @@ class UserProfile
     public string $username;
     public int $age;
 }
-CODE_SAMPLE
+CODE_SAMPLE,
+                    [
+                        'dataModelTraits' => ['Zerotoprod\DataModel\DataModel'],
+                    ]
                 ),
             ]
         );
@@ -74,6 +82,10 @@ CODE_SAMPLE
      */
     public function refactor(Node $node): ?Node
     {
+        if ($this->dataModelTraits === []) {
+            return null;
+        }
+
         if (!$this->usesDataModelTrait($node)) {
             return null;
         }
@@ -129,7 +141,7 @@ CODE_SAMPLE
         $className = $this->getName($node);
         if ($className !== null && $this->reflectionProvider->hasClass($className)) {
             $classReflection = $this->reflectionProvider->getClass($className);
-            foreach (self::DATAMODEL_TRAITS as $trait) {
+            foreach ($this->dataModelTraits as $trait) {
                 if ($classReflection->hasTraitUse($trait)) {
                     return true;
                 }
@@ -139,7 +151,7 @@ CODE_SAMPLE
         foreach ($node->getTraitUses() as $traitUse) {
             foreach ($traitUse->traits as $trait) {
                 $traitName = $this->getName($trait);
-                if (in_array($traitName, self::DATAMODEL_TRAITS, true)) {
+                if (in_array($traitName, $this->dataModelTraits, true)) {
                     return true;
                 }
             }

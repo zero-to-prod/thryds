@@ -6,5 +6,7 @@ use Rector\Config\RectorConfig;
 use Utils\Rector\Rector\RequireMethodAnnotationForDataModelRector;
 
 return static function (RectorConfig $rectorConfig): void {
-    $rectorConfig->rule(RequireMethodAnnotationForDataModelRector::class);
+    $rectorConfig->ruleWithConfiguration(RequireMethodAnnotationForDataModelRector::class, [
+        'dataModelTraits' => ['Zerotoprod\DataModel\DataModel'],
+    ]);
 };

@@ -15,7 +15,7 @@ class Config
 
 namespace Test;
 
-use ZeroToProd\Thryds\Helpers\DataModel;
+use Fixture\Helpers\DataModel;
 
 class Config
 {

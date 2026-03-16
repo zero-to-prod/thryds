@@ -22,7 +22,7 @@ final class FrankenPhpLogToLogClassRector extends AbstractRector implements Conf
     /** @var string[] */
     private array $functions = ['frankenphp_log'];
 
-    private string $logClass = 'ZeroToProd\\Thryds\\Log';
+    private string $logClass = '';
 
     /** @var array<int, string> */
     private const LEVEL_METHOD_MAP = [
@@ -46,11 +46,11 @@ final class FrankenPhpLogToLogClassRector extends AbstractRector implements Conf
 frankenphp_log('message', 4, ['key' => 'value']);
 CODE_SAMPLE,
                 <<<'CODE_SAMPLE'
-\ZeroToProd\Thryds\Log::warn('message', ['key' => 'value']);
+\App\Log::warn('message', ['key' => 'value']);
 CODE_SAMPLE,
                 [
                     'functions' => ['frankenphp_log'],
-                    'logClass' => 'ZeroToProd\\Thryds\\Log',
+                    'logClass' => 'App\\Log',
                 ]
             ),
         ]);
@@ -66,6 +66,10 @@ CODE_SAMPLE,
      */
     public function refactor(Node $node): ?Node
     {
+        if ($this->logClass === '') {
+            return null;
+        }
+
         if (! $this->isNames($node, $this->functions)) {
             return null;
         }

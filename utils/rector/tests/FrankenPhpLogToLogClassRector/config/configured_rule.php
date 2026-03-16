@@ -8,6 +8,6 @@ use Utils\Rector\Rector\FrankenPhpLogToLogClassRector;
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(FrankenPhpLogToLogClassRector::class, [
         'functions' => ['frankenphp_log', 'error_log'],
-        'logClass' => 'ZeroToProd\\Thryds\\Log',
+        'logClass' => 'Fixture\\Log',
     ]);
 };

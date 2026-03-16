@@ -6,5 +6,8 @@ use Rector\Config\RectorConfig;
 use Utils\Rector\Rector\SuggestEnumForStringPropertyRector;
 
 return static function (RectorConfig $rectorConfig): void {
-    $rectorConfig->rule(SuggestEnumForStringPropertyRector::class);
+    $rectorConfig->ruleWithConfiguration(SuggestEnumForStringPropertyRector::class, [
+        'dataModelTraits' => ['Zerotoprod\DataModel\DataModel'],
+        'describeAttrs' => ['Zerotoprod\DataModel\Describe'],
+    ]);
 };

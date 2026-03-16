@@ -38,7 +38,7 @@ class Config
 }
 CODE_SAMPLE,
                 <<<'CODE_SAMPLE'
-use ZeroToProd\Thryds\Helpers\DataModel;
+use App\Helpers\DataModel;
 
 class Config
 {
@@ -46,7 +46,7 @@ class Config
 }
 CODE_SAMPLE,
                 [
-                    'Zerotoprod\DataModel\DataModel' => 'ZeroToProd\Thryds\Helpers\DataModel',
+                    'Zerotoprod\DataModel\DataModel' => 'App\Helpers\DataModel',
                 ]
             ),
         ]);

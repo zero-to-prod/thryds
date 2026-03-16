@@ -9,7 +9,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(ExtractRoutePatternToRouteClassRector::class, [
         'methods' => ['map'],
         'argPosition' => 1,
-        'namespace' => 'ZeroToProd\\Thryds\\Routes',
+        'namespace' => 'Fixture\\Routes',
         'outputDir' => sys_get_temp_dir(),
     ]);
 };

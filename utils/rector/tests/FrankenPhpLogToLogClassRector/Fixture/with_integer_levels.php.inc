@@ -10,10 +10,10 @@ frankenphp_log('default level');
 -----
 <?php
 
-\ZeroToProd\Thryds\Log::warn('Hello World!', ['key' => 'value']);
-\ZeroToProd\Thryds\Log::debug('debug');
-\ZeroToProd\Thryds\Log::info('info');
-\ZeroToProd\Thryds\Log::error('error', ['error' => 'details']);
-\ZeroToProd\Thryds\Log::info('default level');
+\Fixture\Log::warn('Hello World!', ['key' => 'value']);
+\Fixture\Log::debug('debug');
+\Fixture\Log::info('info');
+\Fixture\Log::error('error', ['error' => 'details']);
+\Fixture\Log::info('default level');
 
 ?>
