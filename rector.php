@@ -37,6 +37,7 @@ use Utils\Rector\Rector\RenameVarToMatchReturnTypeRector;
 use Utils\Rector\Rector\ReplaceFullyQualifiedNameRector;
 use Utils\Rector\Rector\RequireLogEventRector;
 use Utils\Rector\Rector\RequireMethodAnnotationForDataModelRector;
+use Utils\Rector\Rector\RequireAllRouteCasesRegisteredRector;
 use Utils\Rector\Rector\RequireNamedArgForBoolParamRector;
 use Utils\Rector\Rector\ForbidHardcodedRouteStringRector;
 use Utils\Rector\Rector\RequireRouteEnumInMapCallRector;
@@ -282,5 +283,13 @@ return static function (RectorConfig $rectorConfig): void {
         'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
         'mode' => 'warn',
         'message' => "TODO: [ForbidHardcodedRouteStringRector] Use Route::%s->value instead of hardcoded '%s'.",
+    ]);
+    $rectorConfig->ruleWithConfiguration(RequireAllRouteCasesRegisteredRector::class, [
+        'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
+        'methods' => ['map'],
+        'argPosition' => 1,
+        'scanDir' => __DIR__ . '/src',
+        'mode' => 'warn',
+        'message' => "TODO: [RequireAllRouteCasesRegisteredRector] Route case '%s' is defined but never registered in any router map() call.",
     ]);
 };
