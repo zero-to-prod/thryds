@@ -1,8 +1,9 @@
 <?php
 
 declare(strict_types=1);
+$baseDir = dirname(__DIR__);
 
-require dirname(__DIR__) . '/vendor/autoload.php';
+require $baseDir . '/vendor/autoload.php';
 
 use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\ServerRequestFactory;
@@ -11,18 +12,19 @@ use League\Route\Router;
 use Psr\Http\Message\ResponseInterface;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
+use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Config;
 
 $Config = Config::from([
-    Config::appEnv => $_ENV['APP_ENV'] ?? 'production',
-    Config::twigCacheDir => dirname(__DIR__) . '/var/cache/twig',
-    Config::templateDir => dirname(__DIR__) . '/templates',
+    Config::appEnv => $_ENV[Config::APP_ENV] ?? AppEnv::Production->value,
+    Config::twigCacheDir => $baseDir . '/var/cache/twig',
+    Config::templateDir => $baseDir . '/templates',
 ]);
 
 $FilesystemLoader = new FilesystemLoader(paths: $Config->templateDir);
 $Environment = new Environment(loader: $FilesystemLoader, options: [
-    'cache' => $Config->twigCacheDir,
-    'auto_reload' => !$Config->isProduction,
+    Config::TWIG_CACHE => $Config->twigCacheDir,
+    Config::TWIG_AUTO_RELOAD => !$Config->isProduction,
 ]);
 
 $ServerRequestInterface = ServerRequestFactory::fromGlobals(server: $_SERVER, query: $_GET, body: $_POST, cookies: $_COOKIE, files: $_FILES);

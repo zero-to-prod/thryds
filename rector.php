@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Zerotoprod\DataModel\DataModel;
+use Zerotoprod\DataModel\Describe;
 use ZeroToProd\Thryds\Log;
 use Rector\Config\RectorConfig;
 use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
@@ -13,6 +15,9 @@ use Utils\Rector\Rector\AddNamedArgWhenVarMismatchesParamRector;
 use Utils\Rector\Rector\RenameParamToMatchTypeNameRector;
 use Utils\Rector\Rector\RenameVarToMatchReturnTypeRector;
 use Utils\Rector\Rector\ReplaceFullyQualifiedNameRector;
+use Utils\Rector\Rector\ExtractRepeatedExpressionToVariableRector;
+use Utils\Rector\Rector\ForbidMagicStringArrayKeyRector;
+use Utils\Rector\Rector\SuggestEnumForStringPropertyRector;
 use Utils\Rector\Rector\UseClassConstArrayKeyForDataModelRector;
 
 return static function (RectorConfig $rectorConfig): void {
@@ -20,6 +25,7 @@ return static function (RectorConfig $rectorConfig): void {
         __DIR__ . '/src',
         __DIR__ . '/public',
     ]);
+    $rectorConfig->importNames();
     $rectorConfig->ruleWithConfiguration(ForbiddenFuncCallRector::class, [
         'error_log',
     ]);
@@ -34,8 +40,13 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->rule(RemoveUnusedPublicMethodParameterRector::class);
     $rectorConfig->rule(UseClassConstArrayKeyForDataModelRector::class);
     $rectorConfig->rule(StringClassNameToClassConstantRector::class);
+    $rectorConfig->rule(ForbidMagicStringArrayKeyRector::class);
+    $rectorConfig->rule(SuggestEnumForStringPropertyRector::class);
+    $rectorConfig->ruleWithConfiguration(ExtractRepeatedExpressionToVariableRector::class, [
+        'dirname',
+    ]);
     $rectorConfig->ruleWithConfiguration(ReplaceFullyQualifiedNameRector::class, [
-        \Zerotoprod\DataModel\DataModel::class => \ZeroToProd\Thryds\Helpers\DataModel::class,
-        \Zerotoprod\DataModel\Describe::class => \ZeroToProd\Thryds\Helpers\Describe::class,
+        DataModel::class => \ZeroToProd\Thryds\Helpers\DataModel::class,
+        Describe::class => \ZeroToProd\Thryds\Helpers\Describe::class,
     ]);
 };

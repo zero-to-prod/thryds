@@ -4,17 +4,22 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
-use Zerotoprod\DataModel\Describe;
 use ZeroToProd\Thryds\Helpers\DataModel;
+use ZeroToProd\Thryds\Helpers\Describe;
 
 readonly class Config
 {
     use DataModel;
 
+    public const string APP_ENV = 'APP_ENV';
+    public const string TWIG_CACHE = 'cache';
+    public const string TWIG_AUTO_RELOAD = 'auto_reload';
+
     /** @see $appEnv */
     public const string appEnv = 'appEnv';
-    #[Describe(['default' => 'production'])]
-    public string $appEnv;
+    #[Describe([Describe::default => AppEnv::Production])]
+    public AppEnv $appEnv;
+
     /** @see $twigCacheDir */
     public const string twigCacheDir = 'twigCacheDir';
     /** @see $templateDir */
@@ -22,17 +27,17 @@ readonly class Config
     /** @see $isProduction */
     public const string isProduction = 'isProduction';
 
-    #[Describe(['default' => '/app/var/cache/twig'])]
+    #[Describe([Describe::default => '/app/var/cache/twig'])]
     public string $twigCacheDir;
 
-    #[Describe(['default' => '/app/templates'])]
+    #[Describe([Describe::default => '/app/templates'])]
     public string $templateDir;
 
-    #[Describe(['cast' => [self::class, 'isProduction']])]
+    #[Describe([Describe::cast => [self::class, 'isProduction']])]
     public bool $isProduction;
 
     public static function isProduction(mixed $value, array $context): bool
     {
-        return ($context['appEnv'] ?? 'production') === 'production';
+        return ($context[self::appEnv] ?? AppEnv::Production->value) === AppEnv::Production->value;
     }
 }
