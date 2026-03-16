@@ -37,28 +37,20 @@ readonly class WebRoutes
         $Router->map(
             HTTP_METHOD::GET->value,
             Route::opcache_status->value,
-            static function (): ResponseInterface {
-                $status = opcache_get_status(false);
-
-                return new JsonResponse(
-                    data: json_decode(
-                        json_encode(value: $status, flags: JSON_PARTIAL_OUTPUT_ON_ERROR),
-                        associative: true,
-                    ),
-                );
-            },
+            static fn(): ResponseInterface => new JsonResponse(
+                data: json_decode(
+                    json_encode(value: opcache_get_status(false), flags: JSON_PARTIAL_OUTPUT_ON_ERROR),
+                    associative: true,
+                ),
+            ),
         );
 
         $Router->map(
             HTTP_METHOD::GET->value,
             Route::opcache_scripts->value,
-            static function (): ResponseInterface {
-                $status = opcache_get_status(true);
-
-                return new JsonResponse(
-                    data: array_keys($status[WebRoutes::scripts] ?? []),
-                );
-            },
+            static fn(): ResponseInterface => new JsonResponse(
+                data: array_keys(opcache_get_status(true)[WebRoutes::scripts] ?? []),
+            ),
         );
     }
 }

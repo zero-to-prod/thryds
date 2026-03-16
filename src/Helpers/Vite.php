@@ -58,9 +58,7 @@ readonly class Vite
 
     private function productionTags(string $entry): string
     {
-        $manifest_file = $this->baseDir . self::MANIFEST_PATH;
-        $manifest = json_decode(file_get_contents(filename: $manifest_file), associative: true);
-        $chunk = $manifest[$entry] ?? null;
+        $chunk = json_decode(file_get_contents(filename: $this->baseDir . self::MANIFEST_PATH), associative: true)[$entry] ?? null;
 
         if ($chunk === null) {
             return '';

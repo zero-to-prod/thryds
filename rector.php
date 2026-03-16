@@ -10,6 +10,7 @@ use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Utils\Rector\Rector\AddViewKeyConstantRector;
 use Utils\Rector\Rector\AddNamedArgWhenVarMismatchesParamRector;
 use Utils\Rector\Rector\ExtractRepeatedExpressionToVariableRector;
+use Utils\Rector\Rector\InlineSingleUseVariableRector;
 use Utils\Rector\Rector\ForbidArrayShapeReturnRector;
 use Utils\Rector\Rector\ForbidCallableTypeVariableNameRector;
 use Utils\Rector\Rector\ForbidDeepNestingRector;
@@ -139,6 +140,9 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
     $rectorConfig->ruleWithConfiguration(ExtractRepeatedExpressionToVariableRector::class, [
         'functions' => ['dirname'],
+        'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(InlineSingleUseVariableRector::class, [
         'mode' => 'auto',
     ]);
     $rectorConfig->ruleWithConfiguration(StringArgToClassConstRector::class, [

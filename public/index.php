@@ -41,10 +41,8 @@ $Blade->if('env', fn(string ...$environments): bool => in_array($Config->APP_ENV
 $Vite = new Vite($Config, baseDir: $base_dir, entry_css: [
     Vite::app_entry => [Vite::app_css],
 ]);
-$vite_php = $Vite->directivePhp(Vite::app_entry);
-$Blade->directive('vite', static fn(): string => $vite_php);
-$htmx_php = $Vite->directivePhp(Vite::htmx_entry);
-$Blade->directive('htmx', static fn(): string => $htmx_php);
+$Blade->directive('vite', static fn(): string => $Vite->directivePhp(Vite::app_entry));
+$Blade->directive('htmx', static fn(): string => $Vite->directivePhp(Vite::htmx_entry));
 
 $Router = new CachedRouter(
     builder: static function (Router $Router) use ($Blade): Router {
@@ -71,12 +69,9 @@ $emit_error_page = static function (string $message, int $status_code) use ($Bla
 // Request handler — called for each incoming request
 $handler = static function () use ($Router, $Config, $emit_error_page): void {
     $ServerRequestInterface = ServerRequestFactory::fromGlobals(server: $_SERVER, query: $_GET, body: $_POST, cookies: $_COOKIE, files: $_FILES);
-    $request_id = RequestId::init($ServerRequestInterface);
-    $SapiEmitter = new SapiEmitter();
 
     try {
-        $ResponseInterface = $Router->dispatch(request: $ServerRequestInterface);
-        $SapiEmitter->emit(response: $ResponseInterface->withHeader(RequestId::header, value: $request_id));
+        new SapiEmitter()->emit(response: $Router->dispatch(request: $ServerRequestInterface)->withHeader(RequestId::header, value: RequestId::init($ServerRequestInterface)));
     } catch (HttpException $HttpException) {
         $emit_error_page($HttpException->getMessage(), $HttpException->getStatusCode());
     } catch (Throwable $Throwable) {
