@@ -96,14 +96,18 @@ CODE_SAMPLE,
      */
     public function refactor(Node $node): ?Node
     {
-        $className = $this->getName($node);
-        if ($className === null) {
+        $shortName = $this->getName($node);
+        if ($shortName === null) {
             return null;
         }
 
-        if (!str_ends_with($className, $this->classSuffix)) {
+        if (!str_ends_with($shortName, $this->classSuffix)) {
             return null;
         }
+
+        $className = $node->namespacedName !== null
+            ? $node->namespacedName->toString()
+            : $shortName;
 
         $changed = false;
 
@@ -196,14 +200,19 @@ CODE_SAMPLE,
 
     private function extractPatternsFromContents(string $contents): void
     {
-        // Find classes ending with the configured suffix
         if (!preg_match('/\bclass\s+(\w+' . preg_quote($this->classSuffix, '/') . ')\b/', $contents, $classMatch)) {
             return;
         }
 
-        $className = $classMatch[1];
+        $shortName = $classMatch[1];
 
-        // Find matching const declarations
+        $namespace = '';
+        if (preg_match('/\bnamespace\s+([\w\\\\]+)\s*;/', $contents, $nsMatch)) {
+            $namespace = $nsMatch[1];
+        }
+
+        $className = $namespace !== '' ? $namespace . '\\' . $shortName : $shortName;
+
         foreach ($this->constNames as $constName) {
             $pattern = '/\bconst\b[^;]*\b' . preg_quote($constName, '/') . '\s*=\s*[\'"]([^\'"]*)[\'"]\\s*;/';
             if (preg_match($pattern, $contents, $constMatch)) {
