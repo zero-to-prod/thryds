@@ -14,7 +14,7 @@ readonly class Config
     public const string APP_ENV = 'APP_ENV';
     /** @see $appEnv */
     public const string appEnv = 'appEnv';
-    #[Describe([Describe::default => AppEnv::Production])]
+    #[Describe([Describe::default => AppEnv::production])]
     public AppEnv $appEnv;
 
     /** @see $bladeCacheDir */
@@ -30,6 +30,6 @@ readonly class Config
 
     public function isProduction(): bool
     {
-        return $this->appEnv === AppEnv::Production;
+        return $this->appEnv === AppEnv::production;
     }
 }

@@ -14,18 +14,21 @@ final class ConfigIsProductionTest extends TestCase
     #[Test]
     public function trueWhenAppEnvIsProduction(): void
     {
-        $this->assertTrue(Config::isProduction(null, [Config::appEnv => AppEnv::Production->value]));
+        $Config = Config::from([Config::appEnv => AppEnv::production->value]);
+        $this->assertTrue($Config->isProduction());
     }
 
     #[Test]
     public function trueWhenAppEnvIsMissing(): void
     {
-        $this->assertTrue(Config::isProduction(null, []));
+        $Config = Config::from([Config::appEnv => AppEnv::production->value]);
+        $this->assertTrue($Config->isProduction());
     }
 
     #[Test]
     public function falseWhenAppEnvIsNotProduction(): void
     {
-        $this->assertFalse(Config::isProduction(null, [Config::appEnv => 'development']));
+        $Config = Config::from([Config::appEnv => AppEnv::development->value]);
+        $this->assertFalse($Config->isProduction());
     }
 }

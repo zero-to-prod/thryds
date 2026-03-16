@@ -20,6 +20,7 @@ use Utils\Rector\Rector\StringArgToClassConstRector;
 use Utils\Rector\Rector\SuggestEnumForStringPropertyRector;
 use Utils\Rector\Rector\UseClassConstArrayKeyForDataModelRector;
 use Utils\Rector\Rector\RequireLogEventRector;
+use Utils\Rector\Rector\RenameEnumCaseToMatchValueRector;
 use Utils\Rector\Rector\UseLogContextConstRector;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
@@ -30,6 +31,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->paths([
         __DIR__ . '/src',
         __DIR__ . '/public',
+        __DIR__ . '/tests',
     ]);
     $rectorConfig->importNames();
     $rectorConfig->ruleWithConfiguration(ForbiddenFuncCallRector::class, [
@@ -69,6 +71,7 @@ return static function (RectorConfig $rectorConfig): void {
         ],
     ]);
     $rectorConfig->rule(MakeClassReadonlyRector::class);
+    $rectorConfig->rule(RenameEnumCaseToMatchValueRector::class);
     $rectorConfig->ruleWithConfiguration(MigrateArrayToDataModelRector::class, [
         [
             'methodName' => 'make',

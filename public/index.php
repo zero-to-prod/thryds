@@ -13,15 +13,15 @@ use Laminas\Diactoros\ServerRequestFactory;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use League\Route\Http\Exception as HttpException;
 use League\Route\Router;
-use Psr\Http\Message\ResponseInterface;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Helpers\View;
 use ZeroToProd\Thryds\Log;
+use ZeroToProd\Thryds\Routes\WebRoutes;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 $Config = Config::from([
-    Config::appEnv => $_ENV[Config::APP_ENV] ?? AppEnv::Production->value,
+    Config::appEnv => $_ENV[Config::APP_ENV] ?? AppEnv::production->value,
     Config::bladeCacheDir => $baseDir . '/var/cache/blade',
     Config::templateDir => $baseDir . '/templates',
 ]);
@@ -34,7 +34,7 @@ $ServerRequestInterface = ServerRequestFactory::fromGlobals(server: $_SERVER, qu
 
 $Router = new Router();
 
-$Router->map('GET', '/', fn(): ResponseInterface => new HtmlResponse(html: $Blade->make(view: View::home)->render()));
+WebRoutes::register(Router: $Router, Blade: $Blade);
 
 try {
     new SapiEmitter()->emit(response: $Router->dispatch(request: $ServerRequestInterface));

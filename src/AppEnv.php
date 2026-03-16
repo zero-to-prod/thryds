@@ -6,5 +6,6 @@ namespace ZeroToProd\Thryds;
 
 enum AppEnv: string
 {
-    case Production = 'production';
+    case production = 'production';
+    case development = 'development';
 }
