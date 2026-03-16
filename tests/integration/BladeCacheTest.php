@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Tests\Integration;
 
+use ZeroToProd\Thryds\Helpers\View;
 use Illuminate\Container\Container;
 use Jenssegers\Blade\Blade;
 use Jenssegers\Blade\Container as BladeContainer;
@@ -26,7 +27,7 @@ final class BladeCacheTest extends TestCase
     {
         // Clean up cached files
         foreach (glob($this->cache_dir . '/*.php') as $file) {
-            unlink($file);
+            unlink(filename: $file);
         }
         rmdir($this->cache_dir);
     }
@@ -40,10 +41,10 @@ final class BladeCacheTest extends TestCase
 
         $this->assertSame([], glob($this->cache_dir . '/*.php'), 'Cache dir should start empty');
 
-        $Blade->make(view: 'home')->render();
+        $Blade->make(view: View::home)->render();
         $cached_files = glob($this->cache_dir . '/*.php');
 
-        $this->assertNotEmpty($cached_files, 'Compiled templates should be written to cache dir');
+        $this->assertNotEmpty(actual: $cached_files, message: 'Compiled templates should be written to cache dir');
     }
 
     #[Test]
@@ -54,25 +55,25 @@ final class BladeCacheTest extends TestCase
         $Blade = new Blade(viewPaths: $this->template_dir, cachePath: $this->cache_dir, container: $Container);
 
         // First render — compiles and caches
-        $first_html = $Blade->make(view: 'home')->render();
+        $first_html = $Blade->make(view: View::home)->render();
         $cached_files = glob($this->cache_dir . '/*.php');
         $mtimes = [];
         foreach ($cached_files as $file) {
-            $mtimes[$file] = filemtime($file);
+            $mtimes[$file] = filemtime(filename: $file);
         }
 
         // Ensure filesystem timestamp granularity (1 second)
         sleep(1);
 
         // Second render — should reuse cached files
-        $second_html = $Blade->make(view: 'home')->render();
+        $second_html = $Blade->make(view: View::home)->render();
 
-        $this->assertSame($first_html, $second_html, 'Output should be identical');
+        $this->assertSame(expected: $first_html, actual: $second_html, message: 'Output should be identical');
 
         foreach ($cached_files as $file) {
             $this->assertSame(
                 $mtimes[$file],
-                filemtime($file),
+                filemtime(filename: $file),
                 "Cached file should not be recompiled: $file",
             );
         }
