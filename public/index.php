@@ -20,6 +20,7 @@ use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Helpers\View;
 use ZeroToProd\Thryds\Helpers\Vite;
 use ZeroToProd\Thryds\Log;
+use ZeroToProd\Thryds\RequestId;
 use ZeroToProd\Thryds\Routes\WebRoutes;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
@@ -53,7 +54,6 @@ $Router = new CachedRouter(
     cache: new FileCache(cacheFilePath: $base_dir . '/var/cache/route.cache', ttl: 86400),
     cacheEnabled: $Config->isProduction(),
 );
-
 $emit_error_page = static function (string $message, int $status_code) use ($Blade): void {
     new SapiEmitter()->emit(
         response: new HtmlResponse(
@@ -71,9 +71,12 @@ $emit_error_page = static function (string $message, int $status_code) use ($Bla
 // Request handler — called for each incoming request
 $handler = static function () use ($Router, $Config, $emit_error_page): void {
     $ServerRequestInterface = ServerRequestFactory::fromGlobals(server: $_SERVER, query: $_GET, body: $_POST, cookies: $_COOKIE, files: $_FILES);
+    $request_id = RequestId::init($ServerRequestInterface);
+    $SapiEmitter = new SapiEmitter();
 
     try {
-        new SapiEmitter()->emit(response: $Router->dispatch(request: $ServerRequestInterface));
+        $ResponseInterface = $Router->dispatch(request: $ServerRequestInterface);
+        $SapiEmitter->emit(response: $ResponseInterface->withHeader(RequestId::header, value: $request_id));
     } catch (HttpException $HttpException) {
         $emit_error_page($HttpException->getMessage(), $HttpException->getStatusCode());
     } catch (Throwable $Throwable) {
@@ -87,6 +90,8 @@ $handler = static function () use ($Router, $Config, $emit_error_page): void {
             $Config->isProduction() ? 'Internal Server Error' : $Throwable->getMessage(),
             500,
         );
+    } finally {
+        RequestId::reset();
     }
 };
 
