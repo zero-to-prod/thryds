@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Routes;
 
 use Jenssegers\Blade\Blade;
-use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\Response\JsonResponse;
 use League\Route\Router;
 use Psr\Http\Message\ResponseInterface;
-use ZeroToProd\Thryds\Helpers\View;
+use ZeroToProd\Thryds\Controllers\HomeController;
 
 readonly class WebRoutes
 {
@@ -21,9 +20,7 @@ readonly class WebRoutes
         $Router->map(
             HTTP_METHOD::GET->value,
             Route::home->value,
-            fn(): ResponseInterface => new HtmlResponse(
-                html: $Blade->make(view: View::home)->render(),
-            ),
+            new HomeController($Blade),
         );
 
         $Router->map(

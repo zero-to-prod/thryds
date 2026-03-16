@@ -51,6 +51,7 @@ $Blade->if('env', fn(string ...$environments): bool => in_array($Config->APP_ENV
 $Vite = new Vite($Config, baseDir: $base_dir, entry_css: [
     Vite::app_entry => [Vite::app_css],
 ]);
+$Container->instance(Vite::class, instance: $Vite);
 $vite_php = $Vite->directivePhp(Vite::app_entry);
 $Blade->directive('vite', static fn(): string => $vite_php);
 $htmx_php = $Vite->directivePhp(Vite::htmx_entry);

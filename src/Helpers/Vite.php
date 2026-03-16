@@ -30,7 +30,7 @@ readonly class Vite
 
     public function directivePhp(string $entry): string
     {
-        return '<?php echo ' . var_export(value: $this->tags($entry), return: true) . '; ?>';
+        return '<?php echo \Illuminate\Container\Container::getInstance()->make(' . self::class . '::class)->tags(' . var_export(value: $entry, return: true) . '); ?>';
     }
 
     public function tags(string $entry): string
