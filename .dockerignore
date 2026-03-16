@@ -12,3 +12,5 @@ rector.php
 CLAUDE.md
 docs.sh
 run
+node_modules/
+public/build/

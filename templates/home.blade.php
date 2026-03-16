@@ -1,5 +1,5 @@
 @extends('base')
 
 @section('body')
-    <h1>Thryds</h1>
+    <h1>Thryds sds</h1>
 @endsection

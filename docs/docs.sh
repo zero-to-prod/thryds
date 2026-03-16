@@ -2,11 +2,13 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPOS_DIR="$SCRIPT_DIR/docs/repos"
-COMPOSER_JSON="$SCRIPT_DIR/composer.json"
-COMPOSER_LOCK="$SCRIPT_DIR/composer.lock"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPOS_DIR="$SCRIPT_DIR/repos"
+COMPOSER_JSON="$PROJECT_DIR/composer.json"
+COMPOSER_LOCK="$PROJECT_DIR/composer.lock"
+PACKAGE_JSON="$PROJECT_DIR/package.json"
 
-# Arbitrary repos not derived from composer.json
+# Arbitrary repos not derived from composer.json or package.json
 EXTRA_REPOS=(
     "laravel/docs"
 )
@@ -37,8 +39,40 @@ for pkg in lock.get('packages', []) + lock.get('packages-dev', []):
 "
 }
 
+# Extract GitHub org/repo for each direct dependency via npm registry API
+npm_repos() {
+    python3 -c "
+import json, re, subprocess
+
+with open('$PACKAGE_JSON') as f:
+    pkg = json.load(f)
+
+deps = set()
+for key in ('dependencies', 'devDependencies'):
+    for name in pkg.get(key, {}):
+        deps.add(name)
+
+for name in sorted(deps):
+    try:
+        result = subprocess.run(
+            ['curl', '-sf', 'https://registry.npmjs.org/' + name],
+            capture_output=True, text=True
+        )
+        if result.returncode != 0:
+            continue
+        data = json.loads(result.stdout)
+        repo_url = data.get('repository', {}).get('url', '')
+        match = re.search(r'github\.com[/:]([^/]+/[^/.]+)', repo_url)
+        if match:
+            print(match.group(1))
+    except Exception:
+        pass
+"
+}
+
 all_repos() {
     composer_repos
+    npm_repos
     for repo in "${EXTRA_REPOS[@]}"; do
         echo "$repo"
     done

@@ -59,15 +59,13 @@ CODE_SAMPLE
      */
     public function refactor(Node $node): ?Node
     {
-        $hasChanged = false;
-
-        foreach ($node->args as $arg) {
-            // Skip positional args (no name)
+        // First pass: identify which args are candidates for name removal
+        $removable = [];
+        foreach ($node->args as $position => $arg) {
             if ($arg->name === null) {
                 continue;
             }
 
-            // Skip non-variable expressions
             if (! $arg->value instanceof Variable) {
                 continue;
             }
@@ -77,10 +75,33 @@ CODE_SAMPLE
                 continue;
             }
 
-            $argName = $arg->name->name;
+            if ($arg->name->name === $varName) {
+                $removable[$position] = true;
+            }
+        }
 
-            // Remove the named arg only when the names match exactly
-            if ($argName !== $varName) {
+        if ($removable === []) {
+            return null;
+        }
+
+        // Second pass: only remove names where it won't create positional-after-named
+        $hasChanged = false;
+        foreach ($node->args as $position => $arg) {
+            if (! isset($removable[$position])) {
+                continue;
+            }
+
+            // Check if any preceding arg will remain named after all removals
+            $precededByNamed = false;
+            for ($i = 0; $i < $position; $i++) {
+                $preceding = $node->args[$i];
+                if ($preceding->name !== null && ! isset($removable[$i])) {
+                    $precededByNamed = true;
+                    break;
+                }
+            }
+
+            if ($precededByNamed) {
                 continue;
             }
 

@@ -6,3 +6,5 @@ docs/repos
 logs/
 var/
 vendor/
+node_modules/
+public/build/

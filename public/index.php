@@ -18,13 +18,14 @@ use League\Route\Router;
 use ZeroToProd\Thryds\APP_ENV;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Helpers\View;
+use ZeroToProd\Thryds\Helpers\Vite;
 use ZeroToProd\Thryds\Log;
 use ZeroToProd\Thryds\Routes\WebRoutes;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 // Boot phase — runs once per worker
 $Config = Config::from([
-    Config::APP_ENV => $_ENV[Config::APP_ENV] ?? APP_ENV::production->value,
+    Config::APP_ENV => $_SERVER[Config::APP_ENV] ?? $_ENV[Config::APP_ENV] ?? APP_ENV::production->value,
     Config::blade_cache_dir => $base_dir . '/var/cache/blade',
     Config::template_dir => $base_dir . '/templates',
 ]);
@@ -35,6 +36,14 @@ $Blade = new Blade(viewPaths: $Config->template_dir, cachePath: $Config->blade_c
 
 $Blade->if(APP_ENV::production->value, fn(): bool => $Config->APP_ENV === APP_ENV::production);
 $Blade->if('env', fn(string ...$environments): bool => in_array($Config->APP_ENV->value, haystack: $environments, strict: true));
+
+$Vite = new Vite($Config, baseDir: $base_dir, entry_css: [
+    Vite::app_entry => [Vite::app_css],
+]);
+$vite_php = $Vite->directivePhp(Vite::app_entry);
+$Blade->directive('vite', static fn(): string => $vite_php);
+$htmx_php = $Vite->directivePhp(Vite::htmx_entry);
+$Blade->directive('htmx', static fn(): string => $htmx_php);
 
 $Router = new CachedRouter(
     builder: static function (Router $Router) use ($Blade): Router {

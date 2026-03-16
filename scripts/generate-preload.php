@@ -22,6 +22,7 @@ use Jenssegers\Blade\Blade;
 use Jenssegers\Blade\Container as BladeContainer;
 use ZeroToProd\Thryds\APP_ENV;
 use ZeroToProd\Thryds\Config;
+use ZeroToProd\Thryds\Helpers\Vite;
 
 use ZeroToProd\Thryds\Helpers\View;
 use ZeroToProd\Thryds\Routes\WebRoutes;
@@ -46,6 +47,14 @@ $Blade = new Blade(viewPaths: $Config->template_dir, cachePath: $Config->blade_c
 
 $Blade->if('production', fn(): bool => $Config->APP_ENV === APP_ENV::production);
 $Blade->if('env', fn(string ...$environments): bool => in_array($Config->APP_ENV->value, $environments, true));
+
+$Vite = new Vite($Config, baseDir: $base_dir, entry_css: [
+    Vite::app_entry => [Vite::app_css],
+]);
+$vite_php = $Vite->directivePhp(Vite::app_entry);
+$Blade->directive('vite', static fn(): string => $vite_php);
+$htmx_php = $Vite->directivePhp(Vite::htmx_entry);
+$Blade->directive('htmx', static fn(): string => $htmx_php);
 
 // Direct instantiation is intentional: this script runs at build time, not in the request path.
 // ForbidDirectRouterInstantiationRector only applies to src/, public/, tests/.

@@ -37,6 +37,18 @@ It does this via 2 main features: a web UI and an api backend.
 - Blade: (Laravel Blade template engine, standalone) in Docker
     - docs/repos/jenssegers/blade
     - docs/repos/laravel/docs/blade.md
+- Vite: (frontend build tool)
+    - vite.config.js
+    - docs: docs/repos/vitejs/vite/docs
+- Tailwind CSS v4: (utility-first CSS framework) via Vite plugin
+    - resources/css/app.css
+    - docs: docs/repos/tailwindlabs/tailwindcss/packages/tailwindcss, packages/@tailwindcss-vite
+- Alpine.js: (lightweight JS framework)
+    - resources/js/app.js
+    - docs: docs/repos/alpinejs/alpine/packages/docs/src/en
+- htmx: (HTML-driven AJAX)
+    - resources/js/app.js
+    - docs: docs/repos/bigskysoftware/htmx/www/content
 
 ## Commands
 

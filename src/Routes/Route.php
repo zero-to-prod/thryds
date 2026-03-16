@@ -13,6 +13,6 @@ enum Route: string
 
     public function with(array $params = [], array $query = []): RenderedRoute
     {
-        return new RenderedRoute(Route: $this, $params, $query);
+        return new RenderedRoute(Route: $this, params: $params, query: $query);
     }
 }

@@ -1,0 +1,16 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "vite": "^6",
+    "@tailwindcss/vite": "^4"
+  },
+  "dependencies": {
+    "alpinejs": "^3",
+    "htmx.org": "^2"
+  }
+}
