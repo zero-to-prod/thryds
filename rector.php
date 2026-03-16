@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use ZeroToProd\Thryds\Log;
 use Rector\Config\RectorConfig;
+use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodParameterRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPublicMethodParameterRector;
 use Utils\Rector\Rector\ForbiddenFuncCallRector;
@@ -11,6 +12,8 @@ use Utils\Rector\Rector\FrankenPhpLogToLogClassRector;
 use Utils\Rector\Rector\AddNamedArgWhenVarMismatchesParamRector;
 use Utils\Rector\Rector\RenameParamToMatchTypeNameRector;
 use Utils\Rector\Rector\RenameVarToMatchReturnTypeRector;
+use Utils\Rector\Rector\ReplaceFullyQualifiedNameRector;
+use Utils\Rector\Rector\UseClassConstArrayKeyForDataModelRector;
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->paths([
@@ -29,4 +32,10 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->rule(AddNamedArgWhenVarMismatchesParamRector::class);
     $rectorConfig->rule(RemoveUnusedPrivateMethodParameterRector::class);
     $rectorConfig->rule(RemoveUnusedPublicMethodParameterRector::class);
+    $rectorConfig->rule(UseClassConstArrayKeyForDataModelRector::class);
+    $rectorConfig->rule(StringClassNameToClassConstantRector::class);
+    $rectorConfig->ruleWithConfiguration(ReplaceFullyQualifiedNameRector::class, [
+        \Zerotoprod\DataModel\DataModel::class => \ZeroToProd\Thryds\Helpers\DataModel::class,
+        \Zerotoprod\DataModel\Describe::class => \ZeroToProd\Thryds\Helpers\Describe::class,
+    ]);
 };

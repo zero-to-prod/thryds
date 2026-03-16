@@ -11,6 +11,10 @@ It does this via 2 main features: a web UI and an api backend.
 - Git
   - .gitignore
   - docs: docs/repos/git/htmldocs
+- PHP 8.5
+  - docs: 
+    - docs/repos/php/doc-en/language
+    - docs/repos/php/doc-en/reference
 - Composer
   - composer.json
   - docs: docs/repos/composer/composer/doc
@@ -30,6 +34,8 @@ It does this via 2 main features: a web UI and an api backend.
 - PhpUnit: (PHP unit testing framework) in Docker
   - phpunit.xml.dist
   - docs: docs/repos/sebastianbergmann
+- Twig: (PHP template engine) in Docker
+  - docs: docs/repos/twigphp/Twig/doc
 
 ## Commands
 
