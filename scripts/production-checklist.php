@@ -18,15 +18,13 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
-use Illuminate\Events\Dispatcher;
-use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Facades\Facade;
-use Illuminate\View\Factory;
-use Illuminate\View\ViewServiceProvider;
+use Jenssegers\Blade\Blade;
 use Jenssegers\Blade\Container as BladeContainer;
+use ZeroToProd\Thryds\APP_ENV;
+use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Helpers\View;
+use ZeroToProd\Thryds\Helpers\Vite;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 $base_dir = dirname(__DIR__);
@@ -112,18 +110,13 @@ function verifyTemplateCache(string $base_dir): int
 
     $Container = new BladeContainer();
     Container::setInstance(container: $Container);
-
-    $Container->bindIf('files', static fn(): Filesystem => new Filesystem());
-    $Container->bindIf('events', static fn(): Dispatcher => new Dispatcher());
-    $Container->bindIf('config', static fn(): Repository => new Repository([
-        'view.paths' => [$template_dir],
-        'view.compiled' => $cache_dir,
-    ]));
-    Facade::setFacadeApplication($Container);
-    (new ViewServiceProvider($Container))->register();
-
-    /** @var Factory $ViewFactory */
-    $ViewFactory = $Container->get('view');
+    $Blade = new Blade(viewPaths: $template_dir, cachePath: $cache_dir, container: $Container);
+    $Config = Config::from([Config::APP_ENV => APP_ENV::development->value]);
+    $Vite = new Vite($Config, baseDir: $base_dir, entry_css: [
+        Vite::app_entry => [Vite::app_css],
+    ]);
+    $Blade->directive('vite', static fn(): string => $Vite->directivePhp(Vite::app_entry));
+    $Blade->directive('htmx', static fn(): string => $Vite->directivePhp(Vite::htmx_entry));
 
     $view_data = [
         View::home => [],
@@ -138,7 +131,7 @@ function verifyTemplateCache(string $base_dir): int
 
     // First render — must compile and write cache files
     foreach ($view_data as $view => $data) {
-        $ViewFactory->make($view, $data)->render();
+        $Blade->make($view, $data)->render();
     }
 
     $cached_files = glob($cache_dir . '/*.php');
@@ -159,7 +152,7 @@ function verifyTemplateCache(string $base_dir): int
 
     // Second render — cached files must not be recompiled
     foreach ($view_data as $view => $data) {
-        $ViewFactory->make($view, $data)->render();
+        $Blade->make($view, $data)->render();
     }
 
     $recompiled = 0;

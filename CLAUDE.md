@@ -58,7 +58,7 @@ It does this via 2 main features: a web UI and an api backend.
 
 ### Running commands in Docker
 
-The `./run` script wraps `docker compose exec php composer` (requires dev server running):
+The `./run` script wraps `docker compose exec php composer` (requires dev server running). It is for **Composer scripts only** — do not use it for arbitrary PHP scripts.
 
 - `./run <command>` — run any Composer command
 - `./run test` — run all tests
@@ -75,6 +75,12 @@ The `./run` script wraps `docker compose exec php composer` (requires dev server
 - `./run lint:blade-routes` — check Blade templates for hardcoded route paths
 - `./run lint:all` — **run this after every change** — fixes code style, applies Rector, checks Blade routes, runs tests
 - `./run production:checklist` — run all production readiness checks (exits non-zero on failures)
+
+### Running PHP scripts directly in Docker
+
+For scripts not exposed as Composer commands, use `docker compose exec php` directly:
+
+- `docker compose exec php php scripts/<script>.php` — run a PHP script inside the running container
 
 Fallback when the dev server is not running (slower, starts a new container):
 
