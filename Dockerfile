@@ -5,12 +5,13 @@ RUN install-php-extensions \
     opcache \
     zip
 
-FROM base AS composer
+FROM base AS vendor
 
 RUN apt-get update && apt-get install -y unzip && rm -rf /var/lib/apt/lists/*
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /app
+COPY composer.json composer.lock /app/
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 FROM base AS production
 
@@ -24,13 +25,16 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 COPY docker/php/opcache.ini $PHP_INI_DIR/conf.d/opcache.ini
 COPY docker/Caddyfile /etc/caddy/Caddyfile
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-COPY composer.json composer.lock /app/
-RUN composer install --no-dev --optimize-autoloader --no-scripts
-
+COPY --from=vendor /app/vendor /app/vendor
 COPY . /app
 RUN php scripts/generate-preload.php
+
+FROM base AS composer
+
+RUN apt-get update && apt-get install -y unzip && rm -rf /var/lib/apt/lists/*
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+WORKDIR /app
 
 FROM production AS development
 
@@ -38,4 +42,5 @@ RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
 COPY docker/php/opcache-dev.ini $PHP_INI_DIR/conf.d/zzz-opcache-dev.ini
 
+RUN apt-get update && apt-get install -y unzip && rm -rf /var/lib/apt/lists/*
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

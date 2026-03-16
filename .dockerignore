@@ -1,0 +1,14 @@
+docs/
+logs/
+tests/
+utils/
+var/
+vendor/
+.git/
+.php-cs-fixer.php
+.php-cs-fixer.cache
+phpunit.xml.dist
+rector.php
+CLAUDE.md
+docs.sh
+run
