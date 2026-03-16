@@ -1,0 +1,257 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * OPcache optimization audit.
+ *
+ * CLI:  docker compose exec php php /app/scripts/opcache-audit.php
+ * HTTP: Register the /_opcache route (see WebRoutes), then curl http://localhost:8888/_opcache
+ */
+
+// Re-exec with opcache.enable_cli=1 if needed
+if (PHP_SAPI === 'cli' && !ini_get('opcache.enable_cli')) {
+    $args = array_map('escapeshellarg', $argv);
+    $exitCode = 0;
+    passthru(PHP_BINARY . ' -d opcache.enable_cli=1 ' . implode(' ', $args), $exitCode);
+    exit($exitCode);
+}
+
+$isDev = (bool) ini_get('opcache.validate_timestamps');
+
+echo opcacheAudit($isDev);
+exit(0);
+
+function opcacheAudit(bool $isDev = false): string
+{
+    $failures = [];
+    $warnings = [];
+    $passes = [];
+    $devNotes = [];
+
+    // 1. Is OPcache enabled?
+    $enabled = (bool) ini_get('opcache.enable');
+    if (!$enabled) {
+        $failures[] = 'opcache.enable is OFF — nothing is cached';
+
+        return formatReport($failures, $warnings, $passes, $devNotes, $isDev);
+    }
+    $passes[] = 'opcache.enable is ON';
+
+    // 2. Get runtime status
+    $status = opcache_get_status(false);
+    if ($status === false) {
+        $failures[] = 'opcache_get_status() returned false — OPcache may not be running';
+
+        return formatReport($failures, $warnings, $passes, $devNotes, $isDev);
+    }
+
+    // 3. Check preloading
+    $preload = ini_get('opcache.preload');
+    if (empty($preload)) {
+        if ($isDev) {
+            $devNotes[] = 'opcache.preload is empty — disabled in dev so file changes are picked up without restart';
+        } else {
+            $failures[] = 'opcache.preload is empty — no scripts are preloaded into shared memory';
+        }
+    } else {
+        $preloadCount = $status['preload_statistics']['scripts'] ?? [];
+        $passes[] = sprintf('opcache.preload is set (%s) — %d scripts preloaded', $preload, count($preloadCount));
+    }
+
+    // 4. Check validate_timestamps (should be 0 in production)
+    $validateTimestamps = ini_get('opcache.validate_timestamps');
+    if ($validateTimestamps === '1') {
+        if ($isDev) {
+            $devNotes[] = 'opcache.validate_timestamps=1 — enabled in dev so file changes are picked up without restart';
+        } else {
+            $failures[] = 'opcache.validate_timestamps=1 — PHP stat()s every file on every request to check for changes';
+        }
+    } else {
+        $passes[] = 'opcache.validate_timestamps=0 — no unnecessary file stat() calls';
+    }
+
+    // 5. Check JIT
+    $jitEnabled = ini_get('opcache.jit');
+    if (empty($jitEnabled) || $jitEnabled === '0' || $jitEnabled === 'off' || $jitEnabled === 'disable') {
+        $warnings[] = sprintf('opcache.jit=%s — JIT compilation is not enabled', var_export($jitEnabled, true));
+    } else {
+        $passes[] = sprintf('opcache.jit=%s', $jitEnabled);
+    }
+
+    $jitBufferRaw = ini_get('opcache.jit_buffer_size');
+    $jitBuffer = parseBytes($jitBufferRaw);
+    if ($jitBuffer === 0) {
+        $warnings[] = 'opcache.jit_buffer_size=0 — even if JIT is configured, it has no memory allocated';
+    } else {
+        $passes[] = sprintf('opcache.jit_buffer_size=%dM', $jitBuffer / 1048576);
+    }
+
+    // 6. Count all PHP files in the project vs what's cached
+    $appFiles = countPhpFiles('/app/src');
+    $vendorFiles = countPhpFiles('/app/vendor');
+    $totalFiles = $appFiles + $vendorFiles;
+    $cachedScripts = $status['opcache_statistics']['num_cached_scripts'] ?? 0;
+    $maxFiles = (int) ini_get('opcache.max_accelerated_files');
+
+    if ($totalFiles > $maxFiles) {
+        $failures[] = sprintf(
+            'opcache.max_accelerated_files=%d but project has %d PHP files (%d app + %d vendor) — cache will evict scripts',
+            $maxFiles,
+            $totalFiles,
+            $appFiles,
+            $vendorFiles,
+        );
+    } else {
+        $passes[] = sprintf(
+            'opcache.max_accelerated_files=%d covers all %d PHP files',
+            $maxFiles,
+            $totalFiles,
+        );
+    }
+
+    // 7. Cache hit rate
+    $hits = $status['opcache_statistics']['hits'] ?? 0;
+    $misses = $status['opcache_statistics']['misses'] ?? 0;
+    $totalRequests = $hits + $misses;
+    if ($totalRequests > 100) {
+        $hitRate = ($hits / $totalRequests) * 100;
+        if ($hitRate < 95 && !$isDev) {
+            $failures[] = sprintf('Cache hit rate: %.1f%% (%d hits / %d misses) — should be >95%%', $hitRate, $hits, $misses);
+        } else {
+            $passes[] = sprintf('Cache hit rate: %.1f%% (%d hits / %d misses)', $hitRate, $hits, $misses);
+        }
+    } else {
+        $warnings[] = sprintf('Only %d OPcache lookups recorded — not enough data for hit rate (need >100)', $totalRequests);
+    }
+
+    // 8. Cached scripts and preload coverage
+    $preloadScripts = count($status['preload_statistics']['scripts'] ?? []);
+    if ($cachedScripts > 0) {
+        $nonPreloaded = $cachedScripts - $preloadScripts;
+        if ($nonPreloaded > 0 && !empty($preload)) {
+            $warnings[] = sprintf(
+                '%d scripts cached, but only %d via preload — %d scripts are compiled on first request (add them to preload.php)',
+                $cachedScripts,
+                $preloadScripts,
+                $nonPreloaded,
+            );
+        } else {
+            $passes[] = sprintf('%d scripts cached (%d via preload)', $cachedScripts, $preloadScripts);
+        }
+    } else if (!$isDev) {
+        $failures[] = '0 scripts cached — OPcache is not caching anything';
+    } else {
+        $warnings[] = '0 scripts cached — expected in dev without preloading';
+    }
+
+    // 9. Memory usage
+    $memUsed = $status['memory_usage']['used_memory'] ?? 0;
+    $memFree = $status['memory_usage']['free_memory'] ?? 0;
+    $memWasted = $status['memory_usage']['wasted_memory'] ?? 0;
+    $memTotal = $memUsed + $memFree + $memWasted;
+    if ($memTotal > 0) {
+        $wastedPct = ($memWasted / $memTotal) * 100;
+        $usedPct = ($memUsed / $memTotal) * 100;
+        if ($wastedPct > 5) {
+            $warnings[] = sprintf('%.1f%% memory wasted (fragmentation) — consider restarting or increasing memory', $wastedPct);
+        }
+        $passes[] = sprintf('Memory: %.1fM used / %.1fM total (%.1f%% utilized, %.1f%% wasted)', $memUsed / 1048576, $memTotal / 1048576, $usedPct, $wastedPct);
+    }
+
+    // 10. save_comments — check if actually needed
+    $saveComments = ini_get('opcache.save_comments');
+    if ($saveComments === '1') {
+        $warnings[] = 'opcache.save_comments=1 — annotations are stored in memory. Only needed if your app uses reflection on doc comments at runtime.';
+    }
+
+    // 11. enable_file_override
+    $fileOverride = ini_get('opcache.enable_file_override');
+    if ($fileOverride !== '1') {
+        $warnings[] = 'opcache.enable_file_override=0 — file_exists/is_file calls won\'t use OPcache, causing extra stat() calls';
+    }
+
+    return formatReport($failures, $warnings, $passes, $devNotes, $isDev);
+}
+
+function parseBytes(string $value): int
+{
+    $value = trim($value);
+    $num = (int) $value;
+    $suffix = strtoupper(substr($value, -1));
+
+    return match ($suffix) {
+        'G' => $num * 1073741824,
+        'M' => $num * 1048576,
+        'K' => $num * 1024,
+        default => $num,
+    };
+}
+
+function countPhpFiles(string $directory): int
+{
+    if (!is_dir($directory)) {
+        return 0;
+    }
+
+    $count = 0;
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS));
+    foreach ($iterator as $file) {
+        if ($file->isFile() && $file->getExtension() === 'php') {
+            $count++;
+        }
+    }
+
+    return $count;
+}
+
+function formatReport(array $failures, array $warnings, array $passes, array $devNotes = [], bool $isDev = false): string
+{
+    $output = "\n=== OPcache Optimization Audit";
+    $output .= $isDev ? " (dev mode) ===\n\n" : " ===\n\n";
+
+    if ($failures !== []) {
+        $output .= "FAILURES (not optimized):\n";
+        foreach ($failures as $f) {
+            $output .= "  [FAIL] $f\n";
+        }
+        $output .= "\n";
+    }
+
+    if ($warnings !== []) {
+        $output .= "WARNINGS:\n";
+        foreach ($warnings as $w) {
+            $output .= "  [WARN] $w\n";
+        }
+        $output .= "\n";
+    }
+
+    if ($devNotes !== []) {
+        $output .= "DEV MODE (skipped — would fail in production):\n";
+        foreach ($devNotes as $d) {
+            $output .= "  [DEV ] $d\n";
+        }
+        $output .= "\n";
+    }
+
+    if ($passes !== []) {
+        $output .= "PASSING:\n";
+        foreach ($passes as $p) {
+            $output .= "  [ OK ] $p\n";
+        }
+        $output .= "\n";
+    }
+
+    $total = count($failures) + count($warnings) + count($passes) + count($devNotes);
+    $output .= sprintf("Result: %d checks — %d failed, %d warnings, %d dev-skipped, %d passed\n", $total, count($failures), count($warnings), count($devNotes), count($passes));
+
+    if ($failures !== []) {
+        $output .= "Verdict: NOT optimized for OPcache\n";
+    } elseif ($warnings !== []) {
+        $output .= "Verdict: Partially optimized (see warnings)\n";
+    } else {
+        $output .= "Verdict: Well optimized\n";
+    }
+
+    return $output . "\n";
+}

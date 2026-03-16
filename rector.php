@@ -12,9 +12,13 @@ use Utils\Rector\Rector\ExtractRoutePatternToRouteClassRector;
 use Utils\Rector\Rector\ForbiddenFuncCallRector;
 use Utils\Rector\Rector\ForbidCallableTypeVariableNameRector;
 use Utils\Rector\Rector\ForbidDuplicateRoutePatternRector;
+use Utils\Rector\Rector\ForbidExitInSourceRector;
 use Utils\Rector\Rector\ForbidDynamicIncludeRector;
+use Utils\Rector\Rector\ForbidGlobalKeywordRector;
+use Utils\Rector\Rector\ForbidErrorSuppressionRector;
 use Utils\Rector\Rector\ForbidEvalRector;
 use Utils\Rector\Rector\ForbidMagicStringArrayKeyRector;
+use Utils\Rector\Rector\ForbidVariableVariablesRector;
 use Utils\Rector\Rector\ForbidStringRoutePatternRector;
 use Utils\Rector\Rector\FrankenPhpLogToLogClassRector;
 use Utils\Rector\Rector\MakeClassReadonlyRector;
@@ -53,6 +57,7 @@ return static function (RectorConfig $rectorConfig): void {
         'error_log',
         'extract',
         'compact',
+        'session_start',
     ]);
     $rectorConfig->ruleWithConfiguration(FrankenPhpLogToLogClassRector::class, [
         'functions' => ['frankenphp_log'],
@@ -131,6 +136,7 @@ return static function (RectorConfig $rectorConfig): void {
         'scanDir' => __DIR__ . '/src/Routes',
     ]);
     $rectorConfig->rule(ForbidEvalRector::class);
+    $rectorConfig->rule(ForbidExitInSourceRector::class);
     $rectorConfig->rule(ForbidDynamicIncludeRector::class);
     $rectorConfig->ruleWithConfiguration(ForbidCallableTypeVariableNameRector::class, [
         'Closure',
@@ -140,6 +146,9 @@ return static function (RectorConfig $rectorConfig): void {
         'Func',
     ]);
     $rectorConfig->rule(RequireTypedPropertyRector::class);
+    $rectorConfig->rule(ForbidVariableVariablesRector::class);
+    $rectorConfig->rule(ForbidErrorSuppressionRector::class);
+    $rectorConfig->rule(ForbidGlobalKeywordRector::class);
     $rectorConfig->rule(SuggestExtractSharedCatchLogicRector::class);
     $rectorConfig->rule(RequireMethodAnnotationForDataModelRector::class);
     $rectorConfig->ruleWithConfiguration(ReplaceFullyQualifiedNameRector::class, [

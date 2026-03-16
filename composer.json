@@ -9,7 +9,8 @@
         "laminas/laminas-httphandlerrunner": "^2.13",
         "jenssegers/blade": "^2",
         "zero-to-prod/data-model": "^81.14",
-        "ext-frankenphp": "*"
+        "ext-frankenphp": "*",
+        "ext-zend-opcache": "*"
     },
     "autoload": {
         "psr-4": {

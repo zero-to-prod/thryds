@@ -12,7 +12,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-FROM base AS app
+FROM base AS production
 
 ENV SERVER_NAME=:80
 ENV FRANKENPHP_CONFIG="worker /app/public/index.php"
@@ -27,11 +27,11 @@ COPY docker/Caddyfile /etc/caddy/Caddyfile
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 COPY composer.json composer.lock /app/
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platform-req=ext-frankenphp
 
 COPY . /app
 
-FROM app AS dev
+FROM production AS development
 
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 

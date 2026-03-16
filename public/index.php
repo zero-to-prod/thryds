@@ -74,9 +74,10 @@ $handler = static function () use ($Router, $Config, $emit_error_page): void {
     }
 };
 
+// TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value 'MAX_REQUESTS' on the appropriate class.
 $max_requests = (int) ($_SERVER['MAX_REQUESTS'] ?? 0);
 for ($nb_requests = 0; !$max_requests || $nb_requests < $max_requests; ++$nb_requests) {
-    $keep_running = frankenphp_handle_request($handler);
+    $keep_running = frankenphp_handle_request(callback: $handler);
 
     gc_collect_cycles();
 
