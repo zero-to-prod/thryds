@@ -22,11 +22,12 @@ use Jenssegers\Blade\Blade;
 use Jenssegers\Blade\Container as BladeContainer;
 use ZeroToProd\Thryds\APP_ENV;
 use ZeroToProd\Thryds\Config;
+
+use function ZeroToProd\Thryds\Helpers\short_class_name;
+
 use ZeroToProd\Thryds\Helpers\View;
 use ZeroToProd\Thryds\Routes\WebRoutes;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
-
-use function ZeroToProd\Thryds\Helpers\short_class_name;
 
 // Boot the app (mirrors public/index.php boot phase)
 echo "Booting app...\n";
@@ -67,7 +68,7 @@ echo "Simulating request dispatch...\n";
 $ServerRequest = \Laminas\Diactoros\ServerRequestFactory::fromGlobals();
 try {
     $Response = $Router->dispatch(request: $ServerRequest);
-    (new \Laminas\HttpHandlerRunner\Emitter\SapiEmitter())->emit(response: $Response);
+    new \Laminas\HttpHandlerRunner\Emitter\SapiEmitter()->emit(response: $Response);
 } catch (\Throwable) {
     // Expected — no real server, just loading the classes
 }
