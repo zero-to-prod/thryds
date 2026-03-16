@@ -11,6 +11,8 @@ use Jenssegers\Blade\Container as BladeContainer;
 use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\ServerRequestFactory;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
+use League\Route\Cache\FileCache;
+use League\Route\Cache\Router as CachedRouter;
 use League\Route\Http\Exception as HttpException;
 use League\Route\Router;
 use ZeroToProd\Thryds\AppEnv;
@@ -34,9 +36,17 @@ $Container = new BladeContainer();
 Container::setInstance(container: $Container);
 $Blade = new Blade(viewPaths: $Config->template_dir, cachePath: $Config->blade_cache_dir, container: $Container);
 
-$Router = new Router();
+$Blade->if('production', fn(): bool => $Config->AppEnv === AppEnv::production);
+$Blade->if('env', fn(string ...$environments): bool => in_array($Config->AppEnv->value, haystack: $environments, strict: true));
 
-WebRoutes::register($Router, $Blade);
+$Router = new CachedRouter(
+    builder: static function (Router $Router) use ($Blade): Router {
+        WebRoutes::register($Router, $Blade);
+        return $Router;
+    },
+    cache: new FileCache(cacheFilePath: $base_dir . '/var/cache/route.cache', ttl: 86400),
+    cacheEnabled: $Config->isProduction(),
+);
 
 $emit_error_page = static function (string $message, int $status_code) use ($Blade): void {
     new SapiEmitter()->emit(

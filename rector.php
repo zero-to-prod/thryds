@@ -16,6 +16,7 @@ use Utils\Rector\Rector\ForbidExitInSourceRector;
 use Utils\Rector\Rector\ForbidDynamicIncludeRector;
 use Utils\Rector\Rector\ForbidGlobalKeywordRector;
 use Utils\Rector\Rector\ForbidErrorSuppressionRector;
+use Utils\Rector\Rector\ForbidDirectRouterInstantiationRector;
 use Utils\Rector\Rector\ForbidEvalRector;
 use Utils\Rector\Rector\ForbidMagicStringArrayKeyRector;
 use Utils\Rector\Rector\ForbidVariableVariablesRector;
@@ -134,6 +135,9 @@ return static function (RectorConfig $rectorConfig): void {
         'classSuffix' => 'Route',
         'constNames' => ['pattern'],
         'scanDir' => __DIR__ . '/src/Routes',
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidDirectRouterInstantiationRector::class, [
+        'League\\Route\\Router',
     ]);
     $rectorConfig->rule(ForbidEvalRector::class);
     $rectorConfig->rule(ForbidExitInSourceRector::class);

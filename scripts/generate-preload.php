@@ -43,6 +43,9 @@ $Container = new BladeContainer();
 Container::setInstance(container: $Container);
 $Blade = new Blade(viewPaths: $Config->template_dir, cachePath: $Config->blade_cache_dir, container: $Container);
 
+$Blade->if('production', fn(): bool => $Config->AppEnv === AppEnv::production);
+$Blade->if('env', fn(string ...$environments): bool => in_array($Config->AppEnv->value, $environments, true));
+
 $Router = new \League\Route\Router();
 WebRoutes::register($Router, $Blade);
 

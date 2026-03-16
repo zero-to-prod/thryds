@@ -58,6 +58,8 @@ The `./run` script wraps `docker compose exec php composer` (requires dev server
 - `./run rector:check` — preview Rector changes
 - `./run opcache` — audit OPcache config (exits non-zero on failures)
 - `./run preload:generate` — regenerate preload.php from the worker's runtime script list
+- `./run route-cache:verify` — verify route caching works in production mode
+- `./run production:checklist` — run all production readiness checks (exits non-zero on failures)
 
 Fallback when the dev server is not running (slower, starts a new container):
 - `docker compose run --rm composer sh` — run a shell inside a container
@@ -129,14 +131,26 @@ API route handlers can return arrays or `JsonSerializable` objects directly — 
 - `./docs.sh install` — clones missing repos (`--depth 1`), skips already cloned.
 - `./docs.sh update` — pulls latest for all cloned repos (`--ff-only`).
 
-## OPcache
+## Production Readiness
 
-The app is optimized for OPcache. Run `./run opcache` to verify. This exits non-zero on failures.
+Run `./run production:checklist` to verify the app is production ready. This exits non-zero on any failure. It checks:
+
+1. **Route caching** — `League\Route\Cache\Router` serializes the prepared router to `var/cache/route.cache` in production, skipping route compilation on subsequent worker boots. Disabled in development so changes take effect immediately.
+2. **OPcache** — ini settings, preload coverage, JIT, hit rate, memory.
+3. **Template caching** — Blade compiles templates to `var/cache/blade/` and reuses them without recompilation.
+
+Individual checks can be run separately:
+- `./run route-cache:verify` — route caching only
+- `./run opcache` — OPcache only
+- `./run preload:generate` — regenerate preload.php locally (for dev/testing)
+
+### Route caching
+
+Routes are registered inside a builder callable passed to `League\Route\Cache\Router` in `public/index.php`. In production (`AppEnv::production`), the router is serialized to disk on first request and deserialized on subsequent worker boots. All route registration must happen inside this builder — never instantiate `League\Route\Router` directly (enforced by `ForbidDirectRouterInstantiationRector`).
+
+### OPcache
 
 `preload.php` is auto-generated at build time (`RUN php scripts/generate-preload.php` in Dockerfile). It boots the app, renders all templates, simulates a request dispatch, then uses `get_included_files()` to discover every script needed at runtime. No manual maintenance required.
-
-- `./run preload:generate` — regenerate locally (for dev/testing)
-- `./run opcache` — verify OPcache config (exits non-zero on failures)
 
 Key config files:
 - `docker/php/opcache.ini` — production settings (preload, no timestamps, JIT)
