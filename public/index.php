@@ -36,23 +36,19 @@ try {
 } catch (HttpException $HttpException) {
     $HtmlResponse = new HtmlResponse(
         html: $Blade->make(view: View::error, data: [
-            // TODO: [AI] Replace magic string 'status_code' with a class constant or enum. Define a public const on the appropriate class with value 'status_code', then reference it here.
             'status_code' => $HttpException->getStatusCode(),
-            // TODO: [AI] Replace magic string 'message' with a class constant or enum. Define a public const on the appropriate class with value 'message', then reference it here.
             'message' => $HttpException->getMessage(),
         ])->render(),
         status: $HttpException->getStatusCode(),
     );
 } catch (Throwable $Throwable) {
-    Log::error($Throwable->getMessage(), [// TODO: [AI] Replace magic string 'exception' with a class constant or enum. Define a public const on the appropriate class with value 'exception', then reference it here.
-    'exception' => $Throwable::class, // TODO: [AI] Replace magic string 'file' with a class constant or enum. Define a public const on the appropriate class with value 'file', then reference it here.
-    'file' => $Throwable->getFile(), // TODO: [AI] Replace magic string 'line' with a class constant or enum. Define a public const on the appropriate class with value 'line', then reference it here.
-    'line' => $Throwable->getLine()]);
+    Log::error($Throwable->getMessage(), [
+        'exception' => $Throwable::class,
+        'file' => $Throwable->getFile(),
+        'line' => $Throwable->getLine()]);
     $HtmlResponse = new HtmlResponse(
         html: $Blade->make(view: View::error, data: [
-            // TODO: [AI] Replace magic string 'status_code' with a class constant or enum. Define a public const on the appropriate class with value 'status_code', then reference it here.
             'status_code' => 500,
-            // TODO: [AI] Replace magic string 'message' with a class constant or enum. Define a public const on the appropriate class with value 'message', then reference it here.
             'message' => $Config->isProduction ? 'Internal Server Error' : $Throwable->getMessage(),
         ])->render(),
         status: 500,

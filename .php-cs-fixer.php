@@ -29,4 +29,8 @@ return (new Config())
         'use_arrow_functions' => true,
         'function_declaration' => ['closure_fn_spacing' => 'none'],
         'braces_position' => true,
+        'single_line_comment_style' => false,
+        'multiline_comment_opening_closing' => false,
+        'no_empty_comment' => false,
+        'no_trailing_whitespace_in_comment' => false,
     ]);

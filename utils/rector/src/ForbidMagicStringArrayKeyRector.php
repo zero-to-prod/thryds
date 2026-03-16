@@ -30,10 +30,10 @@ $value = $_ENV['APP_ENV'];
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
 $options = [
-    // TODO: [AI] Replace magic string 'cache' with a class constant or enum. Define a public const on the appropriate class with value 'cache', then reference it here.
+    // TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value 'cache' on the appropriate class.
     'cache' => '/tmp',
 ];
-// TODO: [AI] Replace magic string 'APP_ENV' with a class constant or enum. Define a public const on the appropriate class with value 'APP_ENV', then reference it here.
+// TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value 'APP_ENV' on the appropriate class.
 $value = $_ENV['APP_ENV'];
 CODE_SAMPLE
                 ),
@@ -90,7 +90,7 @@ CODE_SAMPLE
         }
 
         foreach ($node->getComments() as $comment) {
-            if (str_contains($comment->getText(), '[AI]')) {
+            if (str_contains($comment->getText(), '[ForbidMagicStringArrayKeyRector]')) {
                 return null;
             }
         }
@@ -99,7 +99,7 @@ CODE_SAMPLE
 
         foreach (array_unique($magicStrings) as $keyValue) {
             array_unshift($existingComments, new Comment(
-                "// TODO: [AI] Replace magic string '{$keyValue}' with a class constant or enum. Define a public const on the appropriate class with value '{$keyValue}', then reference it here."
+                "// TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value '{$keyValue}' on the appropriate class."
             ));
         }
 
@@ -116,13 +116,13 @@ CODE_SAMPLE
     private function addTodoComment(Node $node, string $keyValue): ?Node
     {
         foreach ($node->getComments() as $comment) {
-            if (str_contains($comment->getText(), '[AI]')) {
+            if (str_contains($comment->getText(), '[ForbidMagicStringArrayKeyRector]')) {
                 return null;
             }
         }
 
         $todoComment = new Comment(
-            "// TODO: [AI] Replace magic string '{$keyValue}' with a class constant or enum. Define a public const on the appropriate class with value '{$keyValue}', then reference it here."
+            "// TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value '{$keyValue}' on the appropriate class."
         );
 
         $existingComments = $node->getComments();

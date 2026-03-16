@@ -10,9 +10,9 @@ $options = [
 <?php
 
 $options = [
-    // TODO: [AI] Replace magic string 'cache' with a class constant or enum. Define a public const on the appropriate class with value 'cache', then reference it here.
+    // TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value 'cache' on the appropriate class.
     'cache' => '/tmp',
-    // TODO: [AI] Replace magic string 'debug' with a class constant or enum. Define a public const on the appropriate class with value 'debug', then reference it here.
+    // TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value 'debug' on the appropriate class.
     'debug' => true,
 ];
 

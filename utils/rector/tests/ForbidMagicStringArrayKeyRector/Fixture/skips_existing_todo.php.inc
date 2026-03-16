@@ -1,8 +1,8 @@
 <?php
 
 $options = [
-    // TODO: [AI] Replace magic string 'cache' with a class constant or enum. Define a public const on the appropriate class with value 'cache', then reference it here.
+    // TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value 'cache' on the appropriate class.
     'cache' => '/tmp',
 ];
-// TODO: [AI] Replace magic string 'APP_ENV' with a class constant or enum. Define a public const on the appropriate class with value 'APP_ENV', then reference it here.
+// TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value 'APP_ENV' on the appropriate class.
 $value = $_ENV['APP_ENV'];

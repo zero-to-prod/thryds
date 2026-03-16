@@ -37,8 +37,8 @@ final class SuggestEnumForStringPropertyRector extends AbstractRector
         'ZeroToProd\Thryds\Helpers\Describe',
     ];
 
-    private const TODO_MARKER = '[AI] Property';
-    private const CALL_SITE_MARKER = '[AI] The string';
+    private const TODO_MARKER = '[SuggestEnumForStringPropertyRector]';
+    private const CALL_SITE_MARKER = '[SuggestEnumForStringPropertyRector]';
 
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,
@@ -70,7 +70,7 @@ class Config
 {
     use DataModel;
 
-    // TODO: [AI] Property $appEnv has known string values: 'production'. Consider extracting to a backed enum with these cases, then type-hint this property with the enum.
+    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. $appEnv has values: 'production'. Extract to a backed enum.
     #[Describe(['default' => 'production'])]
     public string $appEnv;
 }
@@ -206,7 +206,7 @@ CODE_SAMPLE
             $valuesStr = implode(', ', $quotedValues);
 
             $comment = new Comment(
-                "// TODO: [AI] The string {$valuesStr} is a known value of {$this->resolveShortClassName($className)}::\${$propName}. Once an enum is created for \${$propName}, replace this with the enum case."
+                "// TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. {$valuesStr} is a value of {$this->resolveShortClassName($className)}::\${$propName}. Replace with enum case."
             );
 
             $existingComments = $item->getComments();
@@ -451,7 +451,7 @@ CODE_SAMPLE
         $quotedValues = array_map(static fn(string $v): string => "'{$v}'", $values);
         $valuesStr = implode(', ', $quotedValues);
 
-        $text = "// TODO: [AI] Property \${$propName} has known string values: {$valuesStr}. Consider extracting to a backed enum with these cases, then type-hint this property with the enum.";
+        $text = "// TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. \${$propName} has values: {$valuesStr}. Extract to a backed enum.";
 
         $comment = new Comment($text);
         $existingComments = $property->getComments();
