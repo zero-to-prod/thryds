@@ -32,5 +32,15 @@
         "rector/rector": "^2.3",
         "phpunit/phpunit": "^13.0",
         "friendsofphp/php-cs-fixer": "^3.94"
+    },
+    "scripts": {
+        "test": "./vendor/bin/phpunit",
+        "test:unit": "./vendor/bin/phpunit --testsuite unit",
+        "test:integration": "./vendor/bin/phpunit --testsuite integration",
+        "test:rector": "./vendor/bin/phpunit utils",
+        "lint": "./vendor/bin/php-cs-fixer fix",
+        "lint:check": "./vendor/bin/php-cs-fixer fix --dry-run --diff",
+        "rector": "./vendor/bin/rector process src",
+        "rector:check": "./vendor/bin/rector process src --dry-run"
     }
 }

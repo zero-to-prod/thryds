@@ -41,15 +41,23 @@ It does this via 2 main features: a web UI and an api backend.
 
 - `sh update-docs.sh` - update docs/repos/
 - `docker compose up -d` — start dev server
-- `docker compose run --rm composer`: run Composer commands inside the app container
-  - `sh` — run a shell inside the app container
-  - `./vendor/bin/test` — run tests
-  - `composer <command>` — run any Composer command (e.g. `update`, `require`, `install`)
-  - `./vendor/bin/phpunit utils` - run PHPUnit tests in the `utils` directory like rector
-  - `./vendor/bin/php-cs-fixer fix` — fix code style
-  - `./vendor/bin/php-cs-fixer fix --dry-run --diff` — preview code style changes
-  - `./vendor/bin/rector process src --dry-run` — preview Rector changes
-  - `./vendor/bin/rector process src` — apply Rector changes
+
+### Running commands in Docker
+
+The `./run` script wraps `docker compose exec php composer` (requires dev server running):
+- `./run <command>` — run any Composer command
+- `./run test` — run all tests
+- `./run test:unit` — run unit tests
+- `./run test:integration` — run integration tests
+- `./run test:rector` — run Rector rule tests
+- `./run lint` — fix code style
+- `./run lint:check` — preview code style changes
+- `./run rector` — apply Rector changes
+- `./run rector:check` — preview Rector changes
+
+Fallback when the dev server is not running (slower, starts a new container):
+- `docker compose run --rm composer sh` — run a shell inside a container
+- `docker compose run --rm composer composer <command>` — run any Composer command
 
 ## Logs
 - logs/frankenphp/caddy.log

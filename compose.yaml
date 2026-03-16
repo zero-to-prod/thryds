@@ -2,7 +2,7 @@ services:
   php:
     build:
       context: .
-      target: app
+      target: dev
     ports:
       - "${APP_PORT:-80}:${APP_PORT:-80}"
     environment:

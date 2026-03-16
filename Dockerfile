@@ -16,6 +16,12 @@ FROM base AS app
 
 ENV SERVER_NAME=:80
 
-RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 COPY . /app
+
+FROM app AS dev
+
+RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
