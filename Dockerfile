@@ -27,7 +27,7 @@ COPY docker/Caddyfile /etc/caddy/Caddyfile
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 COPY composer.json composer.lock /app/
-RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platform-req=ext-frankenphp
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 COPY . /app
 RUN php scripts/generate-preload.php

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Tests\Integration;
 
-use ZeroToProd\Thryds\Helpers\View;
 use Illuminate\Container\Container;
 use Jenssegers\Blade\Blade;
 use Jenssegers\Blade\Container as BladeContainer;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ZeroToProd\Thryds\Helpers\View;
 
 final class BladeCacheTest extends TestCase
 {
@@ -18,7 +18,7 @@ final class BladeCacheTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->cache_dir = sys_get_temp_dir() . '/blade_cache_test_' . uniqid();
+        $this->cache_dir = sys_get_temp_dir() . '/blade_cache_test_' . uniqid('', true);
         $this->template_dir = dirname(__DIR__, 2) . '/templates';
         mkdir($this->cache_dir, 0o755, true);
     }

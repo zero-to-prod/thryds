@@ -38,6 +38,12 @@
         "phpunit/phpunit": "^13.0",
         "friendsofphp/php-cs-fixer": "^3.94"
     },
+    "config": {
+        "platform": {
+            "ext-frankenphp": "1.0",
+            "ext-zend-opcache": "1.0"
+        }
+    },
     "scripts": {
         "test": "./vendor/bin/phpunit",
         "test:unit": "./vendor/bin/phpunit --testsuite unit",
