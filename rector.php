@@ -46,6 +46,7 @@ use Utils\Rector\Rector\SuggestExtractSharedCatchLogicRector;
 use Utils\Rector\Rector\RequireParamTypeRector;
 use Utils\Rector\Rector\RequireReturnTypeRector;
 use Utils\Rector\Rector\ForbidDeepNestingRector;
+use Utils\Rector\Rector\LimitConstructorParamsRector;
 use Utils\Rector\Rector\UseLogContextConstRector;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
@@ -184,6 +185,10 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(ForbidDeepNestingRector::class, [
         'maxDepth' => 3,
         'maxNegationComplexity' => 2,
+    ]);
+    $rectorConfig->ruleWithConfiguration(LimitConstructorParamsRector::class, [
+        'maxParams' => 5,
+        'dtoSuffix' => 'Deps',
     ]);
     $rectorConfig->ruleWithConfiguration(RequireMethodAnnotationForDataModelRector::class, [
         'dataModelTraits' => [
