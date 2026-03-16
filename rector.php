@@ -9,6 +9,7 @@ use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Utils\Rector\Rector\AddNamedArgWhenVarMismatchesParamRector;
 use Utils\Rector\Rector\ExtractRepeatedExpressionToVariableRector;
 use Utils\Rector\Rector\ExtractRoutePatternToRouteClassRector;
+use Utils\Rector\Rector\ForbidLongClosureRector;
 use Utils\Rector\Rector\ForbiddenFuncCallRector;
 use Utils\Rector\Rector\ForbidCallableTypeVariableNameRector;
 use Utils\Rector\Rector\ForbidDuplicateRoutePatternRector;
@@ -175,6 +176,10 @@ return static function (RectorConfig $rectorConfig): void {
         'useDocblocks' => true,
     ]);
     $rectorConfig->rule(SuggestDuplicateStringConstantRector::class);
+    $rectorConfig->ruleWithConfiguration(ForbidLongClosureRector::class, [
+        'maxStatements' => 5,
+        'skipArrowFunctions' => true,
+    ]);
     $rectorConfig->ruleWithConfiguration(RequireMethodAnnotationForDataModelRector::class, [
         'dataModelTraits' => [
             DataModel::class,
