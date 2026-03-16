@@ -201,3 +201,4 @@ After adding new files, run `docker compose run --rm composer composer dump-auto
 - Create dedicated factory/analyzer classes when transformation logic exceeds ~50 lines.
 - Always include a test with fixture files for every rule.
 - Do not import scoped/prefixed vendor classes (e.g. `RectorPrefix*\...`) — they are internal to Rector's PHAR and will break in custom rules.
+- **Rules MUST be isolated from the rest of the codebase.** A rule must never import or reference classes, constants, enums, or any other symbols from the application (`src/`, `public/`, `tests/`). All project-specific values (class names, trait FQNs, method names, etc.) must be passed in via configuration. This keeps rules reusable and testable without coupling them to the application.
