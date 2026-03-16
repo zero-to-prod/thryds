@@ -11,12 +11,17 @@ readonly class Vite
     public const string app_entry = 'resources/js/app.js';
     public const string htmx_entry = 'resources/js/htmx.js';
     public const string app_css = 'resources/css/app.css';
+    /** Must match vite.config.js server.origin */
     private const string DEV_SERVER_URL = 'http://localhost:5173';
     private const string MANIFEST_PATH = '/public/build/.vite/manifest.json';
     private const string css = 'css';
     private const string file = 'file';
 
-    /** @param array<string, list<string>> $entry_css Maps entry points to their CSS source paths */
+    /**
+     * @param array<string, list<string>> $entry_css Dev-only: maps entry points to their CSS source paths.
+     *                                               In dev, Vite serves CSS separately so we emit explicit <link> tags.
+     *                                               In production, Vite bundles CSS into the manifest's "css" key — this map is unused.
+     */
     public function __construct(
         private Config $Config,
         private string $baseDir,
