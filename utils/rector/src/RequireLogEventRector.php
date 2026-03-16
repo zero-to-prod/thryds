@@ -112,7 +112,7 @@ CODE_SAMPLE,
 
         $shortName = $this->getShortClassName($this->logClass);
         $todoComment = new Comment(
-            "// TODO: " . self::TODO_MARKER . " Log calls need a durable event id. Add `{$shortName}::{$this->eventKey} => {$shortName}::<event_label>` to the context array."
+            '// TODO: ' . self::TODO_MARKER . " Log calls need a durable event id. Add `{$shortName}::{$this->eventKey} => {$shortName}::<event_label>` to the context array."
         );
 
         $existingComments = $node->getComments();

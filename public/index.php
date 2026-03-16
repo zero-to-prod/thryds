@@ -53,7 +53,7 @@ try {
         Log::event => Log::unhandled_exception,
         Log::exception => $Throwable::class,
         Log::file => $Throwable->getFile(),
-        Log::line => $Throwable->getLine()
+        Log::line => $Throwable->getLine(),
     ]);
     $HtmlResponse = new HtmlResponse(
         html: $Blade->make(view: View::error, data: [class_basename(ErrorViewModel::class) => ErrorViewModel::from([ErrorViewModel::status_code => 500, ErrorViewModel::message => $Config->isProduction() ? 'Internal Server Error' : $Throwable->getMessage()])])->render(),
