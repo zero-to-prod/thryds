@@ -448,7 +448,7 @@ CODE_SAMPLE
      */
     private function addTodoComment(Property $property, string $propName, array $values): void
     {
-        $quotedValues = array_map(static fn (string $v): string => "'{$v}'", $values);
+        $quotedValues = array_map(static fn(string $v): string => "'{$v}'", $values);
         $valuesStr = implode(', ', $quotedValues);
 
         $text = "// TODO: [AI] Property \${$propName} has known string values: {$valuesStr}. Consider extracting to a backed enum with these cases, then type-hint this property with the enum.";

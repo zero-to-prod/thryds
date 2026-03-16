@@ -27,4 +27,6 @@ return (new Config())
         'trailing_comma_in_multiline' => true,
         'new_expression_parentheses' => true,
         'use_arrow_functions' => true,
+        'function_declaration' => ['closure_fn_spacing' => 'none'],
+        'braces_position' => true,
     ]);
