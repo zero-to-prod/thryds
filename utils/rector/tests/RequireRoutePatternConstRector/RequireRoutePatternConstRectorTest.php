@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Utils\Rector\Tests\RenameEnumCaseToMatchValueRector;
+namespace Utils\Rector\Tests\RequireRoutePatternConstRector;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use Rector\Testing\PHPUnit\AbstractRectorTestCase;
 
-final class RenameEnumCaseToMatchValueRectorTest extends AbstractRectorTestCase
+final class RequireRoutePatternConstRectorTest extends AbstractRectorTestCase
 {
     #[DataProvider('provideData')]
     public function test(string $filePath): void
