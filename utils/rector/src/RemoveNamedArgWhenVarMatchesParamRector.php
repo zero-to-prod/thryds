@@ -4,18 +4,30 @@ declare(strict_types=1);
 
 namespace Utils\Rector\Rector;
 
+use PhpParser\Comment;
 use PhpParser\Node;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Expr\Variable;
+use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-final class RemoveNamedArgWhenVarMatchesParamRector extends AbstractRector
+final class RemoveNamedArgWhenVarMatchesParamRector extends AbstractRector implements ConfigurableRectorInterface
 {
+    private string $mode = 'auto';
+
+    private string $message = '';
+
+    public function configure(array $configuration): void
+    {
+        $this->mode = $configuration['mode'] ?? 'auto';
+        $this->message = $configuration['message'] ?? '';
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition('Remove named argument when the variable name already matches the parameter name', [
@@ -80,6 +92,23 @@ CODE_SAMPLE
             return null;
         }
 
+        if ($this->mode !== 'auto') {
+            return $this->addMessageComment($node);
+        }
+
+        return $node;
+    }
+
+    private function addMessageComment(Node $node): ?Node
+    {
+        foreach ($node->getComments() as $comment) {
+            if (str_contains($comment->getText(), $this->message)) {
+                return null;
+            }
+        }
+        $comments = $node->getComments();
+        array_unshift($comments, new Comment('// ' . $this->message));
+        $node->setAttribute('comments', $comments);
         return $node;
     }
 }

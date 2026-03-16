@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utils\Rector\Rector;
 
+use PhpParser\Comment;
 use PhpParser\Node;
 use PhpParser\Node\Const_;
 use PhpParser\Node\Identifier;
@@ -21,6 +22,10 @@ final class RouteParamNameMustBeConstRector extends AbstractRector implements Co
 
     private string $constName = 'pattern';
 
+    private string $mode = 'auto';
+
+    private string $message = '';
+
     public function configure(array $configuration): void
     {
         if (isset($configuration['classSuffix'])) {
@@ -30,6 +35,9 @@ final class RouteParamNameMustBeConstRector extends AbstractRector implements Co
         if (isset($configuration['constName'])) {
             $this->constName = $configuration['constName'];
         }
+
+        $this->mode = $configuration['mode'] ?? 'auto';
+        $this->message = $configuration['message'] ?? '';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -95,8 +103,25 @@ CODE_SAMPLE,
             return null;
         }
 
+        if ($this->mode !== 'auto') {
+            return $this->addMessageComment($node);
+        }
+
         $this->insertParamConsts($node, $missingParams);
 
+        return $node;
+    }
+
+    private function addMessageComment(Node $node): ?Node
+    {
+        foreach ($node->getComments() as $comment) {
+            if (str_contains($comment->getText(), $this->message)) {
+                return null;
+            }
+        }
+        $comments = $node->getComments();
+        array_unshift($comments, new Comment('// ' . $this->message));
+        $node->setAttribute('comments', $comments);
         return $node;
     }
 

@@ -15,10 +15,13 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 final class ForbidVariableVariablesRector extends AbstractRector implements ConfigurableRectorInterface
 {
+    private string $mode = 'warn';
+
     private string $message = 'TODO: Variable variables prevent compile-time variable resolution';
 
     public function configure(array $configuration): void
     {
+        $this->mode = $configuration['mode'] ?? 'warn';
         $this->message = $configuration['message'] ?? $this->message;
     }
 
@@ -54,6 +57,10 @@ CODE_SAMPLE,
      */
     public function refactor(Node $node): ?Node
     {
+        if ($this->mode === 'auto') {
+            return null;
+        }
+
         $hasVariableVariable = false;
 
         $this->traverseNodesWithCallable($node, function (Node $innerNode) use (&$hasVariableVariable): ?Node {

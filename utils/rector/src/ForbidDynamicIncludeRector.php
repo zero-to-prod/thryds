@@ -19,10 +19,13 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 final class ForbidDynamicIncludeRector extends AbstractRector implements ConfigurableRectorInterface
 {
+    private string $mode = 'warn';
+
     private string $message = 'TODO: Dynamic include prevents compile-time optimization';
 
     public function configure(array $configuration): void
     {
+        $this->mode = $configuration['mode'] ?? 'warn';
         $this->message = $configuration['message'] ?? $this->message;
     }
 
@@ -58,6 +61,10 @@ CODE_SAMPLE,
      */
     public function refactor(Node $node): ?Node
     {
+        if ($this->mode === 'auto') {
+            return null;
+        }
+
         if (!$node->expr instanceof Include_) {
             return null;
         }

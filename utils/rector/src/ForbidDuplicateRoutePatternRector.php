@@ -23,6 +23,8 @@ final class ForbidDuplicateRoutePatternRector extends AbstractRector implements 
 
     private string $scanDir = '';
 
+    private string $mode = 'warn';
+
     private string $message = "TODO: Duplicate route pattern '%s' — already defined in %s::%s";
 
     /**
@@ -38,6 +40,7 @@ final class ForbidDuplicateRoutePatternRector extends AbstractRector implements 
         $this->classSuffix = $configuration['classSuffix'] ?? 'Route';
         $this->constNames = $configuration['constNames'] ?? ['pattern'];
         $this->scanDir = $configuration['scanDir'] ?? '';
+        $this->mode = $configuration['mode'] ?? 'warn';
         $this->message = $configuration['message'] ?? "TODO: Duplicate route pattern '%s' — already defined in %s::%s";
 
         $this->patternMap = [];
@@ -99,6 +102,10 @@ CODE_SAMPLE,
      */
     public function refactor(Node $node): ?Node
     {
+        if ($this->mode === 'auto') {
+            return null;
+        }
+
         $shortName = $this->getName($node);
         if ($shortName === null) {
             return null;

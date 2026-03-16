@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utils\Rector\Rector;
 
+use PhpParser\Comment;
 use PhpParser\Comment\Doc;
 use PhpParser\Node;
 use PhpParser\Node\Expr\ClassConstFetch;
@@ -18,15 +19,26 @@ use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\VarLikeIdentifier;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\TypeWithClassName;
+use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-final class RenamePropertyToMatchTypeNameRector extends AbstractRector
+final class RenamePropertyToMatchTypeNameRector extends AbstractRector implements ConfigurableRectorInterface
 {
+    private string $mode = 'auto';
+
+    private string $message = '';
+
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,
     ) {}
+
+    public function configure(array $configuration): void
+    {
+        $this->mode = $configuration['mode'] ?? 'auto';
+        $this->message = $configuration['message'] ?? '';
+    }
 
     public function getRuleDefinition(): RuleDefinition
     {
@@ -90,6 +102,10 @@ CODE_SAMPLE
         $renames = $this->collectPropertyRenames($node);
         if ($renames === []) {
             return null;
+        }
+
+        if ($this->mode !== 'auto') {
+            return $this->addMessageComment($node);
         }
 
         $this->renamePropertyDeclarations($node, $renames);
@@ -255,6 +271,10 @@ CODE_SAMPLE
             return null;
         }
 
+        if ($this->mode !== 'auto') {
+            return $this->addMessageComment($node);
+        }
+
         $node->name = new Identifier($expectedName);
         return $node;
     }
@@ -295,7 +315,24 @@ CODE_SAMPLE
             return null;
         }
 
+        if ($this->mode !== 'auto') {
+            return $this->addMessageComment($node);
+        }
+
         $node->name = new Identifier($expectedName);
+        return $node;
+    }
+
+    private function addMessageComment(Node $node): ?Node
+    {
+        foreach ($node->getComments() as $comment) {
+            if (str_contains($comment->getText(), $this->message)) {
+                return null;
+            }
+        }
+        $comments = $node->getComments();
+        array_unshift($comments, new Comment('// ' . $this->message));
+        $node->setAttribute('comments', $comments);
         return $node;
     }
 

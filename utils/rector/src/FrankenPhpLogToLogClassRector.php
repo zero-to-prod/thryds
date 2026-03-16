@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utils\Rector\Rector;
 
+use PhpParser\Comment;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\FuncCall;
@@ -24,6 +25,10 @@ final class FrankenPhpLogToLogClassRector extends AbstractRector implements Conf
 
     private string $logClass = '';
 
+    private string $mode = 'auto';
+
+    private string $message = '';
+
     /** @var array<int, string> */
     private const LEVEL_METHOD_MAP = [
         -4 => 'debug',
@@ -36,6 +41,8 @@ final class FrankenPhpLogToLogClassRector extends AbstractRector implements Conf
     {
         $this->functions = $configuration['functions'] ?? $this->functions;
         $this->logClass = $configuration['logClass'] ?? $this->logClass;
+        $this->mode = $configuration['mode'] ?? 'auto';
+        $this->message = $configuration['message'] ?? '';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -93,11 +100,28 @@ CODE_SAMPLE,
             $newArgs[] = new Arg($args[2]->value);
         }
 
+        if ($this->mode !== 'auto') {
+            return $this->addMessageComment($node);
+        }
+
         return new StaticCall(
             new FullyQualified($this->logClass),
             new Identifier($method),
             $newArgs
         );
+    }
+
+    private function addMessageComment(Node $node): ?Node
+    {
+        foreach ($node->getComments() as $comment) {
+            if (str_contains($comment->getText(), $this->message)) {
+                return null;
+            }
+        }
+        $comments = $node->getComments();
+        array_unshift($comments, new Comment('// ' . $this->message));
+        $node->setAttribute('comments', $comments);
+        return $node;
     }
 
     /**

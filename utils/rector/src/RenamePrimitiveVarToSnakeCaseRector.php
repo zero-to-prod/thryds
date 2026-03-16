@@ -4,18 +4,30 @@ declare(strict_types=1);
 
 namespace Utils\Rector\Rector;
 
+use PhpParser\Comment;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\Expression;
 use PHPStan\Type\TypeWithClassName;
+use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\PhpParser\Enum\NodeGroup;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-final class RenamePrimitiveVarToSnakeCaseRector extends AbstractRector
+final class RenamePrimitiveVarToSnakeCaseRector extends AbstractRector implements ConfigurableRectorInterface
 {
+    private string $mode = 'auto';
+
+    private string $message = '';
+
+    public function configure(array $configuration): void
+    {
+        $this->mode = $configuration['mode'] ?? 'auto';
+        $this->message = $configuration['message'] ?? '';
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition('Rename local variables holding primitive types to snake_case', [
@@ -105,6 +117,10 @@ CODE_SAMPLE
             return null;
         }
 
+        if ($this->mode !== 'auto') {
+            return $this->addMessageComment($node);
+        }
+
         // Apply all renames to subsequent statements
         foreach ($renames as [$oldName, $newName]) {
             $lastAssignIndex = null;
@@ -138,6 +154,19 @@ CODE_SAMPLE
             }
         }
 
+        return $node;
+    }
+
+    private function addMessageComment(Node $node): ?Node
+    {
+        foreach ($node->getComments() as $comment) {
+            if (str_contains($comment->getText(), $this->message)) {
+                return null;
+            }
+        }
+        $comments = $node->getComments();
+        array_unshift($comments, new Comment('// ' . $this->message));
+        $node->setAttribute('comments', $comments);
         return $node;
     }
 

@@ -18,11 +18,14 @@ final class ForbidDirectRouterInstantiationRector extends AbstractRector impleme
     /** @var string[] */
     private array $forbiddenClasses = [];
 
+    private string $mode = 'warn';
+
     private string $message = 'TODO: Avoid direct instantiation of %s — use a cached router instead';
 
     public function configure(array $configuration): void
     {
         $this->forbiddenClasses = $configuration['forbiddenClasses'] ?? [];
+        $this->mode = $configuration['mode'] ?? 'warn';
         $this->message = $configuration['message'] ?? 'TODO: Avoid direct instantiation of %s — use a cached router instead';
     }
 
@@ -58,6 +61,10 @@ CODE_SAMPLE,
      */
     public function refactor(Node $node): ?Node
     {
+        if ($this->mode === 'auto') {
+            return null;
+        }
+
         $matchedClassName = null;
 
         $this->traverseNodesWithCallable($node->expr, function (Node $subNode) use (&$matchedClassName): null {

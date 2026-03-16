@@ -4,21 +4,33 @@ declare(strict_types=1);
 
 namespace Utils\Rector\Rector;
 
+use PhpParser\Comment;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\Class_;
 use PHPStan\Reflection\ReflectionProvider;
+use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-final class MakeClassReadonlyRector extends AbstractRector
+final class MakeClassReadonlyRector extends AbstractRector implements ConfigurableRectorInterface
 {
+    private string $mode = 'auto';
+
+    private string $message = '';
+
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,
     ) {}
+
+    public function configure(array $configuration): void
+    {
+        $this->mode = $configuration['mode'] ?? 'auto';
+        $this->message = $configuration['message'] ?? '';
+    }
 
     public function getRuleDefinition(): RuleDefinition
     {
@@ -80,10 +92,27 @@ CODE_SAMPLE
             return null;
         }
 
+        if ($this->mode !== 'auto') {
+            return $this->addMessageComment($node);
+        }
+
         $node->flags |= Class_::MODIFIER_READONLY;
 
         $this->removeRedundantPropertyReadonly($node);
 
+        return $node;
+    }
+
+    private function addMessageComment(Node $node): ?Node
+    {
+        foreach ($node->getComments() as $comment) {
+            if (str_contains($comment->getText(), $this->message)) {
+                return null;
+            }
+        }
+        $comments = $node->getComments();
+        array_unshift($comments, new Comment('// ' . $this->message));
+        $node->setAttribute('comments', $comments);
         return $node;
     }
 

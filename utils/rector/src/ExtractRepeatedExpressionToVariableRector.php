@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utils\Rector\Rector;
 
+use PhpParser\Comment;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\Assign;
@@ -25,12 +26,18 @@ final class ExtractRepeatedExpressionToVariableRector extends AbstractRector imp
      */
     private array $pureFunctions = [];
 
+    private string $mode = 'auto';
+
+    private string $message = '';
+
     /**
      * @param string[] $configuration
      */
     public function configure(array $configuration): void
     {
-        $this->pureFunctions = $configuration;
+        $this->mode = $configuration['mode'] ?? 'auto';
+        $this->message = $configuration['message'] ?? '';
+        $this->pureFunctions = $configuration['functions'] ?? $configuration;
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -102,6 +109,13 @@ CODE_SAMPLE,
                 continue;
             }
 
+            if ($this->mode !== 'auto') {
+                $firstStmt = $stmts[$occurrences[0]['stmtIndex']];
+                $this->addMessageComment($firstStmt);
+                $hasChanged = true;
+                continue;
+            }
+
             $representativeCall = $occurrences[0]['node'];
             $varName = $this->resolveVariableName($representativeCall);
 
@@ -147,6 +161,19 @@ CODE_SAMPLE,
 
         $node->stmts = $stmts;
 
+        return $node;
+    }
+
+    private function addMessageComment(Node $node): ?Node
+    {
+        foreach ($node->getComments() as $comment) {
+            if (str_contains($comment->getText(), $this->message)) {
+                return null;
+            }
+        }
+        $comments = $node->getComments();
+        array_unshift($comments, new Comment('// ' . $this->message));
+        $node->setAttribute('comments', $comments);
         return $node;
     }
 

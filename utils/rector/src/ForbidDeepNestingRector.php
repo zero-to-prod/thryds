@@ -49,12 +49,15 @@ final class ForbidDeepNestingRector extends AbstractRector implements Configurab
 
     private int $maxNegationComplexity = 2;
 
+    private string $mode = 'warn';
+
     private string $message = 'TODO: Reduce nesting depth';
 
     public function configure(array $configuration): void
     {
         $this->maxDepth = $configuration['maxDepth'] ?? 3;
         $this->maxNegationComplexity = $configuration['maxNegationComplexity'] ?? 2;
+        $this->mode = $configuration['mode'] ?? 'warn';
         $this->message = $configuration['message'] ?? 'TODO: Reduce nesting depth';
     }
 
@@ -400,6 +403,10 @@ CODE_SAMPLE,
 
     private function addTodoToNode(ClassMethod|Function_ $node, int $depth): ?Node
     {
+        if ($this->mode === 'auto') {
+            return null;
+        }
+
         $message = $this->message . ' (current: ' . $depth . ', max: ' . $this->maxDepth . ')';
 
         foreach ($node->getComments() as $comment) {

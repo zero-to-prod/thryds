@@ -27,6 +27,8 @@ final class RequireReturnTypeRector extends AbstractRector implements Configurab
 
     private bool $skipClosures = false;
 
+    private string $mode = 'warn';
+
     private string $message = 'TODO: Add return type';
 
     private const MAGIC_METHODS = [
@@ -59,6 +61,7 @@ final class RequireReturnTypeRector extends AbstractRector implements Configurab
     {
         $this->skipMagicMethods = $configuration['skipMagicMethods'] ?? true;
         $this->skipClosures = $configuration['skipClosures'] ?? false;
+        $this->mode = $configuration['mode'] ?? 'warn';
         $this->message = $configuration['message'] ?? 'TODO: Add return type';
     }
 
@@ -234,6 +237,10 @@ CODE_SAMPLE,
 
     private function addTodoComment(Node $node): void
     {
+        if ($this->mode === 'auto') {
+            return;
+        }
+
         $todoComment = new Comment('// ' . $this->message);
         $existingComments = $node->getComments();
         array_unshift($existingComments, $todoComment);

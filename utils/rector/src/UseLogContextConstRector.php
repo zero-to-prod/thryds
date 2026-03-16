@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utils\Rector\Rector;
 
+use PhpParser\Comment;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\Array_;
@@ -29,6 +30,10 @@ final class UseLogContextConstRector extends AbstractRector implements Configura
     /** @var string[] */
     private array $methods = [];
 
+    private string $mode = 'auto';
+
+    private string $message = '';
+
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,
     ) {}
@@ -38,6 +43,8 @@ final class UseLogContextConstRector extends AbstractRector implements Configura
         $this->logClass = $configuration['logClass'];
         $this->keys = $configuration['keys'];
         $this->methods = $configuration['methods'] ?? ['debug', 'info', 'warn', 'error'];
+        $this->mode = $configuration['mode'] ?? 'auto';
+        $this->message = $configuration['message'] ?? '';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -116,6 +123,12 @@ CODE_SAMPLE,
 
             $constName = $item->key->value;
 
+            if ($this->mode !== 'auto') {
+                $this->addMessageComment($node);
+                $changed = true;
+                continue;
+            }
+
             $this->addConstantToClassFile($constName);
 
             $item->key = new ClassConstFetch(
@@ -129,6 +142,19 @@ CODE_SAMPLE,
             return null;
         }
 
+        return $node;
+    }
+
+    private function addMessageComment(Node $node): ?Node
+    {
+        foreach ($node->getComments() as $comment) {
+            if (str_contains($comment->getText(), $this->message)) {
+                return null;
+            }
+        }
+        $comments = $node->getComments();
+        array_unshift($comments, new Comment('// ' . $this->message));
+        $node->setAttribute('comments', $comments);
         return $node;
     }
 

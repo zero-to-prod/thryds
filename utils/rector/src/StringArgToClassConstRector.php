@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utils\Rector\Rector;
 
+use PhpParser\Comment;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\ClassConstFetch;
@@ -22,13 +23,19 @@ final class StringArgToClassConstRector extends AbstractRector implements Config
     /** @var array<int, array{class: string, methodName: string, paramName: string}> */
     private array $mappings = [];
 
+    private string $mode = 'auto';
+
+    private string $message = '';
+
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,
     ) {}
 
     public function configure(array $configuration): void
     {
-        $this->mappings = $configuration;
+        $this->mode = $configuration['mode'] ?? 'auto';
+        $this->message = $configuration['message'] ?? '';
+        $this->mappings = $configuration['mappings'] ?? $configuration;
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -89,6 +96,12 @@ CODE_SAMPLE,
                 $stringValue = $arg->value->value;
                 $constName = str_replace('.', '_', $stringValue);
 
+                if ($this->mode !== 'auto') {
+                    $this->addMessageComment($node);
+                    $changed = true;
+                    continue;
+                }
+
                 $this->addConstantToClassFile($mapping['class'], $constName, $stringValue);
 
                 $arg->value = new ClassConstFetch(
@@ -103,6 +116,19 @@ CODE_SAMPLE,
             return null;
         }
 
+        return $node;
+    }
+
+    private function addMessageComment(Node $node): ?Node
+    {
+        foreach ($node->getComments() as $comment) {
+            if (str_contains($comment->getText(), $this->message)) {
+                return null;
+            }
+        }
+        $comments = $node->getComments();
+        array_unshift($comments, new Comment('// ' . $this->message));
+        $node->setAttribute('comments', $comments);
         return $node;
     }
 

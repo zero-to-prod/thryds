@@ -26,6 +26,8 @@ final class LimitConstructorParamsRector extends AbstractRector implements Confi
 
     private string $dtoOutputDir = '';
 
+    private string $mode = 'warn';
+
     private string $message = 'TODO: Too many constructor parameters';
 
     public function configure(array $configuration): void
@@ -33,6 +35,7 @@ final class LimitConstructorParamsRector extends AbstractRector implements Confi
         $this->maxParams = $configuration['maxParams'] ?? 5;
         $this->dtoSuffix = $configuration['dtoSuffix'] ?? 'Deps';
         $this->dtoOutputDir = $configuration['dtoOutputDir'] ?? '';
+        $this->mode = $configuration['mode'] ?? 'warn';
         $this->message = $configuration['message'] ?? 'TODO: Too many constructor parameters';
     }
 
@@ -458,6 +461,10 @@ CODE_SAMPLE,
 
     private function addTodo(Class_ $class, ClassMethod $constructor, int $paramCount): ?Node
     {
+        if ($this->mode === 'auto') {
+            return null;
+        }
+
         $message = $this->message . ' (current: ' . $paramCount . ', max: ' . $this->maxParams . ')';
 
         foreach ($constructor->getComments() as $comment) {

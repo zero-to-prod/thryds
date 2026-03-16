@@ -22,10 +22,13 @@ final class SuggestDuplicateStringConstantRector extends AbstractRector implemen
 {
     private const MIN_LENGTH = 3;
 
+    private string $mode = 'warn';
+
     private string $message = "TODO: Refactor duplicate string '%s' (used %dx) to a constant";
 
     public function configure(array $configuration): void
     {
+        $this->mode = $configuration['mode'] ?? 'warn';
         $this->message = $configuration['message'] ?? "TODO: Refactor duplicate string '%s' (used %dx) to a constant";
     }
 
@@ -65,6 +68,10 @@ CODE_SAMPLE,
      */
     public function refactor(Node $node): ?Node
     {
+        if ($this->mode === 'auto') {
+            return null;
+        }
+
         // Resolve the flat list of statements to annotate against.
         // For a namespaced file, the namespace body is the right level;
         // for a non-namespaced file, the FileNode's stmts are the right level.

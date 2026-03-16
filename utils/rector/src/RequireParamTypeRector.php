@@ -37,6 +37,8 @@ final class RequireParamTypeRector extends AbstractRector implements Configurabl
 
     private bool $useDocblocks = true;
 
+    private string $mode = 'warn';
+
     private string $message = 'TODO: Add param type';
 
     public function __construct(
@@ -48,6 +50,7 @@ final class RequireParamTypeRector extends AbstractRector implements Configurabl
         $this->skipVariadic = $configuration['skipVariadic'] ?? true;
         $this->skipClosures = $configuration['skipClosures'] ?? false;
         $this->useDocblocks = $configuration['useDocblocks'] ?? true;
+        $this->mode = $configuration['mode'] ?? 'warn';
         $this->message = $configuration['message'] ?? 'TODO: Add param type';
     }
 
@@ -340,6 +343,10 @@ CODE_SAMPLE,
 
     private function addTodoComments(Node $node, array $paramNames): void
     {
+        if ($this->mode === 'auto') {
+            return;
+        }
+
         $existingComments = $node->getComments();
 
         $newComments = [];

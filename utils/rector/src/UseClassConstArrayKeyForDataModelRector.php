@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utils\Rector\Rector;
 
+use PhpParser\Comment;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\StaticCall;
@@ -14,24 +15,35 @@ use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\Property;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\ReflectionProvider;
+use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Rector\AbstractRector;
-use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
+use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-final class UseClassConstArrayKeyForDataModelRector extends AbstractRector
+final class UseClassConstArrayKeyForDataModelRector extends AbstractRector implements ConfigurableRectorInterface
 {
     private const DATAMODEL_TRAIT = 'Zerotoprod\DataModel\DataModel';
+
+    private string $mode = 'auto';
+
+    private string $message = '';
 
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,
     ) {}
+
+    public function configure(array $configuration): void
+    {
+        $this->mode = $configuration['mode'] ?? 'auto';
+        $this->message = $configuration['message'] ?? '';
+    }
 
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
             'Add class constants for DataModel properties and replace string array keys in ::from() calls',
             [
-                new CodeSample(
+                new ConfiguredCodeSample(
                     <<<'CODE_SAMPLE'
 use Zerotoprod\DataModel\DataModel;
 
@@ -61,7 +73,8 @@ class Config
 $Config = Config::from([
     Config::appEnv => 'production',
 ]);
-CODE_SAMPLE
+CODE_SAMPLE,
+                    ['message' => 'auto']
                 ),
             ]
         );
@@ -109,6 +122,12 @@ CODE_SAMPLE
                 }
 
                 if (in_array($propName, $existingConstants, true)) {
+                    continue;
+                }
+
+                if ($this->mode !== 'auto') {
+                    $this->addMessageComment($stmt);
+                    $hasChanged = true;
                     continue;
                 }
 
@@ -178,6 +197,12 @@ CODE_SAMPLE
                 continue;
             }
 
+            if ($this->mode !== 'auto') {
+                $this->addMessageComment($node);
+                $hasChanged = true;
+                continue;
+            }
+
             $item->key = $this->nodeFactory->createClassConstFetch($className, $keyString);
             $hasChanged = true;
         }
@@ -240,5 +265,18 @@ CODE_SAMPLE
     private function classHasProperty(ClassReflection $classReflection, string $propertyName): bool
     {
         return $classReflection->hasNativeProperty($propertyName);
+    }
+
+    private function addMessageComment(Node $node): ?Node
+    {
+        foreach ($node->getComments() as $comment) {
+            if (str_contains($comment->getText(), $this->message)) {
+                return null;
+            }
+        }
+        $comments = $node->getComments();
+        array_unshift($comments, new Comment('// ' . $this->message));
+        $node->setAttribute('comments', $comments);
+        return $node;
     }
 }

@@ -21,11 +21,14 @@ final class ForbidCallableTypeVariableNameRector extends AbstractRector implemen
      */
     private array $forbiddenNames = [];
 
+    private string $mode = 'warn';
+
     private string $message = 'TODO: Rename $%s to describe its behaviour';
 
     public function configure(array $configuration): void
     {
         $this->forbiddenNames = $configuration['forbiddenNames'] ?? [];
+        $this->mode = $configuration['mode'] ?? 'warn';
         $this->message = $configuration['message'] ?? 'TODO: Rename $%s to describe its behaviour';
     }
 
@@ -61,6 +64,10 @@ CODE_SAMPLE,
      */
     public function refactor(Node $node): ?Node
     {
+        if ($this->mode === 'auto') {
+            return null;
+        }
+
         if (! $node->expr instanceof Assign) {
             return null;
         }

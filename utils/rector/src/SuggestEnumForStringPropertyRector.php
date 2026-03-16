@@ -34,6 +34,8 @@ final class SuggestEnumForStringPropertyRector extends AbstractRector implements
     /** @var string[] */
     private array $describeAttrs = [];
 
+    private string $mode = 'warn';
+
     private string $message = 'TODO: $%s has known values: %s — consider extracting to an enum';
 
     private string $callSiteMessage = 'TODO: %s is a value of %s::$%s — consider replacing with an enum case';
@@ -46,6 +48,7 @@ final class SuggestEnumForStringPropertyRector extends AbstractRector implements
     {
         $this->dataModelTraits = $configuration['dataModelTraits'] ?? [];
         $this->describeAttrs = $configuration['describeAttrs'] ?? [];
+        $this->mode = $configuration['mode'] ?? 'warn';
         $this->message = $configuration['message'] ?? 'TODO: $%s has known values: %s — consider extracting to an enum';
         $this->callSiteMessage = $configuration['callSiteMessage'] ?? 'TODO: %s is a value of %s::$%s — consider replacing with an enum case';
     }
@@ -100,6 +103,10 @@ CODE_SAMPLE,
 
     public function refactor(Node $node): ?Node
     {
+        if ($this->mode === 'auto') {
+            return null;
+        }
+
         if ($this->dataModelTraits === []) {
             return null;
         }

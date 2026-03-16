@@ -21,6 +21,8 @@ final class ForbidStringRoutePatternRector extends AbstractRector implements Con
 
     private int $argPosition = 1;
 
+    private string $mode = 'warn';
+
     private string $message = "TODO: Extract route pattern '%s' to a class constant";
 
     public function configure(array $configuration): void
@@ -34,6 +36,7 @@ final class ForbidStringRoutePatternRector extends AbstractRector implements Con
         }
 
         if (isset($configuration['message'])) {
+            $this->mode = $configuration['mode'] ?? 'warn';
             $this->message = $configuration['message'];
         }
     }
@@ -70,6 +73,10 @@ CODE_SAMPLE,
      */
     public function refactor(Node $node): ?Node
     {
+        if ($this->mode === 'auto') {
+            return null;
+        }
+
         if (!$node->expr instanceof MethodCall) {
             return null;
         }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utils\Rector\Rector;
 
+use PhpParser\Comment;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\Variable;
@@ -22,12 +23,18 @@ final class RenameVarToMatchReturnTypeRector extends AbstractRector implements C
      */
     private array $skipNames = [];
 
+    private string $mode = 'auto';
+
+    private string $message = '';
+
     /**
-     * @param array{skipNames?: string[]} $configuration
+     * @param array{skipNames?: string[], message?: string} $configuration
      */
     public function configure(array $configuration): void
     {
         $this->skipNames = $configuration['skipNames'] ?? [];
+        $this->mode = $configuration['mode'] ?? 'auto';
+        $this->message = $configuration['message'] ?? '';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -58,6 +65,7 @@ CODE_SAMPLE,
         }
 
         $hasChanged = false;
+        $hasCommentAdded = false;
         $renames = [];
 
         foreach ($stmts as $i => $stmt) {
@@ -115,13 +123,23 @@ CODE_SAMPLE,
                 continue;
             }
 
+            if ($this->mode !== 'auto') {
+                $this->addMessageComment($stmt);
+                $hasCommentAdded = true;
+                continue;
+            }
+
             $assign->var = new Variable($expectedName);
             $renames[] = [$currentName, $expectedName];
             $hasChanged = true;
         }
 
-        if (! $hasChanged) {
+        if (! $hasChanged && ! $hasCommentAdded) {
             return null;
+        }
+
+        if (! $hasChanged) {
+            return $node;
         }
 
         // Apply all renames to subsequent statements
@@ -166,5 +184,18 @@ CODE_SAMPLE,
         $parts = explode('\\', $className);
 
         return end($parts);
+    }
+
+    private function addMessageComment(Node $node): ?Node
+    {
+        foreach ($node->getComments() as $comment) {
+            if (str_contains($comment->getText(), $this->message)) {
+                return null;
+            }
+        }
+        $comments = $node->getComments();
+        array_unshift($comments, new Comment('// ' . $this->message));
+        $node->setAttribute('comments', $comments);
+        return $node;
     }
 }

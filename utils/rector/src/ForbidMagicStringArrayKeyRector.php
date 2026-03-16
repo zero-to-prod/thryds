@@ -25,6 +25,8 @@ final class ForbidMagicStringArrayKeyRector extends AbstractRector implements Co
     /** @var string[] */
     private array $excludedClasses = [];
 
+    private string $mode = 'warn';
+
     private string $message = "TODO: Replace magic string key '%s' with a class constant";
 
     /** @var array<int, true> */
@@ -33,6 +35,7 @@ final class ForbidMagicStringArrayKeyRector extends AbstractRector implements Co
     public function configure(array $configuration): void
     {
         $this->excludedClasses = $configuration['excludedClasses'] ?? [];
+        $this->mode = $configuration['mode'] ?? 'warn';
         $this->message = $configuration['message'] ?? "TODO: Replace magic string key '%s' with a class constant";
     }
 
@@ -74,6 +77,10 @@ CODE_SAMPLE,
      */
     public function refactor(Node $node): ?Node
     {
+        if ($this->mode === 'auto') {
+            return null;
+        }
+
         if ($node instanceof FileNode) {
             $this->excludedItemIds = [];
 

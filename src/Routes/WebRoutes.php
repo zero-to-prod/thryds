@@ -17,7 +17,7 @@ readonly class WebRoutes
     {
         $Router->map(
             HTTP_METHOD::GET->value,
-            HomeRoute::pattern,
+            Route::home->value,
             fn(): ResponseInterface => new HtmlResponse(
                 html: $Blade->make(view: View::home)->render(),
             ),
@@ -25,7 +25,7 @@ readonly class WebRoutes
 
         $Router->map(
             HTTP_METHOD::GET->value,
-            AboutRoute::pattern,
+            Route::about->value,
             fn(): ResponseInterface => new HtmlResponse(
                 html: $Blade->make(view: View::about)->render(),
             ),
@@ -33,7 +33,7 @@ readonly class WebRoutes
 
         $Router->map(
             HTTP_METHOD::GET->value,
-            OpcacheStatusRoute::pattern,
+            Route::opcache_status->value,
             static function (): ResponseInterface {
                 $status = opcache_get_status(false);
 
@@ -48,12 +48,12 @@ readonly class WebRoutes
 
         $Router->map(
             HTTP_METHOD::GET->value,
-            OpcacheStatusRoute::scripts_pattern,
+            Route::opcache_scripts->value,
             static function (): ResponseInterface {
                 $status = opcache_get_status(true);
 
                 return new JsonResponse(
-                    data: array_keys($status[OpcacheStatusRoute::scripts] ?? []),
+                    data: array_keys($status['scripts'] ?? []),
                 );
             },
         );

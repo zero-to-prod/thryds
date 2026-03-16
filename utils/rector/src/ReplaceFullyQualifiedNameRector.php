@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utils\Rector\Rector;
 
+use PhpParser\Comment;
 use PhpParser\Node;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\UseUse;
@@ -17,12 +18,18 @@ final class ReplaceFullyQualifiedNameRector extends AbstractRector implements Co
     /** @var array<string, string> */
     private array $nameMap = [];
 
+    private string $mode = 'auto';
+
+    private string $message = '';
+
     /**
      * @param array<string, string> $configuration
      */
     public function configure(array $configuration): void
     {
-        $this->nameMap = $configuration;
+        $this->mode = $configuration['mode'] ?? 'auto';
+        $this->message = $configuration['message'] ?? '';
+        $this->nameMap = $configuration['replacements'] ?? $configuration;
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -71,8 +78,25 @@ CODE_SAMPLE,
             return null;
         }
 
+        if ($this->mode !== 'auto') {
+            return $this->addMessageComment($node);
+        }
+
         $node->name = new Name($this->nameMap[$currentName]);
 
+        return $node;
+    }
+
+    private function addMessageComment(Node $node): ?Node
+    {
+        foreach ($node->getComments() as $comment) {
+            if (str_contains($comment->getText(), $this->message)) {
+                return null;
+            }
+        }
+        $comments = $node->getComments();
+        array_unshift($comments, new Comment('// ' . $this->message));
+        $node->setAttribute('comments', $comments);
         return $node;
     }
 }

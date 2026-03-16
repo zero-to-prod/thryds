@@ -38,6 +38,8 @@ final class ForbidArrayShapeReturnRector extends AbstractRector implements Confi
 
     private bool $allowMixed = false;
 
+    private string $mode = 'warn';
+
     private string $message = 'TODO: Replace array return with a typed class';
 
     public function __construct(
@@ -53,6 +55,7 @@ final class ForbidArrayShapeReturnRector extends AbstractRector implements Confi
         $this->outputDir = $configuration['outputDir'] ?? '';
         $this->dataModelTrait = $configuration['dataModelTrait'] ?? '';
         $this->allowMixed = $configuration['allowMixed'] ?? false;
+        $this->mode = $configuration['mode'] ?? 'warn';
         $this->message = $configuration['message'] ?? 'TODO: Replace array return with a typed class';
     }
 
@@ -420,6 +423,10 @@ CODE_SAMPLE,
 
     private function addTodoComment(Node $node): void
     {
+        if ($this->mode === 'auto') {
+            return;
+        }
+
         $todoComment = new Comment('// ' . $this->message);
         $existingComments = $node->getComments();
         array_unshift($existingComments, $todoComment);

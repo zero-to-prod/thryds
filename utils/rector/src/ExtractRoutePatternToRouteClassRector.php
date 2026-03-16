@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utils\Rector\Rector;
 
+use PhpParser\Comment;
 use PhpParser\Node;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\MethodCall;
@@ -26,12 +27,18 @@ final class ExtractRoutePatternToRouteClassRector extends AbstractRector impleme
 
     private string $outputDir = '';
 
+    private string $mode = 'auto';
+
+    private string $message = '';
+
     public function configure(array $configuration): void
     {
         $this->methods = $configuration['methods'] ?? [];
         $this->argPosition = $configuration['argPosition'] ?? 1;
         $this->namespace = $configuration['namespace'] ?? '';
         $this->outputDir = $configuration['outputDir'] ?? '';
+        $this->mode = $configuration['mode'] ?? 'auto';
+        $this->message = $configuration['message'] ?? '';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -93,6 +100,10 @@ CODE_SAMPLE,
         $className = $this->deriveClassName($pattern);
         $fqcn = $this->namespace . '\\' . $className;
 
+        if ($this->mode !== 'auto') {
+            return $this->addMessageComment($node);
+        }
+
         $this->generateRouteClassFile($className, $fqcn, $pattern);
 
         $arg->value = new ClassConstFetch(
@@ -100,6 +111,19 @@ CODE_SAMPLE,
             new Identifier('pattern')
         );
 
+        return $node;
+    }
+
+    private function addMessageComment(Node $node): ?Node
+    {
+        foreach ($node->getComments() as $comment) {
+            if (str_contains($comment->getText(), $this->message)) {
+                return null;
+            }
+        }
+        $comments = $node->getComments();
+        array_unshift($comments, new Comment('// ' . $this->message));
+        $node->setAttribute('comments', $comments);
         return $node;
     }
 

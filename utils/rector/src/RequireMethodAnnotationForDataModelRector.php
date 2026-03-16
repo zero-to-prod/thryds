@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utils\Rector\Rector;
 
+use PhpParser\Comment;
 use PhpParser\Comment\Doc;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Class_;
@@ -19,6 +20,10 @@ final class RequireMethodAnnotationForDataModelRector extends AbstractRector imp
     /** @var string[] */
     private array $dataModelTraits = [];
 
+    private string $mode = 'auto';
+
+    private string $message = '';
+
     private const DESCRIBE_ATTRIBUTE = 'Describe';
 
     public function __construct(
@@ -28,6 +33,8 @@ final class RequireMethodAnnotationForDataModelRector extends AbstractRector imp
     public function configure(array $configuration): void
     {
         $this->dataModelTraits = $configuration['dataModelTraits'] ?? [];
+        $this->mode = $configuration['mode'] ?? 'auto';
+        $this->message = $configuration['message'] ?? '';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -93,6 +100,10 @@ CODE_SAMPLE,
         $shape = $this->buildArrayShape($node);
         $expectedAnnotation = "@method static self from(array{{$shape}} \$data)";
 
+        if ($this->mode !== 'auto') {
+            return $this->addMessageComment($node);
+        }
+
         $docComment = $node->getDocComment();
         if ($docComment !== null && str_contains($docComment->getText(), '@method') && str_contains($docComment->getText(), 'from(')) {
             $existingText = $docComment->getText();
@@ -133,6 +144,19 @@ CODE_SAMPLE,
             ));
         }
 
+        return $node;
+    }
+
+    private function addMessageComment(Node $node): ?Node
+    {
+        foreach ($node->getComments() as $comment) {
+            if (str_contains($comment->getText(), $this->message)) {
+                return null;
+            }
+        }
+        $comments = $node->getComments();
+        array_unshift($comments, new Comment('// ' . $this->message));
+        $node->setAttribute('comments', $comments);
         return $node;
     }
 

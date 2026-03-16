@@ -16,10 +16,13 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 final class SuggestExtractSharedCatchLogicRector extends AbstractRector implements ConfigurableRectorInterface
 {
+    private string $mode = 'warn';
+
     private string $message = 'TODO: Multiple catch blocks instantiate the same classes (%s) — consider extracting shared logic';
 
     public function configure(array $configuration): void
     {
+        $this->mode = $configuration['mode'] ?? 'warn';
         $this->message = $configuration['message'] ?? 'TODO: Multiple catch blocks instantiate the same classes (%s) — consider extracting shared logic';
     }
 
@@ -66,6 +69,10 @@ CODE_SAMPLE,
      */
     public function refactor(Node $node): ?Node
     {
+        if ($this->mode === 'auto') {
+            return null;
+        }
+
         if (count($node->catches) < 2) {
             return null;
         }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utils\Rector\Rector;
 
+use PhpParser\Comment;
 use PhpParser\Node;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Stmt\Expression;
@@ -20,12 +21,15 @@ final class ForbiddenFuncCallRector extends AbstractRector implements Configurab
      */
     private array $forbiddenFunctions = [];
 
-    /**
-     * @param string[] $configuration
-     */
+    private string $mode = 'auto';
+
+    private string $message = '';
+
     public function configure(array $configuration): void
     {
-        $this->forbiddenFunctions = $configuration;
+        $this->mode = $configuration['mode'] ?? 'auto';
+        $this->message = $configuration['message'] ?? '';
+        $this->forbiddenFunctions = $configuration['functions'] ?? $configuration;
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -53,7 +57,7 @@ CODE_SAMPLE,
     /**
      * @param Expression $node
      */
-    public function refactor(Node $node): ?int
+    public function refactor(Node $node): int|Node|null
     {
         if (! $node->expr instanceof FuncCall) {
             return null;
@@ -63,6 +67,23 @@ CODE_SAMPLE,
             return null;
         }
 
+        if ($this->mode !== 'auto') {
+            return $this->addMessageComment($node);
+        }
+
         return NodeVisitor::REMOVE_NODE;
+    }
+
+    private function addMessageComment(Node $node): ?Node
+    {
+        foreach ($node->getComments() as $comment) {
+            if (str_contains($comment->getText(), $this->message)) {
+                return null;
+            }
+        }
+        $comments = $node->getComments();
+        array_unshift($comments, new Comment('// ' . $this->message));
+        $node->setAttribute('comments', $comments);
+        return $node;
     }
 }

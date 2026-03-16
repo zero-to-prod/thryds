@@ -21,6 +21,8 @@ final class RequireLogEventRector extends AbstractRector implements Configurable
 {
     private string $logClass = '';
 
+    private string $mode = 'warn';
+
     private string $message = 'TODO: Add a durable event identifier — `%s::%s => %s::<event_label>`';
 
     private string $eventKey = 'event';
@@ -37,6 +39,7 @@ final class RequireLogEventRector extends AbstractRector implements Configurable
         $this->logClass = $configuration['logClass'];
         $this->eventKey = $configuration['eventKey'] ?? 'event';
         $this->methods = $configuration['methods'] ?? ['debug', 'info', 'warn', 'error'];
+        $this->mode = $configuration['mode'] ?? 'warn';
         $this->message = $configuration['message'] ?? 'TODO: Add a durable event identifier — `%s::%s => %s::<event_label>`';
     }
 
@@ -76,6 +79,10 @@ CODE_SAMPLE,
      */
     public function refactor(Node $node): ?Node
     {
+        if ($this->mode === 'auto') {
+            return null;
+        }
+
         if (!$node->expr instanceof StaticCall) {
             return null;
         }

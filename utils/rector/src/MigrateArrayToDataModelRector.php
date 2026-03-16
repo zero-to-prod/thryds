@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utils\Rector\Rector;
 
+use PhpParser\Comment;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\Array_;
@@ -26,9 +27,15 @@ final class MigrateArrayToDataModelRector extends AbstractRector implements Conf
     /** @var array<int, array{methodName: string, dataParam: string, viewParam: string, viewModelNamespace: string, viewModelDir: string, templateDir: string, dataModelTrait: string}> */
     private array $mappings = [];
 
+    private string $mode = 'auto';
+
+    private string $message = '';
+
     public function configure(array $configuration): void
     {
-        $this->mappings = $configuration;
+        $this->mode = $configuration['mode'] ?? 'auto';
+        $this->message = $configuration['message'] ?? '';
+        $this->mappings = $configuration['mappings'] ?? $configuration;
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -122,6 +129,11 @@ CODE_SAMPLE,
         $viewModelClassName = $this->toViewModelClassName($viewName);
         $viewModelFqcn = $mapping['viewModelNamespace'] . '\\' . $viewModelClassName;
 
+        if ($this->mode !== 'auto') {
+            $this->addMessageComment($node);
+            return $node;
+        }
+
         $this->generateViewModelFile($viewModelFqcn, $viewModelClassName, $mapping['viewModelDir'], $mapping['dataModelTrait'], $stringKeyedItems);
         $this->updateBladeTemplate($mapping['templateDir'], $viewName, $viewModelFqcn, $viewModelClassName, $stringKeyedItems);
 
@@ -150,6 +162,19 @@ CODE_SAMPLE,
 
         $dataArray->items = array_merge([$newItem], $remainingItems);
 
+        return $node;
+    }
+
+    private function addMessageComment(Node $node): ?Node
+    {
+        foreach ($node->getComments() as $comment) {
+            if (str_contains($comment->getText(), $this->message)) {
+                return null;
+            }
+        }
+        $comments = $node->getComments();
+        array_unshift($comments, new Comment('// ' . $this->message));
+        $node->setAttribute('comments', $comments);
         return $node;
     }
 

@@ -19,6 +19,8 @@ final class RequireRoutePatternConstRector extends AbstractRector implements Con
 
     private string $constName = 'pattern';
 
+    private string $mode = 'warn';
+
     private string $message = "TODO: Route class '%s' is missing a '%s' constant — define: public const string %s = '/...';";
 
     /** @var string[] */
@@ -39,6 +41,7 @@ final class RequireRoutePatternConstRector extends AbstractRector implements Con
         }
 
         if (isset($configuration['message'])) {
+            $this->mode = $configuration['mode'] ?? 'warn';
             $this->message = $configuration['message'];
         }
     }
@@ -81,6 +84,10 @@ CODE_SAMPLE,
      */
     public function refactor(Node $node): ?Node
     {
+        if ($this->mode === 'auto') {
+            return null;
+        }
+
         if ($node->isAnonymous()) {
             return null;
         }
