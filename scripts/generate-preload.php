@@ -20,7 +20,7 @@ require $base_dir . '/vendor/autoload.php';
 use Illuminate\Container\Container;
 use Jenssegers\Blade\Blade;
 use Jenssegers\Blade\Container as BladeContainer;
-use ZeroToProd\Thryds\AppEnv;
+use ZeroToProd\Thryds\APP_ENV;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Helpers\View;
 use ZeroToProd\Thryds\Routes\WebRoutes;
@@ -32,19 +32,21 @@ use function ZeroToProd\Thryds\Helpers\short_class_name;
 echo "Booting app...\n";
 
 $Config = Config::from([
-    Config::AppEnv => $_ENV[Config::APP_ENV] ?? AppEnv::production->value,
+    Config::APP_ENV => $_ENV[Config::APP_ENV] ?? APP_ENV::production->value,
     Config::blade_cache_dir => $base_dir . '/var/cache/blade',
     Config::template_dir => $base_dir . '/templates',
 ]);
 
-@mkdir($Config->blade_cache_dir, 0o755, true);
+if (!mkdir($concurrentDirectory = $Config->blade_cache_dir, 0o755, true) && !is_dir($concurrentDirectory)) {
+    throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
+}
 
 $Container = new BladeContainer();
 Container::setInstance(container: $Container);
 $Blade = new Blade(viewPaths: $Config->template_dir, cachePath: $Config->blade_cache_dir, container: $Container);
 
-$Blade->if('production', fn(): bool => $Config->AppEnv === AppEnv::production);
-$Blade->if('env', fn(string ...$environments): bool => in_array($Config->AppEnv->value, $environments, true));
+$Blade->if('production', fn(): bool => $Config->APP_ENV === APP_ENV::production);
+$Blade->if('env', fn(string ...$environments): bool => in_array($Config->APP_ENV->value, $environments, true));
 
 $Router = new \League\Route\Router();
 WebRoutes::register($Router, $Blade);
@@ -215,8 +217,8 @@ function parseClassInfo(string $path): ?array
     $deps = [];
     $count = count($tokens);
 
-    for ($i = 0; $i < $count; $i++) {
-        if (!is_array($tokens[$i])) {
+    foreach ($tokens as $i => $iValue) {
+        if (!is_array($iValue)) {
             continue;
         }
 

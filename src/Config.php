@@ -15,11 +15,10 @@ readonly class Config
     use DataModel;
 
     public const string MAX_REQUESTS = 'MAX_REQUESTS';
+    /** @see $APP_ENV */
     public const string APP_ENV = 'APP_ENV';
-    /** @see $AppEnv */
-    public const string AppEnv = 'AppEnv';
-    #[Describe([Describe::default => AppEnv::production])]
-    public AppEnv $AppEnv;
+    #[Describe([Describe::default => APP_ENV::production])]
+    public APP_ENV $APP_ENV;
 
     /** @see $blade_cache_dir */
     public const string blade_cache_dir = 'blade_cache_dir';
@@ -34,6 +33,6 @@ readonly class Config
 
     public function isProduction(): bool
     {
-        return $this->AppEnv === AppEnv::production;
+        return $this->APP_ENV === APP_ENV::production;
     }
 }

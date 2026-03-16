@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
-enum AppEnv: string
+enum APP_ENV: string
 {
     case production = 'production';
     case development = 'development';

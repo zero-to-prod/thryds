@@ -15,7 +15,7 @@ use League\Route\Cache\FileCache;
 use League\Route\Cache\Router as CachedRouter;
 use League\Route\Http\Exception as HttpException;
 use League\Route\Router;
-use ZeroToProd\Thryds\AppEnv;
+use ZeroToProd\Thryds\APP_ENV;
 use ZeroToProd\Thryds\Config;
 
 use function ZeroToProd\Thryds\Helpers\short_class_name;
@@ -27,7 +27,7 @@ use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 // Boot phase — runs once per worker
 $Config = Config::from([
-    Config::AppEnv => $_ENV[Config::APP_ENV] ?? AppEnv::production->value,
+    Config::APP_ENV => $_ENV[Config::APP_ENV] ?? APP_ENV::production->value,
     Config::blade_cache_dir => $base_dir . '/var/cache/blade',
     Config::template_dir => $base_dir . '/templates',
 ]);
@@ -36,8 +36,8 @@ $Container = new BladeContainer();
 Container::setInstance(container: $Container);
 $Blade = new Blade(viewPaths: $Config->template_dir, cachePath: $Config->blade_cache_dir, container: $Container);
 
-$Blade->if('production', fn(): bool => $Config->AppEnv === AppEnv::production);
-$Blade->if('env', fn(string ...$environments): bool => in_array($Config->AppEnv->value, haystack: $environments, strict: true));
+$Blade->if('production', fn(): bool => $Config->APP_ENV === APP_ENV::production);
+$Blade->if('env', fn(string ...$environments): bool => in_array($Config->APP_ENV->value, haystack: $environments, strict: true));
 
 $Router = new CachedRouter(
     builder: static function (Router $Router) use ($Blade): Router {
