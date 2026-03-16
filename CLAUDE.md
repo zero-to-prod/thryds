@@ -66,5 +66,55 @@ Fallback when the dev server is not running (slower, starts a new container):
 
 - ALWAYS use Docker to interact with the app. Never run PHP, Composer, or any app tooling directly on the host.
 
+## Error Handling
+
+Error handling lives in `public/index.php` as a try/catch around `$Router->dispatch()`.
+
+- **HTTP errors** (404, 405, etc.): League\Route throws `League\Route\Http\Exception` subclasses. These are caught and rendered via `templates/error.html.twig` with the correct status code.
+- **Unexpected errors**: Caught as `\Throwable`. Logged via `Log::error()` with exception context. In production, the user sees a generic "Internal Server Error". In development, the actual message is shown.
+- **Never** use `try/catch` inside route handlers to suppress errors. Let exceptions propagate to the top-level handler.
+- **Never** use `error_log()` or `frankenphp_log()` directly. Use `Log::error()`, `Log::warn()`, `Log::info()`, or `Log::debug()`.
+
+### Throwing HTTP errors in route handlers
+
+Use League\Route's built-in HTTP exceptions to signal error responses:
+```php
+use League\Route\Http\Exception\NotFoundException;
+use League\Route\Http\Exception\BadRequestException;
+use League\Route\Http\Exception\UnauthorizedException;
+use League\Route\Http\Exception\ForbiddenException;
+use League\Route\Http\Exception\UnprocessableEntityException;
+
+// In a route handler:
+throw new NotFoundException('User not found');
+throw new BadRequestException('Missing required field: email');
+```
+
+### API routes (JSON responses)
+
+When adding API routes, use League\Route's `JsonStrategy` on a route group. It automatically returns JSON error responses for HTTP exceptions:
+```php
+use Laminas\Diactoros\ResponseFactory;
+use League\Route\Strategy\JsonStrategy;
+
+$JsonStrategy = new JsonStrategy(responseFactory: new ResponseFactory());
+$Router->group('/api', function ($RouteGroup) {
+    $RouteGroup->map('GET', '/users', $handler);
+})->setStrategy(strategy: $JsonStrategy);
+```
+API route handlers can return arrays or `JsonSerializable` objects directly — `JsonStrategy` encodes them automatically.
+
+## Request Validation
+
+- Validate at the boundary: inside route handlers, before any business logic.
+- For invalid input, throw `BadRequestException` (malformed) or `UnprocessableEntityException` (well-formed but semantically invalid).
+- Do not create validation middleware or framework abstractions until there are enough routes to justify it.
+
+## Response Formatting
+
+- **Web routes**: Return `HtmlResponse` with a Twig-rendered template.
+- **API routes**: Return arrays, `JsonSerializable` objects, or `JsonResponse` from handlers using `JsonStrategy`.
+- **Error pages**: Rendered via `templates/error.html.twig` (receives `status_code` and `message`).
+
 ## Non-negotiable Design Decisions
 1.
