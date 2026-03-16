@@ -8,14 +8,20 @@ use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPublicMethodParameterRector;
 use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Utils\Rector\Rector\AddNamedArgWhenVarMismatchesParamRector;
 use Utils\Rector\Rector\ExtractRepeatedExpressionToVariableRector;
+use Utils\Rector\Rector\ExtractRoutePatternToRouteClassRector;
 use Utils\Rector\Rector\ForbiddenFuncCallRector;
+use Utils\Rector\Rector\ForbidDuplicateRoutePatternRector;
 use Utils\Rector\Rector\ForbidMagicStringArrayKeyRector;
+use Utils\Rector\Rector\ForbidStringRoutePatternRector;
 use Utils\Rector\Rector\FrankenPhpLogToLogClassRector;
 use Utils\Rector\Rector\MakeClassReadonlyRector;
 use Utils\Rector\Rector\MigrateArrayToDataModelRector;
+use Utils\Rector\Rector\RemoveNamedArgWhenVarMatchesParamRector;
 use Utils\Rector\Rector\RenameParamToMatchTypeNameRector;
 use Utils\Rector\Rector\RenameVarToMatchReturnTypeRector;
 use Utils\Rector\Rector\ReplaceFullyQualifiedNameRector;
+use Utils\Rector\Rector\RequireRoutePatternConstRector;
+use Utils\Rector\Rector\RouteParamNameMustBeConstRector;
 use Utils\Rector\Rector\StringArgToClassConstRector;
 use Utils\Rector\Rector\SuggestEnumForStringPropertyRector;
 use Utils\Rector\Rector\UseClassConstArrayKeyForDataModelRector;
@@ -44,6 +50,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->rule(RenameParamToMatchTypeNameRector::class);
     $rectorConfig->rule(RenameVarToMatchReturnTypeRector::class);
     $rectorConfig->rule(AddNamedArgWhenVarMismatchesParamRector::class);
+    $rectorConfig->rule(RemoveNamedArgWhenVarMatchesParamRector::class);
     $rectorConfig->rule(RemoveUnusedPrivateMethodParameterRector::class);
     $rectorConfig->rule(RemoveUnusedPublicMethodParameterRector::class);
     $rectorConfig->rule(UseClassConstArrayKeyForDataModelRector::class);
@@ -82,6 +89,30 @@ return static function (RectorConfig $rectorConfig): void {
             'templateDir' => __DIR__ . '/templates',
             'dataModelTrait' => 'Zerotoprod\\DataModel\\DataModel',
         ],
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidStringRoutePatternRector::class, [
+        'methods' => ['map'],
+        'argPosition' => 1,
+    ]);
+    $rectorConfig->ruleWithConfiguration(ExtractRoutePatternToRouteClassRector::class, [
+        'methods' => ['map'],
+        'argPosition' => 1,
+        'namespace' => 'ZeroToProd\\Thryds\\Routes',
+        'outputDir' => __DIR__ . '/src/Routes',
+    ]);
+    $rectorConfig->ruleWithConfiguration(RouteParamNameMustBeConstRector::class, [
+        'classSuffix' => 'Route',
+        'constName' => 'pattern',
+    ]);
+    $rectorConfig->ruleWithConfiguration(RequireRoutePatternConstRector::class, [
+        'classSuffix' => 'Route',
+        'constName' => 'pattern',
+        'excludedClasses' => ['WebRoutes'],
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidDuplicateRoutePatternRector::class, [
+        'classSuffix' => 'Route',
+        'constNames' => ['pattern'],
+        'scanDir' => __DIR__ . '/src/Routes',
     ]);
     $rectorConfig->ruleWithConfiguration(ReplaceFullyQualifiedNameRector::class, [
         DataModel::class => \ZeroToProd\Thryds\Helpers\DataModel::class,

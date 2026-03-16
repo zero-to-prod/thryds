@@ -34,7 +34,7 @@ $ServerRequestInterface = ServerRequestFactory::fromGlobals(server: $_SERVER, qu
 
 $Router = new Router();
 
-WebRoutes::register(Router: $Router, Blade: $Blade);
+WebRoutes::register($Router, $Blade);
 
 try {
     new SapiEmitter()->emit(response: $Router->dispatch(request: $ServerRequestInterface));

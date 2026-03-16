@@ -6,7 +6,6 @@ namespace Utils\Rector\Rector;
 
 use PhpParser\Comment;
 use PhpParser\Node;
-use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Expression;

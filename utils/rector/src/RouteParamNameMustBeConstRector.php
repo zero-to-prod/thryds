@@ -151,7 +151,7 @@ CODE_SAMPLE,
 
         return array_values(array_filter(
             $params,
-            static fn (string $param): bool => !in_array($param, $existingConstNames, true),
+            static fn(string $param): bool => !in_array($param, $existingConstNames, true),
         ));
     }
 
