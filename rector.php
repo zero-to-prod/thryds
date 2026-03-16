@@ -10,7 +10,10 @@ use Utils\Rector\Rector\AddNamedArgWhenVarMismatchesParamRector;
 use Utils\Rector\Rector\ExtractRepeatedExpressionToVariableRector;
 use Utils\Rector\Rector\ExtractRoutePatternToRouteClassRector;
 use Utils\Rector\Rector\ForbiddenFuncCallRector;
+use Utils\Rector\Rector\ForbidCallableTypeVariableNameRector;
 use Utils\Rector\Rector\ForbidDuplicateRoutePatternRector;
+use Utils\Rector\Rector\ForbidDynamicIncludeRector;
+use Utils\Rector\Rector\ForbidEvalRector;
 use Utils\Rector\Rector\ForbidMagicStringArrayKeyRector;
 use Utils\Rector\Rector\ForbidStringRoutePatternRector;
 use Utils\Rector\Rector\FrankenPhpLogToLogClassRector;
@@ -20,6 +23,7 @@ use Utils\Rector\Rector\RemoveNamedArgWhenVarMatchesParamRector;
 use Utils\Rector\Rector\RenameParamToMatchTypeNameRector;
 use Utils\Rector\Rector\RenameVarToMatchReturnTypeRector;
 use Utils\Rector\Rector\ReplaceFullyQualifiedNameRector;
+use Utils\Rector\Rector\RequireTypedPropertyRector;
 use Utils\Rector\Rector\RequireRoutePatternConstRector;
 use Utils\Rector\Rector\RouteParamNameMustBeConstRector;
 use Utils\Rector\Rector\StringArgToClassConstRector;
@@ -30,6 +34,7 @@ use Utils\Rector\Rector\RenameEnumCaseToMatchValueRector;
 use Utils\Rector\Rector\RenamePrimitivePropertyToSnakeCaseRector;
 use Utils\Rector\Rector\RenamePrimitiveVarToSnakeCaseRector;
 use Utils\Rector\Rector\RenamePropertyToMatchTypeNameRector;
+use Utils\Rector\Rector\RequireMethodAnnotationForDataModelRector;
 use Utils\Rector\Rector\SuggestExtractSharedCatchLogicRector;
 use Utils\Rector\Rector\UseLogContextConstRector;
 use Zerotoprod\DataModel\DataModel;
@@ -46,6 +51,8 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->importNames();
     $rectorConfig->ruleWithConfiguration(ForbiddenFuncCallRector::class, [
         'error_log',
+        'extract',
+        'compact',
     ]);
     $rectorConfig->ruleWithConfiguration(FrankenPhpLogToLogClassRector::class, [
         'functions' => ['frankenphp_log'],
@@ -121,7 +128,18 @@ return static function (RectorConfig $rectorConfig): void {
         'constNames' => ['pattern'],
         'scanDir' => __DIR__ . '/src/Routes',
     ]);
+    $rectorConfig->rule(ForbidEvalRector::class);
+    $rectorConfig->rule(ForbidDynamicIncludeRector::class);
+    $rectorConfig->ruleWithConfiguration(ForbidCallableTypeVariableNameRector::class, [
+        'Closure',
+        'Callable',
+        'Callback',
+        'Function',
+        'Func',
+    ]);
+    $rectorConfig->rule(RequireTypedPropertyRector::class);
     $rectorConfig->rule(SuggestExtractSharedCatchLogicRector::class);
+    $rectorConfig->rule(RequireMethodAnnotationForDataModelRector::class);
     $rectorConfig->ruleWithConfiguration(ReplaceFullyQualifiedNameRector::class, [
         DataModel::class => \ZeroToProd\Thryds\Helpers\DataModel::class,
         Describe::class => \ZeroToProd\Thryds\Helpers\Describe::class,

@@ -18,10 +18,14 @@ ENV SERVER_NAME=:80
 
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
+COPY docker/php/opcache.ini $PHP_INI_DIR/conf.d/opcache.ini
+
 COPY . /app
 
 FROM app AS dev
 
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
+
+COPY docker/php/opcache-dev.ini $PHP_INI_DIR/conf.d/zzz-opcache-dev.ini
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

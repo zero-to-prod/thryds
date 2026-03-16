@@ -6,7 +6,7 @@ namespace ZeroToProd\Thryds\ViewModels;
 
 use ZeroToProd\Thryds\Helpers\DataModel;
 
-class ErrorViewModel
+readonly class ErrorViewModel
 {
     use DataModel;
 

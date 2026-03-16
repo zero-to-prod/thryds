@@ -13,7 +13,10 @@
     "autoload": {
         "psr-4": {
             "ZeroToProd\\Thryds\\": "src/"
-        }
+        },
+        "files": [
+            "src/Helpers/function.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
