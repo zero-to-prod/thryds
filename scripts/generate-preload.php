@@ -70,6 +70,21 @@ try {
 new \Laminas\Diactoros\Response\JsonResponse(data: []);
 \Laminas\Diactoros\ServerRequestFilter\IPRange::matches('127.0.0.1', '127.0.0.0/8');
 
+// Force-load classes only reachable via full App::boot() / HTTP request path
+new \League\Route\Cache\Router(
+    builder: static fn(\League\Route\Router $r): \League\Route\Router => $r,
+    cache: new \League\Route\Cache\FileCache(cacheFilePath: '/dev/null', ttl: 0),
+    cacheEnabled: false,
+);
+class_exists(\ZeroToProd\Thryds\App::class);
+new \ZeroToProd\Thryds\RequestId();
+new \Illuminate\Support\Collection();
+new \Illuminate\Support\Stringable('');
+new \Illuminate\View\Compilers\ComponentTagCompiler();
+class_exists(\Laravel\SerializableClosure\Support\ClosureStream::class);
+class_exists(\Laravel\SerializableClosure\Support\ClosureScope::class);
+class_exists(\Psr\SimpleCache\CacheInterface::class);
+
 // Discover all loaded scripts (plus the entrypoint, which FrankenPHP loads directly)
 $scripts = get_included_files();
 $scripts[] = $base_dir . '/public/index.php';
