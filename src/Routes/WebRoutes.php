@@ -23,29 +23,21 @@ readonly class WebRoutes
             new HomeController($Blade),
         );
 
-        $Router->map(
-            HTTP_METHOD::GET->value,
-            Route::about->value,
-            fn(): ResponseInterface => new HtmlResponse(
-                html: $Blade->make(view: View::about->value)->render(),
-            ),
-        );
-
-        $Router->map(
-            HTTP_METHOD::GET->value,
-            Route::login->value,
-            fn(): ResponseInterface => new HtmlResponse(
-                html: $Blade->make(view: View::login->value)->render(),
-            ),
-        );
-
-        $Router->map(
-            HTTP_METHOD::GET->value,
-            Route::styleguide->value,
-            fn(): ResponseInterface => new HtmlResponse(
-                html: $Blade->make(view: View::styleguide->value)->render(),
-            ),
-        );
+        // Auto-register simple view routes by convention: Route::foo → View::foo (matched by name).
+        // home is excluded — it uses HomeController above.
+        foreach (Route::cases() as $Route) {
+            $View = View::tryFrom($Route->name);
+            if ($View !== null && $Route !== Route::home) {
+                // TODO: [RequireRouteEnumInMapCallRector] Route pattern must use Route::case->value. Found '(expression)' instead.
+                $Router->map(
+                    HTTP_METHOD::GET->value,
+                    $Route->value,
+                    fn(): ResponseInterface => new HtmlResponse(
+                        html: $Blade->make(view: $View->value)->render(),
+                    ),
+                );
+            }
+        }
 
         $Router->map(
             HTTP_METHOD::GET->value,
@@ -66,4 +58,5 @@ readonly class WebRoutes
             ),
         );
     }
+
 }

@@ -24,7 +24,6 @@ use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\DevFilter;
 use ZeroToProd\Thryds\Helpers\View;
 use ZeroToProd\Thryds\Routes\WebRoutes;
-use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 // Boot the app (mirrors public/index.php boot phase)
 echo "Booting app...\n";
@@ -48,16 +47,9 @@ WebRoutes::register($Router, $Blade);
 
 // Render all templates to load view-layer dependencies
 echo "Rendering templates...\n";
-$Blade->make(view: View::home->value)->render();
-$Blade->make(view: View::about->value)->render();
-$Blade->make(view: View::login->value)->render();
-$Blade->make(view: View::styleguide->value)->render();
-$Blade->make(view: View::error->value, data: [
-    ErrorViewModel::view_key => ErrorViewModel::from([
-        ErrorViewModel::message => 'test',
-        ErrorViewModel::status_code => 500,
-    ]),
-])->render();
+foreach (View::cases() as $view) {
+    $Blade->make(view: $view->value, data: $view->stubData())->render();
+}
 
 // Simulate request dispatch to load HTTP-layer dependencies
 echo "Simulating request dispatch...\n";

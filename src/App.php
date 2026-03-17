@@ -56,6 +56,9 @@ readonly class App
 
         $Blade = self::bootBlade($Config, $base_dir);
 
+        // cacheEnabled is always false: FrankenPHP worker mode boots once and reuses the router
+        // in-memory across all requests, so disk caching provides no benefit and breaks with
+        // Blade captured in route handler closures (Blade contains non-serializable container bindings).
         $Router = new CachedRouter(
             builder: static function (Router $Router) use ($Blade): Router {
                 WebRoutes::register($Router, $Blade);
@@ -63,7 +66,7 @@ readonly class App
                 return $Router;
             },
             cache: new FileCache(cacheFilePath: $base_dir . '/var/cache/route.cache', ttl: 86400),
-            cacheEnabled: $Config->isProduction(),
+            cacheEnabled: false,
         );
 
         return new self($Config, $Blade, $Router);

@@ -112,15 +112,12 @@ function verifyTemplateCache(string $base_dir): int
     ]);
     $Blade = App::bootBlade($Config, $base_dir);
 
-    $view_data = [
-        View::home->value => [],
-        View::about->value => [],
-        View::error->value => [
-            ErrorViewModel::view_key => ErrorViewModel::from([
-                ErrorViewModel::message => 'test',
-                ErrorViewModel::status_code => 200,
-            ]),
-        ],
+    $view_data = array_fill_keys(array_column(View::cases(), 'value'), []);
+    $view_data[View::error->value] = [
+        ErrorViewModel::view_key => ErrorViewModel::from([
+            ErrorViewModel::message => 'test',
+            ErrorViewModel::status_code => 200,
+        ]),
     ];
 
     // First render — must compile and write cache files

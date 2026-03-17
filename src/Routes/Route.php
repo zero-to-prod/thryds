@@ -17,6 +17,7 @@ enum Route: string
     case about = '/about';
     case opcache_status = '/_opcache/status';
     case login = '/login';
+    case register = '/register';
     case opcache_scripts = '/_opcache/scripts';
     case styleguide = '/_styleguide';
 

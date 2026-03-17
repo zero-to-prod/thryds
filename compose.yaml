@@ -30,6 +30,7 @@ services:
         }
     volumes:
       - ./:/app
+      - /app/public/build
       - caddy_data:/data
       - caddy_config:/config
 
