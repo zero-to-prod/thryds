@@ -7,4 +7,6 @@ namespace ZeroToProd\Thryds;
 readonly class Env
 {
     public const string APP_ENV = 'APP_ENV';
+    public const string MAX_REQUESTS = 'MAX_REQUESTS';
+    public const string FRANKENPHP_HOT_RELOAD = 'FRANKENPHP_HOT_RELOAD';
 }

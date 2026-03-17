@@ -36,8 +36,8 @@ readonly class App
         $Container->instance(Vite::class, instance: $Vite);
         $Blade->directive('vite', static fn(): string => $Vite->directivePhp(Vite::app_entry));
         $Blade->directive('htmx', static fn(): string => $Vite->directivePhp(Vite::htmx_entry));
-        $Blade->directive('hotReload', static fn(): string => '<?php if (isset($_SERVER[\'' . Server::FRANKENPHP_HOT_RELOAD . '\'])): ?>'
-            . '<meta name="frankenphp-hot-reload:url" content="<?= $_SERVER[\'' . Server::FRANKENPHP_HOT_RELOAD . '\'] ?>">'
+        $Blade->directive('hotReload', static fn(): string => '<?php if (isset($_SERVER[\'' . Env::FRANKENPHP_HOT_RELOAD . '\'])): ?>'
+            . '<meta name="frankenphp-hot-reload:url" content="<?= $_SERVER[\'' . Env::FRANKENPHP_HOT_RELOAD . '\'] ?>">'
             . '<script src="https://cdn.jsdelivr.net/npm/idiomorph" defer></script>'
             . '<script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>'
             . '<?php endif; ?>');
@@ -48,7 +48,7 @@ readonly class App
     public static function boot(string $base_dir, ?Config $Config = null): self
     {
         $Config ??= Config::from([
-            Config::AppEnv => $_SERVER[Server::APP_ENV] ?? $_ENV[Env::APP_ENV] ?? AppEnv::production->value,
+            Config::AppEnv => $_SERVER[Env::APP_ENV] ?? $_ENV[Env::APP_ENV] ?? AppEnv::production->value,
             Config::blade_cache_dir => $base_dir . '/var/cache/blade',
             Config::template_dir => $base_dir . '/templates',
         ]);

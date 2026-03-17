@@ -8,19 +8,19 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-development}
       SERVER_NAME: ":${APP_PORT:-80}"
-      FRANKENPHP_CONFIG: >-
+      CADDY_SERVER_EXTRA_DIRECTIVES: |
+        mercure {
+          transport local
+          anonymous
+        }
+      CADDY_PHP_SERVER_EXTRA_DIRECTIVES: |
+        hot_reload
         worker {
           file /app/public/index.php
           watch /app/src/**/*.php
           watch /app/public/**/*.php
           watch /app/templates/**/*.php
         }
-      CADDY_SERVER_EXTRA_DIRECTIVES: |
-        mercure {
-          transport local
-          anonymous
-        }
-      CADDY_PHP_SERVER_EXTRA_DIRECTIVES: "hot_reload"
       CADDY_GLOBAL_OPTIONS: >-
         log {
           output file /app/logs/frankenphp/caddy.log
