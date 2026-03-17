@@ -21,8 +21,8 @@ require __DIR__ . '/../vendor/autoload.php';
 use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Config;
+use ZeroToProd\Thryds\Helpers\Component;
 use ZeroToProd\Thryds\Helpers\View;
-use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 $base_dir = dirname(__DIR__);
 $overall_exit = 0;
@@ -98,52 +98,48 @@ function runScript(string $command): int
 
 function verifyTemplateCache(string $base_dir): int
 {
-    $template_dir = $base_dir . '/templates';
-    $cache_dir = $base_dir . '/var/cache/blade-verify-' . uniqid();
-    mkdir($cache_dir, 0o755, true);
+    $cache_dir = $base_dir . '/var/cache/blade';
 
     $failures = [];
     $passes = [];
 
-    $Config = Config::from([
-        Config::AppEnv => AppEnv::development->value,
-        Config::blade_cache_dir => $cache_dir,
-        Config::template_dir => $template_dir,
-    ]);
-    $Blade = App::bootBlade($Config, $base_dir);
+    echo "\n=== Template Cache Verification ===\n\n";
 
-    $view_data = array_fill_keys(array_column(View::cases(), 'value'), []);
-    $view_data[View::error->value] = [
-        ErrorViewModel::view_key => ErrorViewModel::from([
-            ErrorViewModel::message => 'test',
-            ErrorViewModel::status_code => 200,
-        ]),
-    ];
+    // 1. Populate the real cache via cache-views.php
+    passthru('php ' . escapeshellarg($base_dir . '/scripts/cache-views.php'), $populate_exit);
+    if ($populate_exit !== 0) {
+        echo "  [FAIL] cache-views.php failed\n\n";
 
-    // First render — must compile and write cache files
-    foreach ($view_data as $view => $data) {
-        $Blade->make($view, $data)->render();
+        return 1;
     }
 
-    $cached_files = glob($cache_dir . '/*.php');
-    if ($cached_files === []) {
-        $failures[] = 'No compiled template files found after first render';
+    // 2. Verify the real cache has files for all views and components
+    $cached_files = glob($cache_dir . '/*.php') ?: [];
+    $expected_min = count(View::cases()) + count(Component::cases());
+
+    if (count($cached_files) >= $expected_min) {
+        $passes[] = sprintf('%d compiled files in %s (expected ≥ %d)', count($cached_files), $cache_dir, $expected_min);
     } else {
-        $passes[] = sprintf('%d compiled template files created', count($cached_files));
+        $failures[] = sprintf('%d compiled files found in %s, expected ≥ %d', count($cached_files), $cache_dir, $expected_min);
     }
 
-    // Record mtimes
+    // 3. Verify second render reuses cache (no recompilation)
     $mtimes = [];
     foreach ($cached_files as $file) {
         $mtimes[$file] = filemtime($file);
     }
 
-    // Ensure filesystem timestamp granularity
     sleep(1);
 
-    // Second render — cached files must not be recompiled
-    foreach ($view_data as $view => $data) {
-        $Blade->make($view, $data)->render();
+    $Config = Config::from([
+        Config::AppEnv => AppEnv::production->value,
+        Config::blade_cache_dir => $cache_dir,
+        Config::template_dir => $base_dir . '/templates',
+    ]);
+    $Blade = App::bootBlade($Config, $base_dir);
+
+    foreach (View::cases() as $view) {
+        $Blade->make($view->value, $view->stubData())->render();
     }
 
     $recompiled = 0;
@@ -154,46 +150,30 @@ function verifyTemplateCache(string $base_dir): int
     }
 
     if ($recompiled > 0) {
-        $failures[] = sprintf('%d template files were recompiled on second render (should be 0)', $recompiled);
+        $failures[] = sprintf('%d files recompiled on second render (expected 0)', $recompiled);
     } else {
-        $passes[] = 'Second render reused all cached templates (no recompilation)';
+        $passes[] = 'Second render reused cached templates (0 recompilations)';
     }
-
-    // Clean up
-    foreach (glob($cache_dir . '/*.php') as $file) {
-        unlink($file);
-    }
-    rmdir($cache_dir);
 
     // Report
-    echo "\n=== Template Cache Verification ===\n\n";
-
-    if ($failures !== []) {
-        echo "FAILURES:\n";
-        foreach ($failures as $f) {
-            echo "  [FAIL] $f\n";
-        }
-        echo "\n";
+    foreach ($failures as $f) {
+        echo "  [FAIL] $f\n";
     }
-
-    if ($passes !== []) {
-        echo "PASSING:\n";
-        foreach ($passes as $p) {
-            echo "  [ OK ] $p\n";
-        }
-        echo "\n";
+    foreach ($passes as $p) {
+        echo "  [ OK ] $p\n";
     }
+    echo "\n";
 
     $total = count($failures) + count($passes);
     echo sprintf("Result: %d checks — %d failed, %d passed\n", $total, count($failures), count($passes));
 
     if ($failures !== []) {
-        echo "Verdict: Template caching is NOT working\n\n";
+        echo "Verdict: Template cache is NOT production ready\n\n";
 
         return 1;
     }
 
-    echo "Verdict: Template caching is working correctly\n\n";
+    echo "Verdict: Template cache is production ready\n\n";
 
     return 0;
 }

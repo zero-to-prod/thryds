@@ -67,6 +67,7 @@
             "@test",
             "@generate:preload"
         ],
+        "cache:views": "php scripts/cache-views.php",
         "generate:preload": "php scripts/generate-preload.php",
         "generate:rector-rule": "php scripts/make-rector-rule.php",
         "audit:opcache": "php scripts/opcache-audit.php",

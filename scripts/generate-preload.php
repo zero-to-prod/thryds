@@ -22,8 +22,9 @@ use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\DevFilter;
-use ZeroToProd\Thryds\Helpers\View;
 use ZeroToProd\Thryds\Routes\WebRoutes;
+
+require __DIR__ . '/cache-views.php';
 
 // Boot the app (mirrors public/index.php boot phase)
 echo "Booting app...\n";
@@ -45,11 +46,9 @@ $Blade = App::bootBlade($Config, $base_dir);
 $Router = new Router();
 WebRoutes::register($Router, $Blade);
 
-// Render all templates to load view-layer dependencies
-echo "Rendering templates...\n";
-foreach (View::cases() as $view) {
-    $Blade->make(view: $view->value, data: $view->stubData())->render();
-}
+// Compile all templates to blade cache and load view-layer dependencies
+echo "Compiling templates...\n";
+compileAllTemplates($Blade);
 
 // Simulate request dispatch to load HTTP-layer dependencies
 echo "Simulating request dispatch...\n";
