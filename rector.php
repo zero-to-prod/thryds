@@ -46,6 +46,7 @@ use Utils\Rector\Rector\RequireAllRouteCasesRegisteredRector;
 use Utils\Rector\Rector\RequireClosedSetOnBackedEnumRector;
 use Utils\Rector\Rector\RequireConstForRepeatedArrayKeyRector;
 use Utils\Rector\Rector\RequireEnumValueAccessRector;
+use Utils\Rector\Rector\RequireFragmentIfForBladeRenderRector;
 use Utils\Rector\Rector\RequireLogEventRector;
 use Utils\Rector\Rector\RequireMethodAnnotationForDataModelRector;
 use Utils\Rector\Rector\RequireNamedArgForBoolParamRector;
@@ -472,6 +473,12 @@ return static function (RectorConfig $rectorConfig): void {
         'message' => "TODO: [RequireConstForRepeatedArrayKeyRector] '%s' used %dx as array key — extract to a class constant.",
     ]);
 
+
+    // --- Blade / htmx ---
+    $rectorConfig->ruleWithConfiguration(RequireFragmentIfForBladeRenderRector::class, [
+        'mode' => 'warn',
+        'message' => "TODO: [RequireFragmentIfForBladeRenderRector] ->render() returns the full page. For htmx partial requests, use ->fragmentIf(\$request->hasHeader(Header::hx_request), 'body') instead.",
+    ]);
 
     // --- Checklist Validation ---
     $rectorConfig->ruleWithConfiguration(ValidateChecklistPathsRector::class, [

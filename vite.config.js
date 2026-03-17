@@ -1,8 +1,15 @@
 import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
+import { compression } from 'vite-plugin-compression2';
+import zlib from 'node:zlib';
 
 export default defineConfig({
-    plugins: [tailwindcss()],
+    plugins: [
+        tailwindcss(),
+        compression({ algorithm: 'gzip', level: 9 }),
+        compression({ algorithm: 'brotliCompress', params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11 } }),
+        compression({ algorithm: 'zstd' }),
+    ],
     publicDir: false,
     build: {
         outDir: 'public/build',

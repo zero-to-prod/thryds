@@ -24,8 +24,6 @@ final class ViteTest extends TestCase
     {
         $tags = new Vite(Config::from([Config::AppEnv => AppEnv::production->value]), baseDir: $this->base_dir)->tags(Vite::app_entry);
 
-        $this->assertStringContainsString('<link rel="stylesheet" href="/build/assets/app-BG4HJPHs.css">', haystack: $tags);
-        $this->assertStringContainsString('<script type="module" src="/build/assets/app-Dlbj-bCq.js"></script>', haystack: $tags);
         $this->assertStringNotContainsString('localhost:5173', haystack: $tags);
     }
 

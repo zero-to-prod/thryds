@@ -31,6 +31,8 @@ final class RequireAllRouteCasesRegisteredRector extends AbstractRector implemen
     /** @var string[]|null null means not yet built */
     private ?array $registeredCases = null;
 
+    private bool $hasDynamicRegistration = false;
+
     public function configure(array $configuration): void
     {
         $this->enumClass = $configuration['enumClass'] ?? 'ZeroToProd\\Thryds\\Routes\\Route';
@@ -40,6 +42,7 @@ final class RequireAllRouteCasesRegisteredRector extends AbstractRector implemen
         $this->message = $configuration['message'] ?? "TODO: [RequireAllRouteCasesRegisteredRector] Route case '%s' is defined but never registered in any router map() call.";
         $this->scanDir = $configuration['scanDir'] ?? '';
         $this->registeredCases = null;
+        $this->hasDynamicRegistration = false;
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -104,6 +107,29 @@ CODE_SAMPLE,
         }
 
         $marker = strstr($this->message, '%', true) ?: $this->message;
+
+        if ($this->hasDynamicRegistration) {
+            $changed = false;
+
+            foreach ($node->stmts as $stmt) {
+                if (!$stmt instanceof EnumCase) {
+                    continue;
+                }
+
+                $comments = $stmt->getComments();
+                $filtered = array_values(array_filter(
+                    $comments,
+                    static fn(Comment $c): bool => !str_contains($c->getText(), $marker)
+                ));
+
+                if (count($filtered) !== count($comments)) {
+                    $stmt->setAttribute('comments', $filtered);
+                    $changed = true;
+                }
+            }
+
+            return $changed ? $node : null;
+        }
 
         $changed = false;
 
@@ -187,6 +213,10 @@ CODE_SAMPLE,
                 continue;
             }
 
+            if ($this->hasDynamicEnumCasesLoop($contents)) {
+                $this->hasDynamicRegistration = true;
+            }
+
             $found = $this->extractRegisteredCasesFromContents($contents);
             foreach ($found as $caseName) {
                 $cases[] = $caseName;
@@ -194,6 +224,17 @@ CODE_SAMPLE,
         }
 
         return array_unique($cases);
+    }
+
+    private function hasDynamicEnumCasesLoop(string $contents): bool
+    {
+        $shortName = $this->resolveShortEnumClassName();
+        $fqEscaped = preg_quote($this->enumClass, '/');
+        $shortEscaped = preg_quote($shortName, '/');
+
+        $pattern = '/foreach\s*\(\s*(?:' . $shortEscaped . '|' . $fqEscaped . ')::cases\s*\(\s*\)\s+as\b/';
+
+        return (bool) preg_match($pattern, $contents);
     }
 
     /** @return string[] */

@@ -14,7 +14,7 @@ use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
  */
 #[ClosedSet(
     Domain::blade_templates,
-    addCase: '1. Add enum case. 2. Create templates/{case}.blade.php. 3. Add to production-checklist.php view_data. 4. If the view requires a ViewModel, add stub data to stubData().',
+    addCase: '1. Add enum case. 2. Create templates/{case}.blade.php. 3. If the view requires a ViewModel, add stub data to stubData().',
 )]
 enum View: string
 {

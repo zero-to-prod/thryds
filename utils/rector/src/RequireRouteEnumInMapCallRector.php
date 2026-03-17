@@ -9,9 +9,13 @@ use PhpParser\Node;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\PropertyFetch;
+use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Expression;
+use PhpParser\Node\Stmt\Foreach_;
+use PhpParser\NodeFinder;
 use Rector\Contract\Rector\ConfigurableRectorInterface;
+use Rector\PhpParser\Node\FileNode;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -28,6 +32,9 @@ final class RequireRouteEnumInMapCallRector extends AbstractRector implements Co
     private string $mode = 'warn';
 
     private string $message = "TODO: [RequireRouteEnumInMapCallRector] Route pattern must use Route::case->value. Found '%s' instead.";
+
+    /** @var array<int, true> */
+    private array $exemptExpressionIds = [];
 
     public function configure(array $configuration): void
     {
@@ -85,14 +92,36 @@ CODE_SAMPLE,
      */
     public function getNodeTypes(): array
     {
-        return [Expression::class];
+        return [FileNode::class, Foreach_::class, Expression::class];
     }
 
     /**
-     * @param Expression $node
+     * @param FileNode|Foreach_|Expression $node
      */
     public function refactor(Node $node): ?Node
     {
+        if ($node instanceof FileNode) {
+            $this->exemptExpressionIds = [];
+
+            return null;
+        }
+
+        if ($node instanceof Foreach_) {
+            if ($this->isForeachOverEnumCases($node)) {
+                $nodeFinder = new NodeFinder();
+                $expressions = $nodeFinder->findInstanceOf($node->stmts, Expression::class);
+                foreach ($expressions as $expr) {
+                    $this->exemptExpressionIds[spl_object_id($expr)] = true;
+                }
+            }
+
+            return null;
+        }
+
+        if (isset($this->exemptExpressionIds[spl_object_id($node)])) {
+            return null;
+        }
+
         if (!$node->expr instanceof MethodCall) {
             return null;
         }
@@ -134,6 +163,31 @@ CODE_SAMPLE,
         $node->setAttribute('comments', $existingComments);
 
         return $node;
+    }
+
+    private function isForeachOverEnumCases(Foreach_ $foreach): bool
+    {
+        $expr = $foreach->expr;
+
+        if (!$expr instanceof StaticCall) {
+            return false;
+        }
+
+        if (!$this->isName($expr->name, 'cases')) {
+            return false;
+        }
+
+        $className = $this->getName($expr->class);
+        $shortName = $this->resolveShortEnumClassName();
+
+        return $className === $this->enumClass || $className === $shortName;
+    }
+
+    private function resolveShortEnumClassName(): string
+    {
+        $parts = explode('\\', $this->enumClass);
+
+        return end($parts);
     }
 
     private function isRouteEnumValue(Node $node): bool

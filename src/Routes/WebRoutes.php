@@ -28,7 +28,6 @@ readonly class WebRoutes
         foreach (Route::cases() as $Route) {
             $View = View::tryFrom($Route->name);
             if ($View !== null && $Route !== Route::home) {
-                // TODO: [RequireRouteEnumInMapCallRector] Route pattern must use Route::case->value. Found '(expression)' instead.
                 $Router->map(
                     HTTP_METHOD::GET->value,
                     $Route->value,

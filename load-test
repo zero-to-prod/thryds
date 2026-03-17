@@ -1,0 +1,2 @@
+#!/bin/sh
+docker compose -f compose.load-test.yaml run --rm k6 "$@"

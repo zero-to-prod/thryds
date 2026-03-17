@@ -16,6 +16,7 @@ final class BladeCacheTest extends IntegrationTestCase
     {
         $this->assertSame([], glob($this->cache_dir . self::php_glob), 'Cache dir should start empty');
 
+        // TODO: [RequireFragmentIfForBladeRenderRector] ->render() returns the full page. For htmx partial requests, use ->fragmentIf($request->hasHeader(Header::hx_request), 'body') instead.
         $this->App->Blade->make(view: View::home->value)->render();
 
         $this->assertNotEmpty(actual: glob($this->cache_dir . self::php_glob), message: 'Compiled templates should be written to cache dir');

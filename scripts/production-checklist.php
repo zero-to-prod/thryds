@@ -14,6 +14,7 @@ declare(strict_types=1);
  *   1. Route caching    — scripts/verify-route-cache.php
  *   2. OPcache          — scripts/opcache-audit.php
  *   3. Template caching — compiled Blade templates are written to disk and reused
+ *   4. Component @push  — component templates must use @pushOnce, never bare @push
  */
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -33,7 +34,7 @@ echo "╚═══════════════════════�
 
 // ── 1. Route Cache ──────────────────────────────────────────────
 
-echo "\n┌─ 1/3 Route Cache ─────────────────────\n";
+echo "\n┌─ 1/4 Route Cache ─────────────────────\n";
 
 $route_exit = runScript('php ' . escapeshellarg(__DIR__ . '/verify-route-cache.php'));
 if ($route_exit !== 0) {
@@ -42,7 +43,7 @@ if ($route_exit !== 0) {
 
 // ── 2. OPcache ──────────────────────────────────────────────────
 
-echo "┌─ 2/3 OPcache ─────────────────────────\n";
+echo "┌─ 2/4 OPcache ─────────────────────────\n";
 
 $opcache_exit = runScript('php ' . escapeshellarg(__DIR__ . '/opcache-audit.php'));
 if ($opcache_exit !== 0) {
@@ -51,10 +52,19 @@ if ($opcache_exit !== 0) {
 
 // ── 3. Template Cache ───────────────────────────────────────────
 
-echo "┌─ 3/3 Template Cache ──────────────────\n";
+echo "┌─ 3/4 Template Cache ──────────────────\n";
 
 $template_exit = verifyTemplateCache($base_dir);
 if ($template_exit !== 0) {
+    $overall_exit = 1;
+}
+
+// ── 4. Component @push directives ───────────────────────────────
+
+echo "┌─ 4/4 Component @push Directives ──────\n";
+
+$push_exit = verifyComponentPushDirectives($base_dir);
+if ($push_exit !== 0) {
     $overall_exit = 1;
 }
 
@@ -64,6 +74,7 @@ $checks = [
     ['Route Cache', $route_exit],
     ['OPcache', $opcache_exit],
     ['Template Cache', $template_exit],
+    ['Component @push Directives', $push_exit],
 ];
 
 echo "┌─ Summary ─────────────────────────────\n\n";
@@ -94,6 +105,63 @@ function runScript(string $command): int
     passthru($command, $exit_code);
 
     return $exit_code;
+}
+
+function verifyComponentPushDirectives(string $base_dir): int
+{
+    $template_dir = $base_dir . '/templates/components';
+
+    $failures = [];
+    $passes = [];
+
+    echo "\n=== Component @push Directive Verification ===\n\n";
+
+    foreach (Component::cases() as $component) {
+        $path = $template_dir . '/' . $component->value . '.blade.php';
+
+        if (!file_exists($path)) {
+            $failures[] = sprintf('Missing component template: %s', $path);
+            continue;
+        }
+
+        $lines = file($path, FILE_IGNORE_NEW_LINES);
+        $violations = [];
+
+        foreach ($lines as $line_number => $line) {
+            if (preg_match('/@push\(/', $line) || preg_match('/@prepend\(/', $line)) {
+                $violations[] = sprintf('line %d: %s', $line_number + 1, trim($line));
+            }
+        }
+
+        if ($violations !== []) {
+            foreach ($violations as $violation) {
+                $failures[] = sprintf('Component::%s uses bare @push or @prepend (%s). Use @pushOnce(\'stack\', \'%s\') instead.', $component->name, $violation, $component->value);
+            }
+        } else {
+            $passes[] = sprintf('Component::%s has no bare @push or @prepend', $component->name);
+        }
+    }
+
+    foreach ($failures as $f) {
+        echo "  [FAIL] $f\n";
+    }
+    foreach ($passes as $p) {
+        echo "  [ OK ] $p\n";
+    }
+    echo "\n";
+
+    $total = count($failures) + count($passes);
+    echo sprintf("Result: %d checks — %d failed, %d passed\n", $total, count($failures), count($passes));
+
+    if ($failures !== []) {
+        echo "Verdict: Component @push directives are NOT production ready\n\n";
+
+        return 1;
+    }
+
+    echo "Verdict: Component @push directives are production ready\n\n";
+
+    return 0;
 }
 
 function verifyTemplateCache(string $base_dir): int

@@ -1,0 +1,22 @@
+services:
+  web:
+    build:
+      context: .
+      target: production
+    environment:
+      APP_ENV: production
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost/"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 5s
+
+  k6:
+    image: grafana/k6
+    command: run /scripts/load-test.js
+    volumes:
+      - ./tests/load:/scripts
+    depends_on:
+      web:
+        condition: service_healthy
