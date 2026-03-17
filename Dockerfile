@@ -1,4 +1,4 @@
-FROM dunglas/frankenphp:php8.5 AS base
+FROM dunglas/frankenphp:php8.5@sha256:dc2118cfbe0f645b58f7218f21f4c1a3598cf59cf86dce762d625cb6f5604ae6 AS base
 
 RUN install-php-extensions \
     pdo_mysql \

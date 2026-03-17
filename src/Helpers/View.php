@@ -19,4 +19,5 @@ enum View: string
     case about = 'about';
     case error = 'error';
     case home = 'home';
+    case login = 'login';
 }
