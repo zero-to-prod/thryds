@@ -21,14 +21,8 @@ readonly class App
         public CachedRouter $Router,
     ) {}
 
-    public static function boot(string $base_dir, ?Config $Config = null): self
+    public static function bootBlade(Config $Config, string $base_dir): Blade
     {
-        $Config ??= Config::from([
-            Config::APP_ENV => $_SERVER[Config::APP_ENV] ?? $_ENV[Config::APP_ENV] ?? APP_ENV::production->value,
-            Config::blade_cache_dir => $base_dir . '/var/cache/blade',
-            Config::template_dir => $base_dir . '/templates',
-        ]);
-
         $Container = new BladeContainer();
         Container::setInstance(container: $Container);
         $Blade = new Blade(viewPaths: $Config->template_dir, cachePath: $Config->blade_cache_dir, container: $Container);
@@ -42,6 +36,19 @@ readonly class App
         $Container->instance(Vite::class, instance: $Vite);
         $Blade->directive('vite', static fn(): string => $Vite->directivePhp(Vite::app_entry));
         $Blade->directive('htmx', static fn(): string => $Vite->directivePhp(Vite::htmx_entry));
+
+        return $Blade;
+    }
+
+    public static function boot(string $base_dir, ?Config $Config = null): self
+    {
+        $Config ??= Config::from([
+            Config::APP_ENV => $_SERVER[Config::APP_ENV] ?? $_ENV[Config::APP_ENV] ?? APP_ENV::production->value,
+            Config::blade_cache_dir => $base_dir . '/var/cache/blade',
+            Config::template_dir => $base_dir . '/templates',
+        ]);
+
+        $Blade = self::bootBlade($Config, $base_dir);
 
         $Router = new CachedRouter(
             builder: static function (Router $Router) use ($Blade): Router {

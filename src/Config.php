@@ -14,6 +14,7 @@ readonly class Config
 {
     use DataModel;
 
+    /** Read directly from $_SERVER in public/index.php — no Config property needed. */
     public const string MAX_REQUESTS = 'MAX_REQUESTS';
     /** @see $APP_ENV */
     public const string APP_ENV = 'APP_ENV';

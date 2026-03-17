@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+// FrankenPHP worker entrypoint: boots once, then loops via frankenphp_handle_request().
 $base_dir = dirname(__DIR__);
 
 require __DIR__ . '/../vendor/autoload.php';

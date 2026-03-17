@@ -18,10 +18,8 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Illuminate\Container\Container;
-use Jenssegers\Blade\Blade;
-use Jenssegers\Blade\Container as BladeContainer;
 use ZeroToProd\Thryds\APP_ENV;
+use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Helpers\View;
 use ZeroToProd\Thryds\Helpers\Vite;
@@ -108,15 +106,12 @@ function verifyTemplateCache(string $base_dir): int
     $failures = [];
     $passes = [];
 
-    $Container = new BladeContainer();
-    Container::setInstance(container: $Container);
-    $Blade = new Blade(viewPaths: $template_dir, cachePath: $cache_dir, container: $Container);
-    $Config = Config::from([Config::APP_ENV => APP_ENV::development->value]);
-    $Vite = new Vite($Config, baseDir: $base_dir, entry_css: [
-        Vite::app_entry => [Vite::app_css],
+    $Config = Config::from([
+        Config::APP_ENV => APP_ENV::development->value,
+        Config::blade_cache_dir => $cache_dir,
+        Config::template_dir => $template_dir,
     ]);
-    $Blade->directive('vite', static fn(): string => $Vite->directivePhp(Vite::app_entry));
-    $Blade->directive('htmx', static fn(): string => $Vite->directivePhp(Vite::htmx_entry));
+    $Blade = App::bootBlade($Config, $base_dir);
 
     $view_data = [
         View::home => [],

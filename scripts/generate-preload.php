@@ -17,14 +17,11 @@ $base_dir = dirname(__DIR__);
 
 require $base_dir . '/vendor/autoload.php';
 
-use Illuminate\Container\Container;
-use Jenssegers\Blade\Blade;
-use Jenssegers\Blade\Container as BladeContainer;
 use ZeroToProd\Thryds\APP_ENV;
+use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\Config;
-use ZeroToProd\Thryds\Helpers\Vite;
-
 use ZeroToProd\Thryds\Helpers\View;
+use ZeroToProd\Thryds\Helpers\Vite;
 use ZeroToProd\Thryds\Routes\WebRoutes;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
@@ -41,21 +38,7 @@ if (!mkdir($concurrentDirectory = $Config->blade_cache_dir, 0o755, true) && !is_
     throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
 }
 
-$Container = new BladeContainer();
-Container::setInstance(container: $Container);
-$Blade = new Blade(viewPaths: $Config->template_dir, cachePath: $Config->blade_cache_dir, container: $Container);
-
-$Blade->if('production', fn(): bool => $Config->APP_ENV === APP_ENV::production);
-$Blade->if('env', fn(string ...$environments): bool => in_array($Config->APP_ENV->value, $environments, true));
-
-$Vite = new Vite($Config, baseDir: $base_dir, entry_css: [
-    Vite::app_entry => [Vite::app_css],
-]);
-$Container->instance(Vite::class, instance: $Vite);
-$vite_php = $Vite->directivePhp(Vite::app_entry);
-$Blade->directive('vite', static fn(): string => $vite_php);
-$htmx_php = $Vite->directivePhp(Vite::htmx_entry);
-$Blade->directive('htmx', static fn(): string => $htmx_php);
+$Blade = App::bootBlade($Config, $base_dir);
 
 // Direct instantiation is intentional: this script runs at build time, not in the request path.
 // ForbidDirectRouterInstantiationRector only applies to src/, public/, tests/.
