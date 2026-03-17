@@ -14,10 +14,6 @@ use ZeroToProd\Thryds\Helpers\SourceOfTruth;
  */
 #[SourceOfTruth(
     for: 'dev-only path filters',
-    consumers: [
-        'scripts/generate-preload.php',
-        'scripts/opcache-audit.php',
-    ],
     addCase: '1. Add path to dev_vendors or excluded_dirs. Both consumers use DevFilter::isDevPath() so no further changes needed.',
 )]
 readonly class DevFilter

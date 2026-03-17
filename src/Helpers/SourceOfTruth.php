@@ -9,26 +9,22 @@ use Attribute;
 /**
  * Declares a class or enum as the canonical owner of a domain concept.
  *
- * Lists the files/classes that consume this data. Rector rules verify that
- * consumers actually reference the source class. AI agents use the consumers
- * list as a dependency map when making changes.
+ * AI agents use the `addCase` checklist to know the full set of changes required
+ * when adding a new case or constant. Usage sites are discovered dynamically
+ * by searching the codebase.
  *
- * @example #[SourceOfTruth(for: 'route paths', consumers: [WebRoutes::class, 'templates/*.blade.php'])]
+ * @example #[SourceOfTruth(for: 'route paths', addCase: '1. Add enum case. 2. Register in WebRoutes.')]
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 readonly class SourceOfTruth
 {
     /**
-     * @param string   $for        Human-readable name of the concept this class owns.
-     * @param string[] $consumers  Where this class's data is consumed. Each entry is either:
-     *                             - A class FQN (verified by Rector: must import the source class)
-     *                             - A file glob pattern (verified by Rector: at least one match must reference the source)
-     * @param string   $addCase    Human-readable checklist for what to do when adding a new case/constant.
-     *                             AI agents read this to know the full set of changes required.
+     * @param string $for     Human-readable name of the concept this class owns.
+     * @param string $addCase Human-readable checklist for what to do when adding a new case/constant.
+     *                        AI agents read this to know the full set of changes required.
      */
     public function __construct(
         public string $for,
-        public array $consumers = [],
         public string $addCase = '',
     ) {}
 }

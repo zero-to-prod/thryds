@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
-use Psr\Http\Message\MessageInterface;
 use ZeroToProd\Thryds\Helpers\KeyRegistry;
 
 #[KeyRegistry(
     source: 'HTTP headers',
-    used_in: [[MessageInterface::class, 'getHeaderLine']],
+    addKey: '1. Add constant. 2. Reference via Header::NAME where needed.',
 )]
 readonly class Header
 {

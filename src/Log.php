@@ -8,7 +8,7 @@ use ZeroToProd\Thryds\Helpers\KeyRegistry;
 
 #[KeyRegistry(
     source: 'Log context array',
-    used_in: [[self::class, 'error']],
+    addKey: '1. Add constant. 2. Pass in context array via Log::method([Log::KEY => $value]).',
 )]
 readonly class Log
 {

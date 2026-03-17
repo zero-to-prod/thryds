@@ -6,11 +6,14 @@ namespace Utils\Rector\Rector;
 
 use PhpParser\Comment;
 use PhpParser\Node;
+use PhpParser\Node\Attribute;
+use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Name;
 use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -51,11 +54,11 @@ CODE_SAMPLE
      */
     public function getNodeTypes(): array
     {
-        return [MethodCall::class, StaticCall::class, FuncCall::class, New_::class];
+        return [MethodCall::class, StaticCall::class, FuncCall::class, New_::class, Attribute::class];
     }
 
     /**
-     * @param MethodCall|StaticCall|FuncCall|New_ $node
+     * @param MethodCall|StaticCall|FuncCall|New_|Attribute $node
      */
     public function refactor(Node $node): ?Node
     {
@@ -66,16 +69,19 @@ CODE_SAMPLE
                 continue;
             }
 
-            if (! $arg->value instanceof Variable) {
+            if ($arg->value instanceof Variable) {
+                $matchName = $this->getName($arg->value);
+            } elseif ($arg->value instanceof ClassConstFetch && $arg->value->class instanceof Name) {
+                $matchName = $arg->value->class->getLast();
+            } else {
                 continue;
             }
 
-            $varName = $this->getName($arg->value);
-            if ($varName === null) {
+            if ($matchName === null) {
                 continue;
             }
 
-            if ($arg->name->name === $varName) {
+            if ($arg->name->name === $matchName) {
                 $removable[$position] = true;
             }
         }

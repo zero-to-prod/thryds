@@ -10,7 +10,7 @@ use Attribute;
  * Marks a backed enum as a closed set of allowed values in a specific domain.
  *
  * @example
- * #[ClosedSet(domain: 'HTTP methods', used_in: [[WebRoutes::class, 'register']])]
+ * #[ClosedSet(Domain: Domain::http_methods)]
  * enum HTTP_METHOD: string
  * {
  *     case GET = 'GET';
@@ -18,7 +18,7 @@ use Attribute;
  * }
  *
  * @example
- * #[ClosedSet(domain: 'application environment', used_in: [[Config::class, '__construct'], [App::class, 'boot']])]
+ * #[ClosedSet(Domain: Domain::application_environment, addCase: '1. Add enum case. 2. Handle in Config::__construct().')]
  * enum AppEnv: string
  * {
  *     case production = 'production';
@@ -28,9 +28,12 @@ use Attribute;
 #[Attribute(Attribute::TARGET_CLASS)]
 readonly class ClosedSet
 {
-    /** @param list<array{class: class-string, method: string}> $used_in Each entry is [Class::class, 'method'] — AST-refactorable. */
+    /**
+     * @param Domain $Domain  The value domain this enum constrains.
+     * @param string $addCase Human-readable checklist for what to do when adding a new enum case.
+     */
     public function __construct(
-        public string $domain,
-        public array $used_in = [],
+        public Domain $Domain,
+        public string $addCase = '',
     ) {}
 }

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
-use ZeroToProd\Thryds\Helpers\BladeDirectives;
 use ZeroToProd\Thryds\Helpers\ClosedSet;
+use ZeroToProd\Thryds\Helpers\Domain;
 
-#[ClosedSet(domain: 'application environment', used_in: [[Config::class, '__construct'], [BladeDirectives::class, 'register'], [App::class, 'boot']])]
+#[ClosedSet(Domain: Domain::application_environment, addCase: '1. Add enum case. 2. Handle in Config::__construct() and App::boot().')]
 enum AppEnv: string
 {
     case production = 'production';

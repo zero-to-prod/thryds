@@ -5,21 +5,14 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Routes;
 
 use ZeroToProd\Thryds\Helpers\ClosedSet;
+use ZeroToProd\Thryds\Helpers\Domain;
 use ZeroToProd\Thryds\Helpers\SourceOfTruth;
-use ZeroToProd\Thryds\Tests\Integration\IntegrationTestCase;
 
 #[SourceOfTruth(
     for: 'route paths',
-    consumers: [
-        WebRoutes::class,
-        IntegrationTestCase::class,
-        'templates/*.blade.php',
-        'scripts/opcache-audit.php',
-        'scripts/generate-preload.php',
-    ],
     addCase: '1. Add enum case. 2. Register in WebRoutes::register(). 3. Create controller + template. 4. Add integration test. 5. Add template render in generate-preload.php.',
 )]
-#[ClosedSet(domain: 'URL routes', used_in: [[WebRoutes::class, 'register'], [RenderedRoute::class, '__construct']])]
+#[ClosedSet(Domain: Domain::url_routes)]
 enum Route: string
 {
     case home = '/';

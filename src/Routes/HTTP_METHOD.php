@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Routes;
 
 use ZeroToProd\Thryds\Helpers\ClosedSet;
+use ZeroToProd\Thryds\Helpers\Domain;
 
-#[ClosedSet(domain: 'HTTP methods', used_in: [[WebRoutes::class, 'register']])]
+#[ClosedSet(Domain: Domain::http_methods)]
 enum HTTP_METHOD: string
 {
     case GET = 'GET';

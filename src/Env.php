@@ -9,10 +9,6 @@ use ZeroToProd\Thryds\Helpers\SourceOfTruth;
 
 #[SourceOfTruth(
     for: 'environment variable keys',
-    consumers: [
-        App::class,
-        'public/index.php',
-    ],
     addCase: '1. Add constant. 2. Add to compose.yaml environment section if needed. 3. Add to .env.example.',
 )]
 #[KeyRegistry(

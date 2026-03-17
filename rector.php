@@ -65,8 +65,6 @@ use Utils\Rector\Rector\RequireNamesKeysOnConstantsClassRector;
 use Utils\Rector\Rector\RequireNamesKeysOnMixedConstantsClassRector;
 use Utils\Rector\Rector\RequireViewModelAttributeOnDataModelRector;
 use Utils\Rector\Rector\SuggestAttributeForRepeatedPropertyPatternRector;
-use Utils\Rector\Rector\RequireClassRefInClosedSetUsedInRector;
-use Utils\Rector\Rector\ValidateSourceOfTruthConsumersRector;
 use ZeroToProd\Thryds\OpcacheStatus;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
@@ -421,31 +419,11 @@ return static function (RectorConfig $rectorConfig): void {
         'message' => "TODO: [RequireNamesKeysOnMixedConstantsClassRector] %s has %d string constants — add #[NamesKeys] to declare what they name (ADR-007).",
     ]);
 
-    // --- Source of Truth ---
-    $rectorConfig->ruleWithConfiguration(ValidateSourceOfTruthConsumersRector::class, [
-        'attributeClass' => \ZeroToProd\Thryds\Helpers\SourceOfTruth::class,
-        'mode' => 'warn',
-        'message' => "TODO: [ValidateSourceOfTruthConsumersRector] %s declares %s as a consumer, but it does not reference %s. Update the consumers list.",
-        'projectDir' => __DIR__,
-        'psr4Map' => [
-            'ZeroToProd\\Thryds\\' => __DIR__ . '/src/',
-            'ZeroToProd\\Thryds\\Tests\\' => __DIR__ . '/tests/',
-        ],
-    ]);
-
     // --- Enum Design ---
     $rectorConfig->ruleWithConfiguration(RequireClosedSetOnBackedEnumRector::class, [
         'attributeClass' => \ZeroToProd\Thryds\Helpers\ClosedSet::class,
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->ruleWithConfiguration(RequireClassRefInClosedSetUsedInRector::class, [
-        'attributes' => [
-            ['attributeClass' => \ZeroToProd\Thryds\Helpers\ClosedSet::class, 'paramName' => 'used_in'],
-            ['attributeClass' => \ZeroToProd\Thryds\Helpers\KeyRegistry::class, 'paramName' => 'used_in'],
-        ],
         'mode' => 'warn',
     ]);
-
     // --- Enum Value Arg Safety ---
     $rectorConfig->ruleWithConfiguration(ForbidStringArgForEnumParamRector::class, [
         'enumClasses' => [

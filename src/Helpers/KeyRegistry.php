@@ -15,7 +15,7 @@ use Attribute;
  * @example
  * #[KeyRegistry(
  *     source: 'HTTP headers',
- *     used_in: [[MessageInterface::class, 'getHeaderLine']],
+ *     addKey: '1. Add constant. 2. Reference via Header::NAME where needed.',
  * )]
  * readonly class Header
  * {
@@ -26,6 +26,7 @@ use Attribute;
  * #[KeyRegistry(
  *     source: '$_SERVER / $_ENV',
  *     superglobals: ['_SERVER', '_ENV'],
+ *     addKey: '1. Add constant. 2. Add to compose.yaml environment section if needed.',
  * )]
  * readonly class Env
  * {
@@ -36,13 +37,13 @@ use Attribute;
 readonly class KeyRegistry
 {
     /**
-     * @param string                             $source        Human-readable name of the data source whose keys these constants name.
-     * @param list<array{class: class-string, method: string}>  $used_in       Where these keys are consumed. Each entry is [Class::class, 'method'] — AST-refactorable.
-     * @param string[]                           $superglobals  If the source is a superglobal, list the variable names (e.g., ['_SERVER', '_ENV']).
+     * @param string   $source       Human-readable name of the data source whose keys these constants name.
+     * @param string[] $superglobals If the source is a superglobal, list the variable names (e.g., ['_SERVER', '_ENV']).
+     * @param string   $addKey       Human-readable checklist for what to do when adding a new constant.
      */
     public function __construct(
         public string $source,
-        public array $used_in = [],
         public array $superglobals = [],
+        public string $addKey = '',
     ) {}
 }
