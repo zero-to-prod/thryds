@@ -13,6 +13,16 @@ use ZeroToProd\Thryds\APP_ENV;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Routes\Route;
 
+/**
+ * Base class for integration tests that exercise routes through the full App stack.
+ *
+ * 1. Create a file in tests/Integration/ with a class extending IntegrationTestCase.
+ * 2. Use the #[Test] attribute and declare(strict_types=1).
+ * 3. Call $this->get(Route::case_name) or $this->post(Route::case_name).
+ * 4. Assert on ResponseInterface: getStatusCode(), getHeaderLine(), (string) getBody().
+ * 5. Always reference routes via Route::case_name — RequireRouteTestRector scans tests
+ *    for Route:: references to track coverage and remove TODO comments.
+ */
 abstract class IntegrationTestCase extends TestCase
 {
     private const string base_dir = __DIR__ . '/../..';

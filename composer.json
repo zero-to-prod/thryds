@@ -36,7 +36,8 @@
     "require-dev": {
         "rector/rector": "^2.3",
         "phpunit/phpunit": "^13.0",
-        "friendsofphp/php-cs-fixer": "^3.94"
+        "friendsofphp/php-cs-fixer": "^3.94",
+        "phpstan/phpstan": "^2.1"
     },
     "config": {
         "platform": {
@@ -53,6 +54,7 @@
         "lint:check": "./vendor/bin/php-cs-fixer fix --dry-run --diff",
         "rector": "./vendor/bin/rector process",
         "rector:check": "./vendor/bin/rector process --dry-run",
+        "phpstan": "./vendor/bin/phpstan analyse",
         "opcache": "php scripts/opcache-audit.php",
         "preload:generate": "php scripts/generate-preload.php",
         "route-cache:verify": "php scripts/verify-route-cache.php",
@@ -60,6 +62,7 @@
         "lint:all": [
             "@lint",
             "@rector",
+            "@phpstan",
             "@lint:blade-routes",
             "@test"
         ],

@@ -14,10 +14,11 @@ Thryds — social media platform integrating AI with humanity. Web UI + API back
 ## Quick Reference
 
 - `docker compose up -d` — start dev server
-- `./run lint:all` — lint + rector + blade route check + tests (run after every change)
+- `./run lint:all` — lint + rector + phpstan + blade route check + tests (run after every change)
 - `./run test` — all tests
 - `./run lint` — fix code style
 - `./run rector` — apply Rector refactors
+- `./run phpstan` — static analysis (catches undefined classes, bad types)
 - `logs/frankenphp/caddy.log` — server logs
 - `docker compose exec php php scripts/production-checklist.php` — run all production readiness checks (exits non-zero on failures)
     - Change .env to production and rebuild and restart the app to see production-ready checks.

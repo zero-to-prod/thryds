@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Routes;
 
 use Jenssegers\Blade\Blade;
+use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\Response\JsonResponse;
 use League\Route\Router;
 use Psr\Http\Message\ResponseInterface;
 use ZeroToProd\Thryds\Controllers\HomeController;
+use ZeroToProd\Thryds\Helpers\View;
 
 readonly class WebRoutes
 {

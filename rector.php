@@ -41,6 +41,7 @@ use Utils\Rector\Rector\RequireMethodAnnotationForDataModelRector;
 use Utils\Rector\Rector\ForbidDuplicateRouteRegistrationRector;
 use Utils\Rector\Rector\ReplaceShortClassNameWithViewKeyRector;
 use Utils\Rector\Rector\RequireAllRouteCasesRegisteredRector;
+use Utils\Rector\Rector\RequireRouteTestRector;
 use Utils\Rector\Rector\RequireNamedArgForBoolParamRector;
 use Utils\Rector\Rector\ForbidHardcodedRouteStringRector;
 use Utils\Rector\Rector\RequireRouteEnumInMapCallRector;
@@ -301,5 +302,11 @@ return static function (RectorConfig $rectorConfig): void {
         'scanDir' => __DIR__ . '/src',
         'mode' => 'warn',
         'message' => "TODO: [RequireAllRouteCasesRegisteredRector] Route case '%s' is defined but never registered in any router map() call.",
+    ]);
+    $rectorConfig->ruleWithConfiguration(RequireRouteTestRector::class, [
+        'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
+        'testDir' => __DIR__ . '/tests',
+        'mode' => 'warn',
+        'message' => "TODO: [RequireRouteTestRector] Route case '%s' has no corresponding test. Add a test that exercises this route.",
     ]);
 };
