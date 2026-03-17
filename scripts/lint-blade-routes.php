@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Lint Blade templates for hardcoded route paths.
  *
- * Usage: docker compose exec php php /app/scripts/lint-blade-routes.php
+ * Usage: docker compose exec web php /app/scripts/lint-blade-routes.php
  * Via Composer: ./run check:blade-routes
  *
  * Catches:

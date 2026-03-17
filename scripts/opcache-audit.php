@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * OPcache optimization audit.
  *
- * Usage: docker compose exec php php /app/scripts/opcache-audit.php
+ * Usage: docker compose exec web php /app/scripts/opcache-audit.php
  * Via Composer: ./run opcache
  *
  * Generates HTTP traffic to warm the worker's OPcache, then fetches

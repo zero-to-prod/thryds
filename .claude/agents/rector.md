@@ -35,8 +35,8 @@ Migration docs at `docs/migrations/` contain complete specs. They have a standar
 2. Read `rector.php` to find the correct insertion point for registration
 3. Create all files from the doc (rule, test, config, support, fixtures)
 4. Register in `rector.php` — add `use` import at top, config block in the section indicated by the doc
-5. Run `docker compose exec php composer test:rector` — fix failures
-6. Run `docker compose exec php composer check:all` — fix failures
+5. Run `docker compose exec web composer test:rector` — fix failures
+6. Run `docker compose exec web composer check:all` — fix failures
 7. Report results
 
 **Critical**: Do NOT paraphrase or restructure code from the doc. Use it exactly as written. The doc is the source of truth.
@@ -345,7 +345,7 @@ Custom rules use these PSR-4 namespaces (defined in `composer.json` `autoload-de
 - `Utils\Rector\Rector\` → `utils/rector/src/`
 - `Utils\Rector\Tests\` → `utils/rector/tests/`
 
-After adding new files, run `docker compose run --rm composer composer dump-autoload`.
+After adding new files, run `docker compose run --rm web composer dump-autoload`.
 
 ## Rules
 

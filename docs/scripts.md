@@ -2,7 +2,7 @@
 
 ## `./run` (Project Root)
 
-Wrapper that executes Composer scripts inside Docker: `docker compose exec php composer "$@"`.
+Wrapper that executes Composer scripts inside Docker: `docker compose exec web composer "$@"`.
 
 Usage: `./run <script-name>`
 
@@ -57,7 +57,7 @@ Invoked via `./run <name>`. Defined in `composer.json`.
 
 ## PHP Scripts (`scripts/`)
 
-Run directly via `docker compose exec php php scripts/<name>.php`, or through their Composer aliases above.
+Run directly via `docker compose exec web php scripts/<name>.php`, or through their Composer aliases above.
 
 ### `generate-preload.php`
 

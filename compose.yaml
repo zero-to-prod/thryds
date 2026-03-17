@@ -1,5 +1,5 @@
 services:
-  php:
+  web:
     build:
       context: .
       target: ${APP_ENV:-development}
@@ -33,7 +33,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
 
-  node:
+  dev:
     image: node:22-alpine
     working_dir: /app
     environment:

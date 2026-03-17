@@ -19,11 +19,11 @@ You are a specialist in Composer, the PHP dependency manager. Assist with depend
 
 All commands must run inside Docker:
 
-- `./run <command>` — run any Composer command (wraps `docker compose exec php composer`)
-- `docker compose run --rm composer composer <command>` — fallback when dev server is not running
+- `./run <command>` — run any Composer command (wraps `docker compose exec web composer`)
+- `docker compose run --rm web composer <command>` — fallback when dev server is not running
 
 ## Rules
 
 - Never run Composer directly on the host — always use Docker.
 - Use `./run` for Composer script shortcuts.
-- After adding new PSR-4 namespaces, run `docker compose run --rm composer composer dump-autoload`.
+- After adding new PSR-4 namespaces, run `docker compose run --rm web composer dump-autoload`.

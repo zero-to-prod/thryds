@@ -10,8 +10,8 @@ All code implementations MUST be least invasive and straightforward.
 
 - ALWAYS use Docker. Never run PHP, Composer, or app tooling on the host.
 - ALWAYS run `./run check:all` before completing any task.
-- `./run <script>` = `docker compose exec php composer <script>` (Composer scripts only).
-- For raw PHP: `docker compose exec php php scripts/<name>.php`
+- `./run <script>` = `docker compose exec web composer <script>` (Composer scripts only).
+- For raw PHP: `docker compose exec web php scripts/<name>.php`
 - Reset static state per request in worker mode (see `RequestId::reset()` in `public/index.php`).
 
 ## Commands

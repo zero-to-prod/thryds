@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Generate a custom Rector rule skeleton with test, config, and fixture.
  *
- * Usage: docker compose exec php php scripts/make-rector-rule.php <RuleName> [--mode=auto|warn] [--message="..."]
+ * Usage: docker compose exec web php scripts/make-rector-rule.php <RuleName> [--mode=auto|warn] [--message="..."]
  * Via Composer: ./run generate:rector-rule -- <RuleName> [--mode=auto|warn] [--message="..."]
  *
  * Generates:

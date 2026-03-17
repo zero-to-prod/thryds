@@ -7,7 +7,7 @@ declare(strict_types=1);
  *
  * Runs all verification scripts and reports a combined pass/fail result.
  *
- * Usage: docker compose exec php php /app/scripts/production-checklist.php
+ * Usage: docker compose exec web php /app/scripts/production-checklist.php
  * Via Composer: ./run audit:production
  *
  * Checks:

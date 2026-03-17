@@ -19,8 +19,8 @@ You are a specialist in Docker and Docker Compose. Assist with container configu
 ## Commands
 
 - `docker compose up -d` — start dev server
-- `docker compose exec php <command>` — run commands in the running container
-- `docker compose run --rm composer <command>` — run commands in a new container (fallback)
+- `docker compose exec web <command>` — run commands in the running container
+- `docker compose run --rm web <command>` — run commands in a new container (fallback)
 
 ## Rules
 
