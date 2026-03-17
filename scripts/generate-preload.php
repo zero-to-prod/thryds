@@ -50,6 +50,8 @@ WebRoutes::register($Router, $Blade);
 echo "Rendering templates...\n";
 $Blade->make(view: View::home->value)->render();
 $Blade->make(view: View::about->value)->render();
+$Blade->make(view: View::login->value)->render();
+$Blade->make(view: View::styleguide->value)->render();
 $Blade->make(view: View::error->value, data: [
     ErrorViewModel::view_key => ErrorViewModel::from([
         ErrorViewModel::message => 'test',

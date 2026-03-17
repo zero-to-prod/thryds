@@ -56,12 +56,14 @@
         "check:rector": "./vendor/bin/rector process --dry-run",
         "check:types": "./vendor/bin/phpstan analyse",
         "check:blade-routes": "php scripts/lint-blade-routes.php",
+        "check:blade-components": "php scripts/lint-blade-components.php",
         "check:route-cache": "php scripts/verify-route-cache.php",
         "check:all": [
             "@fix:style",
             "@fix:rector",
             "@check:types",
             "@check:blade-routes",
+            "@check:blade-components",
             "@test",
             "@generate:preload"
         ],

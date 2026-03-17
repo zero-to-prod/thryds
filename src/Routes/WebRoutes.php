@@ -33,6 +33,22 @@ readonly class WebRoutes
 
         $Router->map(
             HTTP_METHOD::GET->value,
+            Route::login->value,
+            fn(): ResponseInterface => new HtmlResponse(
+                html: $Blade->make(view: View::login->value)->render(),
+            ),
+        );
+
+        $Router->map(
+            HTTP_METHOD::GET->value,
+            Route::styleguide->value,
+            fn(): ResponseInterface => new HtmlResponse(
+                html: $Blade->make(view: View::styleguide->value)->render(),
+            ),
+        );
+
+        $Router->map(
+            HTTP_METHOD::GET->value,
             Route::opcache_status->value,
             static fn(): ResponseInterface => new JsonResponse(
                 data: json_decode(

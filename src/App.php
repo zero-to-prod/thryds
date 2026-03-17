@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds;
 
 use Illuminate\Container\Container;
+use Illuminate\Contracts\View\Factory;
 use Jenssegers\Blade\Blade;
 use Jenssegers\Blade\Container as BladeContainer;
 use League\Route\Cache\FileCache;
 use League\Route\Cache\Router as CachedRouter;
 use League\Route\Router;
 use ZeroToProd\Thryds\Helpers\BladeDirectives;
+use ZeroToProd\Thryds\Helpers\Component;
 use ZeroToProd\Thryds\Helpers\Vite;
 use ZeroToProd\Thryds\Routes\WebRoutes;
 
@@ -33,6 +35,13 @@ readonly class App
         ]);
         $Container->instance(Vite::class, instance: $Vite);
         BladeDirectives::register($Blade, $Config, $Vite);
+
+        // Bind Factory contract so ComponentTagCompiler can resolve aliases for <x-*> components.
+        $Container->bind(Factory::class, fn() => $Container->get('view'));
+
+        foreach (Component::cases() as $Component) {
+            $Blade->compiler()->component($Component->viewName(), $Component->value);
+        }
 
         return $Blade;
     }

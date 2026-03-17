@@ -13,6 +13,7 @@ opcache_compile_file(__DIR__ . '/src/Helpers/DataModel.php');
 opcache_compile_file(__DIR__ . '/src/Helpers/Vite.php');
 opcache_compile_file(__DIR__ . '/src/Helpers/BladeDirectives.php');
 opcache_compile_file(__DIR__ . '/src/Helpers/BladeDirective.php');
+opcache_compile_file(__DIR__ . '/src/Helpers/Component.php');
 opcache_compile_file(__DIR__ . '/src/Helpers/View.php');
 
 // Core
@@ -102,6 +103,7 @@ opcache_compile_file(__DIR__ . '/vendor/illuminate/view/Concerns/ManagesTranslat
 opcache_compile_file(__DIR__ . '/vendor/illuminate/view/Compilers/Compiler.php');
 opcache_compile_file(__DIR__ . '/vendor/illuminate/view/Compilers/CompilerInterface.php');
 opcache_compile_file(__DIR__ . '/vendor/illuminate/view/Compilers/Concerns/CompilesAuthorizations.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/view/Component.php');
 opcache_compile_file(__DIR__ . '/vendor/illuminate/view/Compilers/BladeCompiler.php');
 opcache_compile_file(__DIR__ . '/vendor/illuminate/view/Compilers/Concerns/CompilesClasses.php');
 opcache_compile_file(__DIR__ . '/vendor/illuminate/view/Compilers/Concerns/CompilesComments.php');
@@ -154,6 +156,16 @@ opcache_compile_file(__DIR__ . '/vendor/illuminate/contracts/View/Engine.php');
 opcache_compile_file(__DIR__ . '/vendor/illuminate/view/Engines/PhpEngine.php');
 opcache_compile_file(__DIR__ . '/vendor/illuminate/view/Engines/CompilerEngine.php');
 opcache_compile_file(__DIR__ . '/vendor/illuminate/support/Str.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/view/AnonymousComponent.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/collections/Traits/EnumeratesValues.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/collections/Collection.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/contracts/Support/CanBeEscapedWhenCastToString.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/contracts/Support/Arrayable.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/collections/Enumerable.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/contracts/Support/Jsonable.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/collections/HigherOrderCollectionProxy.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/view/ComponentAttributeBag.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/view/ComponentSlot.php');
 opcache_compile_file(__DIR__ . '/vendor/psr/http-factory/src/ServerRequestFactoryInterface.php');
 opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-diactoros/src/ServerRequestFactory.php');
 opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-diactoros/src/ServerRequestFilter/FilterServerRequestInterface.php');
@@ -194,12 +206,6 @@ opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-diactoros/src/ServerRequ
 opcache_compile_file(__DIR__ . '/vendor/league/route/src/Cache/Router.php');
 opcache_compile_file(__DIR__ . '/vendor/league/route/src/Cache/FileCache.php');
 opcache_compile_file(__DIR__ . '/vendor/psr/simple-cache/src/CacheInterface.php');
-opcache_compile_file(__DIR__ . '/vendor/illuminate/collections/Traits/EnumeratesValues.php');
-opcache_compile_file(__DIR__ . '/vendor/illuminate/collections/Collection.php');
-opcache_compile_file(__DIR__ . '/vendor/illuminate/contracts/Support/CanBeEscapedWhenCastToString.php');
-opcache_compile_file(__DIR__ . '/vendor/illuminate/contracts/Support/Arrayable.php');
-opcache_compile_file(__DIR__ . '/vendor/illuminate/collections/Enumerable.php');
-opcache_compile_file(__DIR__ . '/vendor/illuminate/contracts/Support/Jsonable.php');
 opcache_compile_file(__DIR__ . '/vendor/illuminate/support/Stringable.php');
 opcache_compile_file(__DIR__ . '/vendor/illuminate/support/Traits/Dumpable.php');
 opcache_compile_file(__DIR__ . '/vendor/illuminate/support/Traits/Tappable.php');
