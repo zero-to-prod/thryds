@@ -14,9 +14,10 @@ services:
 
   k6:
     image: grafana/k6
-    command: run /scripts/load-test.js
+    command: run --out json=/logs/k6/results.json /scripts/load-test.js
     volumes:
       - ./tests/load:/scripts
+      - ./logs/k6:/logs/k6
     depends_on:
       web:
         condition: service_healthy

@@ -22,9 +22,7 @@ final class ViteTest extends TestCase
     #[Test]
     public function returnsProductionTagsWithCssAndJsFromManifest(): void
     {
-        $tags = new Vite(Config::from([Config::AppEnv => AppEnv::production->value]), baseDir: $this->base_dir)->tags(Vite::app_entry);
-
-        $this->assertStringNotContainsString('localhost:5173', haystack: $tags);
+        $this->assertStringNotContainsString('localhost:5173', haystack: new Vite(Config::from([Config::AppEnv => AppEnv::production->value]), baseDir: $this->base_dir)->tags(Vite::app_entry));
     }
 
     #[Test]

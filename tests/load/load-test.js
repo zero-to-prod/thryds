@@ -25,3 +25,13 @@ export default function () {
         });
     }
 }
+
+export function teardown() {
+    const res = http.get(`${BASE_URL}/_opcache/status`);
+    if (res.status === 200) {
+        const status = JSON.parse(res.body);
+        console.log(`OPcache hit rate: ${(status.opcache_statistics?.hit_rate ?? 0).toFixed(2)}%`);
+        console.log(`OPcache memory used: ${((status.memory_usage?.used_memory ?? 0) / 1024 / 1024).toFixed(2)} MB`);
+        console.log(`OPcache cached scripts: ${status.opcache_statistics?.num_cached_scripts ?? 'n/a'}`);
+    }
+}

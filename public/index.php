@@ -6,6 +6,7 @@ $base_dir = dirname(__DIR__);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use Illuminate\Container\Container;
 use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\ServerRequestFactory;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
@@ -19,6 +20,12 @@ use ZeroToProd\Thryds\RequestId;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 $App = App::boot($base_dir);
+
+// Resolve once at boot to get the cached CompilerEngine instance. Must be called
+// after App::boot() so the container is initialised. forgetCompiledOrNotExpired()
+// is called per-request below — Laravel normally does this via $app->terminating(),
+// which never fires in FrankenPHP worker mode.
+$bladeEngine = Container::getInstance()->make('view.engine.resolver')->resolve('blade');
 
 $emit_error_page = static function (string $message, int $status_code) use ($App): void {
     new SapiEmitter()->emit(
@@ -35,7 +42,7 @@ $emit_error_page = static function (string $message, int $status_code) use ($App
 };
 
 // Request handler — called for each incoming request
-$handler = static function () use ($App, $emit_error_page): void {
+$handler = static function () use ($App, $bladeEngine, $emit_error_page): void {
     $ServerRequestInterface = ServerRequestFactory::fromGlobals(server: $_SERVER, query: $_GET, body: $_POST, cookies: $_COOKIE, files: $_FILES);
 
     try {
@@ -55,6 +62,7 @@ $handler = static function () use ($App, $emit_error_page): void {
         );
     } finally {
         RequestId::reset();
+        $bladeEngine->forgetCompiledOrNotExpired();
     }
 };
 

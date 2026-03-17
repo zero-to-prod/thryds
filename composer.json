@@ -59,16 +59,7 @@
         "check:blade-components": "php scripts/lint-blade-components.php",
         "check:blade-templates": "php scripts/lint-blade-templates.php",
         "check:route-cache": "php scripts/verify-route-cache.php",
-        "check:all": [
-            "@fix:style",
-            "@fix:rector",
-            "@check:types",
-            "@check:blade-routes",
-            "@check:blade-components",
-            "@check:blade-templates",
-            "@test",
-            "@generate:preload"
-        ],
+        "check:all": "php scripts/check-all.php",
         "cache:views": "php scripts/cache-views.php",
         "generate:preload": "php scripts/generate-preload.php",
         "generate:rector-rule": "php scripts/make-rector-rule.php",

@@ -1,2 +1,7 @@
 #!/bin/sh
-docker compose exec web composer "$@"
+if [ "$1" = "test:load" ]; then
+    shift
+    docker compose -f compose.yaml -f compose.load-test.yaml run --rm k6 "$@"
+else
+    docker compose -f compose.yaml -f compose.development.yaml exec web composer "$@"
+fi

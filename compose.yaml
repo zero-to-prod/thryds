@@ -21,6 +21,12 @@ services:
             time_format wall
           }
         }
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost/"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 5s
     volumes:
       - ./:/app
       - /app/public/build
