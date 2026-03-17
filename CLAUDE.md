@@ -29,3 +29,9 @@ All code implementations MUST be least invasive and straightforward.
 51 rules in `utils/rector/src/`, tests in `utils/rector/tests/`, run `./run test:rector`.
 
 Scaffold a new rule: `./run generate:rector-rule -- <RuleName> [--mode=auto|warn] [--message="..."]`
+
+## Organizing Principles
+
+- Constants name things
+- Enumerations define sets
+- Php Attributes define properties

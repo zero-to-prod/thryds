@@ -532,6 +532,10 @@ The fixture file only validates AST transformations; the generated file is a sid
 
 Grouping params by which methods use them together (co-occurrence) can backfire: "core" dependencies that are used everywhere score highest and end up selected for extraction, which is the opposite of the desired outcome. Prefer type-name prefix grouping first; fall back to positional selection (last N params) rather than co-occurrence when a semantic grouping cannot be found.
 
+### Validating const array values
+
+To check a `public const array` holds a list of a specific scalar type, inspect `Array_` items for `$item->key === null` (list) and `$item->value instanceof String_` (or `LNumber`, `DNumber`). Gate with `$stmt->type instanceof Identifier && $stmt->type->name === 'array'`, then `$const->value instanceof Array_` and `$const->value->items !== []`.
+
 ### `importNames()` and `FullyQualified` nodes
 
 `rector.php` enables `$rectorConfig->importNames()`. When rules create nodes with `FullyQualified` types, Rector automatically adds the corresponding `use` statements. There is no need to manually insert imports in rule code.

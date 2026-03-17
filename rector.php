@@ -7,25 +7,30 @@ use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodParameterRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPublicMethodParameterRector;
 use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
-use Utils\Rector\Rector\AddViewKeyConstantRector;
 use Utils\Rector\Rector\AddNamedArgWhenVarMismatchesParamRector;
+use Utils\Rector\Rector\AddViewKeyConstantRector;
 use Utils\Rector\Rector\ExtractRepeatedExpressionToVariableRector;
-use Utils\Rector\Rector\InlineSingleUseVariableRector;
 use Utils\Rector\Rector\ForbidArrayShapeReturnRector;
+use Utils\Rector\Rector\ForbidBareServerEnvKeyRector;
 use Utils\Rector\Rector\ForbidCallableTypeVariableNameRector;
 use Utils\Rector\Rector\ForbidDeepNestingRector;
 use Utils\Rector\Rector\ForbiddenFuncCallRector;
 use Utils\Rector\Rector\ForbidDirectRouterInstantiationRector;
-use Utils\Rector\Rector\ForbidStringRoutePatternRector;
+use Utils\Rector\Rector\ForbidDuplicateRouteRegistrationRector;
 use Utils\Rector\Rector\ForbidDynamicIncludeRector;
 use Utils\Rector\Rector\ForbidErrorSuppressionRector;
 use Utils\Rector\Rector\ForbidEvalRector;
 use Utils\Rector\Rector\ForbidExitInSourceRector;
 use Utils\Rector\Rector\ForbidGlobalKeywordRector;
+use Utils\Rector\Rector\ForbidHardcodedRouteStringRector;
 use Utils\Rector\Rector\ForbidLongClosureRector;
 use Utils\Rector\Rector\ForbidMagicStringArrayKeyRector;
+use Utils\Rector\Rector\ForbidStringArgForEnumParamRector;
+use Utils\Rector\Rector\ForbidStringComparisonOnEnumPropertyRector;
+use Utils\Rector\Rector\ForbidStringRoutePatternRector;
 use Utils\Rector\Rector\ForbidVariableVariablesRector;
 use Utils\Rector\Rector\FrankenPhpLogToLogClassRector;
+use Utils\Rector\Rector\InlineSingleUseVariableRector;
 use Utils\Rector\Rector\LimitConstructorParamsRector;
 use Utils\Rector\Rector\MakeClassReadonlyRector;
 use Utils\Rector\Rector\RemoveNamedArgWhenVarMatchesParamRector;
@@ -36,41 +41,47 @@ use Utils\Rector\Rector\RenamePrimitiveVarToSnakeCaseRector;
 use Utils\Rector\Rector\RenamePropertyToMatchTypeNameRector;
 use Utils\Rector\Rector\RenameVarToMatchReturnTypeRector;
 use Utils\Rector\Rector\ReplaceFullyQualifiedNameRector;
-use Utils\Rector\Rector\RequireLogEventRector;
-use Utils\Rector\Rector\RequireMethodAnnotationForDataModelRector;
-use Utils\Rector\Rector\ForbidDuplicateRouteRegistrationRector;
 use Utils\Rector\Rector\ReplaceShortClassNameWithViewKeyRector;
 use Utils\Rector\Rector\RequireAllRouteCasesRegisteredRector;
-use Utils\Rector\Rector\RequireRouteTestRector;
+use Utils\Rector\Rector\RequireClosedSetOnBackedEnumRector;
+use Utils\Rector\Rector\RequireConstForRepeatedArrayKeyRector;
+use Utils\Rector\Rector\RequireEnumValueAccessRector;
+use Utils\Rector\Rector\RequireLogEventRector;
+use Utils\Rector\Rector\RequireMethodAnnotationForDataModelRector;
 use Utils\Rector\Rector\RequireNamedArgForBoolParamRector;
-use Utils\Rector\Rector\ForbidHardcodedRouteStringRector;
-use Utils\Rector\Rector\RequireRouteEnumInMapCallRector;
-use Utils\Rector\Rector\RequireViewEnumInMakeCallRector;
+use Utils\Rector\Rector\RequireNamesKeysOnConstantsClassRector;
+use Utils\Rector\Rector\RequireNamesKeysOnMixedConstantsClassRector;
 use Utils\Rector\Rector\RequireParamTypeRector;
 use Utils\Rector\Rector\RequireReturnTypeRector;
+use Utils\Rector\Rector\RequireRouteEnumInMapCallRector;
+use Utils\Rector\Rector\RequireRouteTestRector;
+use Utils\Rector\Rector\RequireSpecificResponseReturnTypeRector;
 use Utils\Rector\Rector\RequireTypedPropertyRector;
+use Utils\Rector\Rector\RequireViewEnumInMakeCallRector;
+use Utils\Rector\Rector\RequireViewModelAttributeOnDataModelRector;
+use Utils\Rector\Rector\SuggestAttributeForRepeatedPropertyPatternRector;
 use Utils\Rector\Rector\SuggestConstArrayToEnumRector;
 use Utils\Rector\Rector\SuggestDuplicateStringConstantRector;
+use Utils\Rector\Rector\SuggestEnumForKeyRegistryWithMethodsRector;
+use Utils\Rector\Rector\SuggestEnumForNameEqualsValueConstRector;
 use Utils\Rector\Rector\SuggestEnumForStringPropertyRector;
 use Utils\Rector\Rector\SuggestExtractSharedCatchLogicRector;
 use Utils\Rector\Rector\UseClassConstArrayKeyForDataModelRector;
 use Utils\Rector\Rector\UseLogContextConstRector;
-use Utils\Rector\Rector\ForbidBareServerEnvKeyRector;
-use Utils\Rector\Rector\RequireEnumValueAccessRector;
-use Utils\Rector\Rector\ForbidStringComparisonOnEnumPropertyRector;
-use Utils\Rector\Rector\RequireSpecificResponseReturnTypeRector;
-use Utils\Rector\Rector\ForbidStringArgForEnumParamRector;
-use Utils\Rector\Rector\RequireConstForRepeatedArrayKeyRector;
-use Utils\Rector\Rector\RequireClosedSetOnBackedEnumRector;
-use Utils\Rector\Rector\RequireNamesKeysOnConstantsClassRector;
-use Utils\Rector\Rector\RequireNamesKeysOnMixedConstantsClassRector;
-use Utils\Rector\Rector\RequireViewModelAttributeOnDataModelRector;
-use Utils\Rector\Rector\SuggestAttributeForRepeatedPropertyPatternRector;
 use Utils\Rector\Rector\ValidateChecklistPathsRector;
-use ZeroToProd\Thryds\OpcacheStatus;
+use Utils\Rector\Rector\SuggestEnumForInternalOnlyConstantsRector;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
+use ZeroToProd\Thryds\Env;
+use ZeroToProd\Thryds\Helpers\ClosedSet;
+use ZeroToProd\Thryds\Helpers\KeyRegistry;
+use ZeroToProd\Thryds\Helpers\SourceOfTruth;
+use ZeroToProd\Thryds\Helpers\View;
+use ZeroToProd\Thryds\Helpers\ViewModel;
 use ZeroToProd\Thryds\Log;
+use ZeroToProd\Thryds\LogLevel;
+use ZeroToProd\Thryds\OpcacheStatus;
+use ZeroToProd\Thryds\Routes\HTTP_METHOD;
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->paths([
@@ -270,10 +281,10 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RequireViewModelAttributeOnDataModelRector::class, [
         'traitClasses' => [
             \ZeroToProd\Thryds\Helpers\DataModel::class,
-            \Zerotoprod\DataModel\DataModel::class,
+            DataModel::class,
         ],
         'constantName' => 'view_key',
-        'attributeClass' => \ZeroToProd\Thryds\Helpers\ViewModel::class,
+        'attributeClass' => ViewModel::class,
         'mode' => 'auto',
     ]);
     $rectorConfig->ruleWithConfiguration(SuggestAttributeForRepeatedPropertyPatternRector::class, [
@@ -281,11 +292,11 @@ return static function (RectorConfig $rectorConfig): void {
             [
                 'trait' => \ZeroToProd\Thryds\Helpers\DataModel::class,
                 'constant' => 'view_key',
-                'attribute' => \ZeroToProd\Thryds\Helpers\ViewModel::class,
+                'attribute' => ViewModel::class,
             ],
         ],
         'mode' => 'auto',
-        'message' => "TODO: [SuggestAttributeForRepeatedPropertyPatternRector] %s uses %s + %s — add #[%s] attribute.",
+        'message' => 'TODO: [SuggestAttributeForRepeatedPropertyPatternRector] %s uses %s + %s — add #[%s] attribute.',
     ]);
     $rectorConfig->ruleWithConfiguration(UseClassConstArrayKeyForDataModelRector::class, [
         'mode' => 'auto',
@@ -294,7 +305,7 @@ return static function (RectorConfig $rectorConfig): void {
         'dataModelTraits' => [
             \ZeroToProd\Thryds\Helpers\DataModel::class,
         ],
-        'viewModelAttribute' => \ZeroToProd\Thryds\Helpers\ViewModel::class,
+        'viewModelAttribute' => ViewModel::class,
         'mode' => 'auto',
     ]);
     $rectorConfig->ruleWithConfiguration(ReplaceShortClassNameWithViewKeyRector::class, [
@@ -336,7 +347,7 @@ return static function (RectorConfig $rectorConfig): void {
         'message' => "TODO: [RequireRouteEnumInMapCallRector] Route pattern must use Route::case->value. Found '%s' instead.",
     ]);
     $rectorConfig->ruleWithConfiguration(RequireViewEnumInMakeCallRector::class, [
-        'enumClass' => \ZeroToProd\Thryds\Helpers\View::class,
+        'enumClass' => View::class,
         'methodName' => 'make',
         'paramName' => 'view',
         'mode' => 'auto',
@@ -371,7 +382,7 @@ return static function (RectorConfig $rectorConfig): void {
 
     // --- Environment Key Safety ---
     $rectorConfig->ruleWithConfiguration(ForbidBareServerEnvKeyRector::class, [
-        'envClass' => \ZeroToProd\Thryds\Env::class,
+        'envClass' => Env::class,
         'superglobals' => ['_SERVER', '_ENV'],
         'mode' => 'auto',
         'message' => "TODO: [ForbidBareServerEnvKeyRector] Use %s::%s instead of bare string '%s'.",
@@ -380,11 +391,11 @@ return static function (RectorConfig $rectorConfig): void {
     // --- Enum Value Safety ---
     $rectorConfig->ruleWithConfiguration(RequireEnumValueAccessRector::class, [
         'enumClasses' => [
-            \ZeroToProd\Thryds\Helpers\View::class,
+            View::class,
             \ZeroToProd\Thryds\Routes\Route::class,
-            \ZeroToProd\Thryds\Routes\HTTP_METHOD::class,
+            HTTP_METHOD::class,
             \ZeroToProd\Thryds\AppEnv::class,
-            \ZeroToProd\Thryds\LogLevel::class,
+            LogLevel::class,
         ],
         'mode' => 'auto',
         'message' => 'TODO: [RequireEnumValueAccessRector] %s::%s is a backed enum case — use ->value to get the string.',
@@ -394,9 +405,9 @@ return static function (RectorConfig $rectorConfig): void {
         'enumClasses' => [
             \ZeroToProd\Thryds\AppEnv::class,
             \ZeroToProd\Thryds\Routes\Route::class,
-            \ZeroToProd\Thryds\Routes\HTTP_METHOD::class,
-            \ZeroToProd\Thryds\LogLevel::class,
-            \ZeroToProd\Thryds\Helpers\View::class,
+            HTTP_METHOD::class,
+            LogLevel::class,
+            View::class,
         ],
         'mode' => 'warn',
         'message' => "TODO: [ForbidStringComparisonOnEnumPropertyRector] Compare against %s::%s instead of string '%s'.",
@@ -404,40 +415,49 @@ return static function (RectorConfig $rectorConfig): void {
 
     // --- Constants Class Design ---
     $rectorConfig->ruleWithConfiguration(RequireNamesKeysOnConstantsClassRector::class, [
-        'attributeClass' => \ZeroToProd\Thryds\Helpers\KeyRegistry::class,
+        'attributeClass' => KeyRegistry::class,
         'excludedAttributes' => [
-            \ZeroToProd\Thryds\Helpers\ViewModel::class,
+            ViewModel::class,
         ],
         'mode' => 'warn',
-        'message' => "TODO: [RequireNamesKeysOnConstantsClassRector] %s contains only string constants — add #[NamesKeys] to declare what they name (ADR-007).",
+        'message' => 'TODO: [RequireNamesKeysOnConstantsClassRector] %s contains only string constants — add #[NamesKeys] to declare what they name (ADR-007).',
     ]);
     $rectorConfig->ruleWithConfiguration(RequireNamesKeysOnMixedConstantsClassRector::class, [
-        'attributeClass' => \ZeroToProd\Thryds\Helpers\KeyRegistry::class,
+        'attributeClass' => KeyRegistry::class,
         'minConstants' => 3,
         'excludedTraits' => [
             \ZeroToProd\Thryds\Helpers\DataModel::class,
-            \Zerotoprod\DataModel\DataModel::class,
+            DataModel::class,
         ],
         'excludedAttributes' => [
-            \ZeroToProd\Thryds\Helpers\ViewModel::class,
+            ViewModel::class,
         ],
         'mode' => 'warn',
-        'message' => "TODO: [RequireNamesKeysOnMixedConstantsClassRector] %s has %d string constants — add #[NamesKeys] to declare what they name (ADR-007).",
+        'message' => 'TODO: [RequireNamesKeysOnMixedConstantsClassRector] %s has %d string constants — add #[NamesKeys] to declare what they name (ADR-007).',
     ]);
 
     // --- Enum Design ---
     $rectorConfig->ruleWithConfiguration(RequireClosedSetOnBackedEnumRector::class, [
-        'attributeClass' => \ZeroToProd\Thryds\Helpers\ClosedSet::class,
+        'attributeClass' => ClosedSet::class,
         'mode' => 'warn',
+    ]);
+    $rectorConfig->ruleWithConfiguration(SuggestEnumForNameEqualsValueConstRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: [SuggestEnumForNameEqualsValueConstRector] %s has %d string constants where name equals value — consider migrating to a backed enum.',
+        'minConstants' => 2,
+        'excludedAttributes' => [
+            ClosedSet::class,
+            KeyRegistry::class,
+        ],
     ]);
     // --- Enum Value Arg Safety ---
     $rectorConfig->ruleWithConfiguration(ForbidStringArgForEnumParamRector::class, [
         'enumClasses' => [
             \ZeroToProd\Thryds\AppEnv::class,
-            \ZeroToProd\Thryds\Routes\HTTP_METHOD::class,
+            HTTP_METHOD::class,
             \ZeroToProd\Thryds\Routes\Route::class,
-            \ZeroToProd\Thryds\Helpers\View::class,
-            \ZeroToProd\Thryds\LogLevel::class,
+            View::class,
+            LogLevel::class,
         ],
         'mode' => 'warn',
         'message' => "TODO: [ForbidStringArgForEnumParamRector] '%s' matches %s::%s — use %s::%s->value.",
@@ -456,11 +476,21 @@ return static function (RectorConfig $rectorConfig): void {
     // --- Checklist Validation ---
     $rectorConfig->ruleWithConfiguration(ValidateChecklistPathsRector::class, [
         'attributes' => [
-            ['attributeClass' => \ZeroToProd\Thryds\Helpers\SourceOfTruth::class, 'paramName' => 'addCase'],
-            ['attributeClass' => \ZeroToProd\Thryds\Helpers\ClosedSet::class, 'paramName' => 'addCase'],
-            ['attributeClass' => \ZeroToProd\Thryds\Helpers\KeyRegistry::class, 'paramName' => 'addKey'],
+            ['attributeClass' => SourceOfTruth::class, 'paramName' => 'addCase'],
+            ['attributeClass' => ClosedSet::class, 'paramName' => 'addCase'],
+            ['attributeClass' => KeyRegistry::class, 'paramName' => 'addKey'],
         ],
         'projectDir' => __DIR__,
         'mode' => 'warn',
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(SuggestEnumForKeyRegistryWithMethodsRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: [SuggestEnumForKeyRegistryWithMethodsRector] %s has #[KeyRegistry] but also contains methods — extract constants to a backed enum with #[ClosedSet].',
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(SuggestEnumForInternalOnlyConstantsRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: [SuggestEnumForInternalOnlyConstantsRector] %s has %d string constants only referenced internally — consider migrating to a backed enum.',
     ]);
 };

@@ -15,6 +15,7 @@ enum Domain: string
     case closed_set_domains = 'closed_set_domains';
     case source_of_truth_concepts = 'source_of_truth_concepts';
     case application_environment = 'application_environment';
+    case blade_directives = 'blade_directives';
     case blade_templates = 'blade_templates';
     case http_methods = 'http_methods';
     case key_sources = 'key_sources';

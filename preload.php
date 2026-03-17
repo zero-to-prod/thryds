@@ -12,6 +12,7 @@ opcache_compile_file(__DIR__ . '/src/Helpers/function.php');
 opcache_compile_file(__DIR__ . '/src/Helpers/DataModel.php');
 opcache_compile_file(__DIR__ . '/src/Helpers/Vite.php');
 opcache_compile_file(__DIR__ . '/src/Helpers/BladeDirectives.php');
+opcache_compile_file(__DIR__ . '/src/Helpers/BladeDirective.php');
 opcache_compile_file(__DIR__ . '/src/Helpers/View.php');
 
 // Core

@@ -12,7 +12,6 @@ namespace ZeroToProd\Thryds\Helpers;
  */
 enum Source: string
 {
-    case blade_directive_names = 'Blade directive names';
     case http_headers = 'HTTP headers';
     case log_context_array = 'Log context array';
     case opcache_get_status = 'opcache_get_status()';
