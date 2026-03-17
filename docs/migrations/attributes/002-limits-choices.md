@@ -43,10 +43,10 @@ use Attribute;
  * Marks a backed enum as a domain constraint — a finite set of valid values.
  *
  * Rector rules discover these enums via reflection to auto-configure themselves.
- * AI agents read the domain and usedIn parameters to understand what the enum constrains
+ * AI agents read the domain and used_in parameters to understand what the enum constrains
  * and where new cases must be handled.
  *
- * @example #[LimitsChoices(domain: 'URL routes', usedIn: ['Router::map() arg 2', 'templates'])]
+ * @example #[LimitsChoices(domain: 'URL routes', used_in: ['Router::map() arg 2', 'templates'])]
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 readonly class LimitsChoices
@@ -87,7 +87,7 @@ use ZeroToProd\Thryds\Helpers\ClosedSet;
 
 #[ClosedSet(
     domain: 'URL routes',
-    usedIn: ['Router::map() arg 2', 'templates/*.blade.php href attributes'],
+    used_in: ['Router::map() arg 2', 'templates/*.blade.php href attributes'],
     requireRegistration: true,
     requireTests: true,
 )]
@@ -117,7 +117,7 @@ use ZeroToProd\Thryds\Helpers\ClosedSet;
 
 #[ClosedSet(
     domain: 'Blade templates',
-    usedIn: ['Blade::make(view:)'],
+    used_in: ['Blade::make(view:)'],
 )]
 enum View: string
 {
@@ -142,7 +142,7 @@ use ZeroToProd\Thryds\Helpers\ClosedSet;
 
 #[ClosedSet(
     domain: 'application environment',
-    usedIn: ['Config::$AppEnv', 'Blade @production / @env directives'],
+    used_in: ['Config::$AppEnv', 'Blade @production / @env directives'],
 )]
 enum AppEnv: string
 {
@@ -167,7 +167,7 @@ use ZeroToProd\Thryds\Helpers\ClosedSet;
 
 #[ClosedSet(
     domain: 'HTTP methods',
-    usedIn: ['Router::map() arg 1'],
+    used_in: ['Router::map() arg 1'],
 )]
 enum HTTP_METHOD: string
 {
@@ -192,7 +192,7 @@ use ZeroToProd\Thryds\Helpers\ClosedSet;
 
 #[ClosedSet(
     domain: 'log severity levels',
-    usedIn: ['Log::debug/info/warn/error → frankenphp_log()'],
+    used_in: ['Log::debug/info/warn/error → frankenphp_log()'],
 )]
 enum LogLevel: int
 {
@@ -268,7 +268,7 @@ All `#[LimitsChoices]` enums with string backing types become candidates. The ru
 
 ## New Rector rule: `RequireEnumCaseForNewValueRector`
 
-When a `#[LimitsChoices]` enum's domain is used (detected from `usedIn` patterns), and a bare string is passed that doesn't match any existing case, suggest adding a new enum case.
+When a `#[LimitsChoices]` enum's domain is used (detected from `used_in` patterns), and a bare string is passed that doesn't match any existing case, suggest adding a new enum case.
 
 ```php
 // Detects:
@@ -285,9 +285,9 @@ An agent asked "I need to add a new page" can:
 1. Grep for #[LimitsChoices(domain: 'URL routes')] → finds Route.php
 2. Read `requireRegistration: true` → knows it must register the route in Router::map()
 3. Read `requireTests: true` → knows it must add a test
-4. Read `usedIn` → knows Route is used in Router::map() arg 2 and templates
+4. Read `used_in` → knows Route is used in Router::map() arg 2 and templates
 5. Grep for #[LimitsChoices(domain: 'Blade templates')] → finds View.php
-6. Read `usedIn` → knows to use View::case->value in Blade::make(view:)
+6. Read `used_in` → knows to use View::case->value in Blade::make(view:)
 ```
 
 All from attribute metadata — no rector.php parsing, no docblock interpretation.

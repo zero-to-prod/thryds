@@ -3,7 +3,7 @@
 use Utils\Rector\Tests\RequireClassRefInClosedSetUsedInRector\TestClosedSet;
 use Utils\Rector\Tests\RequireClassRefInClosedSetUsedInRector\TestRouter;
 
-#[TestClosedSet(domain: 'routes', usedIn: [[TestRouter::class, 'map']])]
+#[TestClosedSet(domain: 'routes', used_in: [[TestRouter::class, 'map']])]
 enum Route: string
 {
     case home = '/';
@@ -16,7 +16,7 @@ enum Route: string
 use Utils\Rector\Tests\RequireClassRefInClosedSetUsedInRector\TestClosedSet;
 use Utils\Rector\Tests\RequireClassRefInClosedSetUsedInRector\TestRouter;
 
-#[TestClosedSet(domain: 'routes', usedIn: [[TestRouter::class, 'map']])]
+#[TestClosedSet(domain: 'routes', used_in: [[TestRouter::class, 'map']])]
 enum Route: string
 {
     case home = '/';

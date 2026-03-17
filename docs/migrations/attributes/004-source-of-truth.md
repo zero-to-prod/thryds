@@ -56,7 +56,7 @@ readonly class SourceOfTruth
 
 ```php
 // Before
-#[LimitsChoices(domain: 'URL routes', usedIn: [...], requireRegistration: true, requireTests: true)]
+#[LimitsChoices(domain: 'URL routes', used_in: [...], requireRegistration: true, requireTests: true)]
 enum Route: string { ... }
 
 // After (stacks with #[LimitsChoices])
@@ -73,7 +73,7 @@ use ZeroToProd\Thryds\Helpers\SourceOfTruth;
     ],
     addCase: '1. Add enum case. 2. Register in WebRoutes::register(). 3. Create controller + template. 4. Add integration test. 5. Add template render in generate-preload.php.',
 )]
-#[LimitsChoices(domain: 'URL routes', usedIn: ['Router::map() arg 2'], requireRegistration: true, requireTests: true)]
+#[LimitsChoices(domain: 'URL routes', used_in: ['Router::map() arg 2'], requireRegistration: true, requireTests: true)]
 enum Route: string { ... }
 ```
 
@@ -81,7 +81,7 @@ enum Route: string { ... }
 
 ```php
 // Before
-#[LimitsChoices(domain: 'Blade templates', usedIn: ['Blade::make(view:)'])]
+#[LimitsChoices(domain: 'Blade templates', used_in: ['Blade::make(view:)'])]
 enum View: string { ... }
 
 // After
@@ -99,7 +99,7 @@ use ZeroToProd\Thryds\Helpers\SourceOfTruth;
     ],
     addCase: '1. Add enum case. 2. Create templates/{case}.blade.php. 3. Add render call in generate-preload.php. 4. Add to production-checklist.php view_data.',
 )]
-#[LimitsChoices(domain: 'Blade templates', usedIn: ['Blade::make(view:)'])]
+#[LimitsChoices(domain: 'Blade templates', used_in: ['Blade::make(view:)'])]
 enum View: string { ... }
 ```
 

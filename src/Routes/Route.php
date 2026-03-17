@@ -6,7 +6,7 @@ namespace ZeroToProd\Thryds\Routes;
 
 use ZeroToProd\Thryds\Helpers\ClosedSet;
 
-#[ClosedSet]
+#[ClosedSet(domain: 'URL routes', used_in: [[WebRoutes::class, 'register'], [RenderedRoute::class, '__construct']])]
 enum Route: string
 {
     case home = '/';

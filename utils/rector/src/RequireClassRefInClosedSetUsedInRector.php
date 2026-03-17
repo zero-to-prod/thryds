@@ -186,19 +186,19 @@ final class RequireClassRefInClosedSetUsedInRector extends AbstractRector implem
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
-            "Enforce that attribute array params (usedIn, used_in) use [Class::class, 'method'] format, not plain strings",
+            "Enforce that attribute array params (used_in, used_in) use [Class::class, 'method'] format, not plain strings",
             [
                 new ConfiguredCodeSample(
                     <<<'CODE_SAMPLE'
-#[ClosedSet(usedIn: ['Router::map'])]
+#[ClosedSet(used_in: ['Router::map'])]
 enum Route: string
 {
     case home = '/';
 }
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: [RequireClassRefInClosedSetUsedInRector] Each usedIn entry must be [Class::class, 'method'], not a plain string. Found 'Router::map'.
-#[ClosedSet(usedIn: ['Router::map'])]
+// TODO: [RequireClassRefInClosedSetUsedInRector] Each used_in entry must be [Class::class, 'method'], not a plain string. Found 'Router::map'.
+#[ClosedSet(used_in: ['Router::map'])]
 enum Route: string
 {
     case home = '/';
@@ -206,7 +206,7 @@ enum Route: string
 CODE_SAMPLE,
                     [
                         'attributes' => [
-                            ['attributeClass' => 'App\\Helpers\\ClosedSet', 'paramName' => 'usedIn'],
+                            ['attributeClass' => 'App\\Helpers\\ClosedSet', 'paramName' => 'used_in'],
                         ],
                         'mode' => 'warn',
                     ],

@@ -6,7 +6,7 @@ namespace ZeroToProd\Thryds\Routes;
 
 use ZeroToProd\Thryds\Helpers\ClosedSet;
 
-#[ClosedSet]
+#[ClosedSet(domain: 'HTTP methods', used_in: [[WebRoutes::class, 'register']])]
 enum HTTP_METHOD: string
 {
     case GET = 'GET';

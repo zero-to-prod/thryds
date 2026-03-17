@@ -11,7 +11,7 @@ use ZeroToProd\Thryds\Helpers\ClosedSet;
  * Values: Debug=0, Info=1, Warn=2, Error=3.
  * @see https://frankenphp.dev/docs/worker/#logging
  */
-#[ClosedSet]
+#[ClosedSet(domain: 'log severity levels', used_in: [[Log::class, 'debug'], [Log::class, 'info'], [Log::class, 'warn'], [Log::class, 'error']])]
 enum LogLevel: int
 {
     case Debug = FRANKENPHP_LOG_LEVEL_DEBUG;

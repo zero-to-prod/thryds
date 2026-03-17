@@ -407,7 +407,7 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
     $rectorConfig->ruleWithConfiguration(RequireClassRefInClosedSetUsedInRector::class, [
         'attributes' => [
-            ['attributeClass' => \ZeroToProd\Thryds\Helpers\ClosedSet::class, 'paramName' => 'usedIn'],
+            ['attributeClass' => \ZeroToProd\Thryds\Helpers\ClosedSet::class, 'paramName' => 'used_in'],
             ['attributeClass' => \ZeroToProd\Thryds\Helpers\NamesKeys::class, 'paramName' => 'used_in'],
         ],
         'mode' => 'warn',
