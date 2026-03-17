@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
-use ZeroToProd\Thryds\Helpers\NamesKeys;
+use ZeroToProd\Thryds\Helpers\KeyRegistry;
 
 /** @see opcache_get_status() */
-#[NamesKeys(
-    domain: 'opcache_get_status()',
+#[KeyRegistry(
+    source: 'opcache_get_status()',
 )]
 readonly class OpcacheStatus
 {

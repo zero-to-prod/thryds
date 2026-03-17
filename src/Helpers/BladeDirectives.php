@@ -9,8 +9,8 @@ use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Env;
 
-#[NamesKeys(
-    domain: 'Blade directive names',
+#[KeyRegistry(
+    source: 'Blade directive names',
     used_in: [[Blade::class, 'directive']],
 )]
 readonly class BladeDirectives

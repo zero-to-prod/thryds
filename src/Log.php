@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
-use ZeroToProd\Thryds\Helpers\NamesKeys;
+use ZeroToProd\Thryds\Helpers\KeyRegistry;
 
-#[NamesKeys(
-    domain: 'Log context array',
+#[KeyRegistry(
+    source: 'Log context array',
     used_in: [[self::class, 'error']],
 )]
 readonly class Log

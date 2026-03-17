@@ -379,7 +379,7 @@ return static function (RectorConfig $rectorConfig): void {
 
     // --- Constants Class Design ---
     $rectorConfig->ruleWithConfiguration(RequireNamesKeysOnConstantsClassRector::class, [
-        'attributeClass' => \ZeroToProd\Thryds\Helpers\NamesKeys::class,
+        'attributeClass' => \ZeroToProd\Thryds\Helpers\KeyRegistry::class,
         'excludedAttributes' => [
             \ZeroToProd\Thryds\Helpers\ViewModel::class,
         ],
@@ -387,7 +387,7 @@ return static function (RectorConfig $rectorConfig): void {
         'message' => "TODO: [RequireNamesKeysOnConstantsClassRector] %s contains only string constants — add #[NamesKeys] to declare what they name (ADR-007).",
     ]);
     $rectorConfig->ruleWithConfiguration(RequireNamesKeysOnMixedConstantsClassRector::class, [
-        'attributeClass' => \ZeroToProd\Thryds\Helpers\NamesKeys::class,
+        'attributeClass' => \ZeroToProd\Thryds\Helpers\KeyRegistry::class,
         'minConstants' => 3,
         'excludedTraits' => [
             \ZeroToProd\Thryds\Helpers\DataModel::class,
@@ -408,7 +408,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RequireClassRefInClosedSetUsedInRector::class, [
         'attributes' => [
             ['attributeClass' => \ZeroToProd\Thryds\Helpers\ClosedSet::class, 'paramName' => 'used_in'],
-            ['attributeClass' => \ZeroToProd\Thryds\Helpers\NamesKeys::class, 'paramName' => 'used_in'],
+            ['attributeClass' => \ZeroToProd\Thryds\Helpers\KeyRegistry::class, 'paramName' => 'used_in'],
         ],
         'mode' => 'warn',
     ]);

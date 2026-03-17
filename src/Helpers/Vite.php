@@ -6,8 +6,8 @@ namespace ZeroToProd\Thryds\Helpers;
 
 use ZeroToProd\Thryds\Config;
 
-#[NamesKeys(
-    domain: 'Vite entry points',
+#[KeyRegistry(
+    source: 'Vite entry points',
     used_in: [[self::class, 'tags']],
 )]
 readonly class Vite

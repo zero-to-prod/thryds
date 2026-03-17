@@ -75,10 +75,10 @@ readonly class Env
 }
 
 // After
-use ZeroToProd\Thryds\Helpers\NamesKeys;
+use ZeroToProd\Thryds\Helpers\KeyRegistry;
 
-#[NamesKeys(
-    domain: '$_SERVER / $_ENV',
+#[KeyRegistry(
+    source: '$_SERVER / $_ENV',
     used_in: '$_SERVER[Env::KEY] ?? $_ENV[Env::KEY]',
     superglobals: ['_SERVER', '_ENV'],
 )]
@@ -101,10 +101,10 @@ readonly class Header
 }
 
 // After
-use ZeroToProd\Thryds\Helpers\NamesKeys;
+use ZeroToProd\Thryds\Helpers\KeyRegistry;
 
-#[NamesKeys(
-    domain: 'HTTP headers',
+#[KeyRegistry(
+    source: 'HTTP headers',
     used_in: '$request->getHeaderLine(Header::KEY)',
 )]
 readonly class Header
@@ -125,10 +125,10 @@ readonly class OpcacheStatus
 }
 
 // After
-use ZeroToProd\Thryds\Helpers\NamesKeys;
+use ZeroToProd\Thryds\Helpers\KeyRegistry;
 
-#[NamesKeys(
-    domain: 'opcache_get_status()',
+#[KeyRegistry(
+    source: 'opcache_get_status()',
     used_in: '$status[OpcacheStatus::KEY]',
 )]
 readonly class OpcacheStatus
@@ -150,10 +150,10 @@ readonly class Log
 }
 
 // After
-use ZeroToProd\Thryds\Helpers\NamesKeys;
+use ZeroToProd\Thryds\Helpers\KeyRegistry;
 
-#[NamesKeys(
-    domain: 'Log context array',
+#[KeyRegistry(
+    source: 'Log context array',
     used_in: 'Log::error($msg, [Log::KEY => ...])',
 )]
 readonly class Log

@@ -44,7 +44,7 @@ readonly class Metrics
 ```php
 // rector.php
 $rectorConfig->ruleWithConfiguration(RequireNamesKeysOnMixedConstantsClassRector::class, [
-    'attributeClass' => \ZeroToProd\Thryds\Helpers\NamesKeys::class,
+    'attributeClass' => \ZeroToProd\Thryds\Helpers\KeyRegistry::class,
     'minConstants' => 3,
     'excludedTraits' => [
         \ZeroToProd\Thryds\Helpers\DataModel::class,
@@ -556,7 +556,7 @@ use Utils\Rector\Rector\RequireNamesKeysOnMixedConstantsClassRector;
 
 // Add after RequireNamesKeysOnConstantsClassRector
 $rectorConfig->ruleWithConfiguration(RequireNamesKeysOnMixedConstantsClassRector::class, [
-    'attributeClass' => \ZeroToProd\Thryds\Helpers\NamesKeys::class,
+    'attributeClass' => \ZeroToProd\Thryds\Helpers\KeyRegistry::class,
     'minConstants' => 3,
     'excludedTraits' => [
         \ZeroToProd\Thryds\Helpers\DataModel::class,

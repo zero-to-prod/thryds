@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
-use ZeroToProd\Thryds\Helpers\NamesKeys;
+use ZeroToProd\Thryds\Helpers\KeyRegistry;
 
-#[NamesKeys(
-    domain: '$_SERVER / $_ENV',
+#[KeyRegistry(
+    source: '$_SERVER / $_ENV',
     superglobals: ['_SERVER', '_ENV'],
 )]
 readonly class Env

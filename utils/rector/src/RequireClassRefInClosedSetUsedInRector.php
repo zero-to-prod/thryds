@@ -19,6 +19,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 final class RequireClassRefInClosedSetUsedInRector extends AbstractRector implements ConfigurableRectorInterface
 {
     /** @var list<array{attributeClass: string, paramName: string}> */
+    /** @var list<array{attributeClass: string, paramName: string}> */
     private array $attributes = [];
 
     private string $mode = 'warn';

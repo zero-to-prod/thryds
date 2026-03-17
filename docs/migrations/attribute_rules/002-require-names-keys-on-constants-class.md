@@ -33,9 +33,9 @@ readonly class CacheKey
 }
 
 // After (auto)
-use ZeroToProd\Thryds\Helpers\NamesKeys;
+use ZeroToProd\Thryds\Helpers\KeyRegistry;
 
-#[NamesKeys(domain: 'TODO: describe source')]
+#[KeyRegistry(source: 'TODO: describe source')]
 readonly class CacheKey
 {
     public const string user_profile = 'user_profile';
@@ -48,7 +48,7 @@ readonly class CacheKey
 ```php
 // rector.php
 $rectorConfig->ruleWithConfiguration(RequireNamesKeysOnConstantsClassRector::class, [
-    'attributeClass' => \ZeroToProd\Thryds\Helpers\NamesKeys::class,
+    'attributeClass' => \ZeroToProd\Thryds\Helpers\KeyRegistry::class,
     'excludedAttributes' => [
         \ZeroToProd\Thryds\Helpers\ViewModel::class,
     ],
@@ -517,7 +517,7 @@ use Utils\Rector\Rector\RequireNamesKeysOnConstantsClassRector;
 
 // Add after NamesKeys-related rules
 $rectorConfig->ruleWithConfiguration(RequireNamesKeysOnConstantsClassRector::class, [
-    'attributeClass' => \ZeroToProd\Thryds\Helpers\NamesKeys::class,
+    'attributeClass' => \ZeroToProd\Thryds\Helpers\KeyRegistry::class,
     'excludedAttributes' => [
         \ZeroToProd\Thryds\Helpers\ViewModel::class,
     ],
