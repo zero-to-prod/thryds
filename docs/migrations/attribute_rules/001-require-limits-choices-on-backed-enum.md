@@ -25,9 +25,9 @@ enum Permission: string
 }
 
 // After (auto)
-use ZeroToProd\Thryds\Helpers\LimitsChoices;
+use ZeroToProd\Thryds\Helpers\ClosedSet;
 
-#[LimitsChoices(domain: 'TODO: describe domain')]
+#[ClosedSet(domain: 'TODO: describe domain')]
 enum Permission: string
 {
     case read = 'read';
@@ -40,7 +40,7 @@ enum Permission: string
 ```php
 // rector.php
 $rectorConfig->ruleWithConfiguration(RequireLimitsChoicesOnBackedEnumRector::class, [
-    'attributeClass' => \ZeroToProd\Thryds\Helpers\LimitsChoices::class,
+    'attributeClass' => \ZeroToProd\Thryds\Helpers\ClosedSet::class,
     'mode' => 'warn',
     'message' => "TODO: [RequireLimitsChoicesOnBackedEnumRector] Backed enum %s must declare #[LimitsChoices] — enums limit choices (ADR-007).",
 ]);
@@ -403,7 +403,7 @@ use Utils\Rector\Rector\RequireLimitsChoicesOnBackedEnumRector;
 
 // Add after existing enum rules
 $rectorConfig->ruleWithConfiguration(RequireLimitsChoicesOnBackedEnumRector::class, [
-    'attributeClass' => \ZeroToProd\Thryds\Helpers\LimitsChoices::class,
+    'attributeClass' => \ZeroToProd\Thryds\Helpers\ClosedSet::class,
     'mode' => 'warn',
     'message' => "TODO: [RequireLimitsChoicesOnBackedEnumRector] Backed enum %s must declare #[LimitsChoices] — enums limit choices (ADR-007).",
 ]);

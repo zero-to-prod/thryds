@@ -7,8 +7,7 @@ namespace ZeroToProd\Thryds;
 use ZeroToProd\Thryds\Helpers\NamesKeys;
 
 #[NamesKeys(
-    source: '$_SERVER / $_ENV',
-    access: '$_SERVER[Env::KEY] ?? $_ENV[Env::KEY]',
+    domain: '$_SERVER / $_ENV',
     superglobals: ['_SERVER', '_ENV'],
 )]
 readonly class Env

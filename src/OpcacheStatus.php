@@ -8,8 +8,7 @@ use ZeroToProd\Thryds\Helpers\NamesKeys;
 
 /** @see opcache_get_status() */
 #[NamesKeys(
-    source: 'opcache_get_status()',
-    access: '$status[OpcacheStatus::KEY]',
+    domain: 'opcache_get_status()',
 )]
 readonly class OpcacheStatus
 {

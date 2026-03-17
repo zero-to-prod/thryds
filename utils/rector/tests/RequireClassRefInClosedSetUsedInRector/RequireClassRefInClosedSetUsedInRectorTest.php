@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Utils\Rector\Tests\RequireLimitsChoicesOnBackedEnumRector;
+namespace Utils\Rector\Tests\RequireClassRefInClosedSetUsedInRector;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use Rector\Testing\PHPUnit\AbstractRectorTestCase;
 
-final class RequireLimitsChoicesOnBackedEnumRectorTest extends AbstractRectorTestCase
+final class RequireClassRefInClosedSetUsedInRectorTest extends AbstractRectorTestCase
 {
     #[DataProvider('provideData')]
     public function test(string $filePath): void

@@ -83,9 +83,9 @@ enum Route: string
 }
 
 // After
-use ZeroToProd\Thryds\Helpers\LimitsChoices;
+use ZeroToProd\Thryds\Helpers\ClosedSet;
 
-#[LimitsChoices(
+#[ClosedSet(
     domain: 'URL routes',
     usedIn: ['Router::map() arg 2', 'templates/*.blade.php href attributes'],
     requireRegistration: true,
@@ -113,9 +113,9 @@ enum View: string
 }
 
 // After
-use ZeroToProd\Thryds\Helpers\LimitsChoices;
+use ZeroToProd\Thryds\Helpers\ClosedSet;
 
-#[LimitsChoices(
+#[ClosedSet(
     domain: 'Blade templates',
     usedIn: ['Blade::make(view:)'],
 )]
@@ -138,9 +138,9 @@ enum AppEnv: string
 }
 
 // After
-use ZeroToProd\Thryds\Helpers\LimitsChoices;
+use ZeroToProd\Thryds\Helpers\ClosedSet;
 
-#[LimitsChoices(
+#[ClosedSet(
     domain: 'application environment',
     usedIn: ['Config::$AppEnv', 'Blade @production / @env directives'],
 )]
@@ -163,9 +163,9 @@ enum HTTP_METHOD: string
 }
 
 // After
-use ZeroToProd\Thryds\Helpers\LimitsChoices;
+use ZeroToProd\Thryds\Helpers\ClosedSet;
 
-#[LimitsChoices(
+#[ClosedSet(
     domain: 'HTTP methods',
     usedIn: ['Router::map() arg 1'],
 )]
@@ -188,9 +188,9 @@ enum LogLevel: int
 }
 
 // After
-use ZeroToProd\Thryds\Helpers\LimitsChoices;
+use ZeroToProd\Thryds\Helpers\ClosedSet;
 
-#[LimitsChoices(
+#[ClosedSet(
     domain: 'log severity levels',
     usedIn: ['Log::debug/info/warn/error → frankenphp_log()'],
 )]

@@ -78,8 +78,8 @@ readonly class Env
 use ZeroToProd\Thryds\Helpers\NamesKeys;
 
 #[NamesKeys(
-    source: '$_SERVER / $_ENV',
-    access: '$_SERVER[Env::KEY] ?? $_ENV[Env::KEY]',
+    domain: '$_SERVER / $_ENV',
+    used_in: '$_SERVER[Env::KEY] ?? $_ENV[Env::KEY]',
     superglobals: ['_SERVER', '_ENV'],
 )]
 readonly class Env
@@ -104,8 +104,8 @@ readonly class Header
 use ZeroToProd\Thryds\Helpers\NamesKeys;
 
 #[NamesKeys(
-    source: 'HTTP headers',
-    access: '$request->getHeaderLine(Header::KEY)',
+    domain: 'HTTP headers',
+    used_in: '$request->getHeaderLine(Header::KEY)',
 )]
 readonly class Header
 {
@@ -128,8 +128,8 @@ readonly class OpcacheStatus
 use ZeroToProd\Thryds\Helpers\NamesKeys;
 
 #[NamesKeys(
-    source: 'opcache_get_status()',
-    access: '$status[OpcacheStatus::KEY]',
+    domain: 'opcache_get_status()',
+    used_in: '$status[OpcacheStatus::KEY]',
 )]
 readonly class OpcacheStatus
 {
@@ -153,8 +153,8 @@ readonly class Log
 use ZeroToProd\Thryds\Helpers\NamesKeys;
 
 #[NamesKeys(
-    source: 'Log context array',
-    access: 'Log::error($msg, [Log::KEY => ...])',
+    domain: 'Log context array',
+    used_in: 'Log::error($msg, [Log::KEY => ...])',
 )]
 readonly class Log
 {

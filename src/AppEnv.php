@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
-use ZeroToProd\Thryds\Helpers\LimitsChoices;
+use ZeroToProd\Thryds\Helpers\ClosedSet;
 
-#[LimitsChoices]
+#[ClosedSet]
 enum AppEnv: string
 {
     case production = 'production';

@@ -7,8 +7,8 @@ namespace ZeroToProd\Thryds;
 use ZeroToProd\Thryds\Helpers\NamesKeys;
 
 #[NamesKeys(
-    source: 'Log context array',
-    access: 'Log::error($msg, [Log::KEY => ...])',
+    domain: 'Log context array',
+    used_in: [[self::class, 'error']],
 )]
 readonly class Log
 {

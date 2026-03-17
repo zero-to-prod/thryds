@@ -10,7 +10,7 @@ namespace ZeroToProd\Thryds\Helpers;
  * Pass the value to Blade::make(view: View::name->value).
  * For views with view-model data, pass the ViewModel via view_key as the array key.
  */
-#[LimitsChoices]
+#[ClosedSet]
 enum View: string
 {
     case about = 'about';

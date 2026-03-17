@@ -59,10 +59,11 @@ use Utils\Rector\Rector\ForbidStringComparisonOnEnumPropertyRector;
 use Utils\Rector\Rector\RequireSpecificResponseReturnTypeRector;
 use Utils\Rector\Rector\ForbidStringArgForEnumParamRector;
 use Utils\Rector\Rector\RequireConstForRepeatedArrayKeyRector;
-use Utils\Rector\Rector\RequireLimitsChoicesOnBackedEnumRector;
+use Utils\Rector\Rector\RequireClosedSetOnBackedEnumRector;
 use Utils\Rector\Rector\RequireNamesKeysOnConstantsClassRector;
 use Utils\Rector\Rector\RequireNamesKeysOnMixedConstantsClassRector;
 use Utils\Rector\Rector\RequireViewModelAttributeOnDataModelRector;
+use Utils\Rector\Rector\RequireClassRefInClosedSetUsedInRector;
 use ZeroToProd\Thryds\OpcacheStatus;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
@@ -400,9 +401,16 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
 
     // --- Enum Design ---
-    $rectorConfig->ruleWithConfiguration(RequireLimitsChoicesOnBackedEnumRector::class, [
-        'attributeClass' => \ZeroToProd\Thryds\Helpers\LimitsChoices::class,
+    $rectorConfig->ruleWithConfiguration(RequireClosedSetOnBackedEnumRector::class, [
+        'attributeClass' => \ZeroToProd\Thryds\Helpers\ClosedSet::class,
         'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(RequireClassRefInClosedSetUsedInRector::class, [
+        'attributes' => [
+            ['attributeClass' => \ZeroToProd\Thryds\Helpers\ClosedSet::class, 'paramName' => 'usedIn'],
+            ['attributeClass' => \ZeroToProd\Thryds\Helpers\NamesKeys::class, 'paramName' => 'used_in'],
+        ],
+        'mode' => 'warn',
     ]);
 
     // --- Enum Value Arg Safety ---
@@ -426,4 +434,5 @@ return static function (RectorConfig $rectorConfig): void {
         'mode' => 'warn',
         'message' => "TODO: [RequireConstForRepeatedArrayKeyRector] '%s' used %dx as array key — extract to a class constant.",
     ]);
+
 };

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Routes;
 
-use ZeroToProd\Thryds\Helpers\LimitsChoices;
+use ZeroToProd\Thryds\Helpers\ClosedSet;
 
-#[LimitsChoices]
+#[ClosedSet]
 enum Route: string
 {
     case home = '/';

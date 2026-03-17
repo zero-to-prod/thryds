@@ -35,7 +35,7 @@ readonly class CacheKey
 // After (auto)
 use ZeroToProd\Thryds\Helpers\NamesKeys;
 
-#[NamesKeys(source: 'TODO: describe source')]
+#[NamesKeys(domain: 'TODO: describe source')]
 readonly class CacheKey
 {
     public const string user_profile = 'user_profile';

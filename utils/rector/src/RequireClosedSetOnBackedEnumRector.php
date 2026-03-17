@@ -18,13 +18,13 @@ use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-final class RequireLimitsChoicesOnBackedEnumRector extends AbstractRector implements ConfigurableRectorInterface
+final class RequireClosedSetOnBackedEnumRector extends AbstractRector implements ConfigurableRectorInterface
 {
     private string $attributeClass = '';
 
     private string $mode = 'warn';
 
-    private string $message = 'TODO: [RequireLimitsChoicesOnBackedEnumRector] Backed enum %s must declare #[LimitsChoices] — enums limit choices (ADR-007).';
+    private string $message = 'TODO: [RequireClosedSetOnBackedEnumRector] Backed enum %s must declare #[ClosedSet] — enums limit choices (ADR-007).';
 
     public function configure(array $configuration): void
     {
@@ -36,7 +36,7 @@ final class RequireLimitsChoicesOnBackedEnumRector extends AbstractRector implem
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
-            'Require #[LimitsChoices] attribute on all backed enums',
+            'Require #[ClosedSet] attribute on all backed enums',
             [
                 new ConfiguredCodeSample(
                     <<<'CODE_SAMPLE'
@@ -47,7 +47,7 @@ enum Permission: string
 }
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: [RequireLimitsChoicesOnBackedEnumRector] Backed enum Permission must declare #[LimitsChoices] — enums limit choices (ADR-007).
+// TODO: [RequireClosedSetOnBackedEnumRector] Backed enum Permission must declare #[ClosedSet] — enums limit choices (ADR-007).
 enum Permission: string
 {
     case read = 'read';
@@ -55,7 +55,7 @@ enum Permission: string
 }
 CODE_SAMPLE,
                     [
-                        'attributeClass' => 'App\\Helpers\\LimitsChoices',
+                        'attributeClass' => 'App\\Helpers\\ClosedSet',
                         'mode' => 'warn',
                     ]
                 ),

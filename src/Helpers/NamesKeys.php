@@ -16,13 +16,13 @@ use Attribute;
 readonly class NamesKeys
 {
     /**
-     * @param string   $source       Human-readable name of the data source whose keys these constants name.
-     * @param string   $access       Example usage pattern showing how to access a key using the constant.
-     * @param string[] $superglobals If the source is a superglobal, list the variable names (e.g., ['_SERVER', '_ENV']).
+     * @param string                            $domain        Human-readable name of the data source whose keys these constants name.
+     * @param list<array{class-string, string}> $used_in       Where these keys are consumed. Each entry is [Class::class, 'method'] — AST-refactorable.
+     * @param string[]                          $superglobals  If the source is a superglobal, list the variable names (e.g., ['_SERVER', '_ENV']).
      */
     public function __construct(
-        public string $source,
-        public string $access = '',
+        public string $domain,
+        public array $used_in = [],
         public array $superglobals = [],
     ) {}
 }
