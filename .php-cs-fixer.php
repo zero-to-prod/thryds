@@ -11,8 +11,11 @@ $finder = Finder::create()
         __DIR__ . '/public',
         __DIR__ . '/tests',
         __DIR__ . '/utils',
+        __DIR__ . '/templates',
+        __DIR__ . '/scripts',
     ])
-    ->name('*.php');
+    ->name('*.php')
+    ->append([new SplFileInfo(__DIR__ . '/preload.php')]);
 
 return (new Config())
     ->setFinder($finder)

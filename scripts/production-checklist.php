@@ -18,11 +18,10 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use ZeroToProd\Thryds\APP_ENV;
 use ZeroToProd\Thryds\App;
+use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Helpers\View;
-use ZeroToProd\Thryds\Helpers\Vite;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 $base_dir = dirname(__DIR__);
@@ -107,7 +106,7 @@ function verifyTemplateCache(string $base_dir): int
     $passes = [];
 
     $Config = Config::from([
-        Config::APP_ENV => APP_ENV::development->value,
+        Config::AppEnv => AppEnv::development->value,
         Config::blade_cache_dir => $cache_dir,
         Config::template_dir => $template_dir,
     ]);

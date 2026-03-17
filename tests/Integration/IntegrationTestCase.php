@@ -9,7 +9,7 @@ use Laminas\Diactoros\Uri;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use ZeroToProd\Thryds\App;
-use ZeroToProd\Thryds\APP_ENV;
+use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Routes\Route;
 
@@ -34,7 +34,7 @@ abstract class IntegrationTestCase extends TestCase
         $this->cache_dir = sys_get_temp_dir() . '/thryds_test_' . uniqid('', more_entropy: true);
         mkdir($this->cache_dir, 0o755, recursive: true);
         $this->App = App::boot(self::base_dir, Config::from([
-            Config::APP_ENV => APP_ENV::development->value,
+            Config::AppEnv => AppEnv::development->value,
             Config::blade_cache_dir => $this->cache_dir,
             Config::template_dir => self::base_dir . '/templates',
         ]));

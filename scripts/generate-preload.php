@@ -19,7 +19,7 @@ require $base_dir . '/vendor/autoload.php';
 
 use League\Route\Router;
 use ZeroToProd\Thryds\App;
-use ZeroToProd\Thryds\APP_ENV;
+use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Helpers\View;
 use ZeroToProd\Thryds\Routes\WebRoutes;
@@ -29,7 +29,7 @@ use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 echo "Booting app...\n";
 
 $Config = Config::from([
-    Config::APP_ENV => $_ENV[Config::APP_ENV] ?? APP_ENV::production->value,
+    Config::AppEnv => $_ENV[Config::AppEnv] ?? AppEnv::production->value,
     Config::blade_cache_dir => $base_dir . '/var/cache/blade',
     Config::template_dir => $base_dir . '/templates',
 ]);

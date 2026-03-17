@@ -166,7 +166,7 @@ function opcacheAudit(bool $isDev, string $base_url, array|false $worker_status,
             } else {
                 $passes[] = sprintf('%d scripts cached (%d via preload, %d expected runtime)', $cachedScripts, $preloadScripts, $expected_non_preloaded);
             }
-        } else if (!$isDev) {
+        } elseif (!$isDev) {
             $failures[] = '0 scripts cached — OPcache is not caching anything';
         }
 

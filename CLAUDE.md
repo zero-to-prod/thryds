@@ -23,6 +23,10 @@ Thryds — social media platform integrating AI with humanity. Web UI + API back
 - `docker compose exec php php scripts/production-checklist.php` — run all production readiness checks (exits non-zero on failures)
     - Change .env to production and rebuild and restart the app to see production-ready checks.
 
+## Custom Rector Rules
+
+51 custom rules live in `utils/rector/src/`. Each is a `RectorInterface` implementation registered in `rector.php`. Tests live in `utils/rector/tests/`. Run `./run test:rector` to test only Rector rules.
+
 ## Naming Conventions (Rector-enforced)
 
 - Object instances: PascalCase (`$Config`, `$Blade`, `$Router`) — matches their type name.

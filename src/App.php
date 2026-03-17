@@ -27,8 +27,8 @@ readonly class App
         Container::setInstance(container: $Container);
         $Blade = new Blade(viewPaths: $Config->template_dir, cachePath: $Config->blade_cache_dir, container: $Container);
 
-        $Blade->if(APP_ENV::production->value, fn(): bool => $Config->APP_ENV === APP_ENV::production);
-        $Blade->if('env', fn(string ...$environments): bool => in_array($Config->APP_ENV->value, haystack: $environments, strict: true));
+        $Blade->if(AppEnv::production->value, fn(): bool => $Config->AppEnv === AppEnv::production);
+        $Blade->if('env', fn(string ...$environments): bool => in_array($Config->AppEnv->value, haystack: $environments, strict: true));
 
         $Vite = new Vite($Config, baseDir: $base_dir, entry_css: [
             Vite::app_entry => [Vite::app_css],
@@ -43,7 +43,7 @@ readonly class App
     public static function boot(string $base_dir, ?Config $Config = null): self
     {
         $Config ??= Config::from([
-            Config::APP_ENV => $_SERVER[Config::APP_ENV] ?? $_ENV[Config::APP_ENV] ?? APP_ENV::production->value,
+            Config::AppEnv => $_SERVER[Server::APP_ENV] ?? $_ENV[Env::APP_ENV] ?? AppEnv::production->value,
             Config::blade_cache_dir => $base_dir . '/var/cache/blade',
             Config::template_dir => $base_dir . '/templates',
         ]);

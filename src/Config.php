@@ -8,18 +8,16 @@ use ZeroToProd\Thryds\Helpers\DataModel;
 use ZeroToProd\Thryds\Helpers\Describe;
 
 /**
- * @method static self from(array{APP_ENV?: APP_ENV|string, blade_cache_dir?: string, template_dir?: string} $data)
+ * @method static self from(array{AppEnv?: AppEnv|string, blade_cache_dir?: string, template_dir?: string} $data)
  */
 readonly class Config
 {
     use DataModel;
 
-    /** Read directly from $_SERVER in public/index.php — no Config property needed. */
-    public const string MAX_REQUESTS = 'MAX_REQUESTS';
-    /** @see $APP_ENV */
-    public const string APP_ENV = 'APP_ENV';
-    #[Describe([Describe::default => APP_ENV::production])]
-    public APP_ENV $APP_ENV;
+    /** @see $AppEnv */
+    public const string AppEnv = 'AppEnv';
+    #[Describe([Describe::default => AppEnv::production])]
+    public AppEnv $AppEnv;
 
     /** @see $blade_cache_dir */
     public const string blade_cache_dir = 'blade_cache_dir';
@@ -34,6 +32,6 @@ readonly class Config
 
     public function isProduction(): bool
     {
-        return $this->APP_ENV === APP_ENV::production;
+        return $this->AppEnv === AppEnv::production;
     }
 }

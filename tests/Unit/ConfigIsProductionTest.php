@@ -6,7 +6,7 @@ namespace ZeroToProd\Thryds\Tests\Unit;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use ZeroToProd\Thryds\APP_ENV;
+use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Config;
 
 final class ConfigIsProductionTest extends TestCase
@@ -14,12 +14,12 @@ final class ConfigIsProductionTest extends TestCase
     #[Test]
     public function trueWhenAppEnvIsProduction(): void
     {
-        $this->assertTrue(Config::from([Config::APP_ENV => APP_ENV::production->value])->isProduction());
+        $this->assertTrue(Config::from([Config::AppEnv => AppEnv::production->value])->isProduction());
     }
 
     #[Test]
     public function falseWhenAppEnvIsNotProduction(): void
     {
-        $this->assertFalse(Config::from([Config::APP_ENV => APP_ENV::development->value])->isProduction());
+        $this->assertFalse(Config::from([Config::AppEnv => AppEnv::development->value])->isProduction());
     }
 }

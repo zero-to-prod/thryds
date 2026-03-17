@@ -6,7 +6,7 @@ namespace ZeroToProd\Thryds\Tests\Unit;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use ZeroToProd\Thryds\APP_ENV;
+use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Helpers\Vite;
 
@@ -22,7 +22,7 @@ final class ViteTest extends TestCase
     #[Test]
     public function returnsProductionTagsWithCssAndJsFromManifest(): void
     {
-        $tags = new Vite(Config::from([Config::APP_ENV => APP_ENV::production->value]), baseDir: $this->base_dir)->tags(Vite::app_entry);
+        $tags = new Vite(Config::from([Config::AppEnv => AppEnv::production->value]), baseDir: $this->base_dir)->tags(Vite::app_entry);
 
         $this->assertStringContainsString('<link rel="stylesheet" href="/build/assets/app-BG4HJPHs.css">', haystack: $tags);
         $this->assertStringContainsString('<script type="module" src="/build/assets/app-Dlbj-bCq.js"></script>', haystack: $tags);
@@ -32,7 +32,7 @@ final class ViteTest extends TestCase
     #[Test]
     public function returnsDevTagsWithLocalViteServerWhenNotProduction(): void
     {
-        $tags = new Vite(Config::from([Config::APP_ENV => APP_ENV::development->value]), baseDir: $this->base_dir, entry_css: [
+        $tags = new Vite(Config::from([Config::AppEnv => AppEnv::development->value]), baseDir: $this->base_dir, entry_css: [
             Vite::app_entry => [Vite::app_css],
         ])->tags(Vite::app_entry);
 
@@ -45,13 +45,13 @@ final class ViteTest extends TestCase
     #[Test]
     public function returnsEmptyStringWhenManifestEntryIsMissing(): void
     {
-        $this->assertSame('', new Vite(Config::from([Config::APP_ENV => APP_ENV::production->value]), baseDir: $this->base_dir)->tags('resources/js/nonexistent.js'));
+        $this->assertSame('', new Vite(Config::from([Config::AppEnv => AppEnv::production->value]), baseDir: $this->base_dir)->tags('resources/js/nonexistent.js'));
     }
 
     #[Test]
     public function directivePhpGeneratesRuntimeContainerResolution(): void
     {
-        $php = new Vite(Config::from([Config::APP_ENV => APP_ENV::production->value]), baseDir: $this->base_dir)->directivePhp(Vite::app_entry);
+        $php = new Vite(Config::from([Config::AppEnv => AppEnv::production->value]), baseDir: $this->base_dir)->directivePhp(Vite::app_entry);
 
         $this->assertStringContainsString('Container::getInstance()->make(', haystack: $php);
         $this->assertStringContainsString(Vite::class . '::class', haystack: $php);

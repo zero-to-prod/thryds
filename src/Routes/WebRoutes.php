@@ -11,12 +11,10 @@ use League\Route\Router;
 use Psr\Http\Message\ResponseInterface;
 use ZeroToProd\Thryds\Controllers\HomeController;
 use ZeroToProd\Thryds\Helpers\View;
+use ZeroToProd\Thryds\OpcacheStatus;
 
 readonly class WebRoutes
 {
-    /** OPcache status array key for cached scripts. @see opcache_get_status() */
-    public const string scripts = 'scripts';
-
     public static function register(Router $Router, Blade $Blade): void
     {
         $Router->map(
@@ -48,7 +46,7 @@ readonly class WebRoutes
             HTTP_METHOD::GET->value,
             Route::opcache_scripts->value,
             static fn(): ResponseInterface => new JsonResponse(
-                data: array_keys(opcache_get_status(true)[WebRoutes::scripts] ?? []),
+                data: array_keys(opcache_get_status(true)[OpcacheStatus::scripts] ?? []),
             ),
         );
     }
