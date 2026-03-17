@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds;
 
 use ZeroToProd\Thryds\Helpers\KeyRegistry;
+use ZeroToProd\Thryds\Helpers\Source;
 
 /** @see opcache_get_status() */
 #[KeyRegistry(
-    source: 'opcache_get_status()',
+    Source::opcache_get_status,
 )]
 readonly class OpcacheStatus
 {

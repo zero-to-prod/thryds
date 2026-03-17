@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds;
 
 use ZeroToProd\Thryds\Helpers\KeyRegistry;
+use ZeroToProd\Thryds\Helpers\Source;
 
 #[KeyRegistry(
-    source: 'Log context array',
+    Source::log_context_array,
     addKey: '1. Add constant. 2. Pass in context array via Log::method([Log::KEY => $value]).',
 )]
 readonly class Log

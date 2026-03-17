@@ -10,7 +10,7 @@ use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Env;
 
 #[KeyRegistry(
-    source: 'Blade directive names',
+    Source::blade_directive_names,
     addKey: '1. Add constant. 2. Register directive in BladeDirectives::register().',
 )]
 readonly class BladeDirectives

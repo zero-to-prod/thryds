@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
+use ZeroToProd\Thryds\Helpers\Concept;
 use ZeroToProd\Thryds\Helpers\SourceOfTruth;
 
 /**
@@ -13,7 +14,7 @@ use ZeroToProd\Thryds\Helpers\SourceOfTruth;
  * opcache-audit.php (to count expected non-preloaded scripts).
  */
 #[SourceOfTruth(
-    for: 'dev-only path filters',
+    Concept::dev_only_path_filters,
     addCase: '1. Add path to dev_vendors or excluded_dirs. Both consumers use DevFilter::isDevPath() so no further changes needed.',
 )]
 readonly class DevFilter

@@ -10,11 +10,10 @@ namespace ZeroToProd\Thryds\Helpers;
  * Pass the value to Blade::make(view: View::name->value).
  * For views with view-model data, pass the ViewModel via view_key as the array key.
  */
-#[SourceOfTruth(
-    for: 'Blade template names',
+#[ClosedSet(
+    Domain::blade_templates,
     addCase: '1. Add enum case. 2. Create templates/{case}.blade.php. 3. Add render call in generate-preload.php. 4. Add to production-checklist.php view_data.',
 )]
-#[ClosedSet(Domain: Domain::blade_templates)]
 enum View: string
 {
     case about = 'about';

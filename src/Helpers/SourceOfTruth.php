@@ -7,24 +7,26 @@ namespace ZeroToProd\Thryds\Helpers;
 use Attribute;
 
 /**
- * Declares a class or enum as the canonical owner of a domain concept.
+ * Declares a class as the canonical owner of a domain concept.
  *
- * AI agents use the `addCase` checklist to know the full set of changes required
- * when adding a new case or constant. Usage sites are discovered dynamically
- * by searching the codebase.
+ * For enums, use #[ClosedSet] instead — it carries Domain and addCase in one attribute.
+ * SourceOfTruth is for readonly classes whose public constants name keys (e.g. Env, DevFilter).
  *
- * @example #[SourceOfTruth(for: 'route paths', addCase: '1. Add enum case. 2. Register in WebRoutes.')]
+ * AI agents use the `addCase` checklist to know the full set of changes required.
+ * Usage sites are discovered dynamically by searching the codebase.
+ *
+ * @example #[SourceOfTruth(Concept::environment_variable_keys, addCase: '1. Add constant. 2. Add to compose.yaml.')]
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 readonly class SourceOfTruth
 {
     /**
-     * @param string $for     Human-readable name of the concept this class owns.
-     * @param string $addCase Human-readable checklist for what to do when adding a new case/constant.
-     *                        AI agents read this to know the full set of changes required.
+     * @param Concept $Concept  The concept this class owns.
+     * @param string  $addCase Human-readable checklist for what to do when adding a new case/constant.
+     *                         AI agents read this to know the full set of changes required.
      */
     public function __construct(
-        public string $for,
+        public Concept $Concept,
         public string $addCase = '',
     ) {}
 }

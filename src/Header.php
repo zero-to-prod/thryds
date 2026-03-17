@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds;
 
 use ZeroToProd\Thryds\Helpers\KeyRegistry;
+use ZeroToProd\Thryds\Helpers\Source;
 
 #[KeyRegistry(
-    source: 'HTTP headers',
+    Source::http_headers,
     addKey: '1. Add constant. 2. Reference via Header::NAME where needed.',
 )]
 readonly class Header

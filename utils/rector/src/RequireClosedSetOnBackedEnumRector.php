@@ -6,12 +6,6 @@ namespace Utils\Rector\Rector;
 
 use PhpParser\Comment;
 use PhpParser\Node;
-use PhpParser\Node\Arg;
-use PhpParser\Node\Attribute;
-use PhpParser\Node\AttributeGroup;
-use PhpParser\Node\Identifier;
-use PhpParser\Node\Name\FullyQualified;
-use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Enum_;
 use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Rector\AbstractRector;
@@ -85,10 +79,6 @@ CODE_SAMPLE,
 
         $enumName = (string) $node->name;
 
-        if ($this->mode === 'auto') {
-            return $this->addAttribute($node, $enumName);
-        }
-
         return $this->addTodoComment($node, $enumName);
     }
 
@@ -113,23 +103,6 @@ CODE_SAMPLE,
         $parts = explode('\\', $this->attributeClass);
 
         return end($parts);
-    }
-
-    private function addAttribute(Enum_ $node, string $enumName): Enum_
-    {
-        $attr = new Attribute(
-            new FullyQualified($this->attributeClass),
-            [
-                new Arg(
-                    value: new String_('TODO: describe domain'),
-                    name: new Identifier('domain'),
-                ),
-            ],
-        );
-
-        array_unshift($node->attrGroups, new AttributeGroup([$attr]));
-
-        return $node;
     }
 
     private function addTodoComment(Enum_ $node, string $enumName): Enum_

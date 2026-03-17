@@ -9,8 +9,10 @@ use Attribute;
 /**
  * Marks a backed enum as a closed set of allowed values in a specific domain.
  *
+ * This is the single annotation for enums. For readonly classes, use #[SourceOfTruth] instead.
+ *
  * @example
- * #[ClosedSet(Domain: Domain::http_methods)]
+ * #[ClosedSet(Domain::http_methods, addCase: 'Add enum case. No other changes needed.')]
  * enum HTTP_METHOD: string
  * {
  *     case GET = 'GET';
@@ -18,7 +20,7 @@ use Attribute;
  * }
  *
  * @example
- * #[ClosedSet(Domain: Domain::application_environment, addCase: '1. Add enum case. 2. Handle in Config::__construct().')]
+ * #[ClosedSet(Domain::application_environment, addCase: '1. Add enum case. 2. Handle in Config::__construct().')]
  * enum AppEnv: string
  * {
  *     case production = 'production';
@@ -34,6 +36,6 @@ readonly class ClosedSet
      */
     public function __construct(
         public Domain $Domain,
-        public string $addCase = '',
+        public string $addCase,
     ) {}
 }

@@ -6,13 +6,11 @@ namespace ZeroToProd\Thryds\Routes;
 
 use ZeroToProd\Thryds\Helpers\ClosedSet;
 use ZeroToProd\Thryds\Helpers\Domain;
-use ZeroToProd\Thryds\Helpers\SourceOfTruth;
 
-#[SourceOfTruth(
-    for: 'route paths',
+#[ClosedSet(
+    Domain::url_routes,
     addCase: '1. Add enum case. 2. Register in WebRoutes::register(). 3. Create controller + template. 4. Add integration test. 5. Add template render in generate-preload.php.',
 )]
-#[ClosedSet(Domain: Domain::url_routes)]
 enum Route: string
 {
     case home = '/';

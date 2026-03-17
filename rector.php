@@ -65,6 +65,7 @@ use Utils\Rector\Rector\RequireNamesKeysOnConstantsClassRector;
 use Utils\Rector\Rector\RequireNamesKeysOnMixedConstantsClassRector;
 use Utils\Rector\Rector\RequireViewModelAttributeOnDataModelRector;
 use Utils\Rector\Rector\SuggestAttributeForRepeatedPropertyPatternRector;
+use Utils\Rector\Rector\ValidateChecklistPathsRector;
 use ZeroToProd\Thryds\OpcacheStatus;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
@@ -446,4 +447,15 @@ return static function (RectorConfig $rectorConfig): void {
         'message' => "TODO: [RequireConstForRepeatedArrayKeyRector] '%s' used %dx as array key — extract to a class constant.",
     ]);
 
+
+    // --- Checklist Validation ---
+    $rectorConfig->ruleWithConfiguration(ValidateChecklistPathsRector::class, [
+        'attributes' => [
+            ['attributeClass' => \ZeroToProd\Thryds\Helpers\SourceOfTruth::class, 'paramName' => 'addCase'],
+            ['attributeClass' => \ZeroToProd\Thryds\Helpers\ClosedSet::class, 'paramName' => 'addCase'],
+            ['attributeClass' => \ZeroToProd\Thryds\Helpers\KeyRegistry::class, 'paramName' => 'addKey'],
+        ],
+        'projectDir' => __DIR__,
+        'mode' => 'warn',
+    ]);
 };

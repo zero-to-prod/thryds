@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Helpers;
 
-#[ClosedSet(Domain: Domain::closed_set_domains)]
+#[ClosedSet(Domain::closed_set_domains, addCase: 'Add enum case. Then use it in a #[ClosedSet] attribute on a new backed enum.')]
 /**
  * Closed set of domain names used by #[ClosedSet].
  *
@@ -12,10 +12,12 @@ namespace ZeroToProd\Thryds\Helpers;
  */
 enum Domain: string
 {
-    case closed_set_domains = 'closed set domains';
-    case application_environment = 'application environment';
-    case blade_templates = 'Blade templates';
-    case http_methods = 'HTTP methods';
-    case log_severity_levels = 'log severity levels';
-    case url_routes = 'URL routes';
+    case closed_set_domains = 'closed_set_domains';
+    case source_of_truth_concepts = 'source_of_truth_concepts';
+    case application_environment = 'application_environment';
+    case blade_templates = 'blade_templates';
+    case http_methods = 'http_methods';
+    case key_sources = 'key_sources';
+    case log_severity_levels = 'log_severity_levels';
+    case url_routes = 'url_routes';
 }

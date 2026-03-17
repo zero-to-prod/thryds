@@ -7,7 +7,7 @@ namespace ZeroToProd\Thryds;
 use ZeroToProd\Thryds\Helpers\ClosedSet;
 use ZeroToProd\Thryds\Helpers\Domain;
 
-#[ClosedSet(Domain: Domain::application_environment, addCase: '1. Add enum case. 2. Handle in Config::__construct() and App::boot().')]
+#[ClosedSet(Domain::application_environment, addCase: '1. Add enum case. 2. Handle in Config::__construct() and App::boot().')]
 enum AppEnv: string
 {
     case production = 'production';

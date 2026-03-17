@@ -7,7 +7,7 @@ namespace ZeroToProd\Thryds\Helpers;
 use ZeroToProd\Thryds\Config;
 
 #[KeyRegistry(
-    source: 'Vite entry points',
+    Source::vite_entry_points,
     addKey: '1. Add constant. 2. Register a Blade directive in BladeDirectives::register(). 3. Add entry to vite.config.js input array.',
 )]
 readonly class Vite
