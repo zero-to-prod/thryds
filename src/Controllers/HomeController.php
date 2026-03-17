@@ -16,7 +16,7 @@ readonly class HomeController
     public function __invoke(): ResponseInterface
     {
         return new HtmlResponse(
-            html: $this->Blade->make(view: View::home)->render(),
+            html: $this->Blade->make(view: View::home->value)->render(),
         );
     }
 }

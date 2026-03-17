@@ -113,9 +113,9 @@ function verifyTemplateCache(string $base_dir): int
     $Blade = App::bootBlade($Config, $base_dir);
 
     $view_data = [
-        View::home => [],
-        View::about => [],
-        View::error => [
+        View::home->value => [],
+        View::about->value => [],
+        View::error->value => [
             ErrorViewModel::view_key => ErrorViewModel::from([
                 ErrorViewModel::message => 'test',
                 ErrorViewModel::status_code => 200,

@@ -27,7 +27,7 @@ readonly class WebRoutes
             HTTP_METHOD::GET->value,
             Route::about->value,
             fn(): ResponseInterface => new HtmlResponse(
-                html: $Blade->make(view: View::about)->render(),
+                html: $Blade->make(view: View::about->value)->render(),
             ),
         );
 

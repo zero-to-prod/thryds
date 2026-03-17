@@ -48,7 +48,6 @@ use Utils\Rector\Rector\RequireRouteEnumInMapCallRector;
 use Utils\Rector\Rector\RequireParamTypeRector;
 use Utils\Rector\Rector\RequireReturnTypeRector;
 use Utils\Rector\Rector\RequireTypedPropertyRector;
-use Utils\Rector\Rector\StringArgToClassConstRector;
 use Utils\Rector\Rector\SuggestDuplicateStringConstantRector;
 use Utils\Rector\Rector\SuggestEnumForStringPropertyRector;
 use Utils\Rector\Rector\SuggestExtractSharedCatchLogicRector;
@@ -56,7 +55,6 @@ use Utils\Rector\Rector\UseClassConstArrayKeyForDataModelRector;
 use Utils\Rector\Rector\UseLogContextConstRector;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
-use ZeroToProd\Thryds\Helpers\View;
 use ZeroToProd\Thryds\Log;
 
 return static function (RectorConfig $rectorConfig): void {
@@ -183,16 +181,6 @@ return static function (RectorConfig $rectorConfig): void {
 
     // --- Magic String Elimination ---
     $rectorConfig->rule(StringClassNameToClassConstantRector::class);
-    $rectorConfig->ruleWithConfiguration(StringArgToClassConstRector::class, [
-        'mappings' => [
-            [
-                'class' => View::class,
-                'methodName' => 'make',
-                'paramName' => 'view',
-            ],
-        ],
-        'mode' => 'auto',
-    ]);
     $rectorConfig->ruleWithConfiguration(ForbidMagicStringArrayKeyRector::class, [
         'excludedClasses' => [Log::class],
         'mode' => 'warn',

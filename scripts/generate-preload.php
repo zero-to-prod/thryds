@@ -48,9 +48,9 @@ WebRoutes::register($Router, $Blade);
 
 // Render all templates to load view-layer dependencies
 echo "Rendering templates...\n";
-$Blade->make(view: View::home)->render();
-$Blade->make(view: View::about)->render();
-$Blade->make(view: View::error, data: [
+$Blade->make(view: View::home->value)->render();
+$Blade->make(view: View::about->value)->render();
+$Blade->make(view: View::error->value, data: [
     ErrorViewModel::view_key => ErrorViewModel::from([
         ErrorViewModel::message => 'test',
         ErrorViewModel::status_code => 500,

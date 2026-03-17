@@ -14,14 +14,12 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class RequestId
 {
-    public const string header = 'X-Request-ID';
-
     private static ?string $current = null;
 
     /** Initialize from an incoming request header or generate a new ID. */
     public static function init(ServerRequestInterface $ServerRequestInterface): string
     {
-        $header = $ServerRequestInterface->getHeaderLine(self::header);
+        $header = $ServerRequestInterface->getHeaderLine(Header::request_id);
 
         self::$current = $header !== '' ? $header : self::generate();
 

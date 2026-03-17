@@ -16,7 +16,7 @@ final class BladeCacheTest extends IntegrationTestCase
     {
         $this->assertSame([], glob($this->cache_dir . self::php_glob), 'Cache dir should start empty');
 
-        $this->App->Blade->make(view: View::home)->render();
+        $this->App->Blade->make(view: View::home->value)->render();
 
         $this->assertNotEmpty(actual: glob($this->cache_dir . self::php_glob), message: 'Compiled templates should be written to cache dir');
     }
@@ -25,7 +25,7 @@ final class BladeCacheTest extends IntegrationTestCase
     public function secondRenderUsesCache(): void
     {
         // First render — compiles and caches
-        $first_html = $this->App->Blade->make(view: View::home)->render();
+        $first_html = $this->App->Blade->make(view: View::home->value)->render();
         $cached_files = glob($this->cache_dir . self::php_glob);
         $mtimes = [];
         foreach ($cached_files as $file) {
@@ -35,7 +35,7 @@ final class BladeCacheTest extends IntegrationTestCase
         // Ensure filesystem timestamp granularity (1 second)
         sleep(1);
 
-        $this->assertSame(expected: $first_html, actual: $this->App->Blade->make(view: View::home)->render(), message: 'Output should be identical');
+        $this->assertSame(expected: $first_html, actual: $this->App->Blade->make(view: View::home->value)->render(), message: 'Output should be identical');
 
         foreach ($cached_files as $file) {
             $this->assertSame(

@@ -16,6 +16,7 @@ declare(strict_types=1);
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 use ZeroToProd\Thryds\DevFilter;
+use ZeroToProd\Thryds\OpcacheStatus;
 use ZeroToProd\Thryds\Routes\Route;
 
 $isDev = (bool) ini_get('opcache.validate_timestamps');
@@ -82,7 +83,7 @@ function opcacheAudit(bool $isDev, string $base_url, array|false $worker_status,
             $failures[] = 'opcache.preload is empty — no scripts are preloaded into shared memory';
         }
     } else {
-        $preloadCount = $worker_status['preload_statistics']['scripts'] ?? [];
+        $preloadCount = $worker_status[OpcacheStatus::preload_statistics][OpcacheStatus::scripts] ?? [];
         $passes[] = sprintf('opcache.preload is set (%s) — %d scripts preloaded', $preload, count($preloadCount));
     }
 
@@ -139,8 +140,8 @@ function opcacheAudit(bool $isDev, string $base_url, array|false $worker_status,
     // Runtime checks — require worker status
     if ($worker_status !== false) {
         // 7. Cache hit rate (delta: after warm-up traffic only)
-        $hits = ($worker_status['opcache_statistics']['hits'] ?? 0) - ($baseline ? ($baseline['opcache_statistics']['hits'] ?? 0) : 0);
-        $misses = ($worker_status['opcache_statistics']['misses'] ?? 0) - ($baseline ? ($baseline['opcache_statistics']['misses'] ?? 0) : 0);
+        $hits = ($worker_status[OpcacheStatus::opcache_statistics][OpcacheStatus::hits] ?? 0) - ($baseline ? ($baseline[OpcacheStatus::opcache_statistics][OpcacheStatus::hits] ?? 0) : 0);
+        $misses = ($worker_status[OpcacheStatus::opcache_statistics][OpcacheStatus::misses] ?? 0) - ($baseline ? ($baseline[OpcacheStatus::opcache_statistics][OpcacheStatus::misses] ?? 0) : 0);
         $totalRequests = $hits + $misses;
         if ($totalRequests > 0) {
             $hitRate = ($hits / $totalRequests) * 100;
@@ -152,8 +153,8 @@ function opcacheAudit(bool $isDev, string $base_url, array|false $worker_status,
         }
 
         // 8. Cached scripts and preload coverage
-        $cachedScripts = $worker_status['opcache_statistics']['num_cached_scripts'] ?? 0;
-        $preloadScripts = count($worker_status['preload_statistics']['scripts'] ?? []);
+        $cachedScripts = $worker_status[OpcacheStatus::opcache_statistics][OpcacheStatus::num_cached_scripts] ?? 0;
+        $preloadScripts = count($worker_status[OpcacheStatus::preload_statistics][OpcacheStatus::scripts] ?? []);
         if ($cachedScripts > 0) {
             // Scripts that are expected to not be preloaded:
             // blade cache (generated at runtime), dev vendor bootstraps,
@@ -176,9 +177,9 @@ function opcacheAudit(bool $isDev, string $base_url, array|false $worker_status,
         }
 
         // 9. Memory usage
-        $memUsed = $worker_status['memory_usage']['used_memory'] ?? 0;
-        $memFree = $worker_status['memory_usage']['free_memory'] ?? 0;
-        $memWasted = $worker_status['memory_usage']['wasted_memory'] ?? 0;
+        $memUsed = $worker_status[OpcacheStatus::memory_usage][OpcacheStatus::used_memory] ?? 0;
+        $memFree = $worker_status[OpcacheStatus::memory_usage][OpcacheStatus::free_memory] ?? 0;
+        $memWasted = $worker_status[OpcacheStatus::memory_usage][OpcacheStatus::wasted_memory] ?? 0;
         $memTotal = $memUsed + $memFree + $memWasted;
         if ($memTotal > 0) {
             $wastedPct = ($memWasted / $memTotal) * 100;
