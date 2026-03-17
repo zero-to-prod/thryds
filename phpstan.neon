@@ -1,3 +1,5 @@
+# Level 2: ext-frankenphp stubs cause false positives at higher levels.
+# Rector handles type-enforcement rules instead.
 parameters:
     level: 2
     paths:

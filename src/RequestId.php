@@ -6,6 +6,12 @@ namespace ZeroToProd\Thryds;
 
 use Psr\Http\Message\ServerRequestInterface;
 
+/**
+ * Per-request correlation ID. MUST be reset after each request via reset().
+ *
+ * In FrankenPHP worker mode, PHP state persists across requests. The reset() call
+ * in public/index.php's finally block ensures no ID leaks between requests.
+ */
 class RequestId
 {
     public const string header = 'X-Request-ID';

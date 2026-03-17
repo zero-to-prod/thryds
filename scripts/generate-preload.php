@@ -17,11 +17,11 @@ $base_dir = dirname(__DIR__);
 
 require $base_dir . '/vendor/autoload.php';
 
-use ZeroToProd\Thryds\APP_ENV;
+use League\Route\Router;
 use ZeroToProd\Thryds\App;
+use ZeroToProd\Thryds\APP_ENV;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Helpers\View;
-use ZeroToProd\Thryds\Helpers\Vite;
 use ZeroToProd\Thryds\Routes\WebRoutes;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
@@ -42,7 +42,7 @@ $Blade = App::bootBlade($Config, $base_dir);
 
 // Direct instantiation is intentional: this script runs at build time, not in the request path.
 // ForbidDirectRouterInstantiationRector only applies to src/, public/, tests/.
-$Router = new \League\Route\Router();
+$Router = new Router();
 WebRoutes::register($Router, $Blade);
 
 // Render all templates to load view-layer dependencies
@@ -72,7 +72,7 @@ new \Laminas\Diactoros\Response\JsonResponse(data: []);
 
 // Force-load classes only reachable via full App::boot() / HTTP request path
 new \League\Route\Cache\Router(
-    builder: static fn(\League\Route\Router $r): \League\Route\Router => $r,
+    builder: static fn(Router $r): Router => $r,
     cache: new \League\Route\Cache\FileCache(cacheFilePath: '/dev/null', ttl: 0),
     cacheEnabled: false,
 );
