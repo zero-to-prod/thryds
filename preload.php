@@ -11,11 +11,15 @@ opcache_compile_file(__DIR__ . '/vendor/autoload.php');
 opcache_compile_file(__DIR__ . '/src/Helpers/function.php');
 opcache_compile_file(__DIR__ . '/src/Helpers/DataModel.php');
 opcache_compile_file(__DIR__ . '/src/Helpers/Vite.php');
+opcache_compile_file(__DIR__ . '/src/Helpers/BladeDirectives.php');
 opcache_compile_file(__DIR__ . '/src/Helpers/View.php');
 
 // Core
 opcache_compile_file(__DIR__ . '/src/Config.php');
-opcache_compile_file(__DIR__ . '/src/APP_ENV.php');
+opcache_compile_file(__DIR__ . '/src/AppEnv.php');
+opcache_compile_file(__DIR__ . '/src/App.php');
+opcache_compile_file(__DIR__ . '/src/Controllers/HomeController.php');
+opcache_compile_file(__DIR__ . '/src/RequestId.php');
 
 // Routes
 opcache_compile_file(__DIR__ . '/src/Routes/WebRoutes.php');
@@ -186,3 +190,18 @@ opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-httphandlerrunner/src/Ex
 opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-httphandlerrunner/src/Exception/EmitterException.php');
 opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-diactoros/src/Response/JsonResponse.php');
 opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-diactoros/src/ServerRequestFilter/IPRange.php');
+opcache_compile_file(__DIR__ . '/vendor/league/route/src/Cache/Router.php');
+opcache_compile_file(__DIR__ . '/vendor/league/route/src/Cache/FileCache.php');
+opcache_compile_file(__DIR__ . '/vendor/psr/simple-cache/src/CacheInterface.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/collections/Traits/EnumeratesValues.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/collections/Collection.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/contracts/Support/CanBeEscapedWhenCastToString.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/contracts/Support/Arrayable.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/collections/Enumerable.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/contracts/Support/Jsonable.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/support/Stringable.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/support/Traits/Dumpable.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/support/Traits/Tappable.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/view/Compilers/ComponentTagCompiler.php');
+opcache_compile_file(__DIR__ . '/vendor/laravel/serializable-closure/src/Support/ClosureStream.php');
+opcache_compile_file(__DIR__ . '/vendor/laravel/serializable-closure/src/Support/ClosureScope.php');

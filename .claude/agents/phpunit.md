@@ -28,4 +28,4 @@ All commands run inside Docker:
 
 - Tests must run inside Docker — never run PHPUnit on the host.
 - Follow existing test structure and naming conventions.
-- Always run `./run lint:all` after writing tests.
+- Always run `./run check:all` after writing tests.

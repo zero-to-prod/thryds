@@ -41,7 +41,7 @@ Name tests after the **behavior**, not the implementation:
 - Use `declare(strict_types=1)`.
 - Follow the existing namespace and directory conventions (`tests/unit/`, `tests/integration/`).
 - Prefer real objects over mocks. Only mock external I/O boundaries (HTTP clients, filesystems, etc.).
-- Always run `./run lint:all` after writing tests.
+- Always run `./run check:all` after writing tests.
 - Do NOT create test helpers, base classes, or abstractions unless shared across 3+ test files.
 
 ## Commands

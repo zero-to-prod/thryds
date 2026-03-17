@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
+use ZeroToProd\Thryds\Helpers\NamesKeys;
+
+#[NamesKeys(
+    source: 'Log context array',
+    access: 'Log::error($msg, [Log::KEY => ...])',
+)]
 readonly class Log
 {
     public const string event = 'event';

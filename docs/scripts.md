@@ -12,17 +12,23 @@ Usage: `./run <script-name>`
 
 Invoked via `./run <name>`. Defined in `composer.json`.
 
-### Linting & Analysis
+### Checking (read-only)
 
 | Script | Command | Description |
 |--------|---------|-------------|
-| `lint` | `php-cs-fixer fix` | Apply PHP CS Fixer code style fixes |
-| `lint:check` | `php-cs-fixer fix --dry-run --diff` | Check code style without applying changes |
-| `rector` | `rector process` | Apply Rector refactorings |
-| `rector:check` | `rector process --dry-run` | Preview Rector changes without applying |
-| `phpstan` | `phpstan analyse` | Run static analysis (level 2) |
-| `lint:blade-routes` | `php scripts/lint-blade-routes.php` | Detect hardcoded route paths in Blade templates |
-| `lint:all` | Runs: lint, rector, phpstan, lint:blade-routes, test | Full lint + test suite — run after every change |
+| `check:style` | `php-cs-fixer fix --dry-run --diff` | Check code style without applying changes |
+| `check:rector` | `rector process --dry-run` | Preview Rector changes without applying |
+| `check:types` | `phpstan analyse` | Run static analysis (level 2) |
+| `check:blade-routes` | `php scripts/lint-blade-routes.php` | Detect hardcoded route paths in Blade templates |
+| `check:route-cache` | `php scripts/verify-route-cache.php` | Verify route caching is working correctly |
+| `check:all` | Runs: fix:style, fix:rector, check:types, check:blade-routes, test, generate:preload | Full check + test suite — run after every change |
+
+### Fixing (writes changes)
+
+| Script | Command | Description |
+|--------|---------|-------------|
+| `fix:style` | `php-cs-fixer fix` | Apply PHP CS Fixer code style fixes |
+| `fix:rector` | `rector process` | Apply Rector refactorings |
 
 ### Testing
 
@@ -33,14 +39,19 @@ Invoked via `./run <name>`. Defined in `composer.json`.
 | `test:integration` | `phpunit --testsuite integration` | Run integration tests only |
 | `test:rector` | `phpunit utils` | Run custom Rector rule tests |
 
-### Production & Performance
+### Generating
 
 | Script | Command | Description |
 |--------|---------|-------------|
-| `opcache` | `php scripts/opcache-audit.php` | Audit OPcache configuration and performance |
-| `preload:generate` | `php scripts/generate-preload.php` | Generate `preload.php` for OPcache preloading |
-| `route-cache:verify` | `php scripts/verify-route-cache.php` | Verify route caching is working correctly |
-| `production:checklist` | `php scripts/production-checklist.php` | Run all production readiness checks |
+| `generate:preload` | `php scripts/generate-preload.php` | Generate `preload.php` for OPcache preloading |
+| `generate:rector-rule` | `php scripts/make-rector-rule.php` | Scaffold a new custom Rector rule |
+
+### Auditing
+
+| Script | Command | Description |
+|--------|---------|-------------|
+| `audit:opcache` | `php scripts/opcache-audit.php` | Audit OPcache configuration and performance |
+| `audit:production` | `php scripts/production-checklist.php` | Run all production readiness checks |
 
 ---
 

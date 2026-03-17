@@ -8,7 +8,7 @@ declare(strict_types=1);
  * Runs all verification scripts and reports a combined pass/fail result.
  *
  * Usage: docker compose exec php php /app/scripts/production-checklist.php
- * Via Composer: ./run production:checklist
+ * Via Composer: ./run audit:production
  *
  * Checks:
  *   1. Route caching    — scripts/verify-route-cache.php

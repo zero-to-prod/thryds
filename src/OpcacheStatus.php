@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
-/**
- * Keys from the array returned by {@see opcache_get_status()}.
- */
+use ZeroToProd\Thryds\Helpers\NamesKeys;
+
+/** @see opcache_get_status() */
+#[NamesKeys(
+    source: 'opcache_get_status()',
+    access: '$status[OpcacheStatus::KEY]',
+)]
 readonly class OpcacheStatus
 {
     // Top-level keys

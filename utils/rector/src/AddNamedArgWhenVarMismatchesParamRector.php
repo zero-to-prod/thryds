@@ -70,6 +70,12 @@ CODE_SAMPLE
 
         $parameters = ParametersAcceptorSelector::combineAcceptors($reflection->getVariants())->getParameters();
 
+        foreach ($parameters as $ParameterReflection) {
+            if ($ParameterReflection->isVariadic()) {
+                return null;
+            }
+        }
+
         $hasChanged = false;
         $namedArgSeen = false;
 

@@ -50,22 +50,24 @@
         "test:unit": "./vendor/bin/phpunit --testsuite unit",
         "test:integration": "./vendor/bin/phpunit --testsuite integration",
         "test:rector": "./vendor/bin/phpunit utils",
-        "lint": "./vendor/bin/php-cs-fixer fix",
-        "lint:check": "./vendor/bin/php-cs-fixer fix --dry-run --diff",
-        "rector": "./vendor/bin/rector process",
-        "rector:check": "./vendor/bin/rector process --dry-run",
-        "phpstan": "./vendor/bin/phpstan analyse",
-        "opcache": "php scripts/opcache-audit.php",
-        "preload:generate": "php scripts/generate-preload.php",
-        "route-cache:verify": "php scripts/verify-route-cache.php",
-        "lint:blade-routes": "php scripts/lint-blade-routes.php",
-        "lint:all": [
-            "@lint",
-            "@rector",
-            "@phpstan",
-            "@lint:blade-routes",
-            "@test"
+        "fix:style": "./vendor/bin/php-cs-fixer fix",
+        "check:style": "./vendor/bin/php-cs-fixer fix --dry-run --diff",
+        "fix:rector": "./vendor/bin/rector process",
+        "check:rector": "./vendor/bin/rector process --dry-run",
+        "check:types": "./vendor/bin/phpstan analyse",
+        "check:blade-routes": "php scripts/lint-blade-routes.php",
+        "check:route-cache": "php scripts/verify-route-cache.php",
+        "check:all": [
+            "@fix:style",
+            "@fix:rector",
+            "@check:types",
+            "@check:blade-routes",
+            "@test",
+            "@generate:preload"
         ],
-        "production:checklist": "php scripts/production-checklist.php"
+        "generate:preload": "php scripts/generate-preload.php",
+        "generate:rector-rule": "php scripts/make-rector-rule.php",
+        "audit:opcache": "php scripts/opcache-audit.php",
+        "audit:production": "php scripts/production-checklist.php"
     }
 }

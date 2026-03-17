@@ -53,6 +53,13 @@ use Utils\Rector\Rector\SuggestEnumForStringPropertyRector;
 use Utils\Rector\Rector\SuggestExtractSharedCatchLogicRector;
 use Utils\Rector\Rector\UseClassConstArrayKeyForDataModelRector;
 use Utils\Rector\Rector\UseLogContextConstRector;
+use Utils\Rector\Rector\ForbidBareServerEnvKeyRector;
+use Utils\Rector\Rector\RequireEnumValueAccessRector;
+use Utils\Rector\Rector\ForbidStringComparisonOnEnumPropertyRector;
+use Utils\Rector\Rector\RequireSpecificResponseReturnTypeRector;
+use Utils\Rector\Rector\ForbidStringArgForEnumParamRector;
+use Utils\Rector\Rector\RequireConstForRepeatedArrayKeyRector;
+use ZeroToProd\Thryds\OpcacheStatus;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
 use ZeroToProd\Thryds\Log;
@@ -240,6 +247,14 @@ return static function (RectorConfig $rectorConfig): void {
         'mode' => 'auto',
     ]);
 
+    // --- Controller Conventions ---
+    $rectorConfig->ruleWithConfiguration(RequireSpecificResponseReturnTypeRector::class, [
+        'controllerNamespaces' => ['ZeroToProd\Thryds\Controllers'],
+        'genericInterface' => 'Psr\Http\Message\ResponseInterface',
+        'mode' => 'warn',
+        'message' => 'TODO: [RequireSpecificResponseReturnTypeRector] Replace generic ResponseInterface return type with the specific response class actually returned (e.g. HtmlResponse or JsonResponse).',
+    ]);
+
     // --- DataModel & ViewModel ---
     $rectorConfig->ruleWithConfiguration(UseClassConstArrayKeyForDataModelRector::class, [
         'mode' => 'auto',
@@ -314,5 +329,60 @@ return static function (RectorConfig $rectorConfig): void {
         'testDir' => __DIR__ . '/tests',
         'mode' => 'warn',
         'message' => "TODO: [RequireRouteTestRector] Route case '%s' has no corresponding test. Add a test that exercises this route.",
+    ]);
+
+    // --- Environment Key Safety ---
+    $rectorConfig->ruleWithConfiguration(ForbidBareServerEnvKeyRector::class, [
+        'envClass' => \ZeroToProd\Thryds\Env::class,
+        'superglobals' => ['_SERVER', '_ENV'],
+        'mode' => 'auto',
+        'message' => "TODO: [ForbidBareServerEnvKeyRector] Use %s::%s instead of bare string '%s'.",
+    ]);
+
+    // --- Enum Value Safety ---
+    $rectorConfig->ruleWithConfiguration(RequireEnumValueAccessRector::class, [
+        'enumClasses' => [
+            \ZeroToProd\Thryds\Helpers\View::class,
+            \ZeroToProd\Thryds\Routes\Route::class,
+            \ZeroToProd\Thryds\Routes\HTTP_METHOD::class,
+            \ZeroToProd\Thryds\AppEnv::class,
+            \ZeroToProd\Thryds\LogLevel::class,
+        ],
+        'mode' => 'auto',
+        'message' => 'TODO: [RequireEnumValueAccessRector] %s::%s is a backed enum case — use ->value to get the string.',
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(ForbidStringComparisonOnEnumPropertyRector::class, [
+        'enumClasses' => [
+            \ZeroToProd\Thryds\AppEnv::class,
+            \ZeroToProd\Thryds\Routes\Route::class,
+            \ZeroToProd\Thryds\Routes\HTTP_METHOD::class,
+            \ZeroToProd\Thryds\LogLevel::class,
+            \ZeroToProd\Thryds\Helpers\View::class,
+        ],
+        'mode' => 'warn',
+        'message' => "TODO: [ForbidStringComparisonOnEnumPropertyRector] Compare against %s::%s instead of string '%s'.",
+    ]);
+
+    // --- Enum Value Arg Safety ---
+    $rectorConfig->ruleWithConfiguration(ForbidStringArgForEnumParamRector::class, [
+        'enumClasses' => [
+            \ZeroToProd\Thryds\AppEnv::class,
+            \ZeroToProd\Thryds\Routes\HTTP_METHOD::class,
+            \ZeroToProd\Thryds\Routes\Route::class,
+            \ZeroToProd\Thryds\Helpers\View::class,
+            \ZeroToProd\Thryds\LogLevel::class,
+        ],
+        'mode' => 'warn',
+        'message' => "TODO: [ForbidStringArgForEnumParamRector] '%s' matches %s::%s — use %s::%s->value.",
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(RequireConstForRepeatedArrayKeyRector::class, [
+        'minOccurrences' => 2,
+        'minLength' => 3,
+        'excludedKeys' => ['class', 'mode', 'message'],
+        'excludedClasses' => [Log::class, OpcacheStatus::class],
+        'mode' => 'warn',
+        'message' => "TODO: [RequireConstForRepeatedArrayKeyRector] '%s' used %dx as array key — extract to a class constant.",
     ]);
 };

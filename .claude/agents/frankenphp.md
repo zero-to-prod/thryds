@@ -23,8 +23,8 @@ You are a specialist in FrankenPHP, the Caddy-based PHP application server. Assi
 
 ## Commands
 
-- `./run opcache` — audit OPcache config
-- `./run preload:generate` — regenerate preload.php from the worker's runtime script list
+- `./run audit:opcache` — audit OPcache config
+- `./run generate:preload` — regenerate preload.php from the worker's runtime script list
 
 ## Rules
 

@@ -13,6 +13,7 @@ readonly class HomeController
 {
     public function __construct(private Blade $Blade) {}
 
+    // TODO: [RequireSpecificResponseReturnTypeRector] Replace generic ResponseInterface return type with the specific response class actually returned (e.g. HtmlResponse or JsonResponse).
     public function __invoke(): ResponseInterface
     {
         return new HtmlResponse(

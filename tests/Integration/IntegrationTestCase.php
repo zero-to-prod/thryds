@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Tests\Integration;
 
+use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\ServerRequest;
 use Laminas\Diactoros\Uri;
+use League\Route\Http\Exception as HttpException;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Config;
+use ZeroToProd\Thryds\Helpers\View;
 use ZeroToProd\Thryds\Routes\HTTP_METHOD;
 use ZeroToProd\Thryds\Routes\Route;
+use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 /**
  * Base class for integration tests that exercise routes through the full App stack.
@@ -63,5 +67,30 @@ abstract class IntegrationTestCase extends TestCase
         return $this->App->Router->dispatch(
             new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($Route->value), method: HTTP_METHOD::POST->value),
         );
+    }
+
+    protected function assertErrorResponse(int $expected_status, string $expected_message, Route $Route, HTTP_METHOD $HTTP_METHOD = HTTP_METHOD::GET): void
+    {
+        try {
+            $this->App->Router->dispatch(
+                new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($Route->value), method: $HTTP_METHOD->value),
+            );
+            $this->fail("Expected HttpException with status $expected_status, but no exception was thrown.");
+        } catch (HttpException $HttpException) {
+            $this->assertSame(expected: $expected_status, actual: $HttpException->getStatusCode());
+
+            $body = new HtmlResponse(
+                html: $this->App->Blade->make(view: View::error->value, data: [
+                    ErrorViewModel::view_key => ErrorViewModel::from([
+                        ErrorViewModel::message => $HttpException->getMessage(),
+                        ErrorViewModel::status_code => $HttpException->getStatusCode(),
+                    ]),
+                ])->render(),
+                status: $HttpException->getStatusCode(),
+            )->getBody()->__toString();
+
+            $this->assertStringContainsString(needle: $expected_message, haystack: $body);
+            $this->assertStringContainsString((string) $expected_status, haystack: $body);
+        }
     }
 }

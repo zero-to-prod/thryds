@@ -69,7 +69,7 @@ opcache.jit_buffer_size=64M
 
 ## Preload Generation System
 
-`scripts/generate-preload.php` runs at build time (and via `./run preload:generate`):
+`scripts/generate-preload.php` runs at build time (and via `./run generate:preload`):
 
 1. Boots the app (mirrors `public/index.php` boot phase)
 2. Renders all templates (home, about, error) to discover view-layer dependencies
@@ -82,7 +82,7 @@ opcache.jit_buffer_size=64M
 
 ## Audit System
 
-`scripts/opcache-audit.php` (invoked via `./run opcache`) performs 11 checks:
+`scripts/opcache-audit.php` (invoked via `./run audit:opcache`) performs 11 checks:
 
 ### Config Checks (ini_get)
 1. `opcache.enable` is ON
@@ -123,13 +123,13 @@ The following Rector rules in `rector.php` enforce OPcache-friendly code (all in
 
 ## Commands
 
-- `./run opcache` — run the full OPcache audit
-- `./run preload:generate` — regenerate `preload.php`
-- `./run production:checklist` — run all production readiness checks (includes OPcache audit)
+- `./run audit:opcache` — run the full OPcache audit
+- `./run generate:preload` — regenerate `preload.php`
+- `./run audit:production` — run all production readiness checks (includes OPcache audit)
 
 ## Rules
 
-- **Never manually edit `preload.php`** — it is auto-generated. Run `./run preload:generate` instead.
+- **Never manually edit `preload.php`** — it is auto-generated. Run `./run generate:preload` instead.
 - All OPcache commands must run inside Docker.
 - When adding new application classes, `preload.php` should be regenerated to include them.
 - The preload generator's topological sort handles class dependency ordering — do not manually reorder entries.

@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Generates preload.php by booting the app and discovering loaded scripts.
  *
- * Usage: ./run preload:generate
+ * Usage: ./run generate:preload
  * Build: RUN php scripts/generate-preload.php (in Dockerfile)
  *
  * Boots the app the same way public/index.php does, renders all templates,

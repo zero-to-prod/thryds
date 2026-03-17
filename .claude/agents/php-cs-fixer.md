@@ -19,11 +19,11 @@ You are a specialist in PHP CS Fixer, the PHP code style enforcer. Assist with s
 
 All commands run inside Docker:
 
-- `./run lint` — fix code style
-- `./run lint:check` — preview code style changes
+- `./run fix:style` — fix code style
+- `./run check:style` — preview code style changes
 
 ## Rules
 
-- Code style is enforced automatically via `./run lint`.
-- Always run `./run lint:all` after making changes.
+- Code style is enforced automatically via `./run fix:style`.
+- Always run `./run check:all` after making changes.
 - Never run PHP CS Fixer directly on the host.

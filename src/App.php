@@ -10,6 +10,7 @@ use Jenssegers\Blade\Container as BladeContainer;
 use League\Route\Cache\FileCache;
 use League\Route\Cache\Router as CachedRouter;
 use League\Route\Router;
+use ZeroToProd\Thryds\Helpers\BladeDirectives;
 use ZeroToProd\Thryds\Helpers\Vite;
 use ZeroToProd\Thryds\Routes\WebRoutes;
 
@@ -27,20 +28,11 @@ readonly class App
         Container::setInstance(container: $Container);
         $Blade = new Blade(viewPaths: $Config->template_dir, cachePath: $Config->blade_cache_dir, container: $Container);
 
-        $Blade->if(AppEnv::production->value, fn(): bool => $Config->AppEnv === AppEnv::production);
-        $Blade->if('env', fn(string ...$environments): bool => in_array($Config->AppEnv->value, haystack: $environments, strict: true));
-
         $Vite = new Vite($Config, baseDir: $base_dir, entry_css: [
             Vite::app_entry => [Vite::app_css],
         ]);
         $Container->instance(Vite::class, instance: $Vite);
-        $Blade->directive('vite', static fn(): string => $Vite->directivePhp(Vite::app_entry));
-        $Blade->directive('htmx', static fn(): string => $Vite->directivePhp(Vite::htmx_entry));
-        $Blade->directive('hotReload', static fn(): string => '<?php if (isset($_SERVER[\'' . Env::FRANKENPHP_HOT_RELOAD . '\'])): ?>'
-            . '<meta name="frankenphp-hot-reload:url" content="<?= $_SERVER[\'' . Env::FRANKENPHP_HOT_RELOAD . '\'] ?>">'
-            . '<script src="https://cdn.jsdelivr.net/npm/idiomorph" defer></script>'
-            . '<script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>'
-            . '<?php endif; ?>');
+        BladeDirectives::register($Blade, $Config, $Vite);
 
         return $Blade;
     }
