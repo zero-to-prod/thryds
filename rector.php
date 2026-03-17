@@ -49,6 +49,7 @@ use Utils\Rector\Rector\RequireViewEnumInMakeCallRector;
 use Utils\Rector\Rector\RequireParamTypeRector;
 use Utils\Rector\Rector\RequireReturnTypeRector;
 use Utils\Rector\Rector\RequireTypedPropertyRector;
+use Utils\Rector\Rector\SuggestConstArrayToEnumRector;
 use Utils\Rector\Rector\SuggestDuplicateStringConstantRector;
 use Utils\Rector\Rector\SuggestEnumForStringPropertyRector;
 use Utils\Rector\Rector\SuggestExtractSharedCatchLogicRector;
@@ -178,6 +179,10 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(SuggestDuplicateStringConstantRector::class, [
         'mode' => 'warn',
         'message' => "TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string '%s' (used %dx) to a single source of truth. Consts name things, enums limit choices, attributes define properties.",
+    ]);
+    $rectorConfig->ruleWithConfiguration(SuggestConstArrayToEnumRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: Consider migrating const arrays to a backed enum with #[Group] attributes',
     ]);
     $rectorConfig->ruleWithConfiguration(SuggestEnumForStringPropertyRector::class, [
         'dataModelTraits' => [

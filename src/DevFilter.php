@@ -4,54 +4,16 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
-use ZeroToProd\Thryds\Helpers\Concept;
-use ZeroToProd\Thryds\Helpers\SourceOfTruth;
-
 /**
- * Shared path filters for identifying dev-only and non-production scripts.
+ * Shared filter for identifying dev-only and non-production scripts.
  *
  * Used by generate-preload.php (to exclude from preload) and
  * opcache-audit.php (to count expected non-preloaded scripts).
  */
-#[SourceOfTruth(
-    Concept::dev_only_path_filters,
-    addCase: '1. Add path to dev_vendors or excluded_dirs. Both consumers use DevFilter::isDevPath() so no further changes needed.',
-)]
 readonly class DevFilter
 {
-    /** @var list<string> Vendor paths that are dev-only (not needed at runtime). */
-    public const array dev_vendors = [
-        '/vendor/phpunit/',
-        '/vendor/phpstan/',
-        '/vendor/rector/',
-        '/vendor/friendsofphp/',
-        '/vendor/myclabs/',
-        '/vendor/sebastian/',
-        '/vendor/theseer/',
-        '/vendor/nikic/php-parser/',
-    ];
-
-    /** @var list<string> Directory segments that indicate non-production scripts. */
-    public const array excluded_dirs = [
-        '/var/cache/',
-        '/tests/',
-        '/utils/',
-    ];
-
     public static function isDevPath(string $path): bool
     {
-        foreach (self::dev_vendors as $vendor) {
-            if (str_contains(haystack: $path, needle: $vendor)) {
-                return true;
-            }
-        }
-
-        foreach (self::excluded_dirs as $dir) {
-            if (str_contains(haystack: $path, needle: $dir)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any(DevPath::cases(), fn($devPath): bool => str_contains(haystack: $path, needle: $devPath->value));
     }
 }

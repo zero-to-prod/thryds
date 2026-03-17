@@ -19,5 +19,7 @@ enum Domain: string
     case http_methods = 'http_methods';
     case key_sources = 'key_sources';
     case log_severity_levels = 'log_severity_levels';
+    case dev_path_groups = 'dev_path_groups';
+    case dev_paths = 'dev_paths';
     case url_routes = 'url_routes';
 }

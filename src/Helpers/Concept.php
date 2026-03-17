@@ -13,7 +13,6 @@ namespace ZeroToProd\Thryds\Helpers;
 enum Concept: string
 {
     case blade_template_names = 'Blade template names';
-    case dev_only_path_filters = 'dev-only path filters';
     case environment_variable_keys = 'environment variable keys';
     case route_paths = 'route paths';
 }
