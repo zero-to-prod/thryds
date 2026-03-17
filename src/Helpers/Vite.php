@@ -14,6 +14,8 @@ readonly class Vite
     /** Must match vite.config.js server.origin */
     private const string DEV_SERVER_URL = 'http://localhost:5173';
     private const string MANIFEST_PATH = '/public/build/.vite/manifest.json';
+    /** Must match vite.config.js build.outDir */
+    private const string BUILD_PREFIX = '/build/';
     private const string css = 'css';
     private const string file = 'file';
 
@@ -68,11 +70,11 @@ readonly class Vite
 
         if (isset($chunk[self::css])) {
             foreach ($chunk[self::css] as $css) {
-                $tags .= '<link rel="stylesheet" href="/build/' . $css . '">' . "\n";
+                $tags .= '<link rel="stylesheet" href="' . self::BUILD_PREFIX . $css . '">' . "\n";
             }
         }
 
-        $tags .= '<script type="module" src="/build/' . $chunk[self::file] . '"></script>' . "\n";
+        $tags .= '<script type="module" src="' . self::BUILD_PREFIX . $chunk[self::file] . '"></script>' . "\n";
 
         return $tags;
     }

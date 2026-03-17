@@ -15,7 +15,7 @@ final class HomeControllerTest extends IntegrationTestCase
         $ResponseInterface = $this->get(Route::home);
 
         $this->assertSame(200, $ResponseInterface->getStatusCode());
-        $this->assertStringContainsString('text/html', $ResponseInterface->getHeaderLine('Content-Type'));
+        $this->assertStringContainsString(self::TEXT_HTML, $ResponseInterface->getHeaderLine('Content-Type'));
 
         $body = (string) $ResponseInterface->getBody();
         $this->assertStringContainsString('<h1>Thryds', haystack: $body);

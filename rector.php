@@ -66,97 +66,13 @@ return static function (RectorConfig $rectorConfig): void {
         __DIR__ . '/tests',
     ]);
     $rectorConfig->importNames();
-    $rectorConfig->ruleWithConfiguration(ForbiddenFuncCallRector::class, [
-        'functions' => [
-            'error_log',
-            'extract',
-            'compact',
-            'session_start',
-        ],
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->ruleWithConfiguration(FrankenPhpLogToLogClassRector::class, [
-        'functions' => ['frankenphp_log'],
-        'logClass' => Log::class,
-        'mode' => 'auto',
-    ]);
+
+    // --- Naming ---
     $rectorConfig->ruleWithConfiguration(RenameParamToMatchTypeNameRector::class, [
         'mode' => 'auto',
     ]);
     $rectorConfig->ruleWithConfiguration(RenameVarToMatchReturnTypeRector::class, [
         'skipNames' => ['Closure'],
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->ruleWithConfiguration(AddNamedArgWhenVarMismatchesParamRector::class, [
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->ruleWithConfiguration(RemoveNamedArgWhenVarMatchesParamRector::class, [
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->rule(RemoveUnusedPrivateMethodParameterRector::class);
-    $rectorConfig->rule(RemoveUnusedPublicMethodParameterRector::class);
-    $rectorConfig->ruleWithConfiguration(UseClassConstArrayKeyForDataModelRector::class, [
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->ruleWithConfiguration(AddViewKeyConstantRector::class, [
-        'dataModelTraits' => [
-            \ZeroToProd\Thryds\Helpers\DataModel::class,
-        ],
-        'viewModelAttribute' => \ZeroToProd\Thryds\Helpers\ViewModel::class,
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->ruleWithConfiguration(ReplaceShortClassNameWithViewKeyRector::class, [
-        'shortClassNameFunction' => 'ZeroToProd\\Thryds\\Helpers\\short_class_name',
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->rule(StringClassNameToClassConstantRector::class);
-    $rectorConfig->ruleWithConfiguration(RequireLogEventRector::class, [
-        'logClass' => Log::class,
-        'eventKey' => 'event',
-        'mode' => 'warn',
-        'message' => 'TODO: [RequireLogEventRector] Log calls need a durable event id. Add `%s::%s => %s::<event_label>` to the context array.',
-    ]);
-    $rectorConfig->ruleWithConfiguration(UseLogContextConstRector::class, [
-        'logClass' => Log::class,
-        'keys' => ['exception', 'file', 'line'],
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->ruleWithConfiguration(ForbidMagicStringArrayKeyRector::class, [
-        'excludedClasses' => [Log::class],
-        'mode' => 'warn',
-        'message' => "TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value '%s' on the appropriate class.",
-    ]);
-    $rectorConfig->ruleWithConfiguration(SuggestEnumForStringPropertyRector::class, [
-        'dataModelTraits' => [
-            DataModel::class,
-            \ZeroToProd\Thryds\Helpers\DataModel::class,
-        ],
-        'describeAttrs' => [
-            Describe::class,
-            \ZeroToProd\Thryds\Helpers\Describe::class,
-        ],
-        'mode' => 'warn',
-        'message' => 'TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. $%s has values: %s. Extract to a backed enum.',
-        'callSiteMessage' => 'TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. %s is a value of %s::$%s. Replace with enum case.',
-    ]);
-    $rectorConfig->ruleWithConfiguration(ExtractRepeatedExpressionToVariableRector::class, [
-        'functions' => ['dirname'],
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->ruleWithConfiguration(InlineSingleUseVariableRector::class, [
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->ruleWithConfiguration(StringArgToClassConstRector::class, [
-        'mappings' => [
-            [
-                'class' => View::class,
-                'methodName' => 'make',
-                'paramName' => 'view',
-            ],
-        ],
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->ruleWithConfiguration(MakeClassReadonlyRector::class, [
         'mode' => 'auto',
     ]);
     $rectorConfig->ruleWithConfiguration(RenameEnumCaseToMatchValueRector::class, [
@@ -171,27 +87,6 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RenamePropertyToMatchTypeNameRector::class, [
         'mode' => 'auto',
     ]);
-    $rectorConfig->ruleWithConfiguration(ForbidDirectRouterInstantiationRector::class, [
-        'forbiddenClasses' => [Router::class],
-        'mode' => 'warn',
-        'message' => 'TODO: [ForbidDirectRouterInstantiationRector] Use League\\Route\\Cache\\Router instead of instantiating %s directly. Direct instantiation bypasses route caching.',
-    ]);
-    $rectorConfig->ruleWithConfiguration(ForbidStringRoutePatternRector::class, [
-        'methods' => ['map'],
-        'argPosition' => 1,
-        'mode' => 'warn',
-        'message' => "TODO: [ForbidStringRoutePatternRector] Replace inline string '%s' with a Route enum case reference (e.g. Route::case->value).",
-    ]);
-    $rectorConfig->ruleWithConfiguration(ForbidEvalRector::class, [
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->ruleWithConfiguration(ForbidExitInSourceRector::class, [
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->ruleWithConfiguration(ForbidDynamicIncludeRector::class, [
-        'mode' => 'warn',
-        'message' => 'TODO: [opcache] dynamic include prevents OPcache optimization',
-    ]);
     $rectorConfig->ruleWithConfiguration(ForbidCallableTypeVariableNameRector::class, [
         'forbiddenNames' => [
             'Closure',
@@ -203,26 +98,8 @@ return static function (RectorConfig $rectorConfig): void {
         'mode' => 'warn',
         'message' => 'TODO: [ForbidCallableTypeVariableNameRector] rename $%s to describe its behaviour',
     ]);
-    $rectorConfig->ruleWithConfiguration(RequireTypedPropertyRector::class, [
-        'mode' => 'warn',
-        'message' => 'TODO: [opcache] add a type declaration to improve OPcache optimization',
-    ]);
-    $rectorConfig->ruleWithConfiguration(ForbidVariableVariablesRector::class, [
-        'mode' => 'warn',
-        'message' => 'TODO: [opcache] variable variables prevent compile-time variable resolution',
-    ]);
-    $rectorConfig->ruleWithConfiguration(ForbidErrorSuppressionRector::class, [
-        'mode' => 'warn',
-        'message' => 'TODO: [opcache] @ error suppression adds per-call overhead — handle errors explicitly',
-    ]);
-    $rectorConfig->ruleWithConfiguration(ForbidGlobalKeywordRector::class, [
-        'mode' => 'warn',
-        'message' => 'TODO: [opcache] global keyword prevents scope-level optimization',
-    ]);
-    $rectorConfig->ruleWithConfiguration(SuggestExtractSharedCatchLogicRector::class, [
-        'mode' => 'warn',
-        'message' => 'TODO: [SuggestExtractSharedCatchLogicRector] Multiple catch blocks instantiate the same classes (%s). Consider extracting the shared logic.',
-    ]);
+
+    // --- Type Safety ---
     $rectorConfig->ruleWithConfiguration(RequireReturnTypeRector::class, [
         'skipMagicMethods' => true,
         'skipClosures' => false,
@@ -233,10 +110,28 @@ return static function (RectorConfig $rectorConfig): void {
         'useDocblocks' => true,
         'mode' => 'auto',
     ]);
-    $rectorConfig->ruleWithConfiguration(SuggestDuplicateStringConstantRector::class, [
+    $rectorConfig->ruleWithConfiguration(RequireTypedPropertyRector::class, [
         'mode' => 'warn',
-        'message' => "TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string '%s' (used %dx) to a single source of truth. Consts name things, enums limit choices, attributes define properties.",
+        'message' => 'TODO: [opcache] add a type declaration to improve OPcache optimization',
     ]);
+    $rectorConfig->ruleWithConfiguration(RequireNamedArgForBoolParamRector::class, [
+        'skipBuiltinFunctions' => false,
+        'skipWhenOnlyArg' => true,
+        'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(AddNamedArgWhenVarMismatchesParamRector::class, [
+        'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(RemoveNamedArgWhenVarMatchesParamRector::class, [
+        'mode' => 'auto',
+    ]);
+
+    // --- Code Quality ---
+    $rectorConfig->ruleWithConfiguration(MakeClassReadonlyRector::class, [
+        'mode' => 'auto',
+    ]);
+    $rectorConfig->rule(RemoveUnusedPrivateMethodParameterRector::class);
+    $rectorConfig->rule(RemoveUnusedPublicMethodParameterRector::class);
     $rectorConfig->ruleWithConfiguration(ForbidLongClosureRector::class, [
         'maxStatements' => 5,
         'skipArrowFunctions' => true,
@@ -252,16 +147,131 @@ return static function (RectorConfig $rectorConfig): void {
         'dtoSuffix' => 'Deps',
         'mode' => 'auto',
     ]);
+    $rectorConfig->ruleWithConfiguration(ForbidArrayShapeReturnRector::class, [
+        'minKeys' => 2,
+        'classSuffix' => 'Result',
+        'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(ExtractRepeatedExpressionToVariableRector::class, [
+        'functions' => ['dirname'],
+        'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(InlineSingleUseVariableRector::class, [
+        'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(SuggestExtractSharedCatchLogicRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: [SuggestExtractSharedCatchLogicRector] Multiple catch blocks instantiate the same classes (%s). Consider extracting the shared logic.',
+    ]);
+    $rectorConfig->ruleWithConfiguration(SuggestDuplicateStringConstantRector::class, [
+        'mode' => 'warn',
+        'message' => "TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string '%s' (used %dx) to a single source of truth. Consts name things, enums limit choices, attributes define properties.",
+    ]);
+    $rectorConfig->ruleWithConfiguration(SuggestEnumForStringPropertyRector::class, [
+        'dataModelTraits' => [
+            DataModel::class,
+            \ZeroToProd\Thryds\Helpers\DataModel::class,
+        ],
+        'describeAttrs' => [
+            Describe::class,
+            \ZeroToProd\Thryds\Helpers\Describe::class,
+        ],
+        'mode' => 'warn',
+        'message' => 'TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. $%s has values: %s. Extract to a backed enum.',
+        'callSiteMessage' => 'TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. %s is a value of %s::$%s. Replace with enum case.',
+    ]);
+
+    // --- Magic String Elimination ---
+    $rectorConfig->rule(StringClassNameToClassConstantRector::class);
+    $rectorConfig->ruleWithConfiguration(StringArgToClassConstRector::class, [
+        'mappings' => [
+            [
+                'class' => View::class,
+                'methodName' => 'make',
+                'paramName' => 'view',
+            ],
+        ],
+        'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidMagicStringArrayKeyRector::class, [
+        'excludedClasses' => [Log::class],
+        'mode' => 'warn',
+        'message' => "TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value '%s' on the appropriate class.",
+    ]);
+
+    // --- Forbidden Constructs ---
+    $rectorConfig->ruleWithConfiguration(ForbiddenFuncCallRector::class, [
+        'functions' => [
+            'error_log',
+            'extract',
+            'compact',
+            'session_start',
+        ],
+        'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidEvalRector::class, [
+        'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidExitInSourceRector::class, [
+        'mode' => 'auto',
+    ]);
+
+    // --- OPcache Optimization ---
+    $rectorConfig->ruleWithConfiguration(ForbidDynamicIncludeRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: [opcache] dynamic include prevents OPcache optimization',
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidVariableVariablesRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: [opcache] variable variables prevent compile-time variable resolution',
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidErrorSuppressionRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: [opcache] @ error suppression adds per-call overhead — handle errors explicitly',
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidGlobalKeywordRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: [opcache] global keyword prevents scope-level optimization',
+    ]);
+
+    // --- Logging ---
+    $rectorConfig->ruleWithConfiguration(FrankenPhpLogToLogClassRector::class, [
+        'functions' => ['frankenphp_log'],
+        'logClass' => Log::class,
+        'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(RequireLogEventRector::class, [
+        'logClass' => Log::class,
+        'eventKey' => 'event',
+        'mode' => 'warn',
+        'message' => 'TODO: [RequireLogEventRector] Log calls need a durable event id. Add `%s::%s => %s::<event_label>` to the context array.',
+    ]);
+    $rectorConfig->ruleWithConfiguration(UseLogContextConstRector::class, [
+        'logClass' => Log::class,
+        'keys' => ['exception', 'file', 'line'],
+        'mode' => 'auto',
+    ]);
+
+    // --- DataModel & ViewModel ---
+    $rectorConfig->ruleWithConfiguration(UseClassConstArrayKeyForDataModelRector::class, [
+        'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(AddViewKeyConstantRector::class, [
+        'dataModelTraits' => [
+            \ZeroToProd\Thryds\Helpers\DataModel::class,
+        ],
+        'viewModelAttribute' => \ZeroToProd\Thryds\Helpers\ViewModel::class,
+        'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(ReplaceShortClassNameWithViewKeyRector::class, [
+        'shortClassNameFunction' => 'ZeroToProd\\Thryds\\Helpers\\short_class_name',
+        'mode' => 'auto',
+    ]);
     $rectorConfig->ruleWithConfiguration(RequireMethodAnnotationForDataModelRector::class, [
         'dataModelTraits' => [
             DataModel::class,
             \ZeroToProd\Thryds\Helpers\DataModel::class,
         ],
-        'mode' => 'auto',
-    ]);
-    $rectorConfig->ruleWithConfiguration(ForbidArrayShapeReturnRector::class, [
-        'minKeys' => 2,
-        'classSuffix' => 'Result',
         'mode' => 'auto',
     ]);
     $rectorConfig->ruleWithConfiguration(ReplaceFullyQualifiedNameRector::class, [
@@ -271,10 +281,18 @@ return static function (RectorConfig $rectorConfig): void {
         ],
         'mode' => 'auto',
     ]);
-    $rectorConfig->ruleWithConfiguration(RequireNamedArgForBoolParamRector::class, [
-        'skipBuiltinFunctions' => false,
-        'skipWhenOnlyArg' => true,
-        'mode' => 'auto',
+
+    // --- Route Safety ---
+    $rectorConfig->ruleWithConfiguration(ForbidDirectRouterInstantiationRector::class, [
+        'forbiddenClasses' => [Router::class],
+        'mode' => 'warn',
+        'message' => 'TODO: [ForbidDirectRouterInstantiationRector] Use League\\Route\\Cache\\Router instead of instantiating %s directly. Direct instantiation bypasses route caching.',
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidStringRoutePatternRector::class, [
+        'methods' => ['map'],
+        'argPosition' => 1,
+        'mode' => 'warn',
+        'message' => "TODO: [ForbidStringRoutePatternRector] Replace inline string '%s' with a Route enum case reference (e.g. Route::case->value).",
     ]);
     $rectorConfig->ruleWithConfiguration(RequireRouteEnumInMapCallRector::class, [
         'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,

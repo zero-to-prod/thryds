@@ -36,6 +36,11 @@ readonly class App
         $Container->instance(Vite::class, instance: $Vite);
         $Blade->directive('vite', static fn(): string => $Vite->directivePhp(Vite::app_entry));
         $Blade->directive('htmx', static fn(): string => $Vite->directivePhp(Vite::htmx_entry));
+        $Blade->directive('hotReload', static fn(): string => '<?php if (isset($_SERVER[\'' . Server::FRANKENPHP_HOT_RELOAD . '\'])): ?>'
+            . '<meta name="frankenphp-hot-reload:url" content="<?= $_SERVER[\'' . Server::FRANKENPHP_HOT_RELOAD . '\'] ?>">'
+            . '<script src="https://cdn.jsdelivr.net/npm/idiomorph" defer></script>'
+            . '<script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>'
+            . '<?php endif; ?>');
 
         return $Blade;
     }

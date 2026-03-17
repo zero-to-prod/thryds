@@ -33,7 +33,9 @@ ENV GOMEMLIMIT=256MiB
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 COPY docker/php/opcache.ini $PHP_INI_DIR/conf.d/opcache.ini
+COPY docker/php/logging.ini $PHP_INI_DIR/conf.d/logging.ini
 COPY docker/Caddyfile /etc/caddy/Caddyfile
+COPY docker/Caddyfile /etc/frankenphp/Caddyfile
 
 COPY --from=vendor /app/vendor /app/vendor
 COPY --from=node /app/public/build /app/public/build

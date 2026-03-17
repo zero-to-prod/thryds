@@ -15,6 +15,6 @@ final class OpcacheStatusRouteTest extends IntegrationTestCase
         $ResponseInterface = $this->get(Route::opcache_status);
 
         $this->assertSame(200, $ResponseInterface->getStatusCode());
-        $this->assertStringContainsString('application/json', $ResponseInterface->getHeaderLine('Content-Type'));
+        $this->assertStringContainsString(self::APPLICATION_JSON, $ResponseInterface->getHeaderLine('Content-Type'));
     }
 }

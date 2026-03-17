@@ -21,6 +21,7 @@ use League\Route\Router;
 use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Config;
+use ZeroToProd\Thryds\DevFilter;
 use ZeroToProd\Thryds\Helpers\View;
 use ZeroToProd\Thryds\Routes\WebRoutes;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
@@ -102,17 +103,6 @@ echo sprintf("Wrote %s with %d scripts\n", $preload_path, count($ordered));
 
 function filterAppScripts(array $scripts): array
 {
-    $dev_vendors = [
-        '/vendor/phpunit/',
-        '/vendor/phpstan/',
-        '/vendor/rector/',
-        '/vendor/friendsofphp/',
-        '/vendor/myclabs/',
-        '/vendor/sebastian/',
-        '/vendor/theseer/',
-        '/vendor/nikic/php-parser/',
-    ];
-
     $filtered = [];
 
     foreach ($scripts as $path) {
@@ -124,26 +114,8 @@ function filterAppScripts(array $scripts): array
         // Normalize to /app/ prefix for consistency
         $path = str_replace(dirname(__DIR__), '/app', $path);
 
-        // Skip cache/temp files, tests, utils, and the generator itself
-        if (str_contains($path, '/var/cache/')
-            || str_contains($path, '/tests/')
-            || str_contains($path, '/utils/')
-            || str_contains($path, '/scripts/')
-        ) {
-            continue;
-        }
-
-        // Skip dev-only vendor packages
-        $is_dev = false;
-        foreach ($dev_vendors as $dev_vendor) {
-            if (str_contains($path, $dev_vendor)) {
-                $is_dev = true;
-
-                break;
-            }
-        }
-
-        if ($is_dev) {
+        // Skip scripts/, dev vendors, cache, tests, utils
+        if (str_contains($path, '/scripts/') || DevFilter::isDevPath($path)) {
             continue;
         }
 

@@ -11,6 +11,7 @@ use Psr\Http\Message\ResponseInterface;
 use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Config;
+use ZeroToProd\Thryds\Routes\HTTP_METHOD;
 use ZeroToProd\Thryds\Routes\Route;
 
 /**
@@ -26,6 +27,8 @@ use ZeroToProd\Thryds\Routes\Route;
 abstract class IntegrationTestCase extends TestCase
 {
     private const string base_dir = __DIR__ . '/../..';
+    protected const string TEXT_HTML = 'text/html';
+    protected const string APPLICATION_JSON = 'application/json';
     protected App $App;
     protected string $cache_dir;
 
@@ -51,14 +54,14 @@ abstract class IntegrationTestCase extends TestCase
     protected function get(Route $Route): ResponseInterface
     {
         return $this->App->Router->dispatch(
-            new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($Route->value), method: 'GET'),
+            new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($Route->value), method: HTTP_METHOD::GET->value),
         );
     }
 
     protected function post(Route $Route): ResponseInterface
     {
         return $this->App->Router->dispatch(
-            new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($Route->value), method: 'POST'),
+            new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($Route->value), method: HTTP_METHOD::POST->value),
         );
     }
 }

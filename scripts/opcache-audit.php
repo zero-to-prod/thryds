@@ -13,6 +13,11 @@ declare(strict_types=1);
  * Config checks use ini_get() (same ini for CLI and worker).
  */
 
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+use ZeroToProd\Thryds\DevFilter;
+use ZeroToProd\Thryds\Routes\Route;
+
 $isDev = (bool) ini_get('opcache.validate_timestamps');
 $base_url = 'http://localhost:' . ltrim(getenv('SERVER_NAME') ?: ':80', ':');
 
@@ -28,7 +33,7 @@ exit(str_contains($result, '[FAIL]') ? 1 : 0);
 
 function warmRoutes(string $base_url, int $requests_per_route = 20): void
 {
-    $routes = ['/', '/about'];
+    $routes = array_column(Route::cases(), 'value');
 
     foreach ($routes as $route) {
         for ($i = 0; $i < $requests_per_route; $i++) {
@@ -39,7 +44,7 @@ function warmRoutes(string $base_url, int $requests_per_route = 20): void
 
 function fetchWorkerStatus(string $base_url): array|false
 {
-    $json = @file_get_contents($base_url . '/_opcache/status');
+    $json = @file_get_contents($base_url . Route::opcache_status->value);
     if ($json === false) {
         return false;
     }
@@ -207,7 +212,7 @@ function opcacheAudit(bool $isDev, string $base_url, array|false $worker_status,
  */
 function countExpectedNonPreloaded(string $base_url): int
 {
-    $json = @file_get_contents($base_url . '/_opcache/scripts');
+    $json = @file_get_contents($base_url . Route::opcache_scripts->value);
     if ($json === false) {
         return 0;
     }
@@ -216,17 +221,7 @@ function countExpectedNonPreloaded(string $base_url): int
     $count = 0;
 
     foreach ($scripts as $path) {
-        if (str_contains($path, '/var/cache/')
-            || str_contains($path, '/tests/')
-            || str_contains($path, '/utils/')
-            || str_contains($path, '/vendor/phpunit/')
-            || str_contains($path, '/vendor/phpstan/')
-            || str_contains($path, '/vendor/rector/')
-            || str_contains($path, '/vendor/friendsofphp/')
-            || str_contains($path, '/vendor/myclabs/')
-            || str_contains($path, '/vendor/sebastian/')
-            || str_contains($path, '/vendor/theseer/')
-            || str_contains($path, '/vendor/nikic/php-parser/')
+        if (DevFilter::isDevPath($path)
             || $path === '/app/preload.php'
             || $path === '$PRELOAD$'
         ) {

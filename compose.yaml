@@ -15,6 +15,12 @@ services:
           watch /app/public/**/*.php
           watch /app/templates/**/*.php
         }
+      CADDY_SERVER_EXTRA_DIRECTIVES: |
+        mercure {
+          transport local
+          anonymous
+        }
+      CADDY_PHP_SERVER_EXTRA_DIRECTIVES: "hot_reload"
       CADDY_GLOBAL_OPTIONS: >-
         log {
           output file /app/logs/frankenphp/caddy.log
