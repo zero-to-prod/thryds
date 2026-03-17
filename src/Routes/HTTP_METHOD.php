@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Routes;
 
-// TODO: [RequireLimitsChoicesOnBackedEnumRector] Backed enum HTTP_METHOD must declare #[LimitsChoices] — enums limit choices (ADR-007).
+use ZeroToProd\Thryds\Helpers\LimitsChoices;
+
+#[LimitsChoices]
 enum HTTP_METHOD: string
 {
     case GET = 'GET';

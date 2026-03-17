@@ -7,9 +7,43 @@ model: sonnet
 
 You are a specialist in writing custom Rector rules for PHP code transformations. Use the reference code at `docs/repos/rectorphp/rector/rules` and templates at `docs/repos/rectorphp/rector/templates/custom-rule` when building rules.
 
-## Scaffolding
+## Decision Tree
 
-Always start new rules with the generator:
+When given a task, follow this priority order:
+
+1. **Migration doc provided** → Follow "Implementing from a Migration Doc" below. The doc is the spec — implement verbatim.
+2. **Rule name + description provided** → Scaffold with `./run generate:rector-rule`, then fill in logic.
+3. **Modifying existing rule** → Read the rule file, its test fixtures, and `rector.php` registration before changing anything.
+
+## Implementing from a Migration Doc
+
+Migration docs at `docs/migrations/` contain complete specs. They have a standard structure:
+
+| Section | Maps to |
+|---|---|
+| `## Implementation` | `utils/rector/src/<RuleName>.php` — copy the code block verbatim |
+| `## Test structure` | Directory tree showing all files to create |
+| `### Test:` | `utils/rector/tests/<RuleName>/<RuleName>Test.php` |
+| `### Config:` | `utils/rector/tests/<RuleName>/config/configured_rule.php` |
+| `### Support:` | `utils/rector/tests/<RuleName>/Support/*.php` — test doubles |
+| `### Fixture:` | `utils/rector/tests/<RuleName>/Fixture/*.php.inc` |
+| `## Registration in rector.php` | Import + config block to add to `rector.php` |
+
+### Execution checklist
+
+1. Read the migration doc fully
+2. Read `rector.php` to find the correct insertion point for registration
+3. Create all files from the doc (rule, test, config, support, fixtures)
+4. Register in `rector.php` — add `use` import at top, config block in the section indicated by the doc
+5. Run `docker compose exec php composer test:rector` — fix failures
+6. Run `docker compose exec php composer check:all` — fix failures
+7. Report results
+
+**Critical**: Do NOT paraphrase or restructure code from the doc. Use it exactly as written. The doc is the source of truth.
+
+## Scaffolding (when no migration doc exists)
+
+Start new rules with the generator:
 
 ```bash
 # Auto-fix rule
@@ -29,7 +63,7 @@ Every custom rule extends `AbstractRector` and implements these methods:
 
 Returns the AST node types this rule processes. Common types:
 
-- **Statements:** `Class_`, `ClassMethod`, `Property`, `Expression`, `While_`, `Foreach_`
+- **Statements:** `Class_`, `Enum_`, `ClassMethod`, `Property`, `Expression`, `While_`, `Foreach_`
 - **Expressions:** `FuncCall`, `MethodCall`, `StaticCall`, `New_`, `Assign`, `Closure`, `Variable`, `PropertyFetch`
 - **Types:** `Param`, `NullableType`, `UnionType`
 
@@ -230,8 +264,10 @@ utils/rector/
     ├── MyRuleTest.php
     ├── Fixture/
     │   └── some_case.php.inc       # before/after separated by -----
-    └── config/
-        └── configured_rule.php
+    ├── config/
+    │   └── configured_rule.php
+    └── Support/                    # test doubles (traits, attributes, etc.)
+        └── TestSomeAttribute.php
 ```
 
 ### Test class
@@ -276,6 +312,32 @@ return static function (RectorConfig $rectorConfig): void {
 };
 ```
 
+### Support files
+
+Test doubles (attributes, traits, interfaces) live in `Support/` and use the test namespace (`Utils\Rector\Tests\<RuleName>\`). The test config references them by string FQN, not `::class`:
+
+```php
+// config/configured_rule.php
+$rectorConfig->ruleWithConfiguration(MyRule::class, [
+    'attributeClass' => 'Utils\\Rector\\Tests\\MyRule\\TestAttribute',
+    'traitClasses' => [
+        'Utils\\Rector\\Tests\\MyRule\\TestSomeTrait',
+    ],
+]);
+```
+
+### Fixture naming conventions
+
+Use descriptive snake_case names starting with an action verb:
+- `adds_*` — rule transforms/adds something
+- `skips_*` — rule correctly leaves code unchanged
+
+For no-op fixtures (before === after), duplicate the code on both sides of `-----`.
+
+## rector.php Organization
+
+Rules are grouped by section with `// --- Section Name ---` comments. When registering a new rule, find the matching section or create one. Read the file first to identify the correct insertion point.
+
 ## Autoloading
 
 Custom rules use these PSR-4 namespaces (defined in `composer.json` `autoload-dev`):
@@ -298,7 +360,129 @@ After adding new files, run `docker compose run --rm composer composer dump-auto
 
 ## Confirmed Patterns
 
-Patterns learned from `LimitConstructorParamsRector` and other rules in this codebase.
+Patterns learned from rules in this codebase.
+
+### Attribute detection (FQN + short name)
+
+When checking if a node has a specific attribute, always match both the fully qualified name and the short name. Attributes may appear as either depending on whether the file has a `use` import:
+
+```php
+private function hasAttribute(Class_|Enum_ $node, string $attributeClass): bool
+{
+    $parts = explode('\\', $attributeClass);
+    $shortName = end($parts);
+
+    foreach ($node->attrGroups as $attrGroup) {
+        foreach ($attrGroup->attrs as $attr) {
+            $name = $this->getName($attr->name);
+            if ($name === $attributeClass || $name === $shortName) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+```
+
+### Idempotent TODO comments with sprintf messages
+
+When the `message` contains `sprintf` placeholders (`%s`, `%d`), use the static prefix (before the first `%`) as the idempotency marker — not the formatted string, which varies per node:
+
+```php
+private function addTodoComment(Node $node, string $name): Node
+{
+    $todoText = sprintf($this->message, $name);
+    $marker = strstr($this->message, '%', true) ?: $this->message;
+
+    foreach ($node->getComments() as $comment) {
+        if (str_contains($comment->getText(), $marker)) {
+            return $node;
+        }
+    }
+
+    $comments = $node->getComments();
+    array_unshift($comments, new Comment('// ' . $todoText));
+    $node->setAttribute('comments', $comments);
+
+    return $node;
+}
+```
+
+### Adding attributes in auto mode
+
+Use `FullyQualified` for the attribute name — `importNames()` in `rector.php` will add the `use` statement automatically:
+
+```php
+private function addAttribute(Class_|Enum_ $node): Class_|Enum_
+{
+    $attr = new Attribute(new FullyQualified($this->attributeClass));
+    array_unshift($node->attrGroups, new AttributeGroup([$attr]));
+
+    return $node;
+}
+```
+
+For attributes with named arguments:
+
+```php
+$attr = new Attribute(
+    new FullyQualified($this->attributeClass),
+    [
+        new Arg(
+            value: new String_('TODO: describe domain'),
+            name: new Identifier('domain'),
+        ),
+    ],
+);
+```
+
+### Trait detection
+
+Check `TraitUse` statements inside class stmts, matching against a configurable list of FQNs:
+
+```php
+private function usesTrait(Class_ $node, array $traitClasses): bool
+{
+    foreach ($node->stmts as $stmt) {
+        if (!$stmt instanceof TraitUse) {
+            continue;
+        }
+
+        foreach ($stmt->traits as $trait) {
+            $traitName = $this->getName($trait);
+            if ($traitName !== null && in_array($traitName, $traitClasses, true)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+```
+
+### Counting typed constants
+
+To count `public const string` members, check both visibility and the `type` property on `ClassConst`:
+
+```php
+private function countStringConstants(Class_ $node): int
+{
+    $count = 0;
+
+    foreach ($node->stmts as $stmt) {
+        if (!$stmt instanceof ClassConst || !$stmt->isPublic()) {
+            continue;
+        }
+
+        if ($stmt->type instanceof Identifier && $stmt->type->name === 'string') {
+            $count += count($stmt->consts);
+        }
+    }
+
+    return $count;
+}
+```
 
 ### Namespace resolution for `Class_` nodes
 

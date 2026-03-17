@@ -255,8 +255,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RequireSpecificResponseReturnTypeRector::class, [
         'controllerNamespaces' => ['ZeroToProd\Thryds\Controllers'],
         'genericInterface' => 'Psr\Http\Message\ResponseInterface',
-        'mode' => 'warn',
-        'message' => 'TODO: [RequireSpecificResponseReturnTypeRector] Replace generic ResponseInterface return type with the specific response class actually returned (e.g. HtmlResponse or JsonResponse).',
+        'mode' => 'auto',
     ]);
 
     // --- DataModel & ViewModel ---
@@ -403,8 +402,7 @@ return static function (RectorConfig $rectorConfig): void {
     // --- Enum Design ---
     $rectorConfig->ruleWithConfiguration(RequireLimitsChoicesOnBackedEnumRector::class, [
         'attributeClass' => \ZeroToProd\Thryds\Helpers\LimitsChoices::class,
-        'mode' => 'warn',
-        'message' => "TODO: [RequireLimitsChoicesOnBackedEnumRector] Backed enum %s must declare #[LimitsChoices] — enums limit choices (ADR-007).",
+        'mode' => 'auto',
     ]);
 
     // --- Enum Value Arg Safety ---
