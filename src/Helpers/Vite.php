@@ -6,6 +6,7 @@ namespace ZeroToProd\Thryds\Helpers;
 
 use ZeroToProd\Thryds\Config;
 
+// TODO: [RequireNamesKeysOnMixedConstantsClassRector] Vite has 3 string constants — add #[NamesKeys] to declare what they name (ADR-007).
 readonly class Vite
 {
     public const string app_entry = 'resources/js/app.js';

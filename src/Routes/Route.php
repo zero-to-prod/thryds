@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Routes;
 
+// TODO: [RequireLimitsChoicesOnBackedEnumRector] Backed enum Route must declare #[LimitsChoices] — enums limit choices (ADR-007).
 enum Route: string
 {
     case home = '/';

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
+// TODO: [RequireLimitsChoicesOnBackedEnumRector] Backed enum LogLevel must declare #[LimitsChoices] — enums limit choices (ADR-007).
 /**
  * Backed by constants defined by ext-frankenphp.
  * Values: Debug=0, Info=1, Warn=2, Error=3.

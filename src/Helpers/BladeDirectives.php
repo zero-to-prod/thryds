@@ -9,6 +9,7 @@ use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Env;
 
+// TODO: [RequireNamesKeysOnMixedConstantsClassRector] BladeDirectives has 5 string constants — add #[NamesKeys] to declare what they name (ADR-007).
 readonly class BladeDirectives
 {
     public const string production = 'production';

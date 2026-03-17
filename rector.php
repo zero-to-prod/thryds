@@ -59,6 +59,10 @@ use Utils\Rector\Rector\ForbidStringComparisonOnEnumPropertyRector;
 use Utils\Rector\Rector\RequireSpecificResponseReturnTypeRector;
 use Utils\Rector\Rector\ForbidStringArgForEnumParamRector;
 use Utils\Rector\Rector\RequireConstForRepeatedArrayKeyRector;
+use Utils\Rector\Rector\RequireLimitsChoicesOnBackedEnumRector;
+use Utils\Rector\Rector\RequireNamesKeysOnConstantsClassRector;
+use Utils\Rector\Rector\RequireNamesKeysOnMixedConstantsClassRector;
+use Utils\Rector\Rector\RequireViewModelAttributeOnDataModelRector;
 use ZeroToProd\Thryds\OpcacheStatus;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
@@ -256,6 +260,15 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
 
     // --- DataModel & ViewModel ---
+    $rectorConfig->ruleWithConfiguration(RequireViewModelAttributeOnDataModelRector::class, [
+        'traitClasses' => [
+            \ZeroToProd\Thryds\Helpers\DataModel::class,
+            \Zerotoprod\DataModel\DataModel::class,
+        ],
+        'constantName' => 'view_key',
+        'attributeClass' => \ZeroToProd\Thryds\Helpers\ViewModel::class,
+        'mode' => 'auto',
+    ]);
     $rectorConfig->ruleWithConfiguration(UseClassConstArrayKeyForDataModelRector::class, [
         'mode' => 'auto',
     ]);
@@ -362,6 +375,36 @@ return static function (RectorConfig $rectorConfig): void {
         ],
         'mode' => 'warn',
         'message' => "TODO: [ForbidStringComparisonOnEnumPropertyRector] Compare against %s::%s instead of string '%s'.",
+    ]);
+
+    // --- Constants Class Design ---
+    $rectorConfig->ruleWithConfiguration(RequireNamesKeysOnConstantsClassRector::class, [
+        'attributeClass' => \ZeroToProd\Thryds\Helpers\NamesKeys::class,
+        'excludedAttributes' => [
+            \ZeroToProd\Thryds\Helpers\ViewModel::class,
+        ],
+        'mode' => 'warn',
+        'message' => "TODO: [RequireNamesKeysOnConstantsClassRector] %s contains only string constants — add #[NamesKeys] to declare what they name (ADR-007).",
+    ]);
+    $rectorConfig->ruleWithConfiguration(RequireNamesKeysOnMixedConstantsClassRector::class, [
+        'attributeClass' => \ZeroToProd\Thryds\Helpers\NamesKeys::class,
+        'minConstants' => 3,
+        'excludedTraits' => [
+            \ZeroToProd\Thryds\Helpers\DataModel::class,
+            \Zerotoprod\DataModel\DataModel::class,
+        ],
+        'excludedAttributes' => [
+            \ZeroToProd\Thryds\Helpers\ViewModel::class,
+        ],
+        'mode' => 'warn',
+        'message' => "TODO: [RequireNamesKeysOnMixedConstantsClassRector] %s has %d string constants — add #[NamesKeys] to declare what they name (ADR-007).",
+    ]);
+
+    // --- Enum Design ---
+    $rectorConfig->ruleWithConfiguration(RequireLimitsChoicesOnBackedEnumRector::class, [
+        'attributeClass' => \ZeroToProd\Thryds\Helpers\LimitsChoices::class,
+        'mode' => 'warn',
+        'message' => "TODO: [RequireLimitsChoicesOnBackedEnumRector] Backed enum %s must declare #[LimitsChoices] — enums limit choices (ADR-007).",
     ]);
 
     // --- Enum Value Arg Safety ---
