@@ -45,6 +45,7 @@ use Utils\Rector\Rector\RequireRouteTestRector;
 use Utils\Rector\Rector\RequireNamedArgForBoolParamRector;
 use Utils\Rector\Rector\ForbidHardcodedRouteStringRector;
 use Utils\Rector\Rector\RequireRouteEnumInMapCallRector;
+use Utils\Rector\Rector\RequireViewEnumInMakeCallRector;
 use Utils\Rector\Rector\RequireParamTypeRector;
 use Utils\Rector\Rector\RequireReturnTypeRector;
 use Utils\Rector\Rector\RequireTypedPropertyRector;
@@ -63,7 +64,9 @@ use Utils\Rector\Rector\RequireClosedSetOnBackedEnumRector;
 use Utils\Rector\Rector\RequireNamesKeysOnConstantsClassRector;
 use Utils\Rector\Rector\RequireNamesKeysOnMixedConstantsClassRector;
 use Utils\Rector\Rector\RequireViewModelAttributeOnDataModelRector;
+use Utils\Rector\Rector\SuggestAttributeForRepeatedPropertyPatternRector;
 use Utils\Rector\Rector\RequireClassRefInClosedSetUsedInRector;
+use Utils\Rector\Rector\ValidateSourceOfTruthConsumersRector;
 use ZeroToProd\Thryds\OpcacheStatus;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
@@ -269,6 +272,17 @@ return static function (RectorConfig $rectorConfig): void {
         'attributeClass' => \ZeroToProd\Thryds\Helpers\ViewModel::class,
         'mode' => 'auto',
     ]);
+    $rectorConfig->ruleWithConfiguration(SuggestAttributeForRepeatedPropertyPatternRector::class, [
+        'patterns' => [
+            [
+                'trait' => \ZeroToProd\Thryds\Helpers\DataModel::class,
+                'constant' => 'view_key',
+                'attribute' => \ZeroToProd\Thryds\Helpers\ViewModel::class,
+            ],
+        ],
+        'mode' => 'auto',
+        'message' => "TODO: [SuggestAttributeForRepeatedPropertyPatternRector] %s uses %s + %s — add #[%s] attribute.",
+    ]);
     $rectorConfig->ruleWithConfiguration(UseClassConstArrayKeyForDataModelRector::class, [
         'mode' => 'auto',
     ]);
@@ -316,6 +330,13 @@ return static function (RectorConfig $rectorConfig): void {
         'argPosition' => 1,
         'mode' => 'warn',
         'message' => "TODO: [RequireRouteEnumInMapCallRector] Route pattern must use Route::case->value. Found '%s' instead.",
+    ]);
+    $rectorConfig->ruleWithConfiguration(RequireViewEnumInMakeCallRector::class, [
+        'enumClass' => \ZeroToProd\Thryds\Helpers\View::class,
+        'methodName' => 'make',
+        'paramName' => 'view',
+        'mode' => 'auto',
+        'message' => "TODO: [RequireViewEnumInMakeCallRector] Use View::%s->value instead of string '%s'.",
     ]);
     $rectorConfig->ruleWithConfiguration(ForbidHardcodedRouteStringRector::class, [
         'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
@@ -398,6 +419,18 @@ return static function (RectorConfig $rectorConfig): void {
         ],
         'mode' => 'warn',
         'message' => "TODO: [RequireNamesKeysOnMixedConstantsClassRector] %s has %d string constants — add #[NamesKeys] to declare what they name (ADR-007).",
+    ]);
+
+    // --- Source of Truth ---
+    $rectorConfig->ruleWithConfiguration(ValidateSourceOfTruthConsumersRector::class, [
+        'attributeClass' => \ZeroToProd\Thryds\Helpers\SourceOfTruth::class,
+        'mode' => 'warn',
+        'message' => "TODO: [ValidateSourceOfTruthConsumersRector] %s declares %s as a consumer, but it does not reference %s. Update the consumers list.",
+        'projectDir' => __DIR__,
+        'psr4Map' => [
+            'ZeroToProd\\Thryds\\' => __DIR__ . '/src/',
+            'ZeroToProd\\Thryds\\Tests\\' => __DIR__ . '/tests/',
+        ],
     ]);
 
     // --- Enum Design ---

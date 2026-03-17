@@ -4,12 +4,22 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
+use ZeroToProd\Thryds\Helpers\SourceOfTruth;
+
 /**
  * Shared path filters for identifying dev-only and non-production scripts.
  *
  * Used by generate-preload.php (to exclude from preload) and
  * opcache-audit.php (to count expected non-preloaded scripts).
  */
+#[SourceOfTruth(
+    for: 'dev-only path filters',
+    consumers: [
+        'scripts/generate-preload.php',
+        'scripts/opcache-audit.php',
+    ],
+    addCase: '1. Add path to dev_vendors or excluded_dirs. Both consumers use DevFilter::isDevPath() so no further changes needed.',
+)]
 readonly class DevFilter
 {
     /** @var list<string> Vendor paths that are dev-only (not needed at runtime). */
