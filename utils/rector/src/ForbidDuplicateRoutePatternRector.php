@@ -153,7 +153,6 @@ CODE_SAMPLE,
                     continue;
                 }
 
-                // Already has a TODO comment for this rule — idempotent
                 $marker = strstr($this->message, '%', true) ?: $this->message;
                 $alreadyAnnotated = false;
                 foreach ($stmt->getComments() as $comment) {

@@ -122,7 +122,6 @@ CODE_SAMPLE,
 
             $firstStmt = $occurrences[0]['stmt'];
 
-            // Idempotent: skip if the TODO comment is already present on the statement.
             $marker = strstr($this->message, '%', true) ?: $this->message;
             $alreadyAnnotated = false;
             foreach ($firstStmt->getComments() as $comment) {

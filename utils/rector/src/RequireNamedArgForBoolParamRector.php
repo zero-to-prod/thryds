@@ -114,7 +114,6 @@ CODE_SAMPLE,
             $paramReflection = $parameters[$i] ?? null;
 
             if ($paramReflection === null || $paramReflection->isVariadic()) {
-                // Cannot resolve — fall back to TODO
                 return $this->addTodoComment($node);
             }
         }

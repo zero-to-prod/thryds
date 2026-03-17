@@ -122,7 +122,6 @@ CODE_SAMPLE,
             $isTested = in_array($caseName, $this->testedCases, true);
 
             if ($isTested) {
-                // Remove stale TODO comment if present
                 $comments = $stmt->getComments();
                 $filtered = array_values(array_filter(
                     $comments,
@@ -137,7 +136,6 @@ CODE_SAMPLE,
                 continue;
             }
 
-            // Not tested — add TODO if not already present
             $alreadyAnnotated = false;
             foreach ($stmt->getComments() as $comment) {
                 if (str_contains($comment->getText(), $marker)) {

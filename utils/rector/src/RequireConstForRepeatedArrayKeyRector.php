@@ -44,7 +44,6 @@ final class RequireConstForRepeatedArrayKeyRector extends AbstractRector impleme
 
     /**
      * Maps repeated key value => [expressionObjectId => count].
-     * Only the first Expression containing each repeated key should get the TODO.
      * @var array<string, array<int, int>>
      */
     private array $keyToExpressionIds = [];

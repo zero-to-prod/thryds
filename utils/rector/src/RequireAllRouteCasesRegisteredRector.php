@@ -120,7 +120,6 @@ CODE_SAMPLE,
             $isRegistered = in_array($caseName, $this->registeredCases, true);
 
             if ($isRegistered) {
-                // Remove stale TODO comment if present
                 $comments = $stmt->getComments();
                 $filtered = array_values(array_filter(
                     $comments,
@@ -134,8 +133,6 @@ CODE_SAMPLE,
 
                 continue;
             }
-
-            // Not registered — add TODO if not already present
             $alreadyAnnotated = false;
             foreach ($stmt->getComments() as $comment) {
                 if (str_contains($comment->getText(), $marker)) {

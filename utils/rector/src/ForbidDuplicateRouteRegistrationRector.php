@@ -19,8 +19,6 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 /**
  * Detects when the same Route enum case is registered with the same HTTP method more than once.
- *
- * Flags the second (and subsequent) occurrences with a TODO comment.
  */
 final class ForbidDuplicateRouteRegistrationRector extends AbstractRector implements ConfigurableRectorInterface
 {
@@ -143,7 +141,6 @@ CODE_SAMPLE,
             return null;
         }
 
-        // Duplicate occurrence — add TODO comment if not already present.
         $marker = strstr($this->message, '%', true) ?: $this->message;
         foreach ($node->getComments() as $comment) {
             if (str_contains($comment->getText(), $marker)) {

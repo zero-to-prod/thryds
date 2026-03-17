@@ -26,7 +26,7 @@ use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
  * 3. Call $this->get(Route::case_name) or $this->post(Route::case_name).
  * 4. Assert on ResponseInterface: getStatusCode(), getHeaderLine(), (string) getBody().
  * 5. Always reference routes via Route::case_name — RequireRouteTestRector scans tests
- *    for Route:: references to track coverage and remove TODO comments.
+ *    for Route:: references to track coverage.
  */
 abstract class IntegrationTestCase extends TestCase
 {
