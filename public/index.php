@@ -22,7 +22,7 @@ use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 // Worker boots once; its in-memory object graph persists for the process lifetime.
 // On file changes in dev, FrankenPHP restarts the worker and re-runs this line.
-// See docs/adr/009-hot-reloading.md#context-worker
+// See HOT-001, PERF-001
 $App = App::boot($base_dir);
 
 // Resolve once at boot to get the cached CompilerEngine instance. Must be called
@@ -67,7 +67,7 @@ $handler = static function () use ($App, $bladeEngine, $emit_error_page): void {
     } finally {
         // Static state persists across requests in worker mode; both calls below
         // clear per-request state so it does not bleed into the next request.
-        // See docs/adr/009-hot-reloading.md#consequences-static-state
+        // See SEC-001, HOT-007
         RequestId::reset();
         $bladeEngine->forgetCompiledOrNotExpired();
     }

@@ -27,9 +27,6 @@ SEC-001:
     - rel: adr
       href: docs/adr/001-frankenphp-worker-mode.md
       title: ADR-001 — why FrankenPHP worker mode requires explicit state reset
-    - rel: adr
-      href: docs/adr/009-hot-reloading.md
-      title: ADR-009 — static state consequences under hot reload
   acceptance-criteria:
     - id: SEC-001-a
       text: The current request ID is null when no request is in flight
@@ -57,22 +54,172 @@ PERF-001:
       text: The application instance constructed at boot is reused for every request without reconstruction
   verification: architecture
 
+PERF-002:
+  type: non-functional
+  title: Cyclic garbage is collected after every request
+  description: >
+    gc_collect_cycles() is called explicitly after each request in the worker
+    loop. Long-lived worker processes accumulate cyclic references that the
+    reference-count collector cannot free; explicit collection after each
+    request bounds memory growth over the worker lifetime.
+  acceptance-criteria:
+    - id: PERF-002-a
+      text: The worker loop invokes cycle collection after every handled request
+  verification: architecture
+
 HOT-001:
   type: non-functional
-  title: File changes in development trigger a worker restart
+  title: PHP file changes in development trigger a worker process restart
   description: >
-    Saving any .php file under src/, public/, or templates/ must cause
-    FrankenPHP to restart the worker, re-running App::boot() against the
-    updated code. This requires the hot_reload directive and
-    opcache.validate_timestamps=1 in development.
+    In the development compose overlay, the worker block inside
+    CADDY_PHP_SERVER_EXTRA_DIRECTIVES watches src/, public/, and templates/
+    for *.php changes. When a watched file changes, FrankenPHP kills the
+    current worker and starts a fresh one, re-running App::boot() against the
+    updated code. This is a server-side mechanism independent of the
+    browser-side hot_reload directive.
   links:
     - rel: adr
-      href: docs/adr/009-hot-reloading.md
-      title: ADR-009 — hot reload strategy, watched paths, and worker restart mechanism
+      href: docs/adr/001-frankenphp-worker-mode.md
+      title: ADR-001 — boot-once pattern that makes worker restart necessary on code changes
   acceptance-criteria:
     - id: HOT-001-a
-      text: Saving a watched source file causes the next request to reflect the updated code without restarting the container
+      text: Saving a watched PHP source file causes the next request to reflect the updated code without restarting the container
     - id: HOT-001-b
       text: Saving a file outside the watched directories does not trigger a worker restart
   verification: manual
 
+HOT-002:
+  type: non-functional
+  title: Browser hot reload and worker restart are two independent mechanisms
+  description: >
+    Development uses two distinct hot-reload paths that operate independently.
+    The hot_reload Caddy directive sends a Mercure SSE notification to the
+    browser, which uses DOM morphing to apply changes without a full page reload.
+    The worker { watch } block restarts the PHP worker process when PHP files
+    change. PHP file changes trigger both paths. Non-PHP asset changes (CSS,
+    JS, images) trigger only the browser-side Mercure notification; they do not
+    cause a worker restart.
+  acceptance-criteria:
+    - id: HOT-002-a
+      text: A CSS or JS file change causes the browser to update without restarting the PHP worker process
+    - id: HOT-002-b
+      text: A PHP file change causes both a browser update and a PHP worker process restart
+  verification: manual
+
+HOT-003:
+  type: non-functional
+  title: The hot_reload directive requires a Mercure hub to be configured
+  description: >
+    FrankenPHP's hot_reload directive fails at server startup if no Mercure
+    hub is present. The Mercure block in CADDY_SERVER_EXTRA_DIRECTIVES in
+    compose.yaml is a prerequisite for hot_reload working in development.
+    The hot_reload directive auto-generates a Mercure topic using an FNV-64a
+    hash and sets the FRANKENPHP_HOT_RELOAD environment variable to the
+    corresponding SSE endpoint URL.
+  acceptance-criteria:
+    - id: HOT-003-a
+      text: The development environment starts without error when both the Mercure block and hot_reload directive are present
+  verification: manual
+
+HOT-004:
+  type: non-functional
+  title: The @hotReload Blade directive loads CDN scripts only in development
+  description: >
+    The @hotReload directive emits a meta tag and two CDN script tags
+    (idiomorph and frankenphp-hot-reload from jsDelivr) only when the
+    FRANKENPHP_HOT_RELOAD environment variable is set. This variable is set
+    by FrankenPHP's hot_reload directive and is absent in production. DOM
+    morphing (not a full page reload) is used to apply browser-side changes.
+  acceptance-criteria:
+    - id: HOT-004-a
+      text: When FRANKENPHP_HOT_RELOAD is not set, the rendered HTML contains no hot-reload meta tag or CDN script tags
+    - id: HOT-004-b
+      text: When FRANKENPHP_HOT_RELOAD is set, the rendered HTML includes the Mercure topic meta tag and both CDN script tags
+  verification: integration-test
+
+HOT-005:
+  type: non-functional
+  title: Development runs two worker sets simultaneously
+  description: >
+    The production Dockerfile sets ENV FRANKENPHP_CONFIG="worker /app/public/index.php",
+    which the Caddyfile injects into the global frankenphp {} block. The
+    development Dockerfile stage extends production without overriding this
+    variable. The development compose overlay adds a second worker {} block
+    via CADDY_PHP_SERVER_EXTRA_DIRECTIVES. Both configurations are active
+    simultaneously in development: one worker set without file watching
+    (from FRANKENPHP_CONFIG) and one with file watching (from the compose
+    overlay).
+  acceptance-criteria:
+    - id: HOT-005-a
+      text: In development, two distinct worker configurations are active at the same time
+  verification: manual
+
+HOT-006:
+  type: non-functional
+  title: MAX_REQUESTS=500 applies in development as well as production
+  description: >
+    MAX_REQUESTS is set to 500 in the production Dockerfile stage. The
+    development Dockerfile stage extends production and does not override it.
+    Neither does the development compose overlay. As a result, workers in
+    development also exit from the PHP loop after 500 requests, independent
+    of any file-watcher-triggered restart.
+  acceptance-criteria:
+    - id: HOT-006-a
+      text: Workers in development exit the request-handling loop after the MAX_REQUESTS limit is reached
+  verification: manual
+
+HOT-007:
+  type: non-functional
+  title: Blade compiled-template cache is cleared per request in worker mode
+  description: >
+    Laravel's $app->terminating() lifecycle hook never fires in FrankenPHP
+    worker mode, so the Blade engine's forgetCompiledOrNotExpired() method
+    is called explicitly in the finally block of the worker loop. Without
+    this, stale compiled views built in a previous request could be served
+    to a subsequent request within the same worker process.
+  acceptance-criteria:
+    - id: HOT-007-a
+      text: The worker loop clears the Blade compiled-template cache after every request
+  verification: architecture
+
+HOT-008:
+  type: non-functional
+  title: An anonymous Docker volume prevents host build assets from reaching the container
+  description: >
+    compose.yaml declares the anonymous volume /app/public/build on the web
+    service. This shadows the host's public/build directory inside the
+    container, so Vite-compiled assets built on the host are not visible to
+    the running container. In development, asset serving is delegated entirely
+    to the Vite dev server on port 5173.
+  acceptance-criteria:
+    - id: HOT-008-a
+      text: The web container serves Vite assets via the Vite dev server in development rather than from a host-mounted build directory
+  verification: manual
+
+HOT-009:
+  type: non-functional
+  title: The dev container exits silently when APP_ENV is not development
+  description: >
+    The dev service in compose.yaml guards its entrypoint with a shell
+    conditional: if APP_ENV is not "development", the container exits with
+    code 0 immediately without starting the Vite dev server. Loading
+    compose.yaml alone with a non-development APP_ENV therefore starts the
+    dev container, which then silently exits.
+  acceptance-criteria:
+    - id: HOT-009-a
+      text: When APP_ENV is set to a value other than development, the dev container exits with code 0 without running the Vite dev server
+  verification: manual
+
+HOT-010:
+  type: non-functional
+  title: The zzz- filename prefix ensures opcache-dev.ini is loaded after opcache.ini
+  description: >
+    PHP loads conf.d INI files in lexicographic order. The development
+    Dockerfile stage copies opcache-dev.ini as zzz-opcache-dev.ini so it
+    sorts after opcache.ini and its settings take precedence. Without the
+    prefix, the override order would be undefined and the development settings
+    (validate_timestamps=1, preload=) might be silently ignored.
+  acceptance-criteria:
+    - id: HOT-010-a
+      text: Development OPcache settings override the production OPcache settings when both files are present
+  verification: manual

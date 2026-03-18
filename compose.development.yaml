@@ -3,7 +3,7 @@ services:
     environment:
       # Injects the hot_reload directive and file-watching worker config into the
       # Caddyfile at runtime. Not present in production (this file is never loaded there).
-      # See docs/adr/009-hot-reloading.md#decision-compose
+      # See HOT-001, HOT-002, HOT-003, HOT-005
       CADDY_PHP_SERVER_EXTRA_DIRECTIVES: |
         hot_reload
         worker {

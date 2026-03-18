@@ -13,7 +13,7 @@ use ZeroToProd\Thryds\Attributes\Requirement;
  * In FrankenPHP worker mode, PHP state persists across requests. The reset() call
  * in public/index.php's finally block ensures no ID leaks between requests.
  *
- * @see docs/adr/009-hot-reloading.md#consequences-static-state
+ * @see SEC-001
  */
 #[Requirement('TRACE-001', 'SEC-001')]
 class RequestId
@@ -36,7 +36,7 @@ class RequestId
         return self::$current;
     }
 
-    /** @see docs/adr/009-hot-reloading.md#consequences-static-state */
+    /** @see SEC-001 */
     #[Requirement('SEC-001')]
     public static function reset(): void
     {
