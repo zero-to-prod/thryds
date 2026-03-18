@@ -14,4 +14,5 @@ use ZeroToProd\Thryds\Helpers\Source;
 readonly class Header
 {
     public const string request_id = 'X-Request-ID';
+    public const string hx_request = 'HX-Request';
 }

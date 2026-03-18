@@ -10,14 +10,14 @@ use ZeroToProd\Thryds\Helpers\View;
 final class BladeCacheTest extends IntegrationTestCase
 {
     private const string php_glob = '/*.php';
+    private const string body_fragment = 'body';
 
     #[Test]
     public function compiledTemplatesAreCachedToDisk(): void
     {
         $this->assertSame([], glob($this->cache_dir . self::php_glob), 'Cache dir should start empty');
 
-        // TODO: [RequireFragmentIfForBladeRenderRector] ->render() returns the full page. For htmx partial requests, use ->fragmentIf($request->hasHeader(Header::hx_request), 'body') instead.
-        $this->App->Blade->make(view: View::home->value)->render();
+        $this->App->Blade->make(view: View::home->value)->fragmentIf(false, self::body_fragment);
 
         $this->assertNotEmpty(actual: glob($this->cache_dir . self::php_glob), message: 'Compiled templates should be written to cache dir');
     }
@@ -26,7 +26,7 @@ final class BladeCacheTest extends IntegrationTestCase
     public function secondRenderUsesCache(): void
     {
         // First render — compiles and caches
-        $first_html = $this->App->Blade->make(view: View::home->value)->render();
+        $first_html = $this->App->Blade->make(view: View::home->value)->fragmentIf(false, self::body_fragment);
         $cached_files = glob($this->cache_dir . self::php_glob);
         $mtimes = [];
         foreach ($cached_files as $file) {
@@ -36,7 +36,7 @@ final class BladeCacheTest extends IntegrationTestCase
         // Ensure filesystem timestamp granularity (1 second)
         sleep(1);
 
-        $this->assertSame(expected: $first_html, actual: $this->App->Blade->make(view: View::home->value)->render(), message: 'Output should be identical');
+        $this->assertSame(expected: $first_html, actual: $this->App->Blade->make(view: View::home->value)->fragmentIf(false, self::body_fragment), message: 'Output should be identical');
 
         foreach ($cached_files as $file) {
             $this->assertSame(
