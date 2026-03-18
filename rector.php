@@ -77,6 +77,7 @@ use Utils\Rector\Rector\UseClassConstArrayKeyForDataModelRector;
 use Utils\Rector\Rector\UseLogContextConstRector;
 use Utils\Rector\Rector\ValidateChecklistPathsRector;
 use Utils\Rector\Rector\SuggestEnumForInternalOnlyConstantsRector;
+use Utils\Rector\Rector\ForbidCrossFileStringDuplicationRector;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
 use ZeroToProd\Thryds\Env;
@@ -552,5 +553,11 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(SuggestEnumForInternalOnlyConstantsRector::class, [
         'mode' => 'warn',
         'message' => 'TODO: [SuggestEnumForInternalOnlyConstantsRector] %s has %d string constants only referenced internally — consider migrating to a backed enum. See: utils/rector/docs/SuggestEnumForInternalOnlyConstantsRector.md',
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(ForbidCrossFileStringDuplicationRector::class, [
+        'mode' => 'warn',
+        'minFiles' => 3,
+        'message' => "TODO: [ForbidCrossFileStringDuplicationRector] string '%s' appears in %d files. Extract to a shared constant. See: utils/rector/docs/ForbidCrossFileStringDuplicationRector.md",
     ]);
 };
