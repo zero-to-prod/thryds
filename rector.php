@@ -78,6 +78,7 @@ use Utils\Rector\Rector\UseLogContextConstRector;
 use Utils\Rector\Rector\ValidateChecklistPathsRector;
 use Utils\Rector\Rector\SuggestEnumForInternalOnlyConstantsRector;
 use Utils\Rector\Rector\ForbidCrossFileStringDuplicationRector;
+use Utils\Rector\Rector\RequireExhaustiveMatchOnEnumRector;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
 use ZeroToProd\Thryds\Env;
@@ -500,6 +501,10 @@ return static function (RectorConfig $rectorConfig): void {
             KeyRegistry::class,
         ],
     ]);
+    $rectorConfig->ruleWithConfiguration(RequireExhaustiveMatchOnEnumRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: [RequireExhaustiveMatchOnEnumRector] match() on %s must cover all cases explicitly. See: utils/rector/docs/RequireExhaustiveMatchOnEnumRector.md',
+    ]);
     // --- Enum Value Arg Safety ---
     $rectorConfig->ruleWithConfiguration(ForbidStringArgForEnumParamRector::class, [
         'enumClasses' => [
@@ -560,4 +565,5 @@ return static function (RectorConfig $rectorConfig): void {
         'minFiles' => 3,
         'message' => "TODO: [ForbidCrossFileStringDuplicationRector] string '%s' appears in %d files. Extract to a shared constant. See: utils/rector/docs/ForbidCrossFileStringDuplicationRector.md",
     ]);
+
 };
