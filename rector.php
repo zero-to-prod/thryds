@@ -81,6 +81,7 @@ use Utils\Rector\Rector\SuggestEnumForInternalOnlyConstantsRector;
 use Utils\Rector\Rector\ForbidCrossFileStringDuplicationRector;
 use Utils\Rector\Rector\RequireExhaustiveMatchOnEnumRector;
 use Utils\Rector\Rector\RequireEnumForBranchingConstantRector;
+use Utils\Rector\Rector\DetectParallelBladePhpBehaviorRector;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
 use ZeroToProd\Thryds\Env;
@@ -577,4 +578,9 @@ return static function (RectorConfig $rectorConfig): void {
         'message' => "TODO: [ForbidCrossFileStringDuplicationRector] string '%s' appears in %d files. Extract to a shared constant. See: utils/rector/docs/ForbidCrossFileStringDuplicationRector.md",
     ]);
 
+
+    $rectorConfig->ruleWithConfiguration(DetectParallelBladePhpBehaviorRector::class, [
+        'mode' => 'warn',
+        'message' => 'Use constant or enum reference instead of hardcoded string value. See: utils/rector/docs/DetectParallelBladePhpBehaviorRector.md',
+    ]);
 };
