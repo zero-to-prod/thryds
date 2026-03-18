@@ -60,8 +60,8 @@ readonly class App
         // in-memory across all requests, so disk caching provides no benefit and breaks with
         // Blade captured in route handler closures (Blade contains non-serializable container bindings).
         $Router = new CachedRouter(
-            builder: static function (Router $Router) use ($Blade): Router {
-                WebRoutes::register($Router, $Blade);
+            builder: static function (Router $Router) use ($Blade, $Config): Router {
+                WebRoutes::register($Router, $Blade, $Config);
 
                 return $Router;
             },

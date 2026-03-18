@@ -44,7 +44,7 @@ $Blade = App::bootBlade($Config, $base_dir);
 // Direct instantiation is intentional: this script runs at build time, not in the request path.
 // ForbidDirectRouterInstantiationRector only applies to src/, public/, tests/.
 $Router = new Router();
-WebRoutes::register($Router, $Blade);
+WebRoutes::register($Router, $Blade, $Config);
 
 // Compile all templates to blade cache and load view-layer dependencies
 echo "Compiling templates...\n";

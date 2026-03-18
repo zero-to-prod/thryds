@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Routes;
 
+use ReflectionEnumUnitCase;
 use ZeroToProd\Thryds\Helpers\ClosedSet;
+use ZeroToProd\Thryds\Helpers\DevOnly;
 use ZeroToProd\Thryds\Helpers\Domain;
 
 #[ClosedSet(
@@ -15,13 +17,22 @@ enum Route: string
 {
     case home = '/';
     case about = '/about';
-    case opcache_status = '/_opcache/status';
     case login = '/login';
     case register = '/register';
+    #[DevOnly]
+    case opcache_status = '/_opcache/status';
+    #[DevOnly]
     case opcache_scripts = '/_opcache/scripts';
+    #[DevOnly]
     case styleguide = '/_styleguide';
     // TODO: [RequireRouteTestRector] Route case 'routes' has no corresponding test. Add a test that exercises this route.
+    #[DevOnly]
     case routes = '/_routes';
+
+    public function isDevOnly(): bool
+    {
+        return !empty(new ReflectionEnumUnitCase(self::class, $this->name)->getAttributes(DevOnly::class));
+    }
 
     /** @return string[] Parameter names extracted from {placeholders} in the route pattern. */
     public function params(): array
