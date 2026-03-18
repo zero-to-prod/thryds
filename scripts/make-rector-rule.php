@@ -13,6 +13,7 @@ declare(strict_types=1);
  *   utils/rector/tests/<RuleName>/<RuleName>Test.php
  *   utils/rector/tests/<RuleName>/config/configured_rule.php
  *   utils/rector/tests/<RuleName>/Fixture/example.php.inc
+ *   utils/rector/docs/<RuleName>.md
  *
  * Appends import and registration to rector.php.
  */
@@ -67,6 +68,12 @@ if (!in_array(needle: $mode, haystack: ['auto', 'warn'], strict: true)) {
 if ($mode === 'warn' && $message === '') {
     echo "Error: Warn-mode rules require a --message.\n";
     exit(1);
+}
+
+// Auto-append doc pointer to message if not already present
+$doc_pointer = "See: utils/rector/docs/{$rule_name}.md";
+if ($message !== '' && !str_contains(haystack: $message, needle: $doc_pointer)) {
+    $message = rtrim(string: $message, characters: '.') . '. ' . $doc_pointer;
 }
 
 $rule_path = $base_dir . '/utils/rector/src/' . $rule_name . '.php';
@@ -220,6 +227,81 @@ FIXTURE;
 FIXTURE;
 }
 
+// --- Generate doc skeleton ---
+
+$mode_label = $mode === 'warn' ? '`warn`' : '`auto` or `warn` (configurable)';
+$autofix_label = $mode === 'auto' ? 'Yes' : 'No';
+$message_display = $message !== '' ? $message : 'TODO: add message';
+
+$warn_section = $mode === 'warn' ? <<<MD
+
+### In `warn` mode
+
+```
+// {$message_display}
+```
+MD : '';
+
+$resolution_section = $mode === 'warn' ? <<<MD
+
+## Resolution
+
+When you see the TODO comment from this rule:
+
+1. TODO: step one
+2. TODO: step two
+MD : '';
+
+$doc_content = <<<MD
+# {$rule_name}
+
+TODO: One-sentence description of what the rule enforces.
+
+**Category:** TODO
+**Mode:** {$mode_label}
+**Auto-fix:** {$autofix_label}
+
+## Rationale
+
+TODO: Why this rule exists. The principle or project convention it enforces.
+
+## What It Detects
+
+TODO: The code pattern(s) that trigger this rule.
+
+## Transformation
+
+### In `auto` mode
+
+TODO: Describe exactly what change is made to the code. (Remove this section if auto is a no-op.)
+{$warn_section}
+
+## Configuration
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `mode` | `string` | `'{$mode}'` | `'auto'` to transform, `'warn'` to add a TODO comment |
+
+## Example
+
+### Before
+
+```php
+// TODO: add example from test fixture
+```
+
+### After
+
+```php
+// TODO: add example from test fixture
+```
+{$resolution_section}
+
+## Related Rules
+
+None yet.
+MD;
+
 // --- Write files ---
 
 $test_dir = $base_dir . '/utils/rector/tests/' . $rule_name;
@@ -233,11 +315,14 @@ foreach ($dirs as $dir) {
     }
 }
 
+$docs_dir = $base_dir . '/utils/rector/docs';
+
 $files = [
     $rule_path => $rule_content,
     $test_dir . '/' . $rule_name . 'Test.php' => $test_content,
     $config_dir . '/configured_rule.php' => $config_content,
     $fixture_dir . '/example.php.inc' => $fixture_content,
+    $docs_dir . '/' . $rule_name . '.md' => $doc_content,
 ];
 
 foreach ($files as $path => $content) {
@@ -300,4 +385,5 @@ echo "  Updated rector.php\n";
 echo "\nDone. Next steps:\n";
 echo "  1. Fill in getNodeTypes() and refactor() in utils/rector/src/{$rule_name}.php\n";
 echo "  2. Replace fixture TODOs in utils/rector/tests/{$rule_name}/Fixture/example.php.inc\n";
-echo "  3. Run: ./run test:rector\n";
+echo "  3. Fill in utils/rector/docs/{$rule_name}.md (rationale, examples from fixtures, resolution steps)\n";
+echo "  4. Run: ./run test:rector\n";

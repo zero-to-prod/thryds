@@ -15,6 +15,8 @@ When given a task, follow this priority order:
 2. **Rule name + description provided** → Scaffold with `./run generate:rector-rule`, then fill in logic.
 3. **Modifying existing rule** → Read the rule file, its test fixtures, and `rector.php` registration before changing anything.
 
+When creating or modifying a rule, also create or update its LLM-optimized doc at `utils/rector/docs/<RuleName>.md`.
+
 ## Implementing from a Migration Doc
 
 Migration docs at `docs/migrations/` contain complete specs. They have a standard structure:
@@ -35,9 +37,10 @@ Migration docs at `docs/migrations/` contain complete specs. They have a standar
 2. Read `rector.php` to find the correct insertion point for registration
 3. Create all files from the doc (rule, test, config, support, fixtures)
 4. Register in `rector.php` — add `use` import at top, config block in the section indicated by the doc
-5. Run `docker compose exec web composer test:rector` — fix failures
-6. Run `docker compose exec web composer check:all` — fix failures
-7. Report results
+5. Create or update `utils/rector/docs/<RuleName>.md`
+6. Run `docker compose exec web composer test:rector` — fix failures
+7. Run `docker compose exec web composer check:all` — fix failures
+8. Report results
 
 **Critical**: Do NOT paraphrase or restructure code from the doc. Use it exactly as written. The doc is the source of truth.
 
@@ -53,7 +56,9 @@ Start new rules with the generator:
 ./run generate:rector-rule -- ForbidSleepCallRector --mode=warn --message="TODO: sleep() blocks the worker event loop"
 ```
 
-This creates all required files (rule class, test, config, fixture) and registers the rule in `rector.php`. After scaffolding, fill in `getNodeTypes()`, `refactor()`, and the fixture before/after code.
+This creates all required files (rule class, test, config, fixture) and registers the rule in `rector.php`. After scaffolding, fill in `getNodeTypes()`, `refactor()`, and the fixture before/after code. Also create `utils/rector/docs/<RuleName>.md`.
+
+Every rule in `utils/rector/src/` must have a corresponding entry in `rector.php`. Verify rule count with `ls utils/rector/src/ | wc -l` (69 rules as of 2026-03-18).
 
 ## Rule Structure
 
@@ -175,9 +180,16 @@ $rectorConfig->ruleWithConfiguration(ForbidEvalRector::class, [
 // Warn rule
 $rectorConfig->ruleWithConfiguration(ForbidErrorSuppressionRector::class, [
     'mode' => 'warn',
-    'message' => 'TODO: [opcache] @ error suppression adds per-call overhead',
+    'message' => 'TODO: [opcache] @ error suppression adds per-call overhead. See: utils/rector/docs/ForbidErrorSuppressionRector.md',
 ]);
 ```
+
+**Message conventions in `rector.php`:**
+
+- Format: `TODO: [RuleName] description with %s placeholders. See: utils/rector/docs/RuleName.md`
+- OPcache rules use `[opcache]` prefix instead of rule name: `TODO: [opcache] reason. See: utils/rector/docs/RuleName.md`
+- Always set an explicit `message` key even for rules that have a built-in default (e.g. `RequireClosedSetOnBackedEnumRector`, `ValidateChecklistPathsRector`) so the doc pointer appears in every TODO comment.
+- When a rule leaves a TODO comment, the message must end with ` See: utils/rector/docs/<RuleName>.md`.
 
 - Use `$rectorConfig->ruleWithConfiguration(MyRule::class, [...])` in config files.
 - Use `ConfiguredCodeSample` (not `CodeSample`) in `getRuleDefinition()` for configurable rules — the third argument is the example configuration.
@@ -337,6 +349,8 @@ For no-op fixtures (before === after), duplicate the code on both sides of `----
 ## rector.php Organization
 
 Rules are grouped by section with `// --- Section Name ---` comments. When registering a new rule, find the matching section or create one. Read the file first to identify the correct insertion point.
+
+Current sections (in order): Naming, Type Safety, Code Quality, Magic String Elimination, Forbidden Constructs, OPcache Optimization, Logging, Controller Conventions, DataModel & ViewModel, Route Safety, Environment Key Safety, Enum Value Safety, Constants Class Design, Enum Design, Enum Value Arg Safety, Blade / htmx, Checklist Validation.
 
 ## Autoloading
 
@@ -539,3 +553,24 @@ To check a `public const array` holds a list of a specific scalar type, inspect 
 ### `importNames()` and `FullyQualified` nodes
 
 `rector.php` enables `$rectorConfig->importNames()`. When rules create nodes with `FullyQualified` types, Rector automatically adds the corresponding `use` statements. There is no need to manually insert imports in rule code.
+
+### Route Safety — two distinct patterns
+
+The Route Safety section in `rector.php` covers two separate models:
+
+1. **Route enum** (`ZeroToProd\Thryds\Routes\Route`) — a backed enum where each case IS a route. Rules in this group: `RequireRouteEnumInMapCallRector`, `ForbidHardcodedRouteStringRector`, `RequireAllRouteCasesRegisteredRector`, `RequireRouteTestRector`, `ForbidDuplicateRouteRegistrationRector`, `ForbidStringRoutePatternRector`.
+
+2. **Route classes** (suffix `Route`, e.g. `PostsRoute`) — individual readonly classes, each with a `pattern` const and param consts for every `{param}` in the pattern. Rules in this group: `RequireRoutePatternConstRector`, `RouteParamNameMustBeConstRector`, `ForbidDuplicateRoutePatternRector`, `ExtractRoutePatternToRouteClassRector`.
+
+When working on a Route Safety rule, identify which model it belongs to before reading or modifying related rules.
+
+### `StringArgToClassConstRector` config
+
+This rule requires explicit `mappings` config (`class`, `methodName`, `paramName` per entry) to do anything. An empty `mappings: []` is a valid no-op registration. The rule also writes missing constants directly into the target class file on disk.
+
+### Doc generation approach
+
+- Test fixtures (`utils/rector/tests/<RuleName>/Fixture/*.php.inc`) use `-----` to separate before/after — these are the canonical code examples for docs.
+- Test configs (`utils/rector/tests/<RuleName>/config/configured_rule.php`) show rule-specific test configuration, which may differ from the live `rector.php` config (e.g. test doubles instead of real FQNs).
+- The live project config (with real FQNs and message strings) lives in `rector.php` — always check both when writing docs.
+- Rule docs go in `utils/rector/docs/<RuleName>.md` and are optimised for LLM consumption: purpose, config options, before/after examples, and caveats.

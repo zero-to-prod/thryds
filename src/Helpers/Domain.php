@@ -25,4 +25,8 @@ enum Domain: string
     case dev_paths = 'dev_paths';
     case url_routes = 'url_routes';
     case error_messages = 'error_messages';
+    case button_variants = 'button_variants';
+    case button_sizes = 'button_sizes';
+    case alert_variants = 'alert_variants';
+    case input_types = 'input_types';
 }

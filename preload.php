@@ -15,6 +15,10 @@ opcache_compile_file(__DIR__ . '/src/Helpers/BladeDirectives.php');
 opcache_compile_file(__DIR__ . '/src/Helpers/BladeDirective.php');
 opcache_compile_file(__DIR__ . '/src/Helpers/Component.php');
 opcache_compile_file(__DIR__ . '/src/Helpers/View.php');
+opcache_compile_file(__DIR__ . '/src/Helpers/InputType.php');
+opcache_compile_file(__DIR__ . '/src/Helpers/ButtonVariant.php');
+opcache_compile_file(__DIR__ . '/src/Helpers/ButtonSize.php');
+opcache_compile_file(__DIR__ . '/src/Helpers/AlertVariant.php');
 
 // Core
 opcache_compile_file(__DIR__ . '/src/Config.php');

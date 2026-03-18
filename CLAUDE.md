@@ -38,7 +38,7 @@ Production: `APP_ENV=production docker compose -f compose.yaml up -d`
 
 ## Custom Rector
 
-51 rules in `utils/rector/src/`, tests in `utils/rector/tests/`, run `./run test:rector`.
+69 rules in `utils/rector/src/` (verify with `ls utils/rector/src/ | wc -l`), tests in `utils/rector/tests/`, run `./run test:rector`.
 
 Scaffold a new rule: `./run generate:rector-rule -- <RuleName> [--mode=auto|warn] [--message="..."]`
 
