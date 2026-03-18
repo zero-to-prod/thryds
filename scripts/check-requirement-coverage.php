@@ -95,6 +95,16 @@ foreach ($requirements as $req_id => $req) {
     }
 }
 
+// ── Constraints validation ────────────────────────────────────────────────────
+
+foreach ($requirements as $req_id => $req) {
+    foreach ($req['constraints'] as $i => $constraint) {
+        if (trim($constraint) === '') {
+            $errors[] = "$req_id: constraints[$i] is empty — remove the entry or add text";
+        }
+    }
+}
+
 // ── Fix 7: Criterion style validation ────────────────────────────────────────
 
 foreach ($requirements as $req) {
@@ -152,7 +162,19 @@ foreach ($requirements as $req_id => $req) {
 
     $source = (string) file_get_contents($test_file);
 
+    foreach ($req['constraints'] as $constraint) {
+        echo "  $req_id: [constraint] $constraint\n";
+    }
+
     foreach ($req['acceptance-criteria'] as $criterion) {
+        // A criterion may override the requirement-level verification.
+        $criterion_verification = $criterion['verification'] ?? $verification;
+
+        if (! in_array($criterion_verification, $testable, strict: true)) {
+            echo "  {$criterion['id']}: skipped ($criterion_verification)\n";
+            continue;
+        }
+
         $expected_method = 'test_' . str_replace('-', '_', $criterion['id']);
 
         if (! str_contains($source, "function $expected_method(")) {
@@ -203,9 +225,10 @@ exit(1);
 /**
  * @return array<string, array{
  *   verification: string,
+ *   constraints: list<string>,
  *   authority: array{type: string, id: string, section: string, has_quote: bool}|null,
  *   links: list<array{rel: string, href: string}>,
- *   acceptance-criteria: list<array{id: string, text: string}>
+ *   acceptance-criteria: list<array{id: string, text: string, verification: string|null}>
  * }>
  */
 function parse_requirements(string $file): array
@@ -253,8 +276,9 @@ function parse_requirements(string $file): array
                 continue;
             }
             $criteria[] = [
-                'id'   => (string) ($criterion['id'] ?? ''),
-                'text' => trim((string) ($criterion['text'] ?? '')),
+                'id'           => (string) ($criterion['id'] ?? ''),
+                'text'         => trim((string) ($criterion['text'] ?? '')),
+                'verification' => isset($criterion['verification']) ? (string) $criterion['verification'] : null,
             ];
         }
 
@@ -264,11 +288,18 @@ function parse_requirements(string $file): array
             $enforced_by[] = (string) $rule;
         }
 
+        $constraints = [];
+
+        foreach ((array) ($data['constraints'] ?? []) as $constraint) {
+            $constraints[] = (string) $constraint;
+        }
+
         $requirements[(string) $req_id] = [
-            'verification'       => (string) ($data['verification'] ?? ''),
-            'authority'          => $authority,
-            'links'              => $links,
-            'enforced-by'        => $enforced_by,
+            'verification'        => (string) ($data['verification'] ?? ''),
+            'constraints'         => $constraints,
+            'authority'           => $authority,
+            'links'               => $links,
+            'enforced-by'         => $enforced_by,
             'acceptance-criteria' => $criteria,
         ];
     }
