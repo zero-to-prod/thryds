@@ -12,4 +12,9 @@ enum AppEnv: string
 {
     case production = 'production';
     case development = 'development';
+
+    public static function fromEnv(): self
+    {
+        return self::tryFrom((string) $_SERVER[Env::APP_ENV] ?? $_ENV[Env::APP_ENV] ?? self::production->value) ?? self::production;
+    }
 }

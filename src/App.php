@@ -48,9 +48,8 @@ readonly class App
 
     public static function boot(string $base_dir, ?Config $Config = null): self
     {
-        // TODO: [ForbidEnvCheckOutsideConfigRector] Direct env read outside Config boundary. Move to AppEnv or Config class. See: utils/rector/docs/ForbidEnvCheckOutsideConfigRector.md
         $Config ??= Config::from([
-            Config::AppEnv => $_SERVER[Env::APP_ENV] ?? $_ENV[Env::APP_ENV] ?? AppEnv::production->value,
+            Config::AppEnv => AppEnv::fromEnv(),
             Config::blade_cache_dir => $base_dir . '/var/cache/blade',
             Config::template_dir => $base_dir . '/templates',
         ]);
