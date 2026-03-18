@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\ViewModels;
 
-use ZeroToProd\Thryds\Helpers\DataModel;
-use ZeroToProd\Thryds\Helpers\ViewModel;
+use ZeroToProd\Thryds\Attributes\DataModel;
+use ZeroToProd\Thryds\Attributes\ViewModel;
 
 /**
  * @method static self from(array{message: string, status_code: int} $data)

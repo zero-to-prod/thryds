@@ -18,7 +18,7 @@ When a class has the trait and the constant but lacks the attribute, it is parti
 ## What It Detects
 
 A class that:
-- Uses one of the configured `traitClasses` (e.g. `ZeroToProd\Thryds\Helpers\DataModel`)
+- Uses one of the configured `traitClasses` (e.g. `ZeroToProd\Thryds\Attributes\DataModel`)
 - Declares a constant named `view_key` (or the configured `constantName`)
 - Does **not** already have the configured `attributeClass` attribute
 
@@ -69,7 +69,7 @@ A TODO comment is prepended to the class:
 ```php
 $rectorConfig->ruleWithConfiguration(RequireViewModelAttributeOnDataModelRector::class, [
     'traitClasses' => [
-        \ZeroToProd\Thryds\Helpers\DataModel::class,
+        \ZeroToProd\Thryds\Attributes\DataModel::class,
         DataModel::class,
     ],
     'constantName' => 'view_key',

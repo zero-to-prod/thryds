@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace ZeroToProd\Thryds\Helpers;
+namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
+use ZeroToProd\Thryds\UI\Domain;
 
 /**
  * Marks a backed enum as a closed set of allowed values in a specific domain.

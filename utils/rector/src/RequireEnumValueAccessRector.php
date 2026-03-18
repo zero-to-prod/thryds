@@ -56,7 +56,7 @@ CODE_SAMPLE,
 $Blade->make(view: View::home->value);
 CODE_SAMPLE,
                     [
-                        'enumClasses' => [\ZeroToProd\Thryds\Helpers\View::class],
+                        'enumClasses' => [\ZeroToProd\Thryds\Blade\View::class],
                         'mode' => 'auto',
                     ],
                 ),

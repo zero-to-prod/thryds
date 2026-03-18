@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
-use ZeroToProd\Thryds\Helpers\ClosedSet;
-use ZeroToProd\Thryds\Helpers\Domain;
+use ZeroToProd\Thryds\Attributes\ClosedSet;
+use ZeroToProd\Thryds\UI\Domain;
 
 /**
  * Backed by constants defined by ext-frankenphp.

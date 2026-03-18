@@ -15,7 +15,6 @@ declare(strict_types=1);
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
-use ZeroToProd\Thryds\DevFilter;
 use ZeroToProd\Thryds\OpcacheStatus;
 use ZeroToProd\Thryds\Routes\Route;
 
@@ -222,7 +221,7 @@ function countExpectedNonPreloaded(string $base_url): int
     $count = 0;
 
     foreach ($scripts as $path) {
-        if (DevFilter::isDevPath($path)
+        if (array_any(\ZeroToProd\Thryds\DevPath::cases(), fn($devPath): bool => str_contains(haystack: $path, needle: $devPath->value))
             || $path === '/app/preload.php'
             || $path === '$PRELOAD$'
         ) {

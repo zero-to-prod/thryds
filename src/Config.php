@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
-use ZeroToProd\Thryds\Helpers\DataModel;
-use ZeroToProd\Thryds\Helpers\Describe;
+use ZeroToProd\Thryds\Attributes\DataModel;
+use ZeroToProd\Thryds\Attributes\Describe;
 
 /**
  * @method static self from(array{AppEnv?: AppEnv|string, blade_cache_dir?: string, template_dir?: string} $data)

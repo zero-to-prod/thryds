@@ -7,8 +7,8 @@ namespace ZeroToProd\Thryds\Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ZeroToProd\Thryds\AppEnv;
+use ZeroToProd\Thryds\Blade\Vite;
 use ZeroToProd\Thryds\Config;
-use ZeroToProd\Thryds\Helpers\Vite;
 
 final class ViteTest extends TestCase
 {

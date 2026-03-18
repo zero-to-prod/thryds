@@ -1,6 +1,5 @@
 <?php
 
-use function ZeroToProd\Thryds\Helpers\short_class_name;
 
 class SomeViewModel
 {
@@ -15,7 +14,6 @@ $data = [
 -----
 <?php
 
-use function ZeroToProd\Thryds\Helpers\short_class_name;
 
 class SomeViewModel
 {

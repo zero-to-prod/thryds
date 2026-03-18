@@ -8,7 +8,7 @@ Replaces `use` import statements with configured aliases, redirecting upstream p
 
 ## Rationale
 
-The project wraps third-party packages — in particular `Zerotoprod\DataModel\DataModel` and `Zerotoprod\DataModel\Describe` — in project-local classes (`ZeroToProd\Thryds\Helpers\DataModel`, `ZeroToProd\Thryds\Helpers\Describe`). Importing the upstream package names directly bypasses any project-level extensions or future substitutions. This rule enforces the convention by rewriting `use` statements to point to the project-local aliases, keeping the rest of the file (class body, method calls) unchanged since the short name remains the same.
+The project wraps third-party packages — in particular `Zerotoprod\DataModel\DataModel` and `Zerotoprod\DataModel\Describe` — in project-local classes (`ZeroToProd\Thryds\Attributes\DataModel`, `ZeroToProd\Thryds\Attributes\Describe`). Importing the upstream package names directly bypasses any project-level extensions or future substitutions. This rule enforces the convention by rewriting `use` statements to point to the project-local aliases, keeping the rest of the file (class body, method calls) unchanged since the short name remains the same.
 
 ## What It Detects
 
@@ -56,8 +56,8 @@ The `replacements` map can also be passed directly as the configuration array (w
 ```php
 $rectorConfig->ruleWithConfiguration(ReplaceFullyQualifiedNameRector::class, [
     'replacements' => [
-        DataModel::class => \ZeroToProd\Thryds\Helpers\DataModel::class,
-        Describe::class  => \ZeroToProd\Thryds\Helpers\Describe::class,
+        DataModel::class => \ZeroToProd\Thryds\Attributes\DataModel::class,
+        Describe::class  => \ZeroToProd\Thryds\Attributes\Describe::class,
     ],
     'mode' => 'auto',
 ]);

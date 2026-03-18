@@ -1,6 +1,6 @@
 <?php
 
-use ZeroToProd\Thryds\Helpers\DataModel;
+use ZeroToProd\Thryds\Attributes\DataModel;
 
 readonly class PlainModel
 {

@@ -6,7 +6,7 @@ namespace ZeroToProd\Thryds\Tests\Unit;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use ZeroToProd\Thryds\Helpers\Component;
+use ZeroToProd\Thryds\Blade\Component;
 
 final class ComponentPushDirectivesTest extends TestCase
 {

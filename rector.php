@@ -79,19 +79,19 @@ use Utils\Rector\Rector\SuggestEnumForInternalOnlyConstantsRector;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
 use ZeroToProd\Thryds\Env;
-use ZeroToProd\Thryds\Helpers\AlertVariant;
-use ZeroToProd\Thryds\Helpers\ButtonSize;
-use ZeroToProd\Thryds\Helpers\ButtonVariant;
-use ZeroToProd\Thryds\Helpers\ClosedSet;
-use ZeroToProd\Thryds\Helpers\InputType;
-use ZeroToProd\Thryds\Helpers\KeyRegistry;
-use ZeroToProd\Thryds\Helpers\SourceOfTruth;
-use ZeroToProd\Thryds\Helpers\View;
-use ZeroToProd\Thryds\Helpers\ViewModel;
+use ZeroToProd\Thryds\Attributes\ClosedSet;
+use ZeroToProd\Thryds\Attributes\KeyRegistry;
+use ZeroToProd\Thryds\Attributes\SourceOfTruth;
+use ZeroToProd\Thryds\Attributes\ViewModel;
+use ZeroToProd\Thryds\Blade\View;
+use ZeroToProd\Thryds\UI\AlertVariant;
+use ZeroToProd\Thryds\UI\ButtonSize;
+use ZeroToProd\Thryds\UI\ButtonVariant;
+use ZeroToProd\Thryds\UI\InputType;
 use ZeroToProd\Thryds\Log;
 use ZeroToProd\Thryds\LogLevel;
 use ZeroToProd\Thryds\OpcacheStatus;
-use ZeroToProd\Thryds\Routes\HTTP_METHOD;
+use ZeroToProd\Thryds\Routes\HttpMethod;
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->paths([
@@ -212,11 +212,11 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(SuggestEnumForStringPropertyRector::class, [
         'dataModelTraits' => [
             DataModel::class,
-            \ZeroToProd\Thryds\Helpers\DataModel::class,
+            \ZeroToProd\Thryds\Attributes\DataModel::class,
         ],
         'describeAttrs' => [
             Describe::class,
-            \ZeroToProd\Thryds\Helpers\Describe::class,
+            \ZeroToProd\Thryds\Attributes\Describe::class,
         ],
         'mode' => 'warn',
         'message' => 'TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. $%s has values: %s. Extract to a backed enum. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md',
@@ -294,7 +294,7 @@ return static function (RectorConfig $rectorConfig): void {
     // --- DataModel & ViewModel ---
     $rectorConfig->ruleWithConfiguration(RequireViewModelAttributeOnDataModelRector::class, [
         'traitClasses' => [
-            \ZeroToProd\Thryds\Helpers\DataModel::class,
+            \ZeroToProd\Thryds\Attributes\DataModel::class,
             DataModel::class,
         ],
         'constantName' => 'view_key',
@@ -304,7 +304,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(SuggestAttributeForRepeatedPropertyPatternRector::class, [
         'patterns' => [
             [
-                'trait' => \ZeroToProd\Thryds\Helpers\DataModel::class,
+                'trait' => \ZeroToProd\Thryds\Attributes\DataModel::class,
                 'constant' => 'view_key',
                 'attribute' => ViewModel::class,
             ],
@@ -317,26 +317,26 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
     $rectorConfig->ruleWithConfiguration(AddViewKeyConstantRector::class, [
         'dataModelTraits' => [
-            \ZeroToProd\Thryds\Helpers\DataModel::class,
+            \ZeroToProd\Thryds\Attributes\DataModel::class,
         ],
         'viewModelAttribute' => ViewModel::class,
         'mode' => 'auto',
     ]);
     $rectorConfig->ruleWithConfiguration(ReplaceShortClassNameWithViewKeyRector::class, [
-        'shortClassNameFunction' => 'ZeroToProd\\Thryds\\Helpers\\short_class_name',
+        'shortClassNameFunction' => 'short_class_name',
         'mode' => 'auto',
     ]);
     $rectorConfig->ruleWithConfiguration(RequireMethodAnnotationForDataModelRector::class, [
         'dataModelTraits' => [
             DataModel::class,
-            \ZeroToProd\Thryds\Helpers\DataModel::class,
+            \ZeroToProd\Thryds\Attributes\DataModel::class,
         ],
         'mode' => 'auto',
     ]);
     $rectorConfig->ruleWithConfiguration(ReplaceFullyQualifiedNameRector::class, [
         'replacements' => [
-            DataModel::class => \ZeroToProd\Thryds\Helpers\DataModel::class,
-            Describe::class => \ZeroToProd\Thryds\Helpers\Describe::class,
+            DataModel::class => \ZeroToProd\Thryds\Attributes\DataModel::class,
+            Describe::class => \ZeroToProd\Thryds\Attributes\Describe::class,
         ],
         'mode' => 'auto',
     ]);
@@ -433,7 +433,7 @@ return static function (RectorConfig $rectorConfig): void {
         'enumClasses' => [
             View::class,
             \ZeroToProd\Thryds\Routes\Route::class,
-            HTTP_METHOD::class,
+            HttpMethod::class,
             \ZeroToProd\Thryds\AppEnv::class,
             LogLevel::class,
         ],
@@ -445,7 +445,7 @@ return static function (RectorConfig $rectorConfig): void {
         'enumClasses' => [
             \ZeroToProd\Thryds\AppEnv::class,
             \ZeroToProd\Thryds\Routes\Route::class,
-            HTTP_METHOD::class,
+            HttpMethod::class,
             LogLevel::class,
             View::class,
         ],
@@ -466,7 +466,7 @@ return static function (RectorConfig $rectorConfig): void {
         'attributeClass' => KeyRegistry::class,
         'minConstants' => 3,
         'excludedTraits' => [
-            \ZeroToProd\Thryds\Helpers\DataModel::class,
+            \ZeroToProd\Thryds\Attributes\DataModel::class,
             DataModel::class,
         ],
         'excludedAttributes' => [
@@ -495,7 +495,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(ForbidStringArgForEnumParamRector::class, [
         'enumClasses' => [
             \ZeroToProd\Thryds\AppEnv::class,
-            HTTP_METHOD::class,
+            HttpMethod::class,
             \ZeroToProd\Thryds\Routes\Route::class,
             View::class,
             LogLevel::class,

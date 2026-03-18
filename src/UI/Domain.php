@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace ZeroToProd\Thryds\Helpers;
+namespace ZeroToProd\Thryds\UI;
+
+use ZeroToProd\Thryds\Attributes\ClosedSet;
 
 #[ClosedSet(Domain::closed_set_domains, addCase: 'Add enum case. Then use it in a #[ClosedSet] attribute on a new backed enum.')]
 /**

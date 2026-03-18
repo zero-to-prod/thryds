@@ -6,7 +6,7 @@ namespace ZeroToProd\Thryds\Controllers;
 
 use Jenssegers\Blade\Blade;
 use Laminas\Diactoros\Response\HtmlResponse;
-use ZeroToProd\Thryds\Helpers\View;
+use ZeroToProd\Thryds\Blade\View;
 
 readonly class HomeController
 {

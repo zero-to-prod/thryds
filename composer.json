@@ -17,7 +17,7 @@
             "ZeroToProd\\Thryds\\": "src/"
         },
         "files": [
-            "src/Helpers/function.php"
+            "src/functions.php"
         ]
     },
     "autoload-dev": {

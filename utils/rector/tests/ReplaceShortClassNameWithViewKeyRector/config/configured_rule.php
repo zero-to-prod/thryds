@@ -7,7 +7,7 @@ use Utils\Rector\Rector\ReplaceShortClassNameWithViewKeyRector;
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(ReplaceShortClassNameWithViewKeyRector::class, [
-        'shortClassNameFunction' => 'ZeroToProd\\Thryds\\Helpers\\short_class_name',
+        'shortClassNameFunction' => 'short_class_name',
         'mode' => 'auto',
     ]);
 };

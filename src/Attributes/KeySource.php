@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace ZeroToProd\Thryds\Helpers;
+namespace ZeroToProd\Thryds\Attributes;
+
+use ZeroToProd\Thryds\UI\Domain;
 
 #[ClosedSet(Domain::key_sources, addCase: 'Add enum case. Then use it in a #[KeyRegistry] attribute on a new constants class.')]
 /**
@@ -10,7 +12,7 @@ namespace ZeroToProd\Thryds\Helpers;
  *
  * Add a case here when introducing a new constants class that names keys from a new data source.
  */
-enum Source: string
+enum KeySource: string
 {
     case http_headers = 'HTTP headers';
     case log_context_array = 'Log context array';

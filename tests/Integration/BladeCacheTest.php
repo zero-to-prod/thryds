@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Tests\Integration;
 
 use PHPUnit\Framework\Attributes\Test;
-use ZeroToProd\Thryds\Helpers\View;
+use ZeroToProd\Thryds\Blade\View;
 
 final class BladeCacheTest extends IntegrationTestCase
 {

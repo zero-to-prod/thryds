@@ -91,7 +91,7 @@ A TODO comment is prepended to the class. No docblock is added or modified.
 $rectorConfig->ruleWithConfiguration(RequireMethodAnnotationForDataModelRector::class, [
     'dataModelTraits' => [
         DataModel::class,
-        \ZeroToProd\Thryds\Helpers\DataModel::class,
+        \ZeroToProd\Thryds\Attributes\DataModel::class,
     ],
     'mode' => 'auto',
 ]);

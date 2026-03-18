@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ZeroToProd\Thryds\Helpers;
+namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
 use BackedEnum;

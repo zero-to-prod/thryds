@@ -48,8 +48,8 @@ final class AddViewKeyConstantRector extends AbstractRector implements Configura
             [
                 new ConfiguredCodeSample(
                     <<<'CODE_SAMPLE'
-use ZeroToProd\Thryds\Helpers\ViewModel;
-use ZeroToProd\Thryds\Helpers\DataModel;
+use ZeroToProd\Thryds\Attributes\ViewModel;
+use ZeroToProd\Thryds\Attributes\DataModel;
 
 #[ViewModel]
 readonly class ErrorViewModel
@@ -60,8 +60,8 @@ readonly class ErrorViewModel
 }
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-use ZeroToProd\Thryds\Helpers\ViewModel;
-use ZeroToProd\Thryds\Helpers\DataModel;
+use ZeroToProd\Thryds\Attributes\ViewModel;
+use ZeroToProd\Thryds\Attributes\DataModel;
 
 #[ViewModel]
 readonly class ErrorViewModel
@@ -74,8 +74,8 @@ readonly class ErrorViewModel
 }
 CODE_SAMPLE,
                     [
-                        'dataModelTraits' => ['ZeroToProd\\Thryds\\Helpers\\DataModel'],
-                        'viewModelAttribute' => 'ZeroToProd\\Thryds\\Helpers\\ViewModel',
+                        'dataModelTraits' => ['ZeroToProd\\Thryds\\Attributes\\DataModel'],
+                        'viewModelAttribute' => 'ZeroToProd\\Thryds\\Attributes\\ViewModel',
                         'mode' => 'auto',
                     ]
                 ),

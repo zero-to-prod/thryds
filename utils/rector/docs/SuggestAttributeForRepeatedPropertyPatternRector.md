@@ -11,9 +11,9 @@ Adds a configured marker attribute to classes that exhibit a repeating trait+con
 The `#[ViewModel]` attribute on DataModel classes is one instance of a broader convention: when a class always carries a specific trait and a specific constant together, that combination deserves a dedicated marker attribute. This rule is the generic engine behind that enforcement — it takes a list of `(trait, constant, attribute)` triples and applies the attribute wherever the trait and constant are present but the attribute is not.
 
 In `rector.php` it is configured for the DataModel/ViewModel pattern:
-- trait: `ZeroToProd\Thryds\Helpers\DataModel`
+- trait: `ZeroToProd\Thryds\Attributes\DataModel`
 - constant: `view_key`
-- attribute: `ZeroToProd\Thryds\Helpers\ViewModel`
+- attribute: `ZeroToProd\Thryds\Attributes\ViewModel`
 
 This is a companion to `RequireViewModelAttributeOnDataModelRector`, which is more narrowly focused on the same ViewModel pattern. This rule can be extended to enforce other attribute conventions by adding more patterns.
 
@@ -76,7 +76,7 @@ Each pattern entry:
 $rectorConfig->ruleWithConfiguration(SuggestAttributeForRepeatedPropertyPatternRector::class, [
     'patterns' => [
         [
-            'trait' => \ZeroToProd\Thryds\Helpers\DataModel::class,
+            'trait' => \ZeroToProd\Thryds\Attributes\DataModel::class,
             'constant' => 'view_key',
             'attribute' => ViewModel::class,
         ],

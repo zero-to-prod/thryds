@@ -62,7 +62,7 @@ $data = [
 ];
 CODE_SAMPLE,
                     [
-                        'shortClassNameFunction' => 'ZeroToProd\\Thryds\\Helpers\\short_class_name',
+                        'shortClassNameFunction' => 'short_class_name',
                         'mode' => 'auto',
                     ]
                 ),

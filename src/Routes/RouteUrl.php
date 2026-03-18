@@ -7,8 +7,7 @@ namespace ZeroToProd\Thryds\Routes;
 use InvalidArgumentException;
 use Stringable;
 
-// TODO: [RequireRoutePatternConstRector] Route class 'ZeroToProd\Thryds\Routes\RenderedRoute' is missing a 'pattern' constant — define: public const string pattern = '/...'. See: utils/rector/docs/RequireRoutePatternConstRector.md
-readonly class RenderedRoute implements Stringable
+readonly class RouteUrl implements Stringable
 {
     public function __construct(
         public Route $Route,

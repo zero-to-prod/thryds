@@ -6,7 +6,7 @@ namespace ZeroToProd\Thryds\Tests\Unit;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use ZeroToProd\Thryds\Helpers\View;
+use ZeroToProd\Thryds\Blade\View;
 
 final class ViewEnumTemplateFilesTest extends TestCase
 {

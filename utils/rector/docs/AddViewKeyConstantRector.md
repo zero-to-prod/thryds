@@ -63,7 +63,7 @@ A TODO comment is prepended to the class. No constant is added.
 ```php
 $rectorConfig->ruleWithConfiguration(AddViewKeyConstantRector::class, [
     'dataModelTraits' => [
-        \ZeroToProd\Thryds\Helpers\DataModel::class,
+        \ZeroToProd\Thryds\Attributes\DataModel::class,
     ],
     'viewModelAttribute' => ViewModel::class,
     'mode' => 'auto',
@@ -74,8 +74,8 @@ $rectorConfig->ruleWithConfiguration(AddViewKeyConstantRector::class, [
 
 ### Before
 ```php
-use ZeroToProd\Thryds\Helpers\DataModel;
-use ZeroToProd\Thryds\Helpers\ViewModel;
+use ZeroToProd\Thryds\Attributes\DataModel;
+use ZeroToProd\Thryds\Attributes\ViewModel;
 
 #[ViewModel]
 readonly class ErrorViewModel
@@ -88,8 +88,8 @@ readonly class ErrorViewModel
 
 ### After
 ```php
-use ZeroToProd\Thryds\Helpers\DataModel;
-use ZeroToProd\Thryds\Helpers\ViewModel;
+use ZeroToProd\Thryds\Attributes\DataModel;
+use ZeroToProd\Thryds\Attributes\ViewModel;
 
 #[ViewModel]
 readonly class ErrorViewModel

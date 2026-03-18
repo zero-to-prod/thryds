@@ -1,4 +1,4 @@
-@php use ZeroToProd\Thryds\Helpers\AlertVariant; @endphp
+@php use ZeroToProd\Thryds\UI\AlertVariant; @endphp
 @props([
     'variant' => AlertVariant::info->value,
 ])

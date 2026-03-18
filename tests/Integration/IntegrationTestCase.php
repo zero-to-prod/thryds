@@ -12,9 +12,9 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
+use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Config;
-use ZeroToProd\Thryds\Helpers\View;
-use ZeroToProd\Thryds\Routes\HTTP_METHOD;
+use ZeroToProd\Thryds\Routes\HttpMethod;
 use ZeroToProd\Thryds\Routes\Route;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
@@ -58,22 +58,22 @@ abstract class IntegrationTestCase extends TestCase
     protected function get(Route $Route): ResponseInterface
     {
         return $this->App->Router->dispatch(
-            new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($Route->value), method: HTTP_METHOD::GET->value),
+            new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($Route->value), method: HttpMethod::GET->value),
         );
     }
 
     protected function post(Route $Route): ResponseInterface
     {
         return $this->App->Router->dispatch(
-            new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($Route->value), method: HTTP_METHOD::POST->value),
+            new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($Route->value), method: HttpMethod::POST->value),
         );
     }
 
-    protected function assertErrorResponse(int $expected_status, string $expected_message, Route $Route, HTTP_METHOD $HTTP_METHOD = HTTP_METHOD::GET): void
+    protected function assertErrorResponse(int $expected_status, string $expected_message, Route $Route, HttpMethod $HttpMethod = HttpMethod::GET): void
     {
         try {
             $this->App->Router->dispatch(
-                new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($Route->value), method: $HTTP_METHOD->value),
+                new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($Route->value), method: $HttpMethod->value),
             );
             $this->fail("Expected HttpException with status $expected_status, but no exception was thrown.");
         } catch (HttpException $HttpException) {

@@ -19,8 +19,8 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use ZeroToProd\Thryds\Helpers\Component;
-use ZeroToProd\Thryds\Helpers\View;
+use ZeroToProd\Thryds\Blade\Component;
+use ZeroToProd\Thryds\Blade\View;
 
 $template_dir = __DIR__ . '/../templates';
 $errors = [];

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Routes;
 
 use ReflectionEnumUnitCase;
-use ZeroToProd\Thryds\Helpers\ClosedSet;
-use ZeroToProd\Thryds\Helpers\DevOnly;
-use ZeroToProd\Thryds\Helpers\Domain;
+use ZeroToProd\Thryds\Attributes\ClosedSet;
+use ZeroToProd\Thryds\Attributes\DevOnly;
+use ZeroToProd\Thryds\UI\Domain;
 
 #[ClosedSet(
     Domain::url_routes,
@@ -41,8 +41,8 @@ enum Route: string
         return $matches[1];
     }
 
-    public function with(array $params = [], array $query = []): RenderedRoute
+    public function with(array $params = [], array $query = []): RouteUrl
     {
-        return new RenderedRoute(Route: $this, params: $params, query: $query);
+        return new RouteUrl(Route: $this, params: $params, query: $query);
     }
 }

@@ -19,8 +19,8 @@ require __DIR__ . '/../vendor/autoload.php';
 use Jenssegers\Blade\Blade;
 use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
+use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Config;
-use ZeroToProd\Thryds\Helpers\View;
 
 /**
  * Compiles all Blade templates by rendering every View case with stub data.

@@ -7,34 +7,32 @@ declare(strict_types=1);
 // Autoload
 opcache_compile_file(__DIR__ . '/vendor/autoload.php');
 
-// Helpers
-opcache_compile_file(__DIR__ . '/src/Helpers/function.php');
-opcache_compile_file(__DIR__ . '/src/Helpers/DataModel.php');
-opcache_compile_file(__DIR__ . '/src/Helpers/Vite.php');
-opcache_compile_file(__DIR__ . '/src/Helpers/BladeDirectives.php');
-opcache_compile_file(__DIR__ . '/src/Helpers/BladeDirective.php');
-opcache_compile_file(__DIR__ . '/src/Helpers/Component.php');
-opcache_compile_file(__DIR__ . '/src/Helpers/View.php');
-opcache_compile_file(__DIR__ . '/src/Helpers/InputType.php');
-opcache_compile_file(__DIR__ . '/src/Helpers/ButtonVariant.php');
-opcache_compile_file(__DIR__ . '/src/Helpers/ButtonSize.php');
-opcache_compile_file(__DIR__ . '/src/Helpers/AlertVariant.php');
-
 // Core
+opcache_compile_file(__DIR__ . '/src/functions.php');
+opcache_compile_file(__DIR__ . '/src/Attributes/DataModel.php');
 opcache_compile_file(__DIR__ . '/src/Config.php');
 opcache_compile_file(__DIR__ . '/src/AppEnv.php');
 opcache_compile_file(__DIR__ . '/src/App.php');
+opcache_compile_file(__DIR__ . '/src/Blade/Vite.php');
+opcache_compile_file(__DIR__ . '/src/Blade/BladeDirectives.php');
+opcache_compile_file(__DIR__ . '/src/Blade/BladeDirective.php');
+opcache_compile_file(__DIR__ . '/src/Blade/Component.php');
 opcache_compile_file(__DIR__ . '/src/Controllers/HomeController.php');
+opcache_compile_file(__DIR__ . '/src/Blade/View.php');
+opcache_compile_file(__DIR__ . '/src/UI/InputType.php');
+opcache_compile_file(__DIR__ . '/src/UI/ButtonVariant.php');
+opcache_compile_file(__DIR__ . '/src/UI/ButtonSize.php');
+opcache_compile_file(__DIR__ . '/src/UI/AlertVariant.php');
 opcache_compile_file(__DIR__ . '/src/RequestId.php');
 
 // Routes
-opcache_compile_file(__DIR__ . '/src/Routes/WebRoutes.php');
-opcache_compile_file(__DIR__ . '/src/Routes/HTTP_METHOD.php');
+opcache_compile_file(__DIR__ . '/src/Routes/RouteRegistrar.php');
+opcache_compile_file(__DIR__ . '/src/Routes/HttpMethod.php');
 opcache_compile_file(__DIR__ . '/src/Routes/Route.php');
 
 // ViewModels
 opcache_compile_file(__DIR__ . '/src/ViewModels/ErrorViewModel.php');
-opcache_compile_file(__DIR__ . '/src/ViewModels/ErrorMessage.php');
+opcache_compile_file(__DIR__ . '/src/ViewModels/ErrorMessages.php');
 
 // Entrypoint
 opcache_compile_file(__DIR__ . '/public/index.php');

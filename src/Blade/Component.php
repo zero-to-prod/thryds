@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
-namespace ZeroToProd\Thryds\Helpers;
+namespace ZeroToProd\Thryds\Blade;
+
+use ZeroToProd\Thryds\Attributes\ClosedSet;
+use ZeroToProd\Thryds\UI\Domain;
 
 /**
  * Blade component identifiers. Each case maps to templates/components/{value}.blade.php.

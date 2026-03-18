@@ -1,4 +1,4 @@
-@php use ZeroToProd\Thryds\Helpers\InputType; @endphp
+@php use ZeroToProd\Thryds\UI\InputType; @endphp
 @props([
     'type' => InputType::text->value,
 ])

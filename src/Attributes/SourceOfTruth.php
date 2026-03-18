@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ZeroToProd\Thryds\Helpers;
+namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
 
@@ -21,12 +21,12 @@ use Attribute;
 readonly class SourceOfTruth
 {
     /**
-     * @param Concept $Concept  The concept this class owns.
-     * @param string  $addCase Human-readable checklist for what to do when adding a new case/constant.
+     * @param SourceOfTruthConcept  $SourceOfTruthConcept  The concept this class owns.
+     * @param string                $addCase  Human-readable checklist for what to do when adding a new case/constant.
      *                         AI agents read this to know the full set of changes required.
      */
     public function __construct(
-        public Concept $Concept,
+        public SourceOfTruthConcept $SourceOfTruthConcept,
         public string $addCase = '',
     ) {}
 }

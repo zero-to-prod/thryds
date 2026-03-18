@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Routes;
 
-use ZeroToProd\Thryds\Helpers\ClosedSet;
-use ZeroToProd\Thryds\Helpers\Domain;
+use ZeroToProd\Thryds\Attributes\ClosedSet;
+use ZeroToProd\Thryds\UI\Domain;
 
 #[ClosedSet(Domain::http_methods, addCase: 'Add enum case. No other changes needed — WebRoutes::register() accepts any HTTP_METHOD.')]
-enum HTTP_METHOD: string
+enum HttpMethod: string
 {
     case GET = 'GET';
     case POST = 'POST';

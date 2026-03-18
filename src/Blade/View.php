@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
-namespace ZeroToProd\Thryds\Helpers;
+namespace ZeroToProd\Thryds\Blade;
 
-use ZeroToProd\Thryds\ViewModels\ErrorMessage;
+use ZeroToProd\Thryds\Attributes\ClosedSet;
+use ZeroToProd\Thryds\UI\Domain;
+use ZeroToProd\Thryds\ViewModels\ErrorMessages;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 /**
@@ -32,7 +34,7 @@ enum View: string
         return match ($this) {
             self::error => [
                 ErrorViewModel::view_key => ErrorViewModel::from([
-                    ErrorViewModel::message => ErrorMessage::test->value,
+                    ErrorViewModel::message => ErrorMessages::test->value,
                     ErrorViewModel::status_code => 500,
                 ]),
             ],

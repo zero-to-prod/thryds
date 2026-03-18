@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-namespace ZeroToProd\Thryds\Helpers;
-
 /**
  * Returns the unqualified (short) class name from a fully qualified class string or object.
  *

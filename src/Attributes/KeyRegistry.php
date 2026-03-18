@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ZeroToProd\Thryds\Helpers;
+namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
 
@@ -37,12 +37,12 @@ use Attribute;
 readonly class KeyRegistry
 {
     /**
-     * @param Source   $Source       The data source whose keys these constants name.
-     * @param string[] $superglobals If the source is a superglobal, list the variable names (e.g., ['_SERVER', '_ENV']).
-     * @param string   $addKey       Human-readable checklist for what to do when adding a new constant.
+     * @param KeySource  $KeySource     The data source whose keys these constants name.
+     * @param string[]   $superglobals  If the source is a superglobal, list the variable names (e.g., ['_SERVER', '_ENV']).
+     * @param string     $addKey        Human-readable checklist for what to do when adding a new constant.
      */
     public function __construct(
-        public Source $Source,
+        public KeySource $KeySource,
         public array $superglobals = [],
         public string $addKey = '',
     ) {}

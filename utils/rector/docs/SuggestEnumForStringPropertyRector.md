@@ -51,8 +51,8 @@ The exact messages are configured in `rector.php`.
 Project config (`rector.php`):
 ```php
 $rectorConfig->ruleWithConfiguration(SuggestEnumForStringPropertyRector::class, [
-    'dataModelTraits' => [DataModel::class, \ZeroToProd\Thryds\Helpers\DataModel::class],
-    'describeAttrs' => [Describe::class, \ZeroToProd\Thryds\Helpers\Describe::class],
+    'dataModelTraits' => [DataModel::class, \ZeroToProd\Thryds\Attributes\DataModel::class],
+    'describeAttrs' => [Describe::class, \ZeroToProd\Thryds\Attributes\Describe::class],
     'mode' => 'warn',
     'message' => 'TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. $%s has values: %s. Extract to a backed enum.',
     'callSiteMessage' => 'TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. %s is a value of %s::$%s. Replace with enum case.',

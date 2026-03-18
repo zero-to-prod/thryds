@@ -11,10 +11,10 @@ use Jenssegers\Blade\Container as BladeContainer;
 use League\Route\Cache\FileCache;
 use League\Route\Cache\Router as CachedRouter;
 use League\Route\Router;
-use ZeroToProd\Thryds\Helpers\BladeDirectives;
-use ZeroToProd\Thryds\Helpers\Component;
-use ZeroToProd\Thryds\Helpers\Vite;
-use ZeroToProd\Thryds\Routes\WebRoutes;
+use ZeroToProd\Thryds\Blade\BladeDirectives;
+use ZeroToProd\Thryds\Blade\Component;
+use ZeroToProd\Thryds\Blade\Vite;
+use ZeroToProd\Thryds\Routes\RouteRegistrar;
 
 readonly class App
 {
@@ -61,7 +61,7 @@ readonly class App
         // Blade captured in route handler closures (Blade contains non-serializable container bindings).
         $Router = new CachedRouter(
             builder: static function (Router $Router) use ($Blade, $Config): Router {
-                WebRoutes::register($Router, $Blade, $Config);
+                RouteRegistrar::register($Router, $Blade, $Config);
 
                 return $Router;
             },

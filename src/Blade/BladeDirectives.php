@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ZeroToProd\Thryds\Helpers;
+namespace ZeroToProd\Thryds\Blade;
 
 use Jenssegers\Blade\Blade;
 use ZeroToProd\Thryds\AppEnv;

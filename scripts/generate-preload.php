@@ -21,8 +21,7 @@ use League\Route\Router;
 use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Config;
-use ZeroToProd\Thryds\DevFilter;
-use ZeroToProd\Thryds\Routes\WebRoutes;
+use ZeroToProd\Thryds\Routes\RouteRegistrar;
 
 require __DIR__ . '/cache-views.php';
 
@@ -44,7 +43,7 @@ $Blade = App::bootBlade($Config, $base_dir);
 // Direct instantiation is intentional: this script runs at build time, not in the request path.
 // ForbidDirectRouterInstantiationRector only applies to src/, public/, tests/.
 $Router = new Router();
-WebRoutes::register($Router, $Blade, $Config);
+RouteRegistrar::register($Router, $Blade, $Config);
 
 // Compile all templates to blade cache and load view-layer dependencies
 echo "Compiling templates...\n";
@@ -108,7 +107,11 @@ function filterAppScripts(array $scripts): array
         $path = str_replace(dirname(__DIR__), '/app', $path);
 
         // Skip scripts/, dev vendors, cache, tests, utils
-        if (str_contains($path, '/scripts/') || DevFilter::isDevPath($path)) {
+        if (str_contains($path, '/scripts/') || array_any(
+            \ZeroToProd\Thryds\DevPath::cases(),
+            fn($devPath): bool => str_contains(haystack: $path, needle: $devPath->value)
+        )
+        ) {
             continue;
         }
 

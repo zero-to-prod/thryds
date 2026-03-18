@@ -21,9 +21,9 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
+use ZeroToProd\Thryds\Blade\Component;
+use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Config;
-use ZeroToProd\Thryds\Helpers\Component;
-use ZeroToProd\Thryds\Helpers\View;
 
 $base_dir = dirname(__DIR__);
 $overall_exit = 0;

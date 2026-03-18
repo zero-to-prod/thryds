@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
-use ZeroToProd\Thryds\Helpers\ClosedSet;
-use ZeroToProd\Thryds\Helpers\Domain;
-use ZeroToProd\Thryds\Helpers\Group;
+use ZeroToProd\Thryds\Attributes\ClosedSet;
+use ZeroToProd\Thryds\Attributes\Group;
+use ZeroToProd\Thryds\UI\Domain;
 
 #[ClosedSet(Domain::dev_paths, addCase: '1. Add enum case with #[Group(DevPathGroup::…)] attribute. Both consumers use DevFilter::isDevPath() so no further changes needed.')]
 /**
