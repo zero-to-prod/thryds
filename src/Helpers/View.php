@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Helpers;
 
+use ZeroToProd\Thryds\ViewModels\ErrorMessage;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 /**
@@ -31,8 +32,7 @@ enum View: string
         return match ($this) {
             self::error => [
                 ErrorViewModel::view_key => ErrorViewModel::from([
-                    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. 'test' is a value of ErrorViewModel::$message. Replace with enum case.
-                    ErrorViewModel::message => 'test',
+                    ErrorViewModel::message => ErrorMessage::test->value,
                     ErrorViewModel::status_code => 500,
                 ]),
             ],

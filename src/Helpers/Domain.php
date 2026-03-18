@@ -24,4 +24,5 @@ enum Domain: string
     case dev_path_groups = 'dev_path_groups';
     case dev_paths = 'dev_paths';
     case url_routes = 'url_routes';
+    case error_messages = 'error_messages';
 }

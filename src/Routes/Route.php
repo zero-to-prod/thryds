@@ -25,7 +25,6 @@ enum Route: string
     case opcache_scripts = '/_opcache/scripts';
     #[DevOnly]
     case styleguide = '/_styleguide';
-    // TODO: [RequireRouteTestRector] Route case 'routes' has no corresponding test. Add a test that exercises this route.
     #[DevOnly]
     case routes = '/_routes';
 
@@ -37,7 +36,7 @@ enum Route: string
     /** @return string[] Parameter names extracted from {placeholders} in the route pattern. */
     public function params(): array
     {
-        preg_match_all(pattern: '/\{(\w+)\}/', subject: $this->value, matches: $matches);
+        preg_match_all(pattern: '/\{(\w+)}/', subject: $this->value, matches: $matches);
 
         return $matches[1];
     }
