@@ -578,9 +578,8 @@ return static function (RectorConfig $rectorConfig): void {
         'message' => "TODO: [ForbidCrossFileStringDuplicationRector] string '%s' appears in %d files. Extract to a shared constant. See: utils/rector/docs/ForbidCrossFileStringDuplicationRector.md",
     ]);
 
-
     $rectorConfig->ruleWithConfiguration(DetectParallelBladePhpBehaviorRector::class, [
         'mode' => 'warn',
-        'message' => 'Use constant or enum reference instead of hardcoded string value. See: utils/rector/docs/DetectParallelBladePhpBehaviorRector.md',
+        'message' => "TODO: [DetectParallelBladePhpBehaviorRector] Use %s::%s instead of hardcoded '%s'. See: utils/rector/docs/DetectParallelBladePhpBehaviorRector.md",
     ]);
 };
