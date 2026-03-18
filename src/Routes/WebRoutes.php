@@ -56,6 +56,17 @@ readonly class WebRoutes
                 data: array_keys(opcache_get_status(true)[OpcacheStatus::scripts] ?? []),
             ),
         );
+
+        $Router->map(
+            HTTP_METHOD::GET->value,
+            Route::routes->value,
+            static fn(): ResponseInterface => new JsonResponse(
+                data: array_values(array_map(
+                    fn(Route $Route): string => $Route->value,
+                    array_filter(Route::cases(), fn(Route $Route): bool => !str_starts_with($Route->value, '/_') && $Route->params() === []),
+                )),
+            ),
+        );
     }
 
 }

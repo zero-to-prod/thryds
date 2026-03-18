@@ -12,9 +12,12 @@ export const options = {
     },
 };
 
-const routes = ['/', '/about', '/login', '/register'];
+export function setup() {
+    const res = http.get(`${BASE_URL}/_routes`);
+    return JSON.parse(res.body);
+}
 
-export default function () {
+export default function (routes) {
     for (const route of routes) {
         group(route, () => {
             const res = http.get(`${BASE_URL}${route}`);

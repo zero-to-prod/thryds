@@ -20,6 +20,8 @@ enum Route: string
     case register = '/register';
     case opcache_scripts = '/_opcache/scripts';
     case styleguide = '/_styleguide';
+    // TODO: [RequireRouteTestRector] Route case 'routes' has no corresponding test. Add a test that exercises this route.
+    case routes = '/_routes';
 
     /** @return string[] Parameter names extracted from {placeholders} in the route pattern. */
     public function params(): array
