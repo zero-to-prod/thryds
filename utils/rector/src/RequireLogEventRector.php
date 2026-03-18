@@ -21,6 +21,8 @@ final class RequireLogEventRector extends AbstractRector implements Configurable
 {
     private string $logClass = '';
 
+    private string $logContextClass = '';
+
     private string $mode = 'warn';
 
     private string $message = 'TODO: Add a durable event identifier — `%s::%s => %s::<event_label>`';
@@ -37,6 +39,7 @@ final class RequireLogEventRector extends AbstractRector implements Configurable
     public function configure(array $configuration): void
     {
         $this->logClass = $configuration['logClass'];
+        $this->logContextClass = $configuration['logContextClass'] ?? $configuration['logClass'];
         $this->eventKey = $configuration['eventKey'] ?? 'event';
         $this->methods = $configuration['methods'] ?? ['debug', 'info', 'warn', 'error'];
         $this->mode = $configuration['mode'] ?? 'warn';
@@ -119,7 +122,7 @@ CODE_SAMPLE,
             }
         }
 
-        $shortName = $this->getShortClassName($this->logClass);
+        $shortName = $this->getShortClassName($this->logContextClass);
         $todoComment = new Comment('// ' . sprintf($this->message, $shortName, $this->eventKey, $shortName));
 
         $existingComments = $node->getComments();

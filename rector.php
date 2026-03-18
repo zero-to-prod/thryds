@@ -13,6 +13,7 @@ use Utils\Rector\Rector\ExtractRepeatedExpressionToVariableRector;
 use Utils\Rector\Rector\ExtractRoutePatternToRouteClassRector;
 use Utils\Rector\Rector\ForbidArrayShapeReturnRector;
 use Utils\Rector\Rector\ForbidBareServerEnvKeyRector;
+use Utils\Rector\Rector\ForbidEnvCheckOutsideConfigRector;
 use Utils\Rector\Rector\ForbidCallableTypeVariableNameRector;
 use Utils\Rector\Rector\ForbidDeepNestingRector;
 use Utils\Rector\Rector\ForbiddenFuncCallRector;
@@ -89,6 +90,7 @@ use ZeroToProd\Thryds\UI\ButtonSize;
 use ZeroToProd\Thryds\UI\ButtonVariant;
 use ZeroToProd\Thryds\UI\InputType;
 use ZeroToProd\Thryds\Log;
+use ZeroToProd\Thryds\LogContext;
 use ZeroToProd\Thryds\LogLevel;
 use ZeroToProd\Thryds\OpcacheStatus;
 use ZeroToProd\Thryds\Routes\HttpMethod;
@@ -274,12 +276,14 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
     $rectorConfig->ruleWithConfiguration(RequireLogEventRector::class, [
         'logClass' => Log::class,
+        'logContextClass' => LogContext::class,
         'eventKey' => 'event',
         'mode' => 'warn',
         'message' => 'TODO: [RequireLogEventRector] Log calls need a durable event id. Add `%s::%s => %s::<event_label>` to the context array. See: utils/rector/docs/RequireLogEventRector.md',
     ]);
     $rectorConfig->ruleWithConfiguration(UseLogContextConstRector::class, [
         'logClass' => Log::class,
+        'logContextClass' => LogContext::class,
         'keys' => ['exception', 'file', 'line'],
         'mode' => 'auto',
     ]);
@@ -421,6 +425,10 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
 
     // --- Environment Key Safety ---
+    $rectorConfig->ruleWithConfiguration(ForbidEnvCheckOutsideConfigRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: [ForbidEnvCheckOutsideConfigRector] Direct env read outside Config boundary. Move to AppEnv or Config class. See: utils/rector/docs/ForbidEnvCheckOutsideConfigRector.md',
+    ]);
     $rectorConfig->ruleWithConfiguration(ForbidBareServerEnvKeyRector::class, [
         'envClass' => Env::class,
         'superglobals' => ['_SERVER', '_ENV'],
@@ -512,7 +520,7 @@ return static function (RectorConfig $rectorConfig): void {
         'minOccurrences' => 2,
         'minLength' => 3,
         'excludedKeys' => ['class', 'mode', 'message'],
-        'excludedClasses' => [Log::class, OpcacheStatus::class],
+        'excludedClasses' => [LogContext::class, OpcacheStatus::class],
         'mode' => 'warn',
         'message' => "TODO: [RequireConstForRepeatedArrayKeyRector] '%s' used %dx as array key — extract to a class constant. See: utils/rector/docs/RequireConstForRepeatedArrayKeyRector.md",
     ]);

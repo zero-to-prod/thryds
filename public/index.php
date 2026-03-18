@@ -16,6 +16,7 @@ use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Env;
 use ZeroToProd\Thryds\Header;
 use ZeroToProd\Thryds\Log;
+use ZeroToProd\Thryds\LogContext;
 use ZeroToProd\Thryds\RequestId;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
@@ -51,10 +52,10 @@ $handler = static function () use ($App, $bladeEngine, $emit_error_page): void {
         $emit_error_page($HttpException->getMessage(), $HttpException->getStatusCode());
     } catch (Throwable $Throwable) {
         Log::error($Throwable->getMessage(), [
-            Log::event => Log::unhandled_exception,
-            Log::exception => $Throwable::class,
-            Log::file => $Throwable->getFile(),
-            Log::line => $Throwable->getLine(),
+            LogContext::event => LogContext::unhandled_exception,
+            LogContext::exception => $Throwable::class,
+            LogContext::file => $Throwable->getFile(),
+            LogContext::line => $Throwable->getLine(),
         ]);
         $emit_error_page(
             $App->Config->isProduction() ? 'Internal Server Error' : $Throwable->getMessage(),

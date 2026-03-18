@@ -24,6 +24,9 @@ final class UseLogContextConstRector extends AbstractRector implements Configura
     /** @var string */
     private string $logClass = '';
 
+    /** @var string */
+    private string $logContextClass = '';
+
     /** @var string[] */
     private array $keys = [];
 
@@ -41,6 +44,7 @@ final class UseLogContextConstRector extends AbstractRector implements Configura
     public function configure(array $configuration): void
     {
         $this->logClass = $configuration['logClass'];
+        $this->logContextClass = $configuration['logContextClass'] ?? $configuration['logClass'];
         $this->keys = $configuration['keys'];
         $this->methods = $configuration['methods'] ?? ['debug', 'info', 'warn', 'error'];
         $this->mode = $configuration['mode'] ?? 'auto';
@@ -132,7 +136,7 @@ CODE_SAMPLE,
             $this->addConstantToClassFile($constName);
 
             $item->key = new ClassConstFetch(
-                new FullyQualified($this->logClass),
+                new FullyQualified($this->logContextClass),
                 new Identifier($constName)
             );
             $changed = true;
@@ -175,11 +179,11 @@ CODE_SAMPLE,
 
     private function addConstantToClassFile(string $constName): void
     {
-        if (!$this->reflectionProvider->hasClass($this->logClass)) {
+        if (!$this->reflectionProvider->hasClass($this->logContextClass)) {
             return;
         }
 
-        $classReflection = $this->reflectionProvider->getClass($this->logClass);
+        $classReflection = $this->reflectionProvider->getClass($this->logContextClass);
 
         if ($classReflection->hasConstant($constName)) {
             return;
