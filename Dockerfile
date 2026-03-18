@@ -40,7 +40,7 @@ COPY docker/Caddyfile /etc/frankenphp/Caddyfile
 COPY --from=vendor /app/vendor /app/vendor
 COPY --from=node /app/public/build /app/public/build
 COPY . /app
-RUN rm -rf /app/var/cache/blade && php scripts/generate-preload.php
+RUN mkdir -p /app/logs/frankenphp /app/logs/php && rm -rf /app/var/cache/blade && php scripts/generate-preload.php
 
 FROM base AS composer
 
