@@ -26,10 +26,14 @@ final class SuggestDuplicateStringConstantRector extends AbstractRector implemen
 
     private string $message = "TODO: Refactor duplicate string '%s' (used %dx) to a constant";
 
+    /** @var string[] */
+    private array $ignoredAttributeClasses = [];
+
     public function configure(array $configuration): void
     {
         $this->mode = $configuration['mode'] ?? 'warn';
         $this->message = $configuration['message'] ?? "TODO: Refactor duplicate string '%s' (used %dx) to a constant";
+        $this->ignoredAttributeClasses = $configuration['ignoredAttributeClasses'] ?? [];
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -201,6 +205,20 @@ CODE_SAMPLE,
                 foreach ($node->args as $arg) {
                     if ($arg instanceof Node\Arg && $arg->value instanceof String_) {
                         $ids[spl_object_id($arg->value)] = true;
+                    }
+                }
+            }
+
+            // Attribute args for ignored classes — e.g. #[Requirement('TRACE-001')]
+            if ($node instanceof Node\Attribute && $this->ignoredAttributeClasses !== []) {
+                foreach ($this->ignoredAttributeClasses as $class) {
+                    if ($this->isName($node->name, $class)) {
+                        foreach ($node->args as $arg) {
+                            if ($arg instanceof Node\Arg && $arg->value instanceof String_) {
+                                $ids[spl_object_id($arg->value)] = true;
+                            }
+                        }
+                        break;
                     }
                 }
             }

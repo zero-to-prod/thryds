@@ -20,6 +20,7 @@ $checks = [
     'fix:style'              => $base_dir . '/vendor/bin/php-cs-fixer fix',
     'fix:rector'             => $base_dir . '/vendor/bin/rector process',
     'check:types'            => $base_dir . '/vendor/bin/phpstan analyse',
+    'check:requirements'     => 'php ' . escapeshellarg($base_dir . '/scripts/check-requirement-coverage.php'),
     'check:blade-routes'     => 'php ' . escapeshellarg($base_dir . '/scripts/lint-blade-routes.php'),
     'check:blade-components' => 'php ' . escapeshellarg($base_dir . '/scripts/lint-blade-components.php'),
     'check:blade-templates'  => 'php ' . escapeshellarg($base_dir . '/scripts/lint-blade-templates.php'),

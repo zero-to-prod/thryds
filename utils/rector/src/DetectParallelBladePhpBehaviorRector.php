@@ -148,7 +148,7 @@ CODE_SAMPLE,
      */
     private function collectDefinedValues(array $topStmts, string $filePath): void
     {
-        $this->traverseNodesWithCallable($topStmts, function (Node $node) use ($filePath): null {
+        $this->traverseNodesWithCallable($topStmts, function (Node $node) use ($filePath, $topStmts): null {
             // Backed enum cases: case Foo = 'bar';
             if ($node instanceof EnumCase && $node->expr instanceof String_) {
                 $value = $node->expr->value;
@@ -342,11 +342,11 @@ CODE_SAMPLE,
     {
         foreach ($fileNode->stmts as $stmt) {
             if ($stmt instanceof Namespace_) {
-                return $stmt->stmts;
+                return $stmt->stmts ?? [];
             }
         }
 
-        return $fileNode->stmts;
+        return $fileNode->stmts ?? [];
     }
 
     /**

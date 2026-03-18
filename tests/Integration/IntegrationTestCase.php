@@ -14,6 +14,8 @@ use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Config;
+use ZeroToProd\Thryds\Header;
+use ZeroToProd\Thryds\RequestId;
 use ZeroToProd\Thryds\Routes\HttpMethod;
 use ZeroToProd\Thryds\Routes\Route;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
@@ -53,6 +55,21 @@ abstract class IntegrationTestCase extends TestCase
             unlink(filename: $file);
         }
         rmdir($this->cache_dir);
+    }
+
+    /** @param array<string, string[]> $headers */
+    protected function dispatch(Route $Route, array $headers = [], HttpMethod $HttpMethod = HttpMethod::GET): ResponseInterface
+    {
+        $ServerRequest = new ServerRequest(
+            serverParams: [],
+            uploadedFiles: [],
+            uri: new Uri($Route->value),
+            method: $HttpMethod->value,
+            headers: $headers,
+        );
+
+        return $this->App->Router->dispatch(request: $ServerRequest)
+            ->withHeader(Header::request_id, RequestId::init(ServerRequestInterface: $ServerRequest));
     }
 
     protected function get(Route $Route): ResponseInterface

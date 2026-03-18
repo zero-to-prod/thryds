@@ -49,6 +49,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
+# Extends production with dev-only overrides: php.ini-development and opcache-dev.ini.
+# The zzz- prefix ensures opcache-dev.ini is loaded last, overriding opcache.ini.
+# See docs/adr/009-hot-reloading.md#decision-dockerfile
 FROM production AS development
 
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"

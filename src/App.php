@@ -11,6 +11,7 @@ use Jenssegers\Blade\Container as BladeContainer;
 use League\Route\Cache\FileCache;
 use League\Route\Cache\Router as CachedRouter;
 use League\Route\Router;
+use ZeroToProd\Thryds\Attributes\Requirement;
 use ZeroToProd\Thryds\Blade\BladeDirectives;
 use ZeroToProd\Thryds\Blade\Component;
 use ZeroToProd\Thryds\Blade\Vite;
@@ -46,6 +47,7 @@ readonly class App
         return $Blade;
     }
 
+    #[Requirement('PERF-001')]
     public static function boot(string $base_dir, ?Config $Config = null): self
     {
         $Config ??= Config::from([

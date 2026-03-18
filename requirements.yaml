@@ -1,0 +1,78 @@
+TRACE-001:
+  type: functional
+  title: Every response carries a correlation ID
+  description: >
+    Every HTTP response must include an X-Request-ID header. If the incoming
+    request provides one, it is echoed back; otherwise one is generated.
+  links:
+    - rel: prior-art
+      href: https://www.w3.org/TR/trace-context/
+      title: W3C Trace Context — the standard that formalised per-request propagation headers
+  acceptance-criteria:
+    - id: TRACE-001-a
+      text: Every dispatched response includes a non-empty X-Request-ID header
+    - id: TRACE-001-b
+      text: A request that carries an X-Request-ID header echoes the same value in the response
+    - id: TRACE-001-c
+      text: A request without an X-Request-ID header receives a 32-character lowercase hex string as the response ID
+  verification: integration-test
+
+SEC-001:
+  type: non-functional
+  title: Static state must not bleed across requests
+  description: >
+    Any static property mutated during a request must be reset in a finally
+    block before the next request is served. Applies to all worker-mode processes.
+  links:
+    - rel: adr
+      href: docs/adr/001-frankenphp-worker-mode.md
+      title: ADR-001 — why FrankenPHP worker mode requires explicit state reset
+    - rel: adr
+      href: docs/adr/009-hot-reloading.md
+      title: ADR-009 — static state consequences under hot reload
+  acceptance-criteria:
+    - id: SEC-001-a
+      text: The current request ID is null when no request is in flight
+    - id: SEC-001-b
+      text: The current request ID is a non-null string after a request begins and before it ends
+    - id: SEC-001-c
+      text: The current request ID is null after a request ends
+  verification: unit-test
+
+PERF-001:
+  type: non-functional
+  title: Worker boot cost is paid once per process
+  description: >
+    App::boot() must not be called per-request. All shared state (Router,
+    Blade, Config) is constructed once at worker startup and reused across
+    all requests within that process lifetime.
+  links:
+    - rel: adr
+      href: docs/adr/001-frankenphp-worker-mode.md
+      title: ADR-001 — boot-once pattern and its performance rationale
+  acceptance-criteria:
+    - id: PERF-001-a
+      text: Application boot is called exactly once in the entry point, before the request-handling loop
+    - id: PERF-001-b
+      text: The application instance constructed at boot is reused for every request without reconstruction
+  verification: architecture
+
+HOT-001:
+  type: non-functional
+  title: File changes in development trigger a worker restart
+  description: >
+    Saving any .php file under src/, public/, or templates/ must cause
+    FrankenPHP to restart the worker, re-running App::boot() against the
+    updated code. This requires the hot_reload directive and
+    opcache.validate_timestamps=1 in development.
+  links:
+    - rel: adr
+      href: docs/adr/009-hot-reloading.md
+      title: ADR-009 — hot reload strategy, watched paths, and worker restart mechanism
+  acceptance-criteria:
+    - id: HOT-001-a
+      text: Saving a watched source file causes the next request to reflect the updated code without restarting the container
+    - id: HOT-001-b
+      text: Saving a file outside the watched directories does not trigger a worker restart
+  verification: manual
+

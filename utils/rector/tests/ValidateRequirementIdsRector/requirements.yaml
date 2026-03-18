@@ -1,0 +1,4 @@
+TEST-001:
+  type: functional
+  title: Test requirement
+  description: Used in Rector rule tests only.

@@ -37,7 +37,8 @@
         "rector/rector": "^2.3",
         "phpunit/phpunit": "^13.0",
         "friendsofphp/php-cs-fixer": "^3.94",
-        "phpstan/phpstan": "^2.1"
+        "phpstan/phpstan": "^2.1",
+        "symfony/yaml": "^8.0"
     },
     "replace": {
         "symfony/polyfill-php80": "*",
@@ -60,6 +61,7 @@
         "fix:rector": "./vendor/bin/rector process",
         "check:rector": "./vendor/bin/rector process --dry-run",
         "check:types": "./vendor/bin/phpstan analyse",
+        "check:requirements": "php scripts/check-requirement-coverage.php",
         "check:blade-routes": "php scripts/lint-blade-routes.php",
         "check:blade-components": "php scripts/lint-blade-components.php",
         "check:blade-templates": "php scripts/lint-blade-templates.php",
@@ -67,6 +69,7 @@
         "check:all": "php scripts/check-all.php",
         "cache:views": "php scripts/cache-views.php",
         "generate:preload": "php scripts/generate-preload.php",
+        "generate:requirement": "php scripts/make-requirement.php",
         "generate:rector-rule": "php scripts/make-rector-rule.php",
         "audit:opcache": "php scripts/opcache-audit.php",
         "audit:production": "php scripts/production-checklist.php"

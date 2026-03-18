@@ -82,6 +82,8 @@ use Utils\Rector\Rector\ForbidCrossFileStringDuplicationRector;
 use Utils\Rector\Rector\RequireExhaustiveMatchOnEnumRector;
 use Utils\Rector\Rector\RequireEnumForBranchingConstantRector;
 use Utils\Rector\Rector\DetectParallelBladePhpBehaviorRector;
+use Utils\Rector\Rector\ValidateRequirementIdsRector;
+use ZeroToProd\Thryds\Attributes\Requirement;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
 use ZeroToProd\Thryds\Env;
@@ -211,6 +213,9 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(SuggestDuplicateStringConstantRector::class, [
         'mode' => 'warn',
         'message' => "TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string '%s' (used %dx) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md",
+        'ignoredAttributeClasses' => [
+            Requirement::class,
+        ],
     ]);
     $rectorConfig->ruleWithConfiguration(SuggestConstArrayToEnumRector::class, [
         'mode' => 'warn',
@@ -581,5 +586,11 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(DetectParallelBladePhpBehaviorRector::class, [
         'mode' => 'warn',
         'message' => "TODO: [DetectParallelBladePhpBehaviorRector] Use %s::%s instead of hardcoded '%s'. See: utils/rector/docs/DetectParallelBladePhpBehaviorRector.md",
+    ]);
+
+    // --- Requirement Tracing ---
+    $rectorConfig->ruleWithConfiguration(ValidateRequirementIdsRector::class, [
+        'requirements_file' => __DIR__ . '/requirements.yaml',
+        'message' => "TODO: [ValidateRequirementIdsRector] Requirement ID '%s' not found in requirements.yaml. See: docs/requirement-tracing.md",
     ]);
 };
