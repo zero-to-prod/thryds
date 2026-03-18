@@ -27,6 +27,7 @@ use Utils\Rector\Rector\ForbidExitInSourceRector;
 use Utils\Rector\Rector\ForbidGlobalKeywordRector;
 use Utils\Rector\Rector\ForbidHardcodedRouteStringRector;
 use Utils\Rector\Rector\ForbidLongClosureRector;
+use Utils\Rector\Rector\ForbidMagicHttpStatusCodeRector;
 use Utils\Rector\Rector\ForbidMagicStringArrayKeyRector;
 use Utils\Rector\Rector\ForbidStringArgForEnumParamRector;
 use Utils\Rector\Rector\ForbidStringComparisonOnEnumPropertyRector;
@@ -79,6 +80,7 @@ use Utils\Rector\Rector\ValidateChecklistPathsRector;
 use Utils\Rector\Rector\SuggestEnumForInternalOnlyConstantsRector;
 use Utils\Rector\Rector\ForbidCrossFileStringDuplicationRector;
 use Utils\Rector\Rector\RequireExhaustiveMatchOnEnumRector;
+use Utils\Rector\Rector\RequireEnumForBranchingConstantRector;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
 use ZeroToProd\Thryds\Env;
@@ -250,6 +252,10 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
     $rectorConfig->ruleWithConfiguration(ForbidExitInSourceRector::class, [
         'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidMagicHttpStatusCodeRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: [ForbidMagicHttpStatusCodeRector] Replace %d with a named HTTP status constant or enum case. See: utils/rector/docs/ForbidMagicHttpStatusCodeRector.md',
     ]);
 
     // --- OPcache Optimization ---
@@ -504,6 +510,11 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RequireExhaustiveMatchOnEnumRector::class, [
         'mode' => 'warn',
         'message' => 'TODO: [RequireExhaustiveMatchOnEnumRector] match() on %s must cover all cases explicitly. See: utils/rector/docs/RequireExhaustiveMatchOnEnumRector.md',
+    ]);
+    $rectorConfig->ruleWithConfiguration(RequireEnumForBranchingConstantRector::class, [
+        'mode' => 'warn',
+        'minCases' => 3,
+        'message' => 'TODO: [RequireEnumForBranchingConstantRector] $%s is compared against %d literals (%s) — this is an implicit closed set. Consider extracting to a backed enum and using match(). See: utils/rector/docs/RequireEnumForBranchingConstantRector.md',
     ]);
     // --- Enum Value Arg Safety ---
     $rectorConfig->ruleWithConfiguration(ForbidStringArgForEnumParamRector::class, [
