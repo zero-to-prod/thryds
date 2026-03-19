@@ -18,10 +18,14 @@ Invoked via `./run <name>`. Defined in `composer.json`.
 |--------|---------|-------------|
 | `check:style` | `php-cs-fixer fix --dry-run --diff` | Check code style without applying changes |
 | `check:rector` | `rector process --dry-run` | Preview Rector changes without applying |
-| `check:types` | `phpstan analyse` | Run static analysis (level 2) |
+| `check:types` | `phpstan analyse` | Run static analysis |
+| `check:migrations` | `php scripts/check-migrations.php` | Verify migration file integrity |
+| `check:requirements` | `php scripts/check-requirement-coverage.php` | Check requirement coverage |
 | `check:blade-routes` | `php scripts/lint-blade-routes.php` | Detect hardcoded route paths in Blade templates |
-| `check:route-cache` | `php scripts/verify-route-cache.php` | Verify route caching is working correctly |
-| `check:all` | Runs: fix:style, fix:rector, check:types, check:blade-routes, test, generate:preload | Full check + test suite — run after every change |
+| `check:blade-components` | `php scripts/lint-blade-components.php` | Lint Blade component usage |
+| `check:blade-templates` | `php scripts/lint-blade-templates.php` | Lint Blade templates |
+| `check:blade-push` | `php scripts/check-blade-push.php` | Verify @push directive usage |
+| `check:all` | Runs all `check:*` + `test` | Full read-only check + test suite — the primary dev command |
 
 ### Fixing (writes changes)
 
@@ -46,12 +50,20 @@ Invoked via `./run <name>`. Defined in `composer.json`.
 | `generate:preload` | `php scripts/generate-preload.php` | Generate `preload.php` for OPcache preloading |
 | `generate:rector-rule` | `php scripts/make-rector-rule.php` | Scaffold a new custom Rector rule |
 
-### Auditing
+### Production (prod-specific)
+
+| Script | Command | Description |
+|--------|---------|-------------|
+| `prod:check` | `php scripts/production-checklist.php` | Route cache + OPcache + template cache + @push readiness |
+| `prod:route-cache` | `php scripts/verify-route-cache.php` | Verify route caching behavior in isolation |
+
+### Auditing (read-only analysis)
 
 | Script | Command | Description |
 |--------|---------|-------------|
 | `audit:opcache` | `php scripts/opcache-audit.php` | Audit OPcache configuration and performance |
-| `audit:production` | `php scripts/production-checklist.php` | Run all production readiness checks |
+| `audit:profile` | `php scripts/profile-endpoints.php` | Profile endpoint response times (makes live HTTP requests) |
+| `audit:hotspots` | `php scripts/analyze-access-log.php` | Analyze access log for slow/frequent routes |
 
 ---
 

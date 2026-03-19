@@ -1,9 +1,24 @@
 #!/bin/sh
+APP_ENV=$(grep -E '^APP_ENV=' .env 2>/dev/null | cut -d= -f2 | tr -d '[:space:]')
+APP_ENV=${APP_ENV:-development}
+
+if [ "$APP_ENV" = "production" ]; then
+    COMPOSE_FILES="-f compose.yaml"
+else
+    COMPOSE_FILES="-f compose.yaml -f compose.development.yaml"
+fi
+
 if [ "$1" = "dev:up" ]; then
     docker compose -f compose.yaml -f compose.development.yaml up -d
+elif [ "$1" = "dev" ]; then
+    sed -i '' 's/^APP_ENV=.*/APP_ENV=development/' .env
+    docker compose -f compose.yaml -f compose.development.yaml up -d
+elif [ "$1" = "prod" ]; then
+    sed -i '' 's/^APP_ENV=.*/APP_ENV=production/' .env
+    docker compose -f compose.yaml up -d
 elif [ "$1" = "test:load" ]; then
     shift
     docker compose -f compose.load-test.yaml run --rm k6 "$@"
 else
-    docker compose -f compose.yaml -f compose.development.yaml exec web composer "$@"
+    docker compose $COMPOSE_FILES exec web composer "$@"
 fi

@@ -125,7 +125,7 @@ The following Rector rules in `rector.php` enforce OPcache-friendly code (all in
 
 - `./run audit:opcache` — run the full OPcache audit
 - `./run generate:preload` — regenerate `preload.php`
-- `./run audit:production` — run all production readiness checks (includes OPcache audit)
+- `./run prod:check` — run all production readiness checks (includes OPcache audit)
 
 ## Rules
 

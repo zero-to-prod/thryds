@@ -74,7 +74,8 @@
         "check:blade-routes": "php scripts/lint-blade-routes.php",
         "check:blade-components": "php scripts/lint-blade-components.php",
         "check:blade-templates": "php scripts/lint-blade-templates.php",
-        "check:route-cache": "php scripts/verify-route-cache.php",
+        "check:blade-push": "php scripts/check-blade-push.php",
+        "prod:route-cache": "php scripts/verify-route-cache.php",
         "check:all": "php scripts/check-all.php",
         "check:migrations": "php scripts/check-migrations.php",
         "migrate": "php scripts/migrate.php",
@@ -86,7 +87,7 @@
         "generate:requirement": "php scripts/make-requirement.php",
         "generate:rector-rule": "php scripts/make-rector-rule.php",
         "audit:opcache": "php scripts/opcache-audit.php",
-        "audit:production": "php scripts/production-checklist.php",
+        "prod:check": "php scripts/production-checklist.php",
         "audit:profile": "php scripts/profile-endpoints.php",
         "audit:hotspots": "php scripts/analyze-access-log.php"
     }

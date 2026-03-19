@@ -17,16 +17,16 @@ declare(strict_types=1);
 $base_dir = dirname(__DIR__);
 
 $checks = [
-    'fix:style'              => $base_dir . '/vendor/bin/php-cs-fixer fix',
-    'fix:rector'             => $base_dir . '/vendor/bin/rector process',
+    'check:style'            => $base_dir . '/vendor/bin/php-cs-fixer fix --dry-run --diff',
+    'check:rector'           => $base_dir . '/vendor/bin/rector process --dry-run',
     'check:types'            => $base_dir . '/vendor/bin/phpstan analyse',
     'check:migrations'       => 'php ' . escapeshellarg($base_dir . '/scripts/check-migrations.php'),
     'check:requirements'     => 'php ' . escapeshellarg($base_dir . '/scripts/check-requirement-coverage.php'),
     'check:blade-routes'     => 'php ' . escapeshellarg($base_dir . '/scripts/lint-blade-routes.php'),
     'check:blade-components' => 'php ' . escapeshellarg($base_dir . '/scripts/lint-blade-components.php'),
     'check:blade-templates'  => 'php ' . escapeshellarg($base_dir . '/scripts/lint-blade-templates.php'),
+    'check:blade-push'       => 'php ' . escapeshellarg($base_dir . '/scripts/check-blade-push.php'),
     'test'                   => $base_dir . '/vendor/bin/phpunit',
-    'generate:preload'       => 'php ' . escapeshellarg($base_dir . '/scripts/generate-preload.php'),
 ];
 
 echo "\n╔══════════════════════════════════════╗\n";
@@ -67,7 +67,7 @@ $failed  = array_filter($results, fn(array $r): bool => $r['status'] === 'fail')
 $passed  = count($results) - count($failed);
 $overall = $failed === [];
 
-echo "\n┌─ Summary ─────────────────────────────\n\n";
+echo "\n─ Summary ─────────────────────────────\n\n";
 
 foreach ($results as $name => $result) {
     $label = $result['status'] === 'pass' ? '[ OK ]' : '[FAIL]';
