@@ -25,11 +25,11 @@ abstract class DatabaseTestCase extends TestCase
     {
         try {
             $this->Database = new Database(DatabaseConfig::fromEnv());
+            $this->setUpDatabase();
+            $this->Database->beginTransaction();
         } catch (PDOException $e) {
             $this->markTestSkipped('db container not running — start it with: docker compose up -d db (' . $e->getMessage() . ')');
         }
-        $this->setUpDatabase();
-        $this->Database->beginTransaction();
     }
 
     /** Run DDL or other pre-transaction setup here. Default: no-op. */

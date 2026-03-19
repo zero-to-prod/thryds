@@ -91,7 +91,7 @@ class Database
 
     public function inTransaction(): bool
     {
-        return $this->pdo()->inTransaction();
+        return $this->PDO !== null && $this->PDO->inTransaction();
     }
 
     /** Wrap a block in a transaction; re-throws on failure. */
