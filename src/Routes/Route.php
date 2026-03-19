@@ -64,7 +64,7 @@ enum Route: string
     #[RouteInfo('OPcache scripts')]
     #[RouteOperation(
         HttpMethod::GET,
-        'List of scripts currently held in OPcache'
+        'Scripts loaded in OPcache'
     )]
     case opcache_scripts = '/_opcache/scripts';
 

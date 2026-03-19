@@ -11,6 +11,10 @@ declare(strict_types=1);
  * Exit code: 0 if all checks pass, 1 if any fail.
  * JSON summary is printed at the end for machine parsing.
  *
+ * For checks that emit structured JSON (our custom scripts), the summary
+ * includes a 'violations' array. For external tools (phpstan, php-cs-fixer,
+ * rector, phpunit), it falls back to the last 20 lines of output.
+ *
  * Usage: ./run check:all
  */
 
@@ -29,14 +33,19 @@ $checks = [
     'test'                   => $base_dir . '/vendor/bin/phpunit',
 ];
 
-echo "\n╔══════════════════════════════════════╗\n";
-echo "║            Check: All                ║\n";
-echo "╚══════════════════════════════════════╝\n";
+$fixes = [
+    'check:style'  => './run fix:style',
+    'check:rector' => './run fix:rector',
+];
+
+fwrite(STDERR, "\n╔══════════════════════════════════════╗\n");
+fwrite(STDERR, "║            Check: All                ║\n");
+fwrite(STDERR, "╚══════════════════════════════════════╝\n");
 
 $results = [];
 
 foreach ($checks as $name => $command) {
-    echo "\n┌─ $name\n";
+    fwrite(STDERR, "\n┌─ $name\n");
 
     $proc = proc_open($command, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
     $output = '';
@@ -44,7 +53,7 @@ foreach ($checks as $name => $command) {
         foreach ([1, 2] as $fd) {
             $chunk = fread($pipes[$fd], 4096);
             if ($chunk !== false && $chunk !== '') {
-                echo $chunk;
+                fwrite(STDERR, $chunk);
                 $output .= $chunk;
             }
         }
@@ -54,10 +63,23 @@ foreach ($checks as $name => $command) {
     $exit_code = proc_close($proc);
 
     $result = ['status' => $exit_code === 0 ? 'pass' : 'fail'];
-    if ($exit_code !== 0) {
-        $lines = array_filter(explode("\n", $output), fn(string $l) => trim($l) !== '');
-        $result['output'] = implode("\n", array_slice($lines, -20));
+
+    if ($exit_code !== 0 && isset($fixes[$name])) {
+        $result['fix'] = $fixes[$name];
     }
+
+    if ($exit_code !== 0) {
+        // Try to parse structured violations from our custom scripts.
+        // Fall back to last 20 lines of prose for external tools.
+        $parsed = json_decode($output, associative: true);
+        if (is_array($parsed) && isset($parsed['violations'])) {
+            $result['violations'] = $parsed['violations'];
+        } else {
+            $lines = array_filter(explode("\n", $output), fn(string $l) => trim($l) !== '');
+            $result['output'] = implode("\n", array_slice($lines, -20));
+        }
+    }
+
     $results[$name] = $result;
 }
 
@@ -67,14 +89,14 @@ $failed  = array_filter($results, fn(array $r): bool => $r['status'] === 'fail')
 $passed  = count($results) - count($failed);
 $overall = $failed === [];
 
-echo "\n─ Summary ─────────────────────────────\n\n";
+fwrite(STDERR, "\n─ Summary ─────────────────────────────\n\n");
 
 foreach ($results as $name => $result) {
     $label = $result['status'] === 'pass' ? '[ OK ]' : '[FAIL]';
-    echo "  $label $name\n";
+    fwrite(STDERR, "  $label $name\n");
 }
 
-echo sprintf("\nResult: %d/%d checks passed\n\n", $passed, count($results));
+fwrite(STDERR, sprintf("\nResult: %d/%d checks passed\n\n", $passed, count($results)));
 
 echo json_encode(
     value: ['passed' => $overall, 'checks' => $results],

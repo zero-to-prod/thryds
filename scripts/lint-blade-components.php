@@ -11,6 +11,9 @@ declare(strict_types=1);
  * Allows:
  *   - Component templates themselves (templates/components/*.blade.php)
  *   - Lines inside @php / @endphp blocks
+ *
+ * Exit 0 if no violations. Exit 1 if violations found.
+ * Output: JSON { ok: bool, violations: [{ file, line, rule, message, fix }] }
  */
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -20,12 +23,24 @@ $template_dir = __DIR__ . '/../templates';
 $files = scanBladeFiles($template_dir);
 
 $tag_rules = [
-    '/<button\b/' => 'Use <x-button> instead of raw <button>',
-    '/<input\b/' => 'Use <x-input> instead of raw <input>',
-    '/<div\s[^>]*role\s*=\s*["\']alert["\']/' => 'Use <x-alert> instead of <div role="alert">',
+    '/<button\b/' => [
+        'rule'    => 'raw-html-button',
+        'message' => 'raw <button> tag',
+        'fix'     => 'Use <x-button> component instead',
+    ],
+    '/<input\b/' => [
+        'rule'    => 'raw-html-input',
+        'message' => 'raw <input> tag',
+        'fix'     => 'Use <x-input> component instead',
+    ],
+    '/<div\s[^>]*role\s*=\s*["\']alert["\']/' => [
+        'rule'    => 'raw-html-alert',
+        'message' => 'raw <div role="alert"> tag',
+        'fix'     => 'Use <x-alert> component instead',
+    ],
 ];
 
-$errors = [];
+$violations = [];
 $base_path = realpath(path: __DIR__ . '/..');
 
 foreach ($files as $file) {
@@ -66,28 +81,26 @@ foreach ($files as $file) {
             continue;
         }
 
-        foreach ($tag_rules as $regex => $message) {
+        foreach ($tag_rules as $regex => $info) {
             if (preg_match($regex, $line)) {
-                $errors[] = sprintf(
-                    '  %s:%d — %s',
-                    $relative,
-                    $line_number,
-                    $message,
-                );
+                $violations[] = [
+                    'file'    => $relative,
+                    'line'    => $line_number,
+                    'rule'    => $info['rule'],
+                    'message' => $info['message'],
+                    'fix'     => $info['fix'],
+                ];
             }
         }
     }
 }
 
-if ($errors === []) {
-    echo "No raw HTML component violations found in Blade templates.\n";
-    exit(0);
-}
+echo json_encode(
+    value: ['ok' => $violations === [], 'violations' => $violations],
+    flags: JSON_PRETTY_PRINT,
+) . "\n";
 
-echo "Raw HTML found in Blade templates:\n\n";
-echo implode(separator: "\n", array: $errors) . "\n\n";
-echo sprintf("Found %d violation(s). Use Blade components instead of raw HTML.\n", count($errors));
-exit(1);
+exit($violations === [] ? 0 : 1);
 
 function scanBladeFiles(string $dir): array
 {

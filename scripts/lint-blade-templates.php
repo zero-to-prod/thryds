@@ -15,6 +15,9 @@ declare(strict_types=1);
  * Unregistered templates are never pre-compiled at build time and will
  * be compiled on the first request that renders them, which defeats
  * the view:cache optimization.
+ *
+ * Exit 0 if no violations. Exit 1 if violations found.
+ * Output: JSON { ok: bool, violations: [{ file, rule, message, fix }] }
  */
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -23,7 +26,7 @@ use ZeroToProd\Thryds\Blade\Component;
 use ZeroToProd\Thryds\Blade\View;
 
 $template_dir = __DIR__ . '/../templates';
-$errors = [];
+$violations = [];
 
 // Layouts are shared parent templates extended via @extends — not routable views.
 $known_layouts = ['base'];
@@ -40,11 +43,12 @@ foreach (glob($template_dir . '/*.blade.php') ?: [] as $file) {
     }
 
     if (!in_array($stem, $view_values, true)) {
-        $errors[] = sprintf(
-            '  templates/%s.blade.php — no matching View enum case (expected View::%s)',
-            $stem,
-            $stem,
-        );
+        $violations[] = [
+            'file'    => "templates/{$stem}.blade.php",
+            'rule'    => 'unregistered-view',
+            'message' => "no matching View enum case for '{$stem}'",
+            'fix'     => "Add View::{$stem} to src/Blade/View.php or delete the file",
+        ];
     }
 }
 
@@ -56,25 +60,21 @@ foreach (glob($template_dir . '/components/*.blade.php') ?: [] as $file) {
     $stem = basename($file, '.blade.php');
 
     if (!in_array($stem, $component_values, true)) {
-        $errors[] = sprintf(
-            '  templates/components/%s.blade.php — no matching Component enum case (expected Component::%s)',
-            $stem,
-            str_replace('-', '_', $stem),
-        );
+        $enum_case = str_replace('-', '_', $stem);
+        $violations[] = [
+            'file'    => "templates/components/{$stem}.blade.php",
+            'rule'    => 'unregistered-component',
+            'message' => "no matching Component enum case for '{$stem}'",
+            'fix'     => "Add Component::{$enum_case} to src/Blade/Component.php or delete the file",
+        ];
     }
 }
 
 // ── Result ───────────────────────────────────────────────────────────────────
 
-if ($errors === []) {
-    echo "All Blade templates are registered in View or Component enums.\n";
-    exit(0);
-}
+echo json_encode(
+    value: ['ok' => $violations === [], 'violations' => $violations],
+    flags: JSON_PRETTY_PRINT,
+) . "\n";
 
-echo "Unregistered Blade templates found:\n\n";
-echo implode("\n", $errors) . "\n\n";
-echo sprintf(
-    "Found %d unregistered template(s). Add enum cases or delete the files.\n",
-    count($errors),
-);
-exit(1);
+exit($violations === [] ? 0 : 1);

@@ -1,7 +1,7 @@
 <?php
 
 declare(strict_types=1);
-// FrankenPHP worker entrypoint: boots once, then loops via frankenphp_handle_request().
+// Worker entrypoint: the process boots once and handles requests in a persistent loop.
 $base_dir = dirname(__DIR__);
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -21,14 +21,12 @@ use ZeroToProd\Thryds\RequestId;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 // Worker boots once; its in-memory object graph persists for the process lifetime.
-// On file changes in dev, FrankenPHP restarts the worker and re-runs this line.
+// In development, file changes trigger a worker restart that re-initializes this state.
 // See HOT-001, PERF-001
 $App = App::boot($base_dir);
 
-// Resolve once at boot to get the cached CompilerEngine instance. Must be called
-// after App::boot() so the container is initialised. forgetCompiledOrNotExpired()
-// is called per-request below — Laravel normally does this via $app->terminating(),
-// which never fires in FrankenPHP worker mode.
+// Resolved once at boot; forgetCompiledOrNotExpired() is called per-request to
+// discard template state accumulated during the request. Must follow App::boot().
 $bladeEngine = Container::getInstance()->make('view.engine.resolver')->resolve('blade');
 
 $emit_error_page = static function (string $message, int $status_code) use ($App): void {
@@ -73,8 +71,8 @@ $handler = static function () use ($App, $bladeEngine, $emit_error_page): void {
     }
 };
 
-// FrankenPHP worker loop: frankenphp_handle_request() blocks until a request arrives,
-// invokes $handler, then returns true to continue or false to stop the worker.
+// Worker loop: blocks until a request arrives, dispatches to $handler,
+// then continues or exits based on the return value.
 $max_requests = (int) ($_SERVER[Env::MAX_REQUESTS] ?? 0);
 for ($nb_requests = 0; !$max_requests || $nb_requests < $max_requests; ++$nb_requests) {
     $keep_running = frankenphp_handle_request(callback: $handler);

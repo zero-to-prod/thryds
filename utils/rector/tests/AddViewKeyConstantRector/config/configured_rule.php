@@ -7,8 +7,8 @@ use Utils\Rector\Rector\AddViewKeyConstantRector;
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(AddViewKeyConstantRector::class, [
-        'dataModelTraits' => ['ZeroToProd\\Thryds\\Helpers\\DataModel'],
-        'viewModelAttribute' => 'ZeroToProd\\Thryds\\Helpers\\ViewModel',
+        'dataModelTraits' => ['ZeroToProd\\Thryds\\Attributes\\DataModel'],
+        'viewModelAttribute' => 'ZeroToProd\\Thryds\\Attributes\\ViewModel',
         'mode' => 'auto',
     ]);
 };

@@ -10,6 +10,9 @@ declare(strict_types=1);
  *
  * Usage: docker compose exec web php /app/scripts/check-blade-push.php
  * Via Composer: ./run check:blade-push
+ *
+ * Exit 0 if no violations. Exit 1 if violations found.
+ * Output: JSON { ok: bool, violations: [{ file, line, rule, message, fix }] }
  */
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -18,54 +21,42 @@ use ZeroToProd\Thryds\Blade\Component;
 
 $template_dir = __DIR__ . '/../templates/components';
 
-$failures = [];
-$passes = [];
+$violations = [];
 
 foreach (Component::cases() as $component) {
     $path = $template_dir . '/' . $component->value . '.blade.php';
+    $relative = 'templates/components/' . $component->value . '.blade.php';
 
     if (!file_exists($path)) {
-        $failures[] = sprintf('Missing component template: %s', $path);
+        $violations[] = [
+            'file'    => $relative,
+            'rule'    => 'missing-component-template',
+            'message' => 'component template file not found',
+            'fix'     => "Create {$relative} or remove Component::{$component->name}",
+        ];
+
         continue;
     }
 
     $lines = file($path, FILE_IGNORE_NEW_LINES);
-    $violations = [];
 
     foreach ($lines as $line_number => $line) {
         if (preg_match('/@push\(/', $line) || preg_match('/@prepend\(/', $line)) {
-            $violations[] = sprintf('line %d: %s', $line_number + 1, trim($line));
+            $directive = str_contains($line, '@push(') ? '@push' : '@prepend';
+            $violations[] = [
+                'file'    => $relative,
+                'line'    => $line_number + 1,
+                'rule'    => 'bare-push',
+                'message' => "Component::{$component->name} uses bare {$directive}",
+                'fix'     => "Use @pushOnce('stack', '{$component->value}') instead",
+            ];
         }
     }
-
-    if ($violations !== []) {
-        foreach ($violations as $violation) {
-            $failures[] = sprintf(
-                'Component::%s uses bare @push or @prepend (%s). Use @pushOnce(\'stack\', \'%s\') instead.',
-                $component->name,
-                $violation,
-                $component->value,
-            );
-        }
-    } else {
-        $passes[] = sprintf('Component::%s has no bare @push or @prepend', $component->name);
-    }
 }
 
-foreach ($failures as $f) {
-    echo "  [FAIL] $f\n";
-}
-foreach ($passes as $p) {
-    echo "  [ OK ] $p\n";
-}
+echo json_encode(
+    value: ['ok' => $violations === [], 'violations' => $violations],
+    flags: JSON_PRETTY_PRINT,
+) . "\n";
 
-$total = count($failures) + count($passes);
-echo sprintf("\nResult: %d checks — %d failed, %d passed\n", $total, count($failures), count($passes));
-
-if ($failures !== []) {
-    echo "Verdict: Component @push directives are NOT correct\n\n";
-    exit(1);
-}
-
-echo "Verdict: Component @push directives are correct\n\n";
-exit(0);
+exit($violations === [] ? 0 : 1);

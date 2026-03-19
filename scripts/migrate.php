@@ -12,6 +12,7 @@ declare(strict_types=1);
  * the file, or run migrate:rollback before re-applying.
  *
  * Exit 0 on success, 1 on error.
+ * JSON summary is printed at the end for machine parsing.
  */
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -19,10 +20,12 @@ require __DIR__ . '/../vendor/autoload.php';
 use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\DatabaseConfig;
 use ZeroToProd\Thryds\Migrator;
+use ZeroToProd\Thryds\Tables\MigrationsTable;
 
 $Migrator = new Migrator(
     Database: new Database(DatabaseConfig::fromEnv()),
     migrations_dir: __DIR__ . '/../migrations',
+    migrations_namespace: 'ZeroToProd\\Thryds\\Migrations\\',
 );
 
 $Migrator->ensureTable();
@@ -30,11 +33,24 @@ $Migrator->ensureTable();
 echo "\n=== Migrate ===\n\n";
 
 try {
-    $Migrator->migrate();
+    $applied = $Migrator->migrate();
 } catch (RuntimeException $e) {
     echo "\n  [FAIL] " . $e->getMessage() . "\n\n";
     exit(1);
 }
 
-echo "\nDone.\n\n";
+foreach ($applied as $migration) {
+    echo '  [ OK ] applied ' . $migration[MigrationsTable::id] . ' ' . $migration[MigrationsTable::description] . "\n";
+}
+
+if ($applied === []) {
+    echo "  Nothing to apply.\n";
+}
+
+echo "\n";
+echo json_encode(
+    value: ['applied' => $applied, 'total' => count($applied)],
+    flags: JSON_PRETTY_PRINT,
+) . "\n\n";
+
 exit(0);

@@ -8,8 +8,8 @@ declare(strict_types=1);
  * Usage: docker compose exec web php scripts/migrate-status.php
  * Via Composer: ./run migrate:status
  *
- * 'modified' means the file was changed after it was applied — this is a
- * checksum mismatch and will block migrate from running.
+ * 'modified' means the applied file no longer matches its recorded checksum —
+ * migrate will refuse to run until resolved.
  *
  * Exit 0 if all applied and none modified, 1 if any are pending or modified.
  * JSON summary is printed at the end for machine parsing.
@@ -27,15 +27,19 @@ try {
     $Migrator = new Migrator(
         Database: new Database(DatabaseConfig::fromEnv()),
         migrations_dir: __DIR__ . '/../migrations',
+        migrations_namespace: 'ZeroToProd\\Thryds\\Migrations\\',
     );
     $Migrator->ensureTable();
     $rows = $Migrator->status();
 } catch (PDOException $e) {
-    echo "\n  [SKIP] db container not running — start it with: docker compose up -d db\n\n";
+    echo json_encode(
+        value: ['passed' => true, 'pending' => [], 'modified' => [], 'applied' => [], 'note' => 'skipped — db container not running'],
+        flags: JSON_PRETTY_PRINT,
+    ) . "\n";
     exit(0);
 }
 
-echo "\n=== Migration Status ===\n\n";
+fwrite(STDERR, "\n=== Migration Status ===\n\n");
 
 $pending = [];
 $modified = [];
@@ -48,7 +52,7 @@ foreach ($rows as $row) {
         MigrationStatus::modified => '[WARN]',
     };
     $applied_at = $row[MigrationsTable::applied_at] !== null ? ' (applied ' . $row[MigrationsTable::applied_at] . ')' : '';
-    echo sprintf("  %s %-8s %s %s%s\n", $label, $row[Migrator::col_status]->value, $row[MigrationsTable::id], $row[MigrationsTable::description], $applied_at);
+    fwrite(STDERR, sprintf("  %s %-8s %s %s%s\n", $label, $row[Migrator::col_status]->value, $row[MigrationsTable::id], $row[MigrationsTable::description], $applied_at));
 
     match ($row[Migrator::col_status]) {
         MigrationStatus::pending  => $pending[]  = $row[MigrationsTable::id],
@@ -57,7 +61,7 @@ foreach ($rows as $row) {
     };
 }
 
-echo "\n";
+fwrite(STDERR, "\n");
 echo json_encode(
     value: [
         'passed'   => $pending === [] && $modified === [],

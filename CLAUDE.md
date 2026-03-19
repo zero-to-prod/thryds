@@ -8,11 +8,13 @@ Thryds — social media platform integrating AI with humanity. Web UI + API back
 
 - ALWAYS use Docker. Never run PHP, Composer, or app tooling on the host.
 - ALWAYS run `./run check:all` before completing any task.
-- All code implementations MUST be least invasive and straightforward, optimized for an ai-native experience.
+- ALL code implementations MUST be least invasive and straightforward, optimized for an ai-native experience.
+- ALL code comments MUST be evergreen and not bound to a specific implementation.
 
 ## Command Execution
 
 ```
+./run list              # print all available commands with descriptions
 ./run <script>          # docker compose exec web composer <script>
 ./run test:load         # docker compose -f compose.load-test.yaml run --rm k6
 ./run dev               # set APP_ENV=development, restart with dev overlay
@@ -83,9 +85,9 @@ Raw PHP: `docker compose exec web php scripts/<name>.php`
 ## Migrate & Cache
 
 ```
-./run migrate           # run pending migrations
-./run migrate:status    # list migration state (read-only)
-./run migrate:rollback  # roll back last migration
+./run migrate           # apply pending migrations; JSON {"applied":[{id,description}…],"total":N}
+./run migrate:status    # display → stderr; JSON {"passed":bool,"pending":[…],"modified":[…],"applied":[…]} → stdout
+./run migrate:rollback  # roll back last migration; JSON {"rolled_back":{id,description}|null}
 ./run cache:views       # compile Blade templates to var/cache/blade/
 ```
 

@@ -8,7 +8,62 @@ else
     COMPOSE_FILES="-f compose.yaml -f compose.development.yaml"
 fi
 
-if [ "$1" = "dev:up" ]; then
+if [ "$1" = "list" ]; then
+    cat << 'EOF'
+Thryds — ./run command reference
+
+ENVIRONMENT
+  dev              Switch to development mode and restart containers
+  prod             Switch to production mode and restart containers
+  dev:up           Start development containers (preserves .env)
+
+CHECK (read-only, safe to run anytime)
+  check:all        Run every check and test; JSON summary, never aborts early
+  check:style      Verify code style without touching files (dry-run diff)
+  check:rector     Verify automated refactor rules without applying them
+  check:types      Static analysis — catches type errors before runtime
+  check:migrations Confirm migration files are structurally sound
+  check:requirements Trace requirements to code; surface uncovered specs
+  check:blade-routes     Lint route references inside Blade templates
+  check:blade-components Lint component usage inside Blade templates
+  check:blade-templates  Lint Blade template structure and syntax
+  check:blade-push       Verify @push stacks are consumed by a @stack
+
+TEST
+  test             Run the full test suite (unit + integration + database)
+  test:unit        Run unit tests only — fast, no I/O
+  test:integration Run integration tests — exercises real app boundaries
+  test:database    Run database tests — isolated transactions, real schema
+  test:rector      Run tests for custom Rector rules
+  test:load        k6 load test against the production build
+
+FIX (modifies files)
+  fix:style        Auto-format all PHP files to project style
+  fix:rector       Apply automated refactor rules to the codebase
+
+MIGRATE
+  migrate          Apply all pending migrations; emits JSON {"applied":[…],"total":N}
+  migrate:status   Display → stderr; JSON {"passed":bool,"pending":[…],"modified":[…],"applied":[…]} → stdout
+  migrate:rollback Undo the last migration; emits JSON {"rolled_back":{id,description}|null}
+
+CACHE
+  cache:views      Compile Blade templates to bytecode for production
+
+GENERATE (scaffold new files)
+  generate:migration    Scaffold a new timestamped migration file
+  generate:requirement  Scaffold a requirement entry + matching test stub
+  generate:rector-rule  Scaffold a new custom Rector rule with tests and docs
+  generate:preload      Regenerate OPcache preload manifest (run before prod:check)
+
+AUDIT & PRODUCTION
+  prod:check       Full production readiness checklist (routes, OPcache, templates)
+  prod:route-cache Verify the route cache is valid and up to date
+  audit:opcache    Analyse OPcache configuration for production tuning
+  audit:profile    Profile live endpoints and report timing (makes HTTP requests)
+  audit:hotspots   Parse access logs to surface slow or high-traffic endpoints
+EOF
+
+elif [ "$1" = "dev:up" ]; then
     docker compose -f compose.yaml -f compose.development.yaml up -d
 elif [ "$1" = "dev" ]; then
     sed -i '' 's/^APP_ENV=.*/APP_ENV=development/' .env

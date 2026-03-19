@@ -53,6 +53,7 @@ readonly class Migrator
     public function __construct(
         private Database $Database,
         private string $migrations_dir,
+        private string $migrations_namespace,
     ) {}
 
     public function ensureTable(): void
@@ -108,10 +109,15 @@ readonly class Migrator
         return $result;
     }
 
-    /** Applies all pending migrations in id order. Throws if any applied migration has been modified. */
-    public function migrate(): void
+    /**
+     * Applies all pending migrations in id order. Throws if any applied migration has been modified.
+     *
+     * @return list<array{id: string, description: string}> Keys are MigrationsTable::id and MigrationsTable::description
+     */
+    public function migrate(): array
     {
         $discovered = $this->discover();
+        $applied = [];
         foreach ($this->status() as $row) {
             $id = $this->rowStr($row, key: MigrationsTable::id);
             if ($row[self::col_status] === MigrationStatus::modified) {
@@ -127,18 +133,27 @@ readonly class Migrator
                 'INSERT INTO `' . MigrationsTable::tableName() . '` (id, description, checksum, applied_at) VALUES (' . self::param_id . ', ' . self::param_description . ', ' . self::param_checksum . ', NOW())',
                 [self::param_id => $id, self::param_description => $row[MigrationsTable::description], self::param_checksum => $row[MigrationsTable::checksum]]
             );
-            echo '  [ OK ] applied ' . $id . ' ' . $this->rowStr($row, key: MigrationsTable::description) . "\n";
+            $applied[] = [
+                MigrationsTable::id          => $id,
+                MigrationsTable::description => $this->rowStr($row, key: MigrationsTable::description),
+            ];
         }
+
+        return $applied;
     }
 
-    /** Rolls back the most recently applied migration. */
-    public function rollback(): void
+    /**
+     * Rolls back the most recently applied migration.
+     *
+     * Returns the rolled-back migration, or null if there was nothing to roll back.
+     *
+     * @return array{id: string, description: string}|null
+     */
+    public function rollback(): ?array
     {
         $last = $this->fetchLastApplied();
         if ($last === null) {
-            echo "  Nothing to roll back.\n";
-
-            return;
+            return null;
         }
         $id = $this->rowStr(row: $last, key: MigrationsTable::id);
         $discovered = $this->discover();
@@ -150,7 +165,11 @@ readonly class Migrator
             'DELETE FROM `' . MigrationsTable::tableName() . '` WHERE id = ' . self::param_id,
             [self::param_id => $id]
         );
-        echo '  [ OK ] rolled back ' . $id . ' ' . $this->rowStr(row: $last, key: MigrationsTable::description) . "\n";
+
+        return [
+            MigrationsTable::id          => $id,
+            MigrationsTable::description => $this->rowStr(row: $last, key: MigrationsTable::description),
+        ];
     }
 
     /**
@@ -171,7 +190,7 @@ readonly class Migrator
             if (!preg_match('/^(\d{4})_(.+)$/', basename($path, suffix: '.php'), $matches)) {
                 continue;
             }
-            $fqcn = 'ZeroToProd\\Thryds\\Migrations\\' . $matches[2];
+            $fqcn = $this->migrations_namespace . $matches[2];
             if (!class_exists(class: $fqcn)) {
                 continue;
             }

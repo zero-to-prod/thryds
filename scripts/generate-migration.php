@@ -84,6 +84,14 @@ PHP;
 
 file_put_contents(filename: $path, data: $content);
 
-echo "  Created $filename\n";
-echo "  Next step: implement up() and down(), then run: ./run migrate\n";
+echo json_encode(
+    value: [
+        'created'    => [$filename],
+        'next_steps' => [
+            ['action' => "Implement up() and down() in {$filename}"],
+            ['action' => 'Apply the migration', 'command' => './run migrate'],
+        ],
+    ],
+    flags: JSON_PRETTY_PRINT,
+) . "\n";
 exit(0);

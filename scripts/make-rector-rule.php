@@ -325,23 +325,34 @@ $files = [
     $docs_dir . '/' . $rule_name . '.md' => $doc_content,
 ];
 
+$created = [];
+
 foreach ($files as $path => $content) {
     file_put_contents(filename: $path, data: $content);
-    $relative = str_replace(
+    $created[] = str_replace(
         search: $base_dir . '/',
         replace: '',
         subject: $path,
     );
-    echo "  Created {$relative}\n";
 }
 
 // --- Append to rector.php ---
 
 $rector_path = $base_dir . '/rector.php';
 $rector_content = file_get_contents(filename: $rector_path);
+$warnings = [];
 
 if ($rector_content === false) {
-    echo "\nWarning: Could not read rector.php. Add the import and registration manually.\n";
+    $warnings[] = 'Could not read rector.php — add the import and registration manually';
+    echo json_encode(
+        value: [
+            'created'    => $created,
+            'updated'    => [],
+            'warnings'   => $warnings,
+            'next_steps' => [],
+        ],
+        flags: JSON_PRETTY_PRINT,
+    ) . "\n";
     exit(0);
 }
 
@@ -380,10 +391,18 @@ if ($closing_pos !== false) {
 }
 
 file_put_contents(filename: $rector_path, data: $rector_content);
-echo "  Updated rector.php\n";
+$updated = ['rector.php'];
 
-echo "\nDone. Next steps:\n";
-echo "  1. Fill in getNodeTypes() and refactor() in utils/rector/src/{$rule_name}.php\n";
-echo "  2. Replace fixture TODOs in utils/rector/tests/{$rule_name}/Fixture/example.php.inc\n";
-echo "  3. Fill in utils/rector/docs/{$rule_name}.md (rationale, examples from fixtures, resolution steps)\n";
-echo "  4. Run: ./run test:rector\n";
+echo json_encode(
+    value: [
+        'created'    => $created,
+        'updated'    => $updated,
+        'next_steps' => [
+            ['action' => "Implement getNodeTypes() and refactor() in utils/rector/src/{$rule_name}.php"],
+            ['action' => "Replace fixture TODOs in utils/rector/tests/{$rule_name}/Fixture/example.php.inc"],
+            ['action' => "Fill in utils/rector/docs/{$rule_name}.md (rationale, examples, resolution steps)"],
+            ['action' => 'Run rule tests', 'command' => './run test:rector'],
+        ],
+    ],
+    flags: JSON_PRETTY_PRINT,
+) . "\n";

@@ -89,6 +89,7 @@ use Utils\Rector\Rector\MigrateAddCaseListToHeredocRector;
 use Utils\Rector\Rector\VerticalAttributeArgsRector;
 use Utils\Rector\Rector\DetectStaleCodeReferencesRector;
 use Utils\Rector\Rector\RemoveDefaultsAndApplyAtCallsiteRector;
+use Utils\Rector\Rector\ForbidHardcodedNamespacePrefixRector;
 use ZeroToProd\Thryds\Attributes\Requirement;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
@@ -638,4 +639,9 @@ return static function (RectorConfig $rectorConfig): void {
         'message' => "TODO: [DetectStaleCodeReferencesRector] Comment references '%s' which does not exist. Verify or remove. See: utils/rector/docs/DetectStaleCodeReferencesRector.md",
     ]);
 
+
+    $rectorConfig->ruleWithConfiguration(ForbidHardcodedNamespacePrefixRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: [ForbidHardcodedNamespacePrefixRector] Hardcoded namespace prefix should be passed in as configuration',
+    ]);
 };

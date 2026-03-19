@@ -7,10 +7,9 @@ declare(strict_types=1);
  *
  * Used by check:all. Run manually via: ./run check:migrations
  *
- * Exit 0 if all applied and no modified files.
- * Exit 1 if any pending or modified migrations exist.
- *
+ * Exit 0 if no violations. Exit 1 if violations found.
  * Skips gracefully if the db container is not running.
+ * Output: JSON { ok: bool, violations: [{ id, rule, message, fix }] }
  */
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -25,33 +24,42 @@ try {
     $Migrator = new Migrator(
         Database: new Database(DatabaseConfig::fromEnv()),
         migrations_dir: __DIR__ . '/../migrations',
+        migrations_namespace: 'ZeroToProd\\Thryds\\Migrations\\',
     );
     $Migrator->ensureTable();
     $rows = $Migrator->status();
 } catch (PDOException $e) {
-    echo "check:migrations skipped — db container not running\n";
+    echo json_encode(
+        value: ['ok' => true, 'violations' => [], 'note' => 'skipped — db container not running'],
+        flags: JSON_PRETTY_PRINT,
+    ) . "\n";
     exit(0);
 }
 
-$failures = [];
+$violations = [];
 
 foreach ($rows as $row) {
     if ($row[Migrator::col_status] === MigrationStatus::pending) {
-        $failures[] = "[PEND] {$row[MigrationsTable::id]}: not yet applied — run: ./run migrate";
+        $violations[] = [
+            'id'      => $row[MigrationsTable::id],
+            'rule'    => 'pending-migration',
+            'message' => "migration {$row[MigrationsTable::id]} not yet applied",
+            'fix'     => './run migrate',
+        ];
     }
     if ($row[Migrator::col_status] === MigrationStatus::modified) {
-        $failures[] = "[WARN] {$row[MigrationsTable::id]}: checksum mismatch — file was modified after apply";
+        $violations[] = [
+            'id'      => $row[MigrationsTable::id],
+            'rule'    => 'modified-migration',
+            'message' => "migration {$row[MigrationsTable::id]} checksum mismatch — file was modified after apply",
+            'fix'     => 'Restore the original file or run ./run migrate:rollback',
+        ];
     }
 }
 
-if ($failures !== []) {
-    foreach ($failures as $failure) {
-        echo "$failure\n";
-    }
-    echo "\ncheck:migrations FAILED\n";
-    exit(1);
-}
+echo json_encode(
+    value: ['ok' => $violations === [], 'violations' => $violations],
+    flags: JSON_PRETTY_PRINT,
+) . "\n";
 
-$count = count($rows);
-echo "check:migrations OK ($count migration" . ($count === 1 ? '' : 's') . " applied)\n";
-exit(0);
+exit($violations === [] ? 0 : 1);

@@ -17,12 +17,8 @@ use ZeroToProd\Thryds\Tables\MigrationsTable;
  * Fixture migrations live in tests/Database/Fixtures/Migrations/ and use only
  * DML (INSERT/DELETE) so they run inside the transaction that DatabaseTestCase
  * rolls back in tearDown(). The `migrations` tracking table itself is created
- * as a TEMPORARY TABLE in setUpDatabase() for the same reason.
- *
- * Note: ensureTable() normally creates a real InnoDB table. Here we CREATE a
- * TEMPORARY TABLE named `migrations` first — MySQL will use the temporary table
- * in preference to the permanent one for the duration of the session, giving us
- * full transaction isolation without touching the real schema.
+ * as a session-scoped temporary table in setUpDatabase() — it shadows the real
+ * schema for the duration of the test and is discarded on teardown.
  */
 final class MigratorTest extends DatabaseTestCase
 {
@@ -38,9 +34,8 @@ final class MigratorTest extends DatabaseTestCase
 
     protected function setUpDatabase(): void
     {
-        // Create a TEMPORARY TABLE named `migrations` so Migrator::ensureTable()
-        // skips its CREATE (IF NOT EXISTS finds the temp table), and all writes
-        // stay within the session and are rolled back in tearDown.
+        // A session-scoped temporary table with the same name shadows the real schema,
+        // so ensureTable() finds it via IF NOT EXISTS and all writes are discarded on teardown.
         $this->Database->execute(
             'CREATE TEMPORARY TABLE migrations (
                 id          VARCHAR(20)  NOT NULL,
@@ -63,6 +58,7 @@ final class MigratorTest extends DatabaseTestCase
         $this->Migrator = new Migrator(
             Database: $this->Database,
             migrations_dir: self::fixtures_dir,
+            migrations_namespace: 'ZeroToProd\\Thryds\\Migrations\\',
         );
         $this->Migrator->ensureTable();
     }

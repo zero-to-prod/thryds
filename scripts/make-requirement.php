@@ -166,32 +166,36 @@ PHP;
 // ── Write files ───────────────────────────────────────────────────────────────
 
 file_put_contents(filename: $requirements_file, data: $yaml_block . "\n", flags: FILE_APPEND);
-echo "  Updated requirements.yaml (+{$id})\n";
+
+$updated = ['requirements.yaml'];
+$created = [];
 
 if ($test_file !== null && $test_content !== null) {
     file_put_contents(filename: $test_file, data: $test_content . "\n");
-    $relative = str_replace(search: $base_dir . '/', replace: '', subject: $test_file);
-    echo "  Created {$relative}\n";
+    $created[] = str_replace(search: $base_dir . '/', replace: '', subject: $test_file);
 }
 
 // ── Next steps ────────────────────────────────────────────────────────────────
 
-$steps = [
-    'Fill in description and replace TODO criterion text in requirements.yaml with a present-tense declarative',
-    "Add further criteria ('{$criterion_id}', then '{$id}-b', '{$id}-c', ...) as needed — one criterion per assertion",
+$next_steps = [
+    ['action' => "Fill in description and acceptance criteria for {$id} in requirements.yaml — use present-tense declaratives"],
+    ['action' => "Add further criteria ({$criterion_id}, then {$id}-b, {$id}-c, ...) as needed — one criterion per assertion"],
 ];
 
 if ($test_file !== null) {
     $relative = str_replace(search: $base_dir . '/', replace: '', subject: $test_file);
-    $steps[] = "Implement {$method_name}() in {$relative} and add a method per additional criterion";
-    $steps[] = 'Run: ./run check:requirements && ./run test';
+    $next_steps[] = ['action' => "Implement {$method_name}() in {$relative} and add a method per additional criterion"];
+    $next_steps[] = ['action' => 'Verify coverage and run tests', 'command' => './run check:requirements && ./run test'];
 } else {
-    $steps[] = "verification: {$verification} — no test file generated (see docs/acceptance-criteria.md for what this means)";
-    $steps[] = 'Run: ./run check:requirements';
+    $next_steps[] = ['action' => "verification: {$verification} — no test file generated (see docs/acceptance-criteria.md)"];
+    $next_steps[] = ['action' => 'Verify coverage', 'command' => './run check:requirements'];
 }
 
-echo "\nDone. Next steps:\n";
-
-foreach ($steps as $i => $step) {
-    echo '  ' . ($i + 1) . ". {$step}\n";
-}
+echo json_encode(
+    value: [
+        'created'    => $created,
+        'updated'    => $updated,
+        'next_steps' => $next_steps,
+    ],
+    flags: JSON_PRETTY_PRINT,
+) . "\n";

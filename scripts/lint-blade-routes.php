@@ -19,6 +19,9 @@ declare(strict_types=1);
  *   - href="#anchor"
  *   - href="https://..."
  *   - action="{{ Route::login->value }}"
+ *
+ * Exit 0 if no violations. Exit 1 if violations found.
+ * Output: JSON { ok: bool, violations: [{ file, line, rule, message, fix }] }
  */
 
 $template_dir = __DIR__ . '/../templates';
@@ -30,7 +33,7 @@ if ($files === false || $files === []) {
     $files = scanBladeFiles($template_dir);
 }
 
-$errors = [];
+$violations = [];
 
 foreach ($files as $file) {
     $lines = file($file);
@@ -56,46 +59,45 @@ foreach ($files as $file) {
                 continue;
             }
 
-            $errors[] = sprintf(
-                '  %s:%d — hardcoded %s="%s"',
-                $relative,
-                $line_number,
-                $m[1],
-                $path,
-            );
+            $violations[] = [
+                'file'    => $relative,
+                'line'    => $line_number,
+                'rule'    => 'hardcoded-route',
+                'message' => "hardcoded {$m[1]}=\"{$path}\"",
+                'fix'     => "Use a Route enum value: {$m[1]}=\"{{ Route::name->value }}\"",
+            ];
         }
 
-        // String literal route inside {{ ... }} or {!! ... !!}
+        // String literal route inside {{ ... }}
         if (preg_match('/\{\{[^}]*[\'"](\/[a-zA-Z_\-\/]+)[\'"]/', $line, $m)) {
-            $errors[] = sprintf(
-                '  %s:%d — string literal route \'%s\' in Blade echo',
-                $relative,
-                $line_number,
-                $m[1],
-            );
+            $violations[] = [
+                'file'    => $relative,
+                'line'    => $line_number,
+                'rule'    => 'hardcoded-route',
+                'message' => "string literal route '{$m[1]}' in Blade echo",
+                'fix'     => 'Use a Route enum value instead of a string literal',
+            ];
         }
 
+        // String literal route inside {!! ... !!}
         if (preg_match('/\{!![^!]*[\'"](\/[a-zA-Z_\-\/]+)[\'"]/', $line, $m)) {
-            $errors[] = sprintf(
-                '  %s:%d — string literal route \'%s\' in unescaped Blade echo',
-                $relative,
-                $line_number,
-                $m[1],
-            );
+            $violations[] = [
+                'file'    => $relative,
+                'line'    => $line_number,
+                'rule'    => 'hardcoded-route',
+                'message' => "string literal route '{$m[1]}' in unescaped Blade echo",
+                'fix'     => 'Use a Route enum value instead of a string literal',
+            ];
         }
     }
 }
 
-if ($errors === []) {
-    echo "No hardcoded routes found in Blade templates.\n";
-    exit(0);
-}
+echo json_encode(
+    value: ['ok' => $violations === [], 'violations' => $violations],
+    flags: JSON_PRETTY_PRINT,
+) . "\n";
 
-echo "Hardcoded routes found in Blade templates:\n\n";
-echo implode(separator: "\n", array: $errors) . "\n\n";
-echo sprintf("Found %d violation(s). Use Route enum values instead.\n", count($errors));
-echo "Example: href=\"{{ \\ZeroToProd\\Thryds\\Routes\\Route::about->value }}\"\n";
-exit(1);
+exit($violations === [] ? 0 : 1);
 
 function scanBladeFiles(string $dir): array
 {
