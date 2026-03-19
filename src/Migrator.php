@@ -184,8 +184,6 @@ readonly class Migrator
         sort(array: $files);
         $migrations = [];
         foreach ($files as $path) {
-            // TODO: [opcache] dynamic include prevents OPcache optimization. See: utils/rector/docs/ForbidDynamicIncludeRector.md
-            require_once $path;
             if (!preg_match('/^(\d{4})_(.+)$/', basename($path, suffix: '.php'), $matches)) {
                 continue;
             }

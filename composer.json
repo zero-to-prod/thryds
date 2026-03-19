@@ -17,6 +17,9 @@
         "psr-4": {
             "ZeroToProd\\Thryds\\": "src/"
         },
+        "classmap": [
+            "migrations/"
+        ],
         "files": [
             "src/functions.php"
         ]
@@ -26,7 +29,10 @@
             "ZeroToProd\\Thryds\\Tests\\": "tests/",
             "Utils\\Rector\\Rector\\": "utils/rector/src/",
             "Utils\\Rector\\Tests\\": "utils/rector/tests/"
-        }
+        },
+        "classmap": [
+            "tests/Database/Fixtures/Migrations/"
+        ]
     },
     "authors": [
         {
