@@ -16,7 +16,10 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use ZeroToProd\Thryds\Attributes\ClosedSet;
+use ZeroToProd\Thryds\Attributes\Column;
+use ZeroToProd\Thryds\Attributes\Persists;
 use ZeroToProd\Thryds\Attributes\RouteOperation;
+use ZeroToProd\Thryds\Attributes\Table;
 use ZeroToProd\Thryds\Blade\Component;
 use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Routes\Route;
@@ -34,7 +37,8 @@ $templatesDir = $projectRoot . 'templates';
 
 /** Controllers explicitly mapped in RouteRegistrar (route name → short class name). */
 $explicitControllers = [
-    'home' => 'HomeController',
+    'home'     => 'HomeController',
+    'register' => 'RegisterController',
 ];
 
 /** All registered component names (the x- tag suffix). */
@@ -139,6 +143,22 @@ foreach (Component::cases() as $Component) {
     $addNode('component:' . $Component->value, 'component', $Component->value);
 }
 
+// Scan Table classes (models) — each carries its own schema via #[Column] attributes.
+$tablesDir = $projectRoot . 'src/Tables';
+foreach (glob($tablesDir . '/*.php') ?: [] as $tableFile) {
+    $className = basename($tableFile, '.php');
+    $fqcn      = 'ZeroToProd\\Thryds\\Tables\\' . $className;
+    if (! class_exists($fqcn)) {
+        continue;
+    }
+    $ref        = new ReflectionClass($fqcn);
+    $tableAttrs = $ref->getAttributes(Table::class);
+    if ($tableAttrs === []) {
+        continue;
+    }
+    $addNode('model:' . $className, 'model', $className);
+}
+
 // Walk each route.
 foreach (Route::cases() as $Route) {
     $routeId = 'route:' . $Route->name;
@@ -169,6 +189,23 @@ foreach (Route::cases() as $Route) {
     } else {
         // No view match — JSON endpoint or similar.
         $nodes[$routeId]['registration'] = 'none';
+    }
+}
+
+// Wire persists edges from controllers to models via #[Persists] attributes.
+foreach ($explicitControllers as $controllerName) {
+    $fqcn = 'ZeroToProd\\Thryds\\Controllers\\' . $controllerName;
+    if (! class_exists($fqcn)) {
+        continue;
+    }
+    $ref = new ReflectionClass($fqcn);
+    foreach ($ref->getAttributes(Persists::class) as $attr) {
+        $modelFqcn = $attr->newInstance()->model;
+        $shortName = substr(strrchr($modelFqcn, '\\') ?: ('\\' . $modelFqcn), 1);
+        $modelId   = 'model:' . $shortName;
+        if (isset($nodes[$modelId])) {
+            $addEdge('controller:' . $controllerName, $modelId, 'persists');
+        }
     }
 }
 
@@ -385,6 +422,41 @@ function decorateNode(array $node, string $projectRoot, string $templatesDir, ar
             ];
             break;
 
+        case 'model':
+            $fqcn = 'ZeroToProd\\Thryds\\Tables\\' . $label;
+            if (class_exists($fqcn)) {
+                $ref                 = new ReflectionClass($fqcn);
+                $node['description'] = docblockDescription($ref->getDocComment());
+                $tableAttr           = $ref->getAttributes(Table::class)[0] ?? null;
+                $node['table_name']  = $tableAttr ? $tableAttr->newInstance()->TableName->value : '';
+                $fields              = [];
+                foreach ($ref->getProperties(ReflectionProperty::IS_PUBLIC) as $prop) {
+                    if ($prop->isStatic()) {
+                        continue;
+                    }
+                    $colAttrs = $prop->getAttributes(Column::class);
+                    if ($colAttrs === []) {
+                        continue;
+                    }
+                    $col      = $colAttrs[0]->newInstance();
+                    $fields[] = [
+                        'name'     => $prop->getName(),
+                        'type'     => $col->DataType->value,
+                        'nullable' => $col->nullable,
+                        'comment'  => $col->comment,
+                    ];
+                }
+                $node['fields'] = $fields;
+            } else {
+                $node['description'] = '';
+                $node['table_name']  = '';
+                $node['fields']      = [];
+            }
+            $node['sources'] = [
+                $source('class', $projectRoot . 'src/Tables/' . $label . '.php'),
+            ];
+            break;
+
         case 'test':
             $node['sources'] = [
                 $source('class', $projectRoot . 'tests/Integration/' . $label . '.php'),
@@ -443,6 +515,12 @@ foreach ([
         $extensionGuides[$key] = $attrs[0]->newInstance()->addCase;
     }
 }
+$extensionGuides['model'] = implode("\n", [
+    '1. Add a TableName enum case for the new table.',
+    '2. Create src/Tables/<ClassName>.php with #[Table] and #[Column] attributes.',
+    '3. Write a migration to CREATE TABLE ...',
+    '4. Run ./run migrate to apply.',
+]);
 
 if ($format === 'dot') {
     // Node shapes by type for visual distinction.
@@ -454,6 +532,7 @@ if ($format === 'dot') {
         'layout'     => 'tab',
         'viewmodel'  => 'cylinder',
         'ui_enum'    => 'diamond',
+        'model'      => 'cylinder',
         'test'       => 'hexagon',
     ];
     $colors = [
@@ -464,6 +543,7 @@ if ($format === 'dot') {
         'layout'     => '#D7BDE2',
         'viewmodel'  => '#FADBD8',
         'ui_enum'    => '#D5F5E3',
+        'model'      => '#D5DBDB',
         'test'       => '#D6EAF8',
     ];
 

@@ -50,6 +50,10 @@ enum Route: string
         HttpMethod::GET,
         'New user registration form'
     )]
+    #[RouteOperation(
+        HttpMethod::POST,
+        'Handle registration submission'
+    )]
     case register = '/register';
 
     #[DevOnly]

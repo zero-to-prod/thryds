@@ -90,6 +90,8 @@ use Utils\Rector\Rector\VerticalAttributeArgsRector;
 use Utils\Rector\Rector\DetectStaleCodeReferencesRector;
 use Utils\Rector\Rector\RemoveDefaultsAndApplyAtCallsiteRector;
 use Utils\Rector\Rector\ForbidHardcodedNamespacePrefixRector;
+use Utils\Rector\Rector\RouteInfoRequiredRector;
+use Utils\Rector\Rector\RouteOperationRequiredRector;
 use Rector\CodeQuality\Rector\FuncCall\SortCallLikeNamedArgsRector;
 use Rector\CodeQuality\Rector\Attribute\SortAttributeNamedArgsRector;
 use ZeroToProd\Thryds\Attributes\Requirement;
@@ -655,5 +657,19 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(ForbidHardcodedNamespacePrefixRector::class, [
         'mode' => 'warn',
         'message' => 'TODO: [ForbidHardcodedNamespacePrefixRector] Hardcoded namespace prefix should be passed in as configuration',
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(RouteInfoRequiredRector::class, [
+        'enumClass' => 'ZeroToProd\\Thryds\\Routes\\Route',
+        'attributeClass' => 'ZeroToProd\\Thryds\\Attributes\\RouteInfo',
+        'mode' => 'warn',
+        'message' => "TODO: [RouteInfoRequiredRector] Route case '%s' must declare #[RouteInfo] so the inventory graph can emit a description for this route. See: utils/rector/docs/RouteInfoRequiredRector.md",
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(RouteOperationRequiredRector::class, [
+        'enumClass'      => 'ZeroToProd\\Thryds\\Routes\\Route',
+        'attributeClass' => 'ZeroToProd\\Thryds\\Attributes\\RouteOperation',
+        'mode'           => 'warn',
+        'message'        => "TODO: [RouteOperationRequiredRector] Route case '%s' must declare at least one #[RouteOperation] so the inventory graph can emit HTTP methods for this route. See: utils/rector/docs/RouteOperationRequiredRector.md",
     ]);
 };
