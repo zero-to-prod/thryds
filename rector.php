@@ -93,6 +93,7 @@ use Utils\Rector\Rector\ForbidHardcodedNamespacePrefixRector;
 use Utils\Rector\Rector\RouteInfoRequiredRector;
 use Utils\Rector\Rector\RouteOperationRequiredRector;
 use Utils\Rector\Rector\RequirePersistsOnTableReferenceRector;
+use Utils\Rector\Rector\RequireViewModelDataInMakeCallRector;
 use Utils\Rector\Rector\RouteOperationRequiresRouteInfoRector;
 use Utils\Rector\Rector\AddViewModelAttributeRector;
 use Utils\Rector\Rector\RequireViewKeyConstantOnViewModelRector;
@@ -374,6 +375,11 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(UseClassConstArrayKeyForDataModelRector::class, [
         'mode' => 'auto',
     ]);
+    $rectorConfig->ruleWithConfiguration(RequireViewKeyConstantOnViewModelRector::class, [
+        'viewModelAttribute' => ViewModel::class,
+        'mode' => 'warn',
+        'message' => 'TODO: [RequireViewKeyConstantOnViewModelRector] %s is missing `public const string view_key`. Required for graph inventory. See: utils/rector/docs/RequireViewKeyConstantOnViewModelRector.md',
+    ]);
     $rectorConfig->ruleWithConfiguration(AddViewKeyConstantRector::class, [
         'dataModelTraits' => [
             \ZeroToProd\Thryds\Attributes\DataModel::class,
@@ -398,6 +404,13 @@ return static function (RectorConfig $rectorConfig): void {
             Describe::class => \ZeroToProd\Thryds\Attributes\Describe::class,
         ],
         'mode' => 'auto',
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(RequireViewModelDataInMakeCallRector::class, [
+        'viewEnumClass'       => View::class,
+        'viewModelsNamespace' => 'ZeroToProd\\Thryds\\ViewModels',
+        'mode'                => 'warn',
+        'message'             => "TODO: [RequireViewModelDataInMakeCallRector] make() renders '%s' which has a %s — pass data: [%s::view_key => %s::from([...])] so the view receives typed context. See: utils/rector/docs/RequireViewModelDataInMakeCallRector.md",
     ]);
 
     // --- Route Safety ---

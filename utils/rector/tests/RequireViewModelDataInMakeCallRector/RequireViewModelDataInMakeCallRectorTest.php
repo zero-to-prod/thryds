@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Utils\Rector\Tests\RequireViewKeyConstantOnViewModelRector;
+namespace Utils\Rector\Tests\RequireViewModelDataInMakeCallRector;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use Rector\Testing\PHPUnit\AbstractRectorTestCase;
 
-final class RequireViewKeyConstantOnViewModelRectorTest extends AbstractRectorTestCase
+final class RequireViewModelDataInMakeCallRectorTest extends AbstractRectorTestCase
 {
     #[DataProvider('provideData')]
     public function test(string $filePath): void

@@ -167,6 +167,10 @@ opcache_compile_file(__DIR__ . '/vendor/illuminate/contracts/Support/Jsonable.ph
 opcache_compile_file(__DIR__ . '/vendor/illuminate/collections/HigherOrderCollectionProxy.php');
 opcache_compile_file(__DIR__ . '/vendor/illuminate/view/ComponentAttributeBag.php');
 opcache_compile_file(__DIR__ . '/vendor/illuminate/view/ComponentSlot.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/view/Compilers/ComponentTagCompiler.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/support/Stringable.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/support/Traits/Dumpable.php');
+opcache_compile_file(__DIR__ . '/vendor/illuminate/support/Traits/Tappable.php');
 opcache_compile_file(__DIR__ . '/vendor/psr/http-factory/src/ServerRequestFactoryInterface.php');
 opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-diactoros/src/ServerRequestFactory.php');
 opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-diactoros/src/ServerRequestFilter/FilterServerRequestInterface.php');
@@ -207,9 +211,5 @@ opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-diactoros/src/ServerRequ
 opcache_compile_file(__DIR__ . '/vendor/league/route/src/Cache/Router.php');
 opcache_compile_file(__DIR__ . '/vendor/league/route/src/Cache/FileCache.php');
 opcache_compile_file(__DIR__ . '/vendor/psr/simple-cache/src/CacheInterface.php');
-opcache_compile_file(__DIR__ . '/vendor/illuminate/support/Stringable.php');
-opcache_compile_file(__DIR__ . '/vendor/illuminate/support/Traits/Dumpable.php');
-opcache_compile_file(__DIR__ . '/vendor/illuminate/support/Traits/Tappable.php');
-opcache_compile_file(__DIR__ . '/vendor/illuminate/view/Compilers/ComponentTagCompiler.php');
 opcache_compile_file(__DIR__ . '/vendor/laravel/serializable-closure/src/Support/ClosureStream.php');
 opcache_compile_file(__DIR__ . '/vendor/laravel/serializable-closure/src/Support/ClosureScope.php');
