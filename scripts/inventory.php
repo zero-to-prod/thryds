@@ -18,8 +18,10 @@ require __DIR__ . '/../vendor/autoload.php';
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 use ZeroToProd\Thryds\Attributes\Column;
 use ZeroToProd\Thryds\Attributes\Persists;
+use ZeroToProd\Thryds\Attributes\RedirectsTo;
 use ZeroToProd\Thryds\Attributes\RouteOperation;
 use ZeroToProd\Thryds\Attributes\Table;
+use ZeroToProd\Thryds\Attributes\ViewModel;
 use ZeroToProd\Thryds\Blade\Component;
 use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Routes\Route;
@@ -192,7 +194,7 @@ foreach (Route::cases() as $Route) {
     }
 }
 
-// Wire persists edges from controllers to models via #[Persists] attributes.
+// Wire persists and redirects_to edges from controllers via attributes.
 foreach ($explicitControllers as $controllerName) {
     $fqcn = 'ZeroToProd\\Thryds\\Controllers\\' . $controllerName;
     if (! class_exists($fqcn)) {
@@ -205,6 +207,13 @@ foreach ($explicitControllers as $controllerName) {
         $modelId   = 'model:' . $shortName;
         if (isset($nodes[$modelId])) {
             $addEdge('controller:' . $controllerName, $modelId, 'persists');
+        }
+    }
+    foreach ($ref->getAttributes(RedirectsTo::class) as $attr) {
+        $route   = $attr->newInstance()->Route;
+        $routeId = 'route:' . $route->name;
+        if (isset($nodes[$routeId])) {
+            $addEdge('controller:' . $controllerName, $routeId, 'redirects_to');
         }
     }
 }
@@ -515,12 +524,8 @@ foreach ([
         $extensionGuides[$key] = $attrs[0]->newInstance()->addCase;
     }
 }
-$extensionGuides['model'] = implode("\n", [
-    '1. Add a TableName enum case for the new table.',
-    '2. Create src/Tables/<ClassName>.php with #[Table] and #[Column] attributes.',
-    '3. Write a migration to CREATE TABLE ...',
-    '4. Run ./run migrate to apply.',
-]);
+$extensionGuides['model']     = Table::addCase;
+$extensionGuides['viewmodel'] = ViewModel::addCase;
 
 if ($format === 'dot') {
     // Node shapes by type for visual distinction.
