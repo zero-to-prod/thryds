@@ -12,7 +12,10 @@ use ZeroToProd\Thryds\UI\Domain;
  * Values: Debug=0, Info=1, Warn=2, Error=3.
  * @see https://frankenphp.dev/docs/worker/#logging
  */
-#[ClosedSet(Domain::log_severity_levels, addCase: 'Add enum case. No other changes needed — Log methods accept any LogLevel.')]
+#[ClosedSet(
+    Domain::log_severity_levels,
+    addCase: 'Add enum case. No other changes needed — Log methods accept any LogLevel.'
+)]
 enum LogLevel: int
 {
     case Debug = FRANKENPHP_LOG_LEVEL_DEBUG;

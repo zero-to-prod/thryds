@@ -10,7 +10,7 @@ All code implementations MUST be least invasive and straightforward.
 
 - ALWAYS use Docker. Never run PHP, Composer, or app tooling on the host.
 - ALWAYS run `./run check:all` before completing any task.
-- `./run <script>` = `docker compose exec web composer <script>` for all Composer scripts, or `docker compose -f compose.load-test.yaml run --rm k6` for `test:load`.
+- `./run <script>` = `docker compose exec web composer <script>` for all Composer scripts, or `docker compose -f compose.load-test.yaml run --rm k6` for `test:load`, or the named aliases below.
 - For raw PHP: `docker compose exec web php scripts/<name>.php`
 - Reset static state per request in worker mode (see `RequestId::reset()` in `public/index.php`).
 
@@ -22,12 +22,12 @@ All code implementations MUST be least invasive and straightforward.
 | `compose.development.yaml` | Dev overrides — must be passed explicitly with `-f`. Adds hot_reload + file-watching worker. Never applies to production. |
 | `compose.load-test.yaml` | Production load test. Builds `production` target, skips the override entirely. |
 
-Dev: `docker compose -f compose.yaml -f compose.development.yaml up -d`
+Dev: `./run dev:up`
 Production: `APP_ENV=production docker compose -f compose.yaml up -d`
 
 ## Commands
 
-- `docker compose -f compose.yaml -f compose.development.yaml up -d` — start dev
+- `./run dev:up` — start dev
 - `./run check:all` — full checks + tests
 - `./run test` — tests only
 - `./run test:load` — run k6 load test against a production build (results → `logs/k6/results.json`)

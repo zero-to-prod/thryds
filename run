@@ -1,5 +1,7 @@
 #!/bin/sh
-if [ "$1" = "test:load" ]; then
+if [ "$1" = "dev:up" ]; then
+    docker compose -f compose.yaml -f compose.development.yaml up -d
+elif [ "$1" = "test:load" ]; then
     shift
     docker compose -f compose.load-test.yaml run --rm k6 "$@"
 else

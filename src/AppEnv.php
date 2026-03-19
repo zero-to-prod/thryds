@@ -15,6 +15,8 @@ enum AppEnv: string
 
     public static function fromEnv(): self
     {
-        return self::tryFrom((string) $_SERVER[Env::APP_ENV] ?? $_ENV[Env::APP_ENV] ?? self::production->value) ?? self::production;
+        $raw = $_SERVER[Env::APP_ENV] ?? $_ENV[Env::APP_ENV] ?? self::production->value;
+
+        return self::tryFrom(is_string(value: $raw) ? $raw : self::production->value) ?? self::production;
     }
 }

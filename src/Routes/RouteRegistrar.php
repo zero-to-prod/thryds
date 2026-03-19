@@ -45,7 +45,7 @@ readonly class RouteRegistrar
                 Route::opcache_status->value,
                 static fn(): ResponseInterface => new JsonResponse(
                     data: json_decode(
-                        json_encode(value: opcache_get_status(false), flags: JSON_PARTIAL_OUTPUT_ON_ERROR),
+                        (string) json_encode(value: opcache_get_status(false), flags: JSON_PARTIAL_OUTPUT_ON_ERROR),
                         associative: true,
                     ),
                 ),

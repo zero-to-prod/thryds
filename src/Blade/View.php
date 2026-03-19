@@ -28,7 +28,7 @@ enum View: string
     case register = 'register';
     case styleguide = 'styleguide';
 
-    /** Returns stub data for preload rendering. Most views need none; views with ViewModels return their minimum required data. */
+    /** @return array<string, mixed> Returns stub data for preload rendering. Most views need none; views with ViewModels return their minimum required data. */
     public function stubData(): array
     {
         return match ($this) {

@@ -21,21 +21,36 @@ class Database
         $this->PDO = self::connect($DatabaseConfig);
     }
 
-    /** SELECT — returns all rows as associative arrays. */
+    /**
+     * SELECT — returns all rows as associative arrays.
+     *
+     * @param array<string, mixed> $params
+     * @return array<int, array<string, mixed>>
+     */
     public function all(string $sql, array $params = []): array
     {
         return $this->run($sql, $params)->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /** SELECT — returns one row or null. */
+    /**
+     * SELECT — returns one row or null.
+     *
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>|null
+     */
     public function one(string $sql, array $params = []): ?array
     {
+        /** @var array<string, mixed>|false $row */
         $row = $this->run($sql, $params)->fetch(PDO::FETCH_ASSOC);
 
-        return $row === false ? null : $row;
+        return $row !== false ? $row : null;
     }
 
-    /** SELECT — returns a single scalar value or null. */
+    /**
+     * SELECT — returns a single scalar value or null.
+     *
+     * @param array<string, mixed> $params
+     */
     public function scalar(string $sql, array $params = []): mixed
     {
         $value = $this->run($sql, $params)->fetchColumn();
@@ -43,18 +58,26 @@ class Database
         return $value === false ? null : $value;
     }
 
-    /** INSERT / UPDATE / DELETE — returns affected row count. */
+    /**
+     * INSERT / UPDATE / DELETE — returns affected row count.
+     *
+     * @param array<string, mixed> $params
+     */
     public function execute(string $sql, array $params = []): int
     {
         return $this->run($sql, $params)->rowCount();
     }
 
-    /** INSERT — returns last insert ID. */
+    /**
+     * INSERT — returns last insert ID.
+     *
+     * @param array<string, mixed> $params
+     */
     public function insert(string $sql, array $params = []): string
     {
         $this->run($sql, $params);
 
-        return $this->PDO->lastInsertId();
+        return (string) $this->PDO->lastInsertId();
     }
 
     public function beginTransaction(): void
@@ -87,6 +110,7 @@ class Database
         }
     }
 
+    /** @param array<string, mixed> $params */
     private function run(string $sql, array $params): PDOStatement
     {
         try {

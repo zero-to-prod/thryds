@@ -11,7 +11,13 @@ use ZeroToProd\Thryds\UI\Domain;
 
 #[ClosedSet(
     Domain::url_routes,
-    addCase: '1. Add enum case. 2. Register in WebRoutes::register() (inline closure for read-only views, controller class for stateful or complex logic). 3. Create controller + template. 4. Add integration test. 5. Add template render in generate-preload.php.',
+    addCase: <<<TEXT
+    1. Add enum case. 
+    2. If the route is a simple read-only view: add a matching View case with the same name — RouteRegistrar::register() auto-registers it via View::tryFrom(\$Route->name). If the route needs stateful or complex logic: add an explicit \$Router->map() call in RouteRegistrar::register() instead. 
+    3. Create controller (if needed) + template. 
+    4. Add integration test. 
+    5. Add template render in generate-preload.php.
+    TEXT
 )]
 enum Route: string
 {
@@ -41,6 +47,10 @@ enum Route: string
         return $matches[1];
     }
 
+    /**
+     * @param array<string, string> $params
+     * @param array<string, string> $query
+     */
     public function with(array $params = [], array $query = []): RouteUrl
     {
         return new RouteUrl(Route: $this, params: $params, query: $query);

@@ -9,6 +9,10 @@ use Stringable;
 
 readonly class RouteUrl implements Stringable
 {
+    /**
+     * @param array<string, string> $params
+     * @param array<string, string> $query
+     */
     public function __construct(
         public Route $Route,
         public array $params = [],
