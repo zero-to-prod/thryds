@@ -4,12 +4,6 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Tests\Database;
 
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'should-not-persist' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'oops' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'SELECT COUNT(*) FROM _test_db WHERE val = ?' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'closure-result' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'committed' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'INSERT INTO _test_db (val) VALUES (?)' (used 3x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
 use PDOException;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;

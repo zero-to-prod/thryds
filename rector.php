@@ -92,6 +92,8 @@ use Utils\Rector\Rector\RemoveDefaultsAndApplyAtCallsiteRector;
 use Utils\Rector\Rector\ForbidHardcodedNamespacePrefixRector;
 use Utils\Rector\Rector\RouteInfoRequiredRector;
 use Utils\Rector\Rector\RouteOperationRequiredRector;
+use Utils\Rector\Rector\RequirePersistsOnTableReferenceRector;
+use Utils\Rector\Rector\RouteOperationRequiresRouteInfoRector;
 use Rector\CodeQuality\Rector\FuncCall\SortCallLikeNamedArgsRector;
 use Rector\CodeQuality\Rector\Attribute\SortAttributeNamedArgsRector;
 use ZeroToProd\Thryds\Attributes\Requirement;
@@ -671,5 +673,21 @@ return static function (RectorConfig $rectorConfig): void {
         'attributeClass' => 'ZeroToProd\\Thryds\\Attributes\\RouteOperation',
         'mode'           => 'warn',
         'message'        => "TODO: [RouteOperationRequiredRector] Route case '%s' must declare at least one #[RouteOperation] so the inventory graph can emit HTTP methods for this route. See: utils/rector/docs/RouteOperationRequiredRector.md",
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(RouteOperationRequiresRouteInfoRector::class, [
+        'enumClass'              => 'ZeroToProd\\Thryds\\Routes\\Route',
+        'triggerAttributeClass'  => 'ZeroToProd\\Thryds\\Attributes\\RouteOperation',
+        'requiredAttributeClass' => 'ZeroToProd\\Thryds\\Attributes\\RouteInfo',
+        'mode'                   => 'warn',
+        'message'                => "TODO: [RouteOperationRequiresRouteInfoRector] Route case '%s' declares #[RouteOperation] but is missing #[RouteInfo]. Both attributes are required together: #[RouteOperation] declares HTTP methods, #[RouteInfo] declares the route description. See: utils/rector/docs/RouteOperationRequiresRouteInfoRector.md",
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(RequirePersistsOnTableReferenceRector::class, [
+        'tablesNamespace'      => 'ZeroToProd\\Thryds\\Tables',
+        'attributeClass'       => 'ZeroToProd\\Thryds\\Attributes\\Persists',
+        'controllersNamespace' => 'ZeroToProd\\Thryds\\Controllers',
+        'mode'                 => 'warn',
+        'message'              => "TODO: [RequirePersistsOnTableReferenceRector] '%s' imports '%s' from the tables namespace but is missing #[Persists(%s::class)]. Add it so the inventory graph shows the persistence edge. See: utils/rector/docs/RequirePersistsOnTableReferenceRector.md",
     ]);
 };
