@@ -10,7 +10,8 @@
         "jenssegers/blade": "^2",
         "zero-to-prod/data-model": "^81.14",
         "ext-frankenphp": "*",
-        "ext-zend-opcache": "*"
+        "ext-zend-opcache": "*",
+        "ext-pdo": "*"
     },
     "autoload": {
         "psr-4": {
@@ -55,6 +56,7 @@
         "test": "./vendor/bin/phpunit",
         "test:unit": "./vendor/bin/phpunit --testsuite unit",
         "test:integration": "./vendor/bin/phpunit --testsuite integration",
+        "test:database": "./vendor/bin/phpunit --testsuite database",
         "test:rector": "./vendor/bin/phpunit utils",
         "fix:style": "./vendor/bin/php-cs-fixer fix",
         "check:style": "./vendor/bin/php-cs-fixer fix --dry-run --diff",

@@ -57,6 +57,21 @@ class Database
         return $this->PDO->lastInsertId();
     }
 
+    public function beginTransaction(): void
+    {
+        $this->PDO->beginTransaction();
+    }
+
+    public function rollBack(): void
+    {
+        $this->PDO->rollBack();
+    }
+
+    public function inTransaction(): bool
+    {
+        return $this->PDO->inTransaction();
+    }
+
     /** Wrap a block in a transaction; re-throws on failure. */
     public function transaction(Closure $Closure): mixed
     {
