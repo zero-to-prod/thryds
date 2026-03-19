@@ -29,7 +29,7 @@ Three-layer caching strategy:
 - `scripts/production-checklist.php` — orchestrates all production optimization checks
 
 ### Application Code
-- `src/Routes/WebRoutes.php` — registers `/_opcache/status` and `/_opcache/scripts` endpoints
+- `src/Routes/RouteRegistrar.php` — registers `/_opcache/status` and `/_opcache/scripts` endpoints
 - `src/Routes/Route.php` — defines `Route::opcache_status` and `Route::opcache_scripts` enum cases
 - `rector.php` — enforces OPcache-friendly code patterns via Rector rules
 
@@ -103,7 +103,7 @@ The audit warms the cache by hitting `/` and `/about` (5 + 50 requests), takes a
 
 ## Status Endpoints
 
-Registered in `src/Routes/WebRoutes.php`:
+Registered in `src/Routes/RouteRegistrar.php`:
 - `GET /_opcache/status` — returns `opcache_get_status(false)` as JSON (aggregate stats)
 - `GET /_opcache/scripts` — returns array of cached script paths from `opcache_get_status(true)['scripts']`
 

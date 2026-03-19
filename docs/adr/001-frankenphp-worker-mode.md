@@ -19,4 +19,4 @@ Use FrankenPHP in worker mode as the application server. The app boots once (`Ap
 - **Static state persists across requests.** Any mutable static variable (e.g., `RequestId::$current`) must be reset in a `finally` block after each request. This is a class of bug that doesn't exist in FPM.
 - **OPcache preloading is effective.** Because the worker process is long-lived, preloaded bytecode stays in shared memory and is used for every request.
 - **Caddy is built in.** No separate Nginx/Apache config — HTTPS, HTTP/2, and HTTP/3 work out of the box.
-- **ext-frankenphp stubs are incomplete.** PHPStan level is capped at 2 because higher levels produce false positives from missing stub definitions (see ADR-003).
+- **ext-frankenphp stubs are sufficient.** PHPStan runs at level 9 (see ADR-003). The ext-frankenphp stubs cover all used functions — no false positives were found at any level.

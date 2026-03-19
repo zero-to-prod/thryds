@@ -9,6 +9,6 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RequireRoutePatternConstRector::class, [
         'classSuffix' => 'Route',
         'constName' => 'pattern',
-        'excludedClasses' => ['WebRoutes'],
+        'excludedClasses' => ['RouteRegistrar'],
     ]);
 };

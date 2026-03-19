@@ -21,11 +21,11 @@ readonly class DatabaseConfig
     public static function fromEnv(): self
     {
         return new self(
-            host: (string) getenv('DB_HOST'),
-            port: (int) (getenv('DB_PORT') ?: 3306),
-            database: (string) getenv('DB_DATABASE'),
-            username: (string) getenv('DB_USERNAME'),
-            password: (string) getenv('DB_PASSWORD'),
+            host: (string) getenv(Env::DB_HOST),
+            port: (int) (getenv(Env::DB_PORT) ?: 3306),
+            database: (string) getenv(Env::DB_DATABASE),
+            username: (string) getenv(Env::DB_USERNAME),
+            password: (string) getenv(Env::DB_PASSWORD),
         );
     }
 }

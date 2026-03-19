@@ -37,14 +37,14 @@ Project config (`rector.php`): `mode => 'auto'`.
 
 ### Before
 ```php
-WebRoutes::register(Router: $Router, Blade: $Blade);
+RouteRegistrar::register(Router: $Router, Blade: $Blade);
 doSomething(request: $request);
 new HtmlResponse(html: $html);
 ```
 
 ### After
 ```php
-WebRoutes::register($Router, $Blade);
+RouteRegistrar::register($Router, $Blade);
 doSomething($request);
 new HtmlResponse($html);
 ```

@@ -17,7 +17,11 @@ use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
  */
 #[ClosedSet(
     Domain::blade_templates,
-    addCase: '1. Add enum case. 2. Create templates/{case}.blade.php. 3. If the view requires a ViewModel, add stub data to stubData().',
+    addCase: <<<TEXT
+        1. Add enum case.
+        2. Create templates/{case}.blade.php.
+        3. If the view requires a ViewModel, add stub data to stubData().
+    TEXT,
 )]
 enum View: string
 {

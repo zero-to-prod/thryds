@@ -36,7 +36,7 @@ final class RemoveNamedArgWhenVarMatchesParamRector extends AbstractRector imple
         return new RuleDefinition('Remove named argument when the variable name already matches the parameter name', [
             new CodeSample(
                 <<<'CODE_SAMPLE'
-WebRoutes::register(Router: $Router, Blade: $Blade);
+RouteRegistrar::register(Router: $Router, Blade: $Blade);
 $Router->dispatch(request: $Request);
 new HtmlResponse(html: $html);
 CODE_SAMPLE,

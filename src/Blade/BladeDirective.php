@@ -7,7 +7,10 @@ namespace ZeroToProd\Thryds\Blade;
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 use ZeroToProd\Thryds\UI\Domain;
 
-#[ClosedSet(Domain::blade_directives, addCase: '1. Add enum case. 2. Register directive in BladeDirectives::register().')]
+#[ClosedSet(Domain::blade_directives, addCase: <<<TEXT
+    1. Add enum case.
+    2. Register directive in BladeDirectives::register().
+TEXT)]
 enum BladeDirective: string
 {
     case production = 'production';

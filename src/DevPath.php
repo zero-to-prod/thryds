@@ -8,7 +8,12 @@ use ZeroToProd\Thryds\Attributes\ClosedSet;
 use ZeroToProd\Thryds\Attributes\Group;
 use ZeroToProd\Thryds\UI\Domain;
 
-#[ClosedSet(Domain::dev_paths, addCase: '1. Add enum case with #[Group(DevPathGroup::…)] attribute. Both consumers use DevFilter::isDevPath() so no further changes needed.')]
+#[ClosedSet(
+    Domain::dev_paths,
+    addCase: <<<TEXT
+    1. Add enum case with #[Group(DevPathGroup::…)] attribute. Both consumers use DevFilter::isDevPath() so no further changes needed.
+    TEXT
+)]
 /**
  * Closed set of path segments that identify dev-only files.
  *

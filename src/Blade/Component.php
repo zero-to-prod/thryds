@@ -14,7 +14,11 @@ use ZeroToProd\Thryds\UI\Domain;
  */
 #[ClosedSet(
     Domain::blade_components,
-    addCase: '1. Add enum case. 2. Create templates/components/{case}.blade.php with @props. 3. Add example to styleguide template.',
+    addCase: <<<TEXT
+        1. Add enum case.
+        2. Create templates/components/{case}.blade.php with @props.
+        3. Add example to styleguide template.
+    TEXT,
 )]
 enum Component: string
 {

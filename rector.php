@@ -12,6 +12,7 @@ use Utils\Rector\Rector\AddViewKeyConstantRector;
 use Utils\Rector\Rector\ExtractRepeatedExpressionToVariableRector;
 use Utils\Rector\Rector\ExtractRoutePatternToRouteClassRector;
 use Utils\Rector\Rector\ForbidArrayShapeReturnRector;
+use Utils\Rector\Rector\ForbidBareGetenvCallRector;
 use Utils\Rector\Rector\ForbidBareServerEnvKeyRector;
 use Utils\Rector\Rector\ForbidEnvCheckOutsideConfigRector;
 use Utils\Rector\Rector\ForbidCallableTypeVariableNameRector;
@@ -83,6 +84,8 @@ use Utils\Rector\Rector\RequireExhaustiveMatchOnEnumRector;
 use Utils\Rector\Rector\RequireEnumForBranchingConstantRector;
 use Utils\Rector\Rector\DetectParallelBladePhpBehaviorRector;
 use Utils\Rector\Rector\ValidateRequirementIdsRector;
+use Utils\Rector\Rector\MigrateAddCaseListToHeredocRector;
+use Utils\Rector\Rector\DetectStaleCodeReferencesRector;
 use ZeroToProd\Thryds\Attributes\Requirement;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
@@ -449,6 +452,12 @@ return static function (RectorConfig $rectorConfig): void {
         'mode' => 'auto',
         'message' => "TODO: [ForbidBareServerEnvKeyRector] Use %s::%s instead of bare string '%s'. See: utils/rector/docs/ForbidBareServerEnvKeyRector.md",
     ]);
+    $rectorConfig->ruleWithConfiguration(ForbidBareGetenvCallRector::class, [
+        'envClass' => Env::class,
+        'functions' => ['getenv'],
+        'mode' => 'auto',
+        'message' => "TODO: [ForbidBareGetenvCallRector] Use %s::%s instead of bare string '%s' in getenv(). See: utils/rector/docs/ForbidBareGetenvCallRector.md",
+    ]);
 
     // --- Enum Value Safety ---
     $rectorConfig->ruleWithConfiguration(RequireEnumValueAccessRector::class, [
@@ -556,6 +565,9 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
 
     // --- Checklist Validation ---
+    $rectorConfig->ruleWithConfiguration(MigrateAddCaseListToHeredocRector::class, [
+        'mode' => 'auto',
+    ]);
     $rectorConfig->ruleWithConfiguration(ValidateChecklistPathsRector::class, [
         'attributes' => [
             ['attributeClass' => SourceOfTruth::class, 'paramName' => 'addCase'],
@@ -592,5 +604,10 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(ValidateRequirementIdsRector::class, [
         'requirements_file' => __DIR__ . '/requirements.yaml',
         'message' => "TODO: [ValidateRequirementIdsRector] Requirement ID '%s' not found in requirements.yaml. See: docs/requirement-tracing.md",
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(DetectStaleCodeReferencesRector::class, [
+        'mode' => 'warn',
+        'message' => "TODO: [DetectStaleCodeReferencesRector] Comment references '%s' which does not exist. Verify or remove. See: utils/rector/docs/DetectStaleCodeReferencesRector.md",
     ]);
 };
