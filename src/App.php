@@ -49,7 +49,7 @@ readonly class App
     }
 
     #[Requirement('PERF-001')]
-    public static function boot(string $base_dir, ?Config $Config = null): self
+    public static function boot(string $base_dir, ?Config $Config = null, ?DatabaseConfig $DatabaseConfig = null): self
     {
         $Config ??= Config::from([
             Config::AppEnv => AppEnv::fromEnv(),
@@ -72,6 +72,6 @@ readonly class App
             cacheEnabled: false,
         );
 
-        return new self($Config, $Blade, $Router, new Database(DatabaseConfig::fromEnv()));
+        return new self($Config, $Blade, $Router, new Database($DatabaseConfig ?? DatabaseConfig::fromEnv()));
     }
 }

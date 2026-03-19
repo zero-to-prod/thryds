@@ -15,6 +15,7 @@ use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Config;
+use ZeroToProd\Thryds\DatabaseConfig;
 use ZeroToProd\Thryds\Header;
 use ZeroToProd\Thryds\RequestId;
 use ZeroToProd\Thryds\Routes\HttpMethod;
@@ -47,7 +48,7 @@ abstract class IntegrationTestCase extends TestCase
             Config::AppEnv => AppEnv::development->value,
             Config::blade_cache_dir => $this->cache_dir,
             Config::template_dir => self::base_dir . '/templates',
-        ]));
+        ]), new DatabaseConfig(host: '0.0.0.0', port: 0, database: '', username: '', password: ''));
     }
 
     protected function tearDown(): void
