@@ -8,7 +8,7 @@ Thryds — social media platform integrating AI with humanity. Web UI + API back
 
 - ALWAYS use Docker. Never run PHP, Composer, or app tooling on the host.
 - ALWAYS run `./run check:all` before completing any task.
-- All code implementations MUST be least invasive and straightforward.
+- All code implementations MUST be least invasive and straightforward, optimized for an ai-native experience.
 
 ## Command Execution
 
