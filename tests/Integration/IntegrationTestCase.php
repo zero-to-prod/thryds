@@ -10,6 +10,7 @@ use Laminas\Diactoros\Uri;
 use League\Route\Http\Exception as HttpException;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
+use Psr\SimpleCache\InvalidArgumentException;
 use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Blade\View;
@@ -72,6 +73,9 @@ abstract class IntegrationTestCase extends TestCase
             ->withHeader(Header::request_id, RequestId::init(ServerRequestInterface: $ServerRequest));
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function get(Route $Route): ResponseInterface
     {
         return $this->App->Router->dispatch(

@@ -12,13 +12,12 @@ use Throwable;
 
 class Database
 {
-    private PDO $PDO;
+    private ?PDO $PDO = null;
     private readonly DatabaseConfig $DatabaseConfig;
 
     public function __construct(DatabaseConfig $DatabaseConfig)
     {
         $this->DatabaseConfig = $DatabaseConfig;
-        $this->PDO = self::connect($DatabaseConfig);
     }
 
     /**
@@ -77,44 +76,49 @@ class Database
     {
         $this->run($sql, $params);
 
-        return (string) $this->PDO->lastInsertId();
+        return (string) $this->pdo()->lastInsertId();
     }
 
     public function beginTransaction(): void
     {
-        $this->PDO->beginTransaction();
+        $this->pdo()->beginTransaction();
     }
 
     public function rollBack(): void
     {
-        $this->PDO->rollBack();
+        $this->pdo()->rollBack();
     }
 
     public function inTransaction(): bool
     {
-        return $this->PDO->inTransaction();
+        return $this->pdo()->inTransaction();
     }
 
     /** Wrap a block in a transaction; re-throws on failure. */
     public function transaction(Closure $Closure): mixed
     {
-        $this->PDO->beginTransaction();
+        $this->pdo()->beginTransaction();
         try {
             $result = $Closure($this);
-            $this->PDO->commit();
+            $this->pdo()->commit();
 
             return $result;
         } catch (Throwable $e) {
-            $this->PDO->rollBack();
+            $this->pdo()->rollBack();
             throw $e;
         }
+    }
+
+    private function pdo(): PDO
+    {
+        return $this->PDO ??= self::connect($this->DatabaseConfig);
     }
 
     /** @param array<string, mixed> $params */
     private function run(string $sql, array $params): PDOStatement
     {
         try {
-            $stmt = $this->PDO->prepare(query: $sql);
+            $stmt = $this->pdo()->prepare(query: $sql);
             $stmt->execute($params);
 
             return $stmt;

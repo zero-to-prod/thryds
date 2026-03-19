@@ -17,8 +17,8 @@ final class AboutRouteTest extends IntegrationTestCase
         $this->assertSame(200, $ResponseInterface->getStatusCode());
         $this->assertStringContainsString(self::TEXT_HTML, $ResponseInterface->getHeaderLine('Content-Type'));
 
-        $body = (string) $ResponseInterface->getBody();
-        $this->assertStringContainsString('About Thryds', haystack: $body);
-        $this->assertStringContainsString('</html>', haystack: $body);
+        $haystack = (string) $ResponseInterface->getBody();
+        $this->assertStringContainsString('About Thryds', $haystack);
+        $this->assertStringContainsString('</html>', $haystack);
     }
 }
