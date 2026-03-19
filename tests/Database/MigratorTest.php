@@ -10,6 +10,8 @@ use ZeroToProd\Thryds\MigrationStatus;
 use ZeroToProd\Thryds\Migrator;
 use ZeroToProd\Thryds\Tables\MigrationsTable;
 
+// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string '/nonexistent/migrations' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
+// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'ZeroToProd\Thryds\Migrations\' (used 6x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
 /**
  * Tests the Migrator infrastructure: table creation, apply, rollback, and
  * checksum-based modification detection.
@@ -163,5 +165,78 @@ final class MigratorTest extends DatabaseTestCase
         $this->expectExceptionMessageMatches('/0001.*modified/');
 
         $this->Migrator->migrate();
+    }
+
+    #[Test]
+    public function rollback_returns_null_when_nothing_applied(): void
+    {
+        $this->assertNull($this->Migrator->rollback());
+    }
+
+    #[Test]
+    public function rollback_throws_when_applied_migration_file_not_found(): void
+    {
+        $this->Migrator->migrate();
+
+        $Migrator = new Migrator(
+            Database: $this->Database,
+            migrations_dir: '/nonexistent/migrations',
+            migrations_namespace: 'ZeroToProd\\Thryds\\Migrations\\',
+        );
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/applied but its file was not found/');
+
+        $Migrator->rollback();
+    }
+
+    #[Test]
+    public function status_returns_empty_when_no_migration_files_exist(): void
+    {
+        $this->assertSame([], new Migrator(
+            Database: $this->Database,
+            migrations_dir: '/nonexistent/migrations',
+            migrations_namespace: 'ZeroToProd\\Thryds\\Migrations\\',
+        )->status());
+    }
+
+    #[Test]
+    public function discover_skips_files_without_valid_class_or_attribute(): void
+    {
+        $this->assertSame([], new Migrator(
+            Database: $this->Database,
+            migrations_dir: __DIR__ . '/Fixtures/MigrationsSkip',
+            migrations_namespace: 'ZeroToProd\\Thryds\\Migrations\\',
+        )->status());
+    }
+
+    #[Test]
+    public function discover_throws_when_migration_attribute_id_mismatches_filename(): void
+    {
+        $Migrator = new Migrator(
+            Database: $this->Database,
+            migrations_dir: __DIR__ . '/Fixtures/MigrationsWrongId',
+            migrations_namespace: 'ZeroToProd\\Thryds\\Migrations\\',
+        );
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/does not match filename prefix/');
+
+        $Migrator->status();
+    }
+
+    #[Test]
+    public function migrate_throws_when_migration_class_does_not_implement_interface(): void
+    {
+        $Migrator = new Migrator(
+            Database: $this->Database,
+            migrations_dir: __DIR__ . '/Fixtures/MigrationsNotInterface',
+            migrations_namespace: 'ZeroToProd\\Thryds\\Migrations\\',
+        );
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/must implement MigrationInterface/');
+
+        $Migrator->migrate();
     }
 }

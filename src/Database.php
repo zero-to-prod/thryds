@@ -94,7 +94,10 @@ class Database
         return $this->PDO !== null && $this->PDO->inTransaction();
     }
 
-    /** Wrap a block in a transaction; re-throws on failure. */
+    /** Wrap a block in a transaction; re-throws on failure.
+     *
+     * @throws Throwable
+     */
     public function transaction(Closure $Closure): mixed
     {
         $this->pdo()->beginTransaction();

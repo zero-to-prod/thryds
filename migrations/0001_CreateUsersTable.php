@@ -17,13 +17,17 @@ final readonly class CreateUsersTable implements MigrationInterface
     public function up(Database $Database): void
     {
         $Database->execute(
-            'CREATE TABLE IF NOT EXISTS `users` (
-                id         BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
-                email      VARCHAR(255)     NOT NULL,
-                created_at DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                PRIMARY KEY (id),
-                UNIQUE KEY uq_users_email (email)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
+            "CREATE TABLE IF NOT EXISTS `users` (
+                id                CHAR(26)          NOT NULL COMMENT 'Primary key',
+                name              VARCHAR(255)       NOT NULL COMMENT 'Display name',
+                handle            VARCHAR(30)        NOT NULL COMMENT 'Unique public username',
+                email             VARCHAR(255)       NULL     COMMENT 'Contact email address',
+                email_verified_at TIMESTAMP          NULL     COMMENT 'Timestamp of email verification',
+                password          VARCHAR(255)       NOT NULL COMMENT 'Hashed password',
+                created_at        TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP                    COMMENT 'Record creation time',
+                updated_at        TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Record last update time',
+                PRIMARY KEY (id)
+            ) COLLATE=utf8mb4_unicode_ci"
         );
     }
 

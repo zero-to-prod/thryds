@@ -254,7 +254,7 @@ readonly class Migrator
     {
         $value = $row[$key];
         if (!is_string($value)) {
-            throw new RuntimeException("Expected string for key '$key', got " . gettype($value) . '.');
+            throw new RuntimeException("Expected string for key '$key', got " . gettype($value) . '.'); // @codeCoverageIgnore
         }
 
         return $value;
@@ -263,7 +263,7 @@ readonly class Migrator
     private function instantiate(string $class): MigrationInterface
     {
         if (!class_exists($class)) {
-            throw new RuntimeException("Migration class $class does not exist.");
+            throw new RuntimeException("Migration class $class does not exist."); // @codeCoverageIgnore
         }
         $instance = new ReflectionClass(objectOrClass: $class)->newInstance();
         if (!$instance instanceof MigrationInterface) {

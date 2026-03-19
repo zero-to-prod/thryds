@@ -2,7 +2,7 @@
 
 ## Project
 
-Thryds — social media platform integrating AI with humanity. Web UI + API backend. PHP 8.5, FrankenPHP, Docker.
+Thryds — a play off of threads, is a social media platform integrating AI with humanity. Web UI + API backend. PHP 8.5, FrankenPHP, Docker.
 
 ## Rules
 

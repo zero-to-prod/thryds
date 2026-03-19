@@ -119,7 +119,15 @@ return static function (RectorConfig $rectorConfig): void {
     // Table definition enums use attributes on enum cases, which triggers a Rector
     // scope-resolution bug (PhpParser\Node\Attribute missing scope). These files are
     // pure schema declarations — no executable logic for Rector to transform.
-    $rectorConfig->skip([__DIR__ . '/src/Tables']);
+    $rectorConfig->skip([
+        __DIR__ . '/src/Tables',
+        // Intentionally minimal fixture files trigger Rector's scope-resolution bug
+        __DIR__ . '/tests/Database/Fixtures/MigrationsSkip',
+        __DIR__ . '/tests/Database/Fixtures/MigrationsWrongId',
+        __DIR__ . '/tests/Database/Fixtures/MigrationsNotInterface',
+        // Migration files repeat table names across up()/down() by design
+        SuggestDuplicateStringConstantRector::class => [__DIR__ . '/migrations'],
+    ]);
     $rectorConfig->importNames();
 
     // --- Naming ---

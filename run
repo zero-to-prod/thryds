@@ -58,6 +58,10 @@ GENERATE (scaffold new files)
   generate:rector-rule  Scaffold a new custom Rector rule with tests and docs
   generate:preload      Regenerate OPcache preload manifest (run before prod:check)
 
+DATABASE (read-only)
+  db:query         Execute a SELECT statement and print results as JSON
+                   Pass -- "<sql>" to specify the query
+
 AUDIT & PRODUCTION
   prod:check       Full production readiness checklist (routes, OPcache, templates)
   prod:route-cache Verify the route cache is valid and up to date

@@ -32,7 +32,10 @@
             "Utils\\Rector\\Tests\\": "utils/rector/tests/"
         },
         "classmap": [
-            "tests/Database/Fixtures/Migrations/"
+            "tests/Database/Fixtures/Migrations/",
+            "tests/Database/Fixtures/MigrationsSkip/",
+            "tests/Database/Fixtures/MigrationsWrongId/",
+            "tests/Database/Fixtures/MigrationsNotInterface/"
         ]
     },
     "authors": [
@@ -91,6 +94,7 @@
         "audit:opcache": "php scripts/opcache-audit.php",
         "prod:check": "php scripts/production-checklist.php",
         "audit:profile": "php scripts/profile-endpoints.php",
-        "audit:hotspots": "php scripts/analyze-access-log.php"
+        "audit:hotspots": "php scripts/analyze-access-log.php",
+        "db:query": "php scripts/db-query.php"
     }
 }
