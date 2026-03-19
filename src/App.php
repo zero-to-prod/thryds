@@ -23,6 +23,7 @@ readonly class App
         public Config $Config,
         public Blade $Blade,
         public CachedRouter $Router,
+        public Database $Database,
     ) {}
 
     public static function bootBlade(Config $Config, string $base_dir): Blade
@@ -71,6 +72,6 @@ readonly class App
             cacheEnabled: false,
         );
 
-        return new self($Config, $Blade, $Router);
+        return new self($Config, $Blade, $Router, new Database(DatabaseConfig::fromEnv()));
     }
 }

@@ -21,6 +21,14 @@ services:
             time_format wall
           }
         }
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_DATABASE:-thryds}
+      DB_USERNAME: ${DB_USERNAME:-thryds}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+    depends_on:
+      db:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost/"]
       interval: 2s
@@ -32,6 +40,24 @@ services:
       - /app/public/build
       - caddy_data:/data
       - caddy_config:/config
+
+  db:
+    image: mysql:9.2
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-thryds}
+      MYSQL_USER: ${DB_USERNAME:-thryds}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   dev:
     image: node:22-alpine
@@ -58,3 +84,4 @@ volumes:
   caddy_data:
   caddy_config:
   node_modules:
+  db_data:
