@@ -22,6 +22,6 @@ use ZeroToProd\Thryds\Schema\ReferentialAction;
 readonly class OnUpdate
 {
     public function __construct(
-        public ReferentialAction $ReferentialAction = ReferentialAction::RESTRICT,
+        public ReferentialAction $ReferentialAction,
     ) {}
 }

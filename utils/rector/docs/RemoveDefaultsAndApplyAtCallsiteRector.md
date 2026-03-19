@@ -12,21 +12,23 @@ Default parameter values create implicit behaviour: callers that omit an argumen
 
 Common scenarios:
 - A `bool $debug = false` param that should always be set explicitly.
-- A PHP `#[Attribute]` constructor with a `$addKey = '...'` default that should appear verbatim in every usage.
+- A PHP `#[Attribute]` constructor with a `$superglobals = []` default that should appear verbatim in every usage.
 - A method default that represents a domain decision, not a fallback.
 
-## What It Detects
+## What It Does
 
-Functions, methods, and PHP attribute constructors whose parameters have default values, where the default was registered in `targetFunctions`, `targetMethods`, or `targetAttributes`.
+For **PHP attribute constructors** (auto-discovered): uses `ReflectionClass` to find optional constructor parameters of the attribute class, then adds each missing arg as a named argument at the callsite. Because reflection works from the compiled class on disk, this operates correctly across files in Rector's parallel worker mode — no static state is shared between workers.
 
-At each call site that omits a registered defaulted argument, the rule adds the default value explicitly using **named argument syntax** so the added argument is self-documenting.
+For **functions and methods** (opt-in, same-file only): uses AST analysis within the same file. The definition and callsite must be in the same file for this path; cross-file function/method migration is not supported.
+
+For **attribute class definitions** (in the same file as the class): removes defaults from `__construct` parameters once they have been inlined at callsites.
 
 ## Transformation
 
 ### In `auto` mode
 
-1. For every defaulted parameter in a registered callable, the default is removed from the parameter declaration (making the parameter required).
-2. Every call site that was omitting that argument receives the default value added as a named argument: `greeting: 'Hello'`.
+1. **Callsite (attribute):** Any `#[MyAttr(...)]` that omits an argument with a default gets that default added as a named arg, e.g. `superglobals: []`.
+2. **Definition (attribute class constructor):** Once defaults are inlined, the default is removed from the parameter declaration (making it required).
 3. Call sites that already pass the argument (positionally or by name) are left untouched.
 
 ### In `warn` mode
@@ -38,15 +40,15 @@ No-op. This is a structural refactoring — there is no useful warning-only form
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `mode` | `string` | `'auto'` | `'auto'` to transform. `'warn'` is a no-op. |
-| `targetFunctions` | `string[]` | `[]` | Fully-qualified function names to migrate, e.g. `['MyNs\\greet']`. Empty list with the key present = migrate ALL functions (use with care). |
-| `targetMethods` | `string[]` | `[]` | `'ClassName::methodName'` strings, e.g. `['App\\Mailer::send']`. Empty list with the key present = migrate ALL methods. |
-| `targetAttributes` | `string[]` | `[]` | Attribute class FQCNs, e.g. `['App\\Attributes\\MyAttr']`. Empty list with the key present = migrate ALL attributes. |
+| `targetFunctions` | `string[]` | `[]` | Fully-qualified function names (same-file only), e.g. `['MyNs\\greet']`. Empty = skip all functions. |
+| `targetMethods` | `string[]` | `[]` | `'ClassName::methodName'` strings (same-file only). Empty = skip all methods. |
+| `targetAttributes` | `string[]` | `[]` | Attribute class FQCNs to restrict to, e.g. `['App\\Attributes\\MyAttr']`. Empty = process ALL non-internal `#[Attribute]` classes. |
 
-**Important:** If none of `targetFunctions`, `targetMethods`, `targetAttributes` appear as keys in the configuration, the rule is a **no-op**. This is the safe default for a permanent `rector.php` registration. The rule activates only when at least one of the three target keys is present.
+`targetFunctions` and `targetMethods` are opt-in only: empty lists (the default) mean skip entirely. `targetAttributes` empty means process all.
 
 ## Registration in rector.php
 
-The rule is registered as a no-op (no target keys) so it can live permanently in `rector.php` without modifying any code:
+The rule is registered with empty target lists for attributes (process all `#[Attribute]` classes) and without function/method targets:
 
 ```php
 $rectorConfig->ruleWithConfiguration(RemoveDefaultsAndApplyAtCallsiteRector::class, [
@@ -54,20 +56,62 @@ $rectorConfig->ruleWithConfiguration(RemoveDefaultsAndApplyAtCallsiteRector::cla
 ]);
 ```
 
-To run a migration, add a target key:
+To restrict to specific attribute classes:
+
+```php
+$rectorConfig->ruleWithConfiguration(RemoveDefaultsAndApplyAtCallsiteRector::class, [
+    'mode' => 'auto',
+    'targetAttributes' => ['MyApp\\Attributes\\KeyRegistry'],
+]);
+```
+
+To also migrate functions/methods in the same file:
 
 ```php
 $rectorConfig->ruleWithConfiguration(RemoveDefaultsAndApplyAtCallsiteRector::class, [
     'mode' => 'auto',
     'targetFunctions' => ['MyApp\\Utils\\greet'],
     'targetMethods'   => ['MyApp\\Mailer::send'],
-    'targetAttributes' => ['MyApp\\Attributes\\KeyRegistry'],
 ]);
 ```
 
 ## Example
 
-### Function — before
+### Attribute constructor — before
+
+```php
+#[Attribute]
+class KeyRegistry
+{
+    public function __construct(
+        public readonly string $source,
+        public array $superglobals = [],
+        public string $addKey = '',
+    ) {}
+}
+
+#[KeyRegistry('vite_entry_points')]                        // relying on defaults
+#[KeyRegistry('vite_entry_points', addKey: 'custom')]     // already explicit for addKey
+```
+
+### Attribute constructor — after
+
+```php
+#[Attribute]
+class KeyRegistry
+{
+    public function __construct(
+        public readonly string $source,
+        public array $superglobals,                        // default removed
+        public string $addKey,                             // default removed
+    ) {}
+}
+
+#[KeyRegistry('vite_entry_points', superglobals: [], addKey: '')]     // defaults applied
+#[KeyRegistry('vite_entry_points', superglobals: [], addKey: 'custom')]  // addKey kept, superglobals added
+```
+
+### Function (same-file) — before
 
 ```php
 function greet(string $name, string $greeting = 'Hello'): string
@@ -79,7 +123,7 @@ greet('Alice');           // relying on default
 greet('Bob', 'Hi');       // already explicit
 ```
 
-### Function — after
+### Function (same-file) — after
 
 ```php
 function greet(string $name, string $greeting): string
@@ -91,50 +135,31 @@ greet('Alice', greeting: 'Hello');  // default applied explicitly
 greet('Bob', 'Hi');                 // unchanged
 ```
 
-### Attribute constructor — before
+## Cross-file behaviour
 
-```php
-#[Attribute]
-class KeyRegistry
-{
-    public function __construct(
-        public readonly string $source,
-        public readonly string $addKey = '1. Add constant. 2. Register directive.',
-    ) {}
-}
+For **attributes**: reflection is used, so the rule works across files and in parallel worker mode. When Rector processes a callsite file, it reflects on the attribute class from the autoloader — no shared state between worker processes.
 
-#[KeyRegistry('vite_entry_points')]                        // relying on default
-#[KeyRegistry('vite_entry_points', addKey: 'custom')]     // already explicit
+For **functions and methods**: AST analysis only. The rule collects defaults from definitions in the current file and applies them to callsites in the same file. Cross-file function/method migration requires two passes: one to update callsites, one to remove defaults.
+
+## Execution order caveat
+
+When running `fix:rector` over the whole codebase in a single pass, the attribute class definition file and its callsite files may be processed in any order. If the definition file is processed first (defaults removed), the reflected defaults are gone when callsite files are subsequently processed. Run `fix:rector` in dry-run mode first to preview, then apply changes file-by-file or restrict to specific files if needed:
+
+```bash
+# Step 1: process only definition + specific callsite files together
+vendor/bin/rector process src/Attributes/KeyRegistry.php src/Header.php
+
+# Step 2: run full fix to catch remaining callsites
+vendor/bin/rector process
 ```
-
-### Attribute constructor — after
-
-```php
-#[Attribute]
-class KeyRegistry
-{
-    public function __construct(
-        public readonly string $source,
-        public readonly string $addKey,                    // default removed
-    ) {}
-}
-
-#[KeyRegistry('vite_entry_points', addKey: '1. Add constant. 2. Register directive.')]  // default applied
-#[KeyRegistry('vite_entry_points', addKey: 'custom')]                                   // unchanged
-```
-
-## Cross-file usage
-
-The rule uses `FileNode`-based traversal with static state. Within a single file, both the definition and call sites are transformed atomically. Across files, Rector's multi-pass architecture (it re-runs until no changes) ensures convergence: definitions are collected on the first pass, call sites in the same or later passes are updated, and defaults are removed once all call sites have been updated.
-
-For single-file test fixtures the rule works in one pass because definition and call sites share the same `FileNode`.
 
 ## Caveats
 
-- Only removes defaults that are listed in the target configuration. Unlisted callables are never touched.
 - Does not handle variadic parameters.
-- For method calls on instances (`$obj->method()`), the class is inferred from the registry: if exactly one registered method has that name, it is matched. If multiple classes have a method of the same name, provide the class name via `targetMethods` with the FQN.
-- Always uses named argument syntax for the added arg (`param: value`), even when appending positionally would be valid, to keep the change self-documenting.
+- Skips PHP built-in classes (e.g. `\Attribute`, `\Iterator`) — their defaults are never inlined.
+- Skips attribute classes that cannot be autoloaded (e.g. classes defined only in test fixture files).
+- For method calls on instances (`$obj->method()`), the class is inferred from the local registry: if exactly one registered method has that name it is matched; otherwise provide the FQN via `targetMethods`.
+- Always uses named argument syntax for the added arg (`param: value`) to keep changes self-documenting.
 
 ## Related Rules
 

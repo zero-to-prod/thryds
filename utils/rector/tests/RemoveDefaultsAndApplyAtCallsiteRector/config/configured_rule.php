@@ -8,11 +8,8 @@ use Utils\Rector\Rector\RemoveDefaultsAndApplyAtCallsiteRector;
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RemoveDefaultsAndApplyAtCallsiteRector::class, [
         'mode' => 'auto',
-        // Provide all three target keys (even as empty) so noopMode is false.
-        // Each fixture sets its own config, but this base config activates the rule
-        // by declaring that it should match all functions/methods/attributes found.
-        'targetFunctions' => [],
-        'targetMethods' => [],
-        'targetAttributes' => [],
+        // Attributes are auto-discovered (empty = all). Opt-in functions/methods for fixture coverage.
+        'targetFunctions' => ['Fixture\\greet'],
+        'targetMethods' => ['Fixture\\Mailer::send'],
     ]);
 };

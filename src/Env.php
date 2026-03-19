@@ -20,6 +20,7 @@ use ZeroToProd\Thryds\Attributes\SourceOfTruthConcept;
 #[KeyRegistry(
     KeySource::server_env,
     superglobals: ['_SERVER', '_ENV'],
+    addKey: ''
 )]
 readonly class Env
 {

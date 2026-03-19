@@ -31,7 +31,7 @@ readonly class Index
     /** @param string[] $columns SQL column names (backed values of the enum cases), in index key order. */
     public function __construct(
         public array $columns,
-        public bool $unique = false,
-        public string $name = '',
+        public bool $unique,
+        public string $name,
     ) {}
 }

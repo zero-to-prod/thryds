@@ -10,6 +10,7 @@ use ZeroToProd\Thryds\Attributes\KeySource;
 #[KeyRegistry(
     KeySource::log_context_array,
     addKey: '1. Add constant. 2. Pass in context array via Log::method([LogContext::KEY => $value]).',
+    superglobals: []
 )]
 readonly class LogContext
 {

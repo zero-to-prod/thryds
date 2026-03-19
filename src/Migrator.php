@@ -30,6 +30,7 @@ use ZeroToProd\Thryds\Tables\MigrationsTable;
 #[KeyRegistry(
     KeySource::migrations_table,
     addKey: '1. Add constant. 2. Reference via Migrator::CONST_NAME where needed.',
+    superglobals: []
 )]
 readonly class Migrator
 {

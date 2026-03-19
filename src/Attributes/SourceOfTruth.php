@@ -27,6 +27,6 @@ readonly class SourceOfTruth
      */
     public function __construct(
         public SourceOfTruthConcept $SourceOfTruthConcept,
-        public string $addCase = '',
+        public string $addCase,
     ) {}
 }

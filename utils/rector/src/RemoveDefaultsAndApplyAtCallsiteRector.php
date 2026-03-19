@@ -7,18 +7,31 @@ namespace Utils\Rector\Rector;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Attribute;
+use PhpParser\Node\Expr\Array_;
+use PhpParser\Node\Expr\ArrayItem;
+use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
+use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Param;
+use PhpParser\Node\Scalar\Float_;
+use PhpParser\Node\Scalar\Int_;
+use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Namespace_;
 use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\PhpParser\Node\FileNode;
 use Rector\Rector\AbstractRector;
+use ReflectionClass;
+use ReflectionException;
+use ReflectionFunction;
+use ReflectionMethod;
+use ReflectionParameter;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
@@ -26,15 +39,19 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  * Removes default values from function/method/attribute parameters and
  * explicitly adds those defaults at every call site that was relying on them.
  *
- * Configure targetFunctions, targetMethods, and/or targetAttributes to specify
- * which callables to migrate. Leave all three empty to make the rule a no-op
- * (safe for a permanent rector.php registration).
+ * Attributes: auto-discovered via PHP reflection. All #[Attribute] classes with
+ * defaulted constructor params are processed unless targetAttributes is non-empty
+ * (in which case only those FQCNs are processed). Reflection is used so this rule
+ * works correctly across files in Rector's parallel worker mode.
  *
- * targetFunctions: list of fully-qualified function names, e.g. ['MyNs\\myFunc']
- * targetMethods:   list of 'ClassName::methodName' strings, e.g. ['App\\Mailer::send']
- * targetAttributes: list of attribute FQCNs, e.g. ['App\\Attributes\\MyAttr']
+ * Functions/methods: opt-in only. Provide non-empty targetFunctions / targetMethods
+ * lists to process them; empty (the default) means skip that category entirely.
+ * Reflection is attempted; if the function/class is not loaded, it is skipped.
  *
- * Leaving all three empty (the default) is a no-op.
+ * targetFunctions:  list of fully-qualified function names, e.g. ['MyNs\\myFunc']
+ * targetMethods:    list of 'ClassName::methodName' strings, e.g. ['App\\Mailer::send']
+ * targetAttributes: list of attribute FQCNs to restrict to, e.g. ['App\\Attributes\\MyAttr']
+ *                   Leave empty (default) to process ALL #[Attribute] classes.
  */
 final class RemoveDefaultsAndApplyAtCallsiteRector extends AbstractRector implements ConfigurableRectorInterface
 {
@@ -44,7 +61,7 @@ final class RemoveDefaultsAndApplyAtCallsiteRector extends AbstractRector implem
 
     /**
      * Fully-qualified function names to migrate, e.g. ['MyNs\\greet'].
-     * Empty = migrate ALL functions (use with care).
+     * Empty (default) = skip all functions (opt-in only).
      *
      * @var string[]
      */
@@ -52,66 +69,24 @@ final class RemoveDefaultsAndApplyAtCallsiteRector extends AbstractRector implem
 
     /**
      * 'ClassName::method' strings to migrate, e.g. ['App\\Mailer::send'].
-     * Empty = migrate ALL methods of known classes (use with care).
+     * Empty (default) = skip all methods (opt-in only).
      *
      * @var string[]
      */
     private array $targetMethods = [];
 
     /**
-     * Attribute FQCNs to migrate, e.g. ['App\\Attributes\\MyAttr'].
-     * Empty = migrate ALL attributes.
+     * Attribute FQCNs to restrict to, e.g. ['App\\Attributes\\MyAttr'].
+     * Empty (default) = process ALL #[Attribute] classes automatically.
      *
      * @var string[]
      */
     private array $targetAttributes = [];
 
-    /**
-     * When true, all three target lists are explicitly empty and the rule is a no-op.
-     * Set to false when any target list is provided (even empty is provided meaning
-     * "match all").
-     */
-    private bool $noopMode = true;
-
-    /**
-     * Registry of callables whose parameters have defaults that should be inlined.
-     *
-     * Key format:
-     *   "function:<fqn>"              – top-level function
-     *   "method:<ClassName>::<name>"  – instance/static method
-     *   "attribute:<FQCN>"            – PHP attribute (via __construct)
-     *
-     * Value: list of param info:
-     *   ['name' => string, 'position' => int, 'default' => Node\Expr]
-     *
-     * @var array<string, list<array{name: string, position: int, default: Node\Expr}>>
-     */
-    private static array $registry = [];
-
-    /**
-     * Tracks which registry keys have had their defaults removed so we don't
-     * double-remove on subsequent Rector passes.
-     *
-     * @var array<string, true>
-     */
-    private static array $defaultsRemoved = [];
-
     public function configure(array $configuration): void
     {
         $this->mode = $configuration['mode'] ?? 'auto';
         $this->message = $configuration['message'] ?? '';
-
-        // Reset static state on each configure() call so tests stay isolated.
-        self::$registry = [];
-        self::$defaultsRemoved = [];
-
-        // If none of the target keys appear in config, treat as no-op for safety.
-        $hasTargets = array_key_exists('targetFunctions', $configuration)
-            || array_key_exists('targetMethods', $configuration)
-            || array_key_exists('targetAttributes', $configuration);
-
-        $this->noopMode = !$hasTargets;
-
         $this->targetFunctions = $configuration['targetFunctions'] ?? [];
         $this->targetMethods = $configuration['targetMethods'] ?? [];
         $this->targetAttributes = $configuration['targetAttributes'] ?? [];
@@ -167,59 +142,104 @@ CODE_SAMPLE,
             return null;
         }
 
-        if ($this->noopMode) {
-            return null;
-        }
-
         $namespace = $this->resolveNamespaceFromFile($node);
+        $stmts = $this->resolveTopStmts($node);
 
-        // Phase 1: collect definitions with defaulted params from this file.
-        $this->collectDefinitions($node, $namespace);
+        // --- Phase 1: collect function/method defaults from AST (for same-file callsites) ---
 
-        // Phase 2: apply modifications (add explicit args at call sites, remove defaults from defs).
-        return $this->applyModifications($node, $namespace);
-    }
+        /**
+         * Local param registry (not static — avoids parallel worker contamination).
+         * Key: 'function:<fqn>' or 'method:<Class>::<method>'
+         * Value: list of defaulted param info built from AST nodes
+         *
+         * @var array<string, list<array{name: string, position: int, default: Node\Expr}>>
+         */
+        $localRegistry = [];
 
-    // -------------------------------------------------------------------------
-    // Phase 1: collection
-    // -------------------------------------------------------------------------
-
-    private function collectDefinitions(FileNode $fileNode, string $namespace): void
-    {
-        $stmts = $this->resolveTopStmts($fileNode);
-
-        $this->traverseNodesWithCallable($stmts, function (Node $innerNode) use ($namespace): null {
-            if ($innerNode instanceof Function_) {
-                $this->collectFunctionDefinition($innerNode, $namespace);
-            } elseif ($innerNode instanceof Class_) {
-                $this->collectClassDefinition($innerNode);
+        $this->traverseNodesWithCallable($stmts, function (Node $inner) use (&$localRegistry, $namespace): null {
+            if ($inner instanceof Function_) {
+                $this->collectFunctionIntoRegistry($inner, $namespace, $localRegistry);
+            } elseif ($inner instanceof Class_) {
+                $this->collectClassMethodsIntoRegistry($inner, $localRegistry);
             }
             return null;
         });
+
+        // --- Phase 2: apply modifications ---
+
+        $changed = false;
+
+        // Modify call sites.
+        $this->traverseNodesWithCallable($stmts, function (Node $inner) use (&$changed, $namespace, $localRegistry): ?Node {
+            if ($inner instanceof FuncCall) {
+                $result = $this->applyToFuncCall($inner, $namespace, $localRegistry);
+                if ($result !== null) {
+                    $changed = true;
+                    return $result;
+                }
+            } elseif ($inner instanceof MethodCall || $inner instanceof StaticCall) {
+                $result = $this->applyToMethodOrStaticCall($inner, $localRegistry);
+                if ($result !== null) {
+                    $changed = true;
+                    return $result;
+                }
+            } elseif ($inner instanceof Attribute) {
+                $result = $this->applyToAttribute($inner);
+                if ($result !== null) {
+                    $changed = true;
+                    return $result;
+                }
+            }
+            return null;
+        });
+
+        // Modify definitions: remove defaults from params.
+        $this->traverseNodesWithCallable($stmts, function (Node $inner) use (&$changed, $namespace, $localRegistry): null {
+            if ($inner instanceof Function_) {
+                if ($this->removeDefaultsFromFunction($inner, $namespace, $localRegistry)) {
+                    $changed = true;
+                }
+            } elseif ($inner instanceof Class_) {
+                if ($this->removeDefaultsFromClass($inner, $localRegistry)) {
+                    $changed = true;
+                }
+            }
+            return null;
+        });
+
+        return $changed ? $node : null;
     }
 
-    private function collectFunctionDefinition(Function_ $node, string $namespace): void
+    // -------------------------------------------------------------------------
+    // Local registry collection (functions/methods only — attributes use reflection)
+    // -------------------------------------------------------------------------
+
+    /**
+     * @param array<string, list<array{name: string, position: int, default: Node\Expr}>> $localRegistry
+     */
+    private function collectFunctionIntoRegistry(Function_ $node, string $namespace, array &$localRegistry): void
     {
         $funcName = $this->getName($node);
         if ($funcName === null) {
             return;
         }
 
-        // Prefer namespacedName when available (set by PhpParser's NameResolver).
         $fqn = $node->namespacedName !== null
             ? $node->namespacedName->toString()
             : ($namespace !== '' ? $namespace . '\\' . $funcName : $funcName);
 
-        // Filter: only collect if in targetFunctions (empty list = collect all).
-        if ($this->targetFunctions !== [] && !in_array($fqn, $this->targetFunctions, true)) {
+        if ($this->targetFunctions === [] || !in_array($fqn, $this->targetFunctions, true)) {
             return;
         }
 
         $key = 'function:' . $fqn;
-        $this->registerDefaultedParams($key, $node->params);
+        $this->registerDefaultedParamsFromAst($key, $node->params, $localRegistry);
     }
 
-    private function collectClassDefinition(Class_ $node): void
+    /**
+     * @param array<string, list<array{name: string, position: int, default: Node\Expr}>> $localRegistry
+     */
+    private function collectClassMethodsIntoRegistry(Class_ $node, array &$localRegistry): void
     {
         $className = $node->namespacedName !== null
             ? $node->namespacedName->toString()
@@ -229,51 +249,30 @@ CODE_SAMPLE,
             return;
         }
 
-        $isAttributeClass = $this->classHasAttributeAttribute($node);
-
         foreach ($node->getMethods() as $method) {
             $methodName = $this->getName($method);
             if ($methodName === null) {
                 continue;
             }
 
-            $methodKey = 'method:' . $className . '::' . $methodName;
-
-            // Filter: only collect if in targetMethods (empty list = collect all).
-            if ($this->targetMethods === [] || in_array($className . '::' . $methodName, $this->targetMethods, true)) {
-                $this->registerDefaultedParams($methodKey, $method->params);
-            }
-
-            // If this is a constructor on a PHP #[Attribute] class, also register
-            // an attribute key so we can handle #[ClassName(...)] usages.
-            if ($methodName === '__construct' && $isAttributeClass) {
-                $attrKey = 'attribute:' . $className;
-
-                // Filter: only collect if in targetAttributes (empty list = collect all).
-                if ($this->targetAttributes === [] || in_array($className, $this->targetAttributes, true)) {
-                    $this->registerDefaultedParams($attrKey, $method->params);
-                }
+            $spec = $className . '::' . $methodName;
+            if ($this->targetMethods !== [] && in_array($spec, $this->targetMethods, true)) {
+                $key = 'method:' . $spec;
+                $this->registerDefaultedParamsFromAst($key, $method->params, $localRegistry);
             }
         }
     }
 
     /**
      * @param Param[] $params
+     * @param array<string, list<array{name: string, position: int, default: Node\Expr}>> $localRegistry
      */
-    private function registerDefaultedParams(string $key, array $params): void
+    private function registerDefaultedParamsFromAst(string $key, array $params, array &$localRegistry): void
     {
-        // Only register if not already removed (second Rector pass: defaults are gone).
-        if (isset(self::$defaultsRemoved[$key])) {
-            return;
-        }
-
         $defaultedParams = [];
 
         foreach ($params as $position => $param) {
-            if ($param->default === null) {
-                continue;
-            }
-            if ($param->variadic) {
+            if ($param->default === null || $param->variadic) {
                 continue;
             }
 
@@ -285,92 +284,37 @@ CODE_SAMPLE,
             $defaultedParams[] = [
                 'name' => $paramName,
                 'position' => $position,
-                'default' => $param->default,
+                'default' => clone $param->default,
             ];
         }
 
-        if ($defaultedParams === []) {
-            return;
+        if ($defaultedParams !== []) {
+            $localRegistry[$key] = $defaultedParams;
         }
-
-        self::$registry[$key] = $defaultedParams;
     }
 
     // -------------------------------------------------------------------------
-    // Phase 2: modifications
+    // Call-site modification
     // -------------------------------------------------------------------------
 
-    private function applyModifications(FileNode $fileNode, string $namespace): ?FileNode
-    {
-        if (self::$registry === []) {
-            return null;
-        }
-
-        $changed = false;
-        $stmts = $this->resolveTopStmts($fileNode);
-
-        // Modify call sites.
-        $this->traverseNodesWithCallable($stmts, function (Node $node) use (&$changed, $namespace): ?Node {
-            if ($node instanceof FuncCall) {
-                $result = $this->applyToFuncCall($node, $namespace);
-                if ($result !== null) {
-                    $changed = true;
-                    return $result;
-                }
-            } elseif ($node instanceof MethodCall) {
-                $result = $this->applyToMethodOrStaticCall($node);
-                if ($result !== null) {
-                    $changed = true;
-                    return $result;
-                }
-            } elseif ($node instanceof StaticCall) {
-                $result = $this->applyToMethodOrStaticCall($node);
-                if ($result !== null) {
-                    $changed = true;
-                    return $result;
-                }
-            } elseif ($node instanceof Attribute) {
-                $result = $this->applyToAttribute($node);
-                if ($result !== null) {
-                    $changed = true;
-                    return $result;
-                }
-            }
-            return null;
-        });
-
-        // Modify definitions: remove defaults from params.
-        $this->traverseNodesWithCallable($stmts, function (Node $node) use (&$changed, $namespace): null {
-            if ($node instanceof Function_) {
-                if ($this->removeDefaultsFromFunction($node, $namespace)) {
-                    $changed = true;
-                }
-            } elseif ($node instanceof Class_) {
-                if ($this->removeDefaultsFromClass($node)) {
-                    $changed = true;
-                }
-            }
-            return null;
-        });
-
-        return $changed ? $fileNode : null;
-    }
-
-    private function applyToFuncCall(FuncCall $node, string $namespace): ?FuncCall
+    /**
+     * @param array<string, list<array{name: string, position: int, default: Node\Expr}>> $localRegistry
+     */
+    private function applyToFuncCall(FuncCall $node, string $namespace, array $localRegistry): ?FuncCall
     {
         if (!$node->name instanceof Name) {
             return null;
         }
 
         $name = $node->name->toString();
-        $key = $this->findFunctionKey($name, $namespace);
+        $key = $this->findFunctionKey($name, $namespace, $localRegistry);
         if ($key === null) {
             return null;
         }
 
-        $defaultedParams = self::$registry[$key];
+        $defaultedParams = $localRegistry[$key];
 
-        if (!$this->addMissingArgs($node, $defaultedParams)) {
+        if (!$this->addMissingArgsFromAst($node, $defaultedParams)) {
             return null;
         }
 
@@ -379,23 +323,24 @@ CODE_SAMPLE,
 
     /**
      * @param MethodCall|StaticCall $node
+     * @param array<string, list<array{name: string, position: int, default: Node\Expr}>> $localRegistry
      * @return MethodCall|StaticCall|null
      */
-    private function applyToMethodOrStaticCall(Node $node): ?Node
+    private function applyToMethodOrStaticCall(Node $node, array $localRegistry): ?Node
     {
         $methodName = $this->getName($node->name);
         if ($methodName === null) {
             return null;
         }
 
-        $key = $this->resolveMethodKey($node, $methodName);
+        $key = $this->resolveMethodKey($node, $methodName, $localRegistry);
         if ($key === null) {
             return null;
         }
 
-        $defaultedParams = self::$registry[$key];
+        $defaultedParams = $localRegistry[$key];
 
-        if (!$this->addMissingArgs($node, $defaultedParams)) {
+        if (!$this->addMissingArgsFromAst($node, $defaultedParams)) {
             return null;
         }
 
@@ -404,41 +349,238 @@ CODE_SAMPLE,
 
     private function applyToAttribute(Attribute $node): ?Attribute
     {
-        $attrName = $this->getName($node->name);
-        if ($attrName === null) {
+        $attrFqcn = $this->getName($node->name);
+        if ($attrFqcn === null) {
             return null;
         }
 
-        $key = $this->findAttributeKey($attrName);
-        if ($key === null) {
+        // Filter by targetAttributes if configured.
+        if ($this->targetAttributes !== [] && !in_array($attrFqcn, $this->targetAttributes, true)) {
+            // Also try short-name match.
+            $shortName = $this->resolveShortName($attrFqcn);
+            $matched = false;
+            foreach ($this->targetAttributes as $target) {
+                if ($target === $attrFqcn || $this->resolveShortName($target) === $shortName) {
+                    $matched = true;
+                    break;
+                }
+            }
+            if (!$matched) {
+                return null;
+            }
+        }
+
+        $defaultedParams = $this->getDefaultedParamsViaReflection($attrFqcn);
+        if ($defaultedParams === null || $defaultedParams === []) {
             return null;
         }
 
-        $defaultedParams = self::$registry[$key];
-
-        if (!$this->addMissingArgs($node, $defaultedParams)) {
+        if (!$this->addMissingArgsFromReflected($node, $defaultedParams)) {
             return null;
         }
 
         return $node;
     }
 
+    // -------------------------------------------------------------------------
+    // Reflection helpers
+    // -------------------------------------------------------------------------
+
     /**
-     * Add missing args to a call/attribute node using the default values.
+     * Returns null if the class cannot be reflected, is a PHP internal class,
+     * or has no constructor. Returns an empty array if the constructor has no
+     * defaulted params.
+     *
+     * @return list<array{name: string, position: int, default: mixed, isConstant: bool, constantName: string|null}>|null
+     */
+    private function getDefaultedParamsViaReflection(string $fqcn): ?array
+    {
+        try {
+            $rc = new ReflectionClass($fqcn);
+        } catch (ReflectionException) {
+            return null;
+        }
+
+        // Skip PHP built-in classes (e.g. \Attribute, \Iterator) — they are not
+        // user-defined and their defaults should not be inlined at call sites.
+        if ($rc->isInternal()) {
+            return null;
+        }
+
+        $constructor = $rc->getConstructor();
+        if ($constructor === null) {
+            return null;
+        }
+
+        $defaultedParams = [];
+
+        foreach ($constructor->getParameters() as $position => $param) {
+            if (!$param->isOptional() || $param->isVariadic()) {
+                continue;
+            }
+
+            $isConstant = $param->isDefaultValueConstant();
+            $defaultedParams[] = [
+                'name' => $param->getName(),
+                'position' => $position,
+                'default' => $param->getDefaultValue(),
+                'isConstant' => $isConstant,
+                'constantName' => $isConstant ? $param->getDefaultValueConstantName() : null,
+            ];
+        }
+
+        return $defaultedParams;
+    }
+
+    /**
+     * Returns null if the function cannot be reflected or has no defaulted params.
+     *
+     * @return list<array{name: string, position: int, default: mixed, isConstant: bool, constantName: string|null}>|null
+     */
+    private function getDefaultedFunctionParamsViaReflection(string $fqn): ?array
+    {
+        try {
+            $rf = new ReflectionFunction($fqn);
+        } catch (ReflectionException) {
+            return null;
+        }
+
+        return $this->extractDefaultedParams($rf->getParameters());
+    }
+
+    /**
+     * Returns null if the method cannot be reflected or has no defaulted params.
+     *
+     * @return list<array{name: string, position: int, default: mixed, isConstant: bool, constantName: string|null}>|null
+     */
+    private function getDefaultedMethodParamsViaReflection(string $className, string $methodName): ?array
+    {
+        try {
+            $rm = new ReflectionMethod($className, $methodName);
+        } catch (ReflectionException) {
+            return null;
+        }
+
+        return $this->extractDefaultedParams($rm->getParameters());
+    }
+
+    /**
+     * @param ReflectionParameter[] $params
+     * @return list<array{name: string, position: int, default: mixed, isConstant: bool, constantName: string|null}>
+     */
+    private function extractDefaultedParams(array $params): array
+    {
+        $result = [];
+
+        foreach ($params as $position => $param) {
+            if (!$param->isOptional() || $param->isVariadic()) {
+                continue;
+            }
+
+            $isConstant = $param->isDefaultValueConstant();
+            $result[] = [
+                'name' => $param->getName(),
+                'position' => $position,
+                'default' => $param->getDefaultValue(),
+                'isConstant' => $isConstant,
+                'constantName' => $isConstant ? $param->getDefaultValueConstantName() : null,
+            ];
+        }
+
+        return $result;
+    }
+
+    // -------------------------------------------------------------------------
+    // Arg injection helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Add missing args from AST-collected defaults (functions/methods).
+     * Returns true if any args were added.
+     *
+     * @param FuncCall|MethodCall|StaticCall $node
+     * @param list<array{name: string, position: int, default: Node\Expr}> $defaultedParams
+     */
+    private function addMissingArgsFromAst(Node $node, array $defaultedParams): bool
+    {
+        [$positionalCount, $explicitParamNames] = $this->analyzeExistingArgs($node->args);
+
+        $added = false;
+
+        foreach ($defaultedParams as $paramInfo) {
+            $paramName = $paramInfo['name'];
+            $paramPosition = $paramInfo['position'];
+            $defaultExpr = $paramInfo['default'];
+
+            if (isset($explicitParamNames[$paramName])) {
+                continue;
+            }
+
+            if ($paramPosition < $positionalCount) {
+                continue;
+            }
+
+            $node->args[] = new Arg(
+                value: clone $defaultExpr,
+                name: new Identifier($paramName),
+            );
+            $explicitParamNames[$paramName] = true;
+            $added = true;
+        }
+
+        return $added;
+    }
+
+    /**
+     * Add missing args from reflected defaults (attributes, and optionally functions/methods).
      * Returns true if any args were added.
      *
      * @param FuncCall|MethodCall|StaticCall|Attribute $node
-     * @param list<array{name: string, position: int, default: Node\Expr}> $defaultedParams
+     * @param list<array{name: string, position: int, default: mixed, isConstant: bool, constantName: string|null}> $defaultedParams
      */
-    private function addMissingArgs(Node $node, array $defaultedParams): bool
+    private function addMissingArgsFromReflected(Node $node, array $defaultedParams): bool
     {
-        $existingArgs = $node->args;
+        [$positionalCount, $explicitParamNames] = $this->analyzeExistingArgs($node->args);
 
-        // Count positional args passed and collect named arg param names.
+        $added = false;
+
+        foreach ($defaultedParams as $paramInfo) {
+            $paramName = $paramInfo['name'];
+            $paramPosition = $paramInfo['position'];
+
+            if (isset($explicitParamNames[$paramName])) {
+                continue;
+            }
+
+            if ($paramPosition < $positionalCount) {
+                continue;
+            }
+
+            $defaultExpr = $paramInfo['isConstant'] && $paramInfo['constantName'] !== null
+                ? $this->buildExprFromConstantName($paramInfo['constantName'])
+                : $this->buildExprFromReflected($paramInfo['default']);
+
+            $node->args[] = new Arg(
+                value: $defaultExpr,
+                name: new Identifier($paramName),
+            );
+            $explicitParamNames[$paramName] = true;
+            $added = true;
+        }
+
+        return $added;
+    }
+
+    /**
+     * @param array<Arg|\PhpParser\Node\VariadicPlaceholder> $args
+     * @return array{int, array<string, true>}
+     */
+    private function analyzeExistingArgs(array $args): array
+    {
         $positionalCount = 0;
         $explicitParamNames = [];
 
-        foreach ($existingArgs as $arg) {
+        foreach ($args as $arg) {
             if (!$arg instanceof Arg) {
                 continue;
             }
@@ -449,39 +591,64 @@ CODE_SAMPLE,
             }
         }
 
-        $added = false;
-
-        foreach ($defaultedParams as $paramInfo) {
-            $paramName = $paramInfo['name'];
-            $paramPosition = $paramInfo['position'];
-            $defaultValue = $paramInfo['default'];
-
-            // Already explicitly passed by name.
-            if (isset($explicitParamNames[$paramName])) {
-                continue;
-            }
-
-            // Already covered by a positional arg.
-            if ($paramPosition < $positionalCount) {
-                continue;
-            }
-
-            // Always use named syntax when adding a previously-defaulted arg —
-            // it makes the intent explicit and self-documenting.
-            $newArg = new Arg(
-                value: $defaultValue,
-                name: new Identifier($paramName),
-            );
-
-            $node->args[] = $newArg;
-            $explicitParamNames[$paramName] = true;
-            $added = true;
-        }
-
-        return $added;
+        return [$positionalCount, $explicitParamNames];
     }
 
-    private function removeDefaultsFromFunction(Function_ $node, string $namespace): bool
+    // -------------------------------------------------------------------------
+    // AST node building from reflected values
+    // -------------------------------------------------------------------------
+
+    private function buildExprFromReflected(mixed $value): Node\Expr
+    {
+        if (is_string($value)) {
+            return new String_($value);
+        }
+        if (is_int($value)) {
+            return new Int_($value);
+        }
+        if (is_float($value)) {
+            return new Float_($value);
+        }
+        if ($value === true) {
+            return new ConstFetch(new Name('true'));
+        }
+        if ($value === false) {
+            return new ConstFetch(new Name('false'));
+        }
+        if ($value === null) {
+            return new ConstFetch(new Name('null'));
+        }
+        if (is_array($value)) {
+            $items = [];
+            foreach ($value as $k => $v) {
+                $key = is_string($k) || is_int($k) ? $this->buildExprFromReflected($k) : null;
+                $items[] = new ArrayItem($this->buildExprFromReflected($v), $key);
+            }
+            return new Array_($items, ['kind' => Array_::KIND_SHORT]);
+        }
+
+        // Enum instance or other object: fall back to string representation.
+        return new String_((string) $value);
+    }
+
+    private function buildExprFromConstantName(string $constantName): Node\Expr
+    {
+        if (str_contains($constantName, '::')) {
+            [$className, $constName] = explode('::', $constantName, 2);
+            return new ClassConstFetch(new FullyQualified($className), new Identifier($constName));
+        }
+
+        return new ConstFetch(new Name($constantName));
+    }
+
+    // -------------------------------------------------------------------------
+    // Definition modification (remove defaults from params)
+    // -------------------------------------------------------------------------
+
+    /**
+     * @param array<string, list<array{name: string, position: int, default: Node\Expr}>> $localRegistry
+     */
+    private function removeDefaultsFromFunction(Function_ $node, string $namespace, array $localRegistry): bool
     {
         $funcName = $this->getName($node);
         if ($funcName === null) {
@@ -494,10 +661,20 @@ CODE_SAMPLE,
 
         $key = 'function:' . $fqn;
 
-        return $this->removeDefaultsFromParams($node->params, $key);
+        if (!isset($localRegistry[$key])) {
+            return false;
+        }
+
+        return $this->removeDefaultsFromParamsByNames(
+            $node->params,
+            array_column($localRegistry[$key], 'name'),
+        );
     }
 
-    private function removeDefaultsFromClass(Class_ $node): bool
+    /**
+     * @param array<string, list<array{name: string, position: int, default: Node\Expr}>> $localRegistry
+     */
+    private function removeDefaultsFromClass(Class_ $node, array $localRegistry): bool
     {
         $className = $node->namespacedName !== null
             ? $node->namespacedName->toString()
@@ -508,6 +685,7 @@ CODE_SAMPLE,
         }
 
         $changed = false;
+        $isAttributeClass = $this->classHasAttributeAttribute($node);
 
         foreach ($node->getMethods() as $method) {
             $methodName = $this->getName($method);
@@ -515,10 +693,23 @@ CODE_SAMPLE,
                 continue;
             }
 
+            // Opt-in methods.
             $key = 'method:' . $className . '::' . $methodName;
+            if (isset($localRegistry[$key])) {
+                $names = array_column($localRegistry[$key], 'name');
+                if ($this->removeDefaultsFromParamsByNames($method->params, $names)) {
+                    $changed = true;
+                }
+            }
 
-            if ($this->removeDefaultsFromParams($method->params, $key)) {
-                $changed = true;
+            // Attribute class constructors: remove ALL defaults (they are inlined at callsites).
+            if ($methodName === '__construct' && $isAttributeClass) {
+                $shouldProcess = $this->targetAttributes === []
+                    || in_array($className, $this->targetAttributes, true);
+
+                if ($shouldProcess && $this->removeAllDefaultsFromParams($method->params)) {
+                    $changed = true;
+                }
             }
         }
 
@@ -527,23 +718,11 @@ CODE_SAMPLE,
 
     /**
      * @param Param[] $params
+     * @param string[] $names
      */
-    private function removeDefaultsFromParams(array $params, string $key): bool
+    private function removeDefaultsFromParamsByNames(array $params, array $names): bool
     {
-        $defaultedParams = self::$registry[$key] ?? null;
-        if ($defaultedParams === null) {
-            return false;
-        }
-
-        if (isset(self::$defaultsRemoved[$key])) {
-            return false;
-        }
-
-        $defaultedParamNames = [];
-        foreach ($defaultedParams as $info) {
-            $defaultedParamNames[$info['name']] = true;
-        }
-
+        $nameSet = array_flip($names);
         $changed = false;
 
         foreach ($params as $param) {
@@ -552,7 +731,7 @@ CODE_SAMPLE,
             }
 
             $paramName = $this->getName($param);
-            if ($paramName === null || !isset($defaultedParamNames[$paramName])) {
+            if ($paramName === null || !isset($nameSet[$paramName])) {
                 continue;
             }
 
@@ -560,60 +739,71 @@ CODE_SAMPLE,
             $changed = true;
         }
 
-        if ($changed) {
-            self::$defaultsRemoved[$key] = true;
+        return $changed;
+    }
+
+    /**
+     * Remove ALL default values from params (used for attribute constructors).
+     *
+     * @param Param[] $params
+     */
+    private function removeAllDefaultsFromParams(array $params): bool
+    {
+        $changed = false;
+
+        foreach ($params as $param) {
+            if ($param->default === null || $param->variadic) {
+                continue;
+            }
+
+            $param->default = null;
+            $changed = true;
         }
 
         return $changed;
     }
 
     // -------------------------------------------------------------------------
-    // Key resolution helpers
+    // Key resolution helpers (local registry)
     // -------------------------------------------------------------------------
 
-    private function findFunctionKey(string $name, string $namespace): ?string
+    /**
+     * @param array<string, list<array{name: string, position: int, default: Node\Expr}>> $localRegistry
+     */
+    private function findFunctionKey(string $name, string $namespace, array $localRegistry): ?string
     {
-        // FQ name (starts with \).
         if (str_starts_with($name, '\\')) {
             $plain = ltrim($name, '\\');
             $key = 'function:' . $plain;
-            return isset(self::$registry[$key]) ? $key : null;
+            return isset($localRegistry[$key]) ? $key : null;
         }
 
-        // Try namespaced key first.
         if ($namespace !== '') {
             $fqKey = 'function:' . $namespace . '\\' . $name;
-            if (isset(self::$registry[$fqKey])) {
+            if (isset($localRegistry[$fqKey])) {
                 return $fqKey;
             }
         }
 
-        // Try unqualified (global).
         $globalKey = 'function:' . $name;
-        if (isset(self::$registry[$globalKey])) {
-            return $globalKey;
-        }
-
-        return null;
+        return isset($localRegistry[$globalKey]) ? $globalKey : null;
     }
 
     /**
      * @param MethodCall|StaticCall $node
+     * @param array<string, list<array{name: string, position: int, default: Node\Expr}>> $localRegistry
      */
-    private function resolveMethodKey(Node $node, string $methodName): ?string
+    private function resolveMethodKey(Node $node, string $methodName, array $localRegistry): ?string
     {
-        // For StaticCall, try to resolve the class name from the call.
         if ($node instanceof StaticCall && $node->class instanceof Name) {
             $candidateClass = $node->class->toString();
 
-            // Exact FQ match.
             $directKey = 'method:' . $candidateClass . '::' . $methodName;
-            if (isset(self::$registry[$directKey])) {
+            if (isset($localRegistry[$directKey])) {
                 return $directKey;
             }
 
-            // Short-name match (e.g. `Mailer::send` where Mailer is imported).
-            foreach (array_keys(self::$registry) as $key) {
+            foreach (array_keys($localRegistry) as $key) {
                 if (!str_starts_with($key, 'method:')) {
                     continue;
                 }
@@ -629,10 +819,8 @@ CODE_SAMPLE,
             }
         }
 
-        // For instance method calls: if there's exactly one definition of this
-        // method name in the registry, we can safely match it.
         $matches = [];
-        foreach (array_keys(self::$registry) as $key) {
+        foreach (array_keys($localRegistry) as $key) {
             if (!str_starts_with($key, 'method:')) {
                 continue;
             }
@@ -648,27 +836,9 @@ CODE_SAMPLE,
         return null;
     }
 
-    private function findAttributeKey(string $attrName): ?string
-    {
-        // Direct FQ match.
-        $directKey = 'attribute:' . $attrName;
-        if (isset(self::$registry[$directKey])) {
-            return $directKey;
-        }
-
-        // Short name match (attribute used without FQ import, or short alias).
-        foreach (array_keys(self::$registry) as $key) {
-            if (!str_starts_with($key, 'attribute:')) {
-                continue;
-            }
-            $fqcn = substr($key, strlen('attribute:'));
-            if ($this->resolveShortName($fqcn) === $attrName) {
-                return $key;
-            }
-        }
-
-        return null;
-    }
+    // -------------------------------------------------------------------------
+    // Shared helpers
+    // -------------------------------------------------------------------------
 
     private function resolveShortName(string $fqcn): string
     {

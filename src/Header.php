@@ -10,6 +10,7 @@ use ZeroToProd\Thryds\Attributes\KeySource;
 #[KeyRegistry(
     KeySource::http_headers,
     addKey: '1. Add constant. 2. Reference via Header::NAME where needed.',
+    superglobals: []
 )]
 readonly class Header
 {

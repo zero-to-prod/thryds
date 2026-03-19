@@ -43,7 +43,7 @@ readonly class KeyRegistry
      */
     public function __construct(
         public KeySource $KeySource,
-        public array $superglobals = [],
-        public string $addKey = '',
+        public array $superglobals,
+        public string $addKey,
     ) {}
 }

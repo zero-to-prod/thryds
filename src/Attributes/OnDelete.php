@@ -22,6 +22,6 @@ use ZeroToProd\Thryds\Schema\ReferentialAction;
 readonly class OnDelete
 {
     public function __construct(
-        public ReferentialAction $ReferentialAction = ReferentialAction::RESTRICT,
+        public ReferentialAction $ReferentialAction,
     ) {}
 }

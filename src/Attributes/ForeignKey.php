@@ -34,6 +34,6 @@ readonly class ForeignKey
         /** Target column as a table-enum case, e.g. RoleTable::id. Navigate here for the full column definition. */
         public BackedEnum $BackedEnum,
         /** Constraint name. Auto-generated from source/target if empty. */
-        public string $name = '',
+        public string $name,
     ) {}
 }

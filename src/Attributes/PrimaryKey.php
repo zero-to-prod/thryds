@@ -28,6 +28,6 @@ readonly class PrimaryKey
 {
     /** @param string[] $columns SQL column names for a composite PK. Empty when used on a single column case. */
     public function __construct(
-        public array $columns = [],
+        public array $columns,
     ) {}
 }

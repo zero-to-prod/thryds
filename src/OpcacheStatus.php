@@ -10,6 +10,8 @@ use ZeroToProd\Thryds\Attributes\KeySource;
 /** @see opcache_get_status() */
 #[KeyRegistry(
     KeySource::opcache_get_status,
+    superglobals: [],
+    addKey: ''
 )]
 readonly class OpcacheStatus
 {

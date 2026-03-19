@@ -49,8 +49,15 @@ class MigrationsTable
         DataType: DataType::VARCHAR,
         length: 20,
         comment: 'Migration id, matching the four-digit prefix of the migration filename (e.g. 0001).',
+        precision: null,
+        scale: null,
+        unsigned: false,
+        nullable: false,
+        auto_increment: false,
+        default: null,
+        values: null,
     )]
-    #[PrimaryKey]
+    #[PrimaryKey(columns: [])]
     public string $id;
 
     /** @see $description */
@@ -59,6 +66,13 @@ class MigrationsTable
         DataType: DataType::VARCHAR,
         length: 255,
         comment: 'Human-readable description from the #[Migration] attribute on the migration class.',
+        precision: null,
+        scale: null,
+        unsigned: false,
+        nullable: false,
+        auto_increment: false,
+        default: null,
+        values: null,
     )]
     public string $description;
 
@@ -68,6 +82,13 @@ class MigrationsTable
         DataType: DataType::VARCHAR,
         length: 64,
         comment: 'SHA-256 hash of the migration file contents at the time it was applied.',
+        precision: null,
+        scale: null,
+        unsigned: false,
+        nullable: false,
+        auto_increment: false,
+        default: null,
+        values: null,
     )]
     public string $checksum;
 
@@ -77,6 +98,13 @@ class MigrationsTable
         DataType: DataType::DATETIME,
         default: Column::CURRENT_TIMESTAMP,
         comment: 'Timestamp when the migration was applied.',
+        length: null,
+        precision: null,
+        scale: null,
+        unsigned: false,
+        nullable: false,
+        auto_increment: false,
+        values: null,
     )]
     public string $applied_at;
 }

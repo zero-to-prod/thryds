@@ -56,14 +56,14 @@ readonly class Column
      */
     public function __construct(
         public DataType $DataType,
-        public ?int $length = null,
-        public ?int $precision = null,
-        public ?int $scale = null,
-        public bool $unsigned = false,
-        public bool $nullable = false,
-        public bool $auto_increment = false,
-        public string|int|float|bool|null $default = null,
-        public ?array $values = null,
-        public string $comment = '',
+        public ?int $length,
+        public ?int $precision,
+        public ?int $scale,
+        public bool $unsigned,
+        public bool $nullable,
+        public bool $auto_increment,
+        public string|int|float|bool|null $default,
+        public ?array $values,
+        public string $comment,
     ) {}
 }

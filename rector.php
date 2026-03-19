@@ -217,8 +217,9 @@ return static function (RectorConfig $rectorConfig): void {
         'mappings' => [],
         'mode' => 'auto',
     ]);
-    // No-op registration — configure targetFunctions/targetMethods/targetAttributes
-    // to activate for a one-shot migration. See: utils/rector/docs/RemoveDefaultsAndApplyAtCallsiteRector.md
+    // Auto-discovers all #[Attribute] classes with defaulted params and inlines
+    // those defaults at every call site. Functions/methods require explicit opt-in
+    // via targetFunctions/targetMethods. See: utils/rector/docs/RemoveDefaultsAndApplyAtCallsiteRector.md
     $rectorConfig->ruleWithConfiguration(RemoveDefaultsAndApplyAtCallsiteRector::class, [
         'mode' => 'auto',
     ]);
