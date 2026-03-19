@@ -71,6 +71,7 @@
         "test:coverage": "php scripts/check-coverage.php",
         "check:coverage": "php scripts/check-coverage.php",
         "fix:style": "./vendor/bin/php-cs-fixer fix",
+        "check:composer": "@composer validate",
         "check:style": "./vendor/bin/php-cs-fixer fix --dry-run --diff",
         "fix:rector": "./vendor/bin/rector process",
         "check:rector": "./vendor/bin/rector process --dry-run",

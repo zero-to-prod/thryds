@@ -16,9 +16,11 @@ ENVIRONMENT
   dev              Switch to development mode and restart containers
   prod             Switch to production mode and restart containers
   dev:up           Start development containers (preserves .env)
+  composer <cmd>   Run any Composer command inside the container (e.g. composer update, composer require …)
 
 CHECK (read-only, safe to run anytime)
   check:all        Run every check and test; JSON summary, never aborts early
+  check:composer   Validate composer.json integrity and consistency
   check:style      Verify code style without touching files (dry-run diff)
   check:rector     Verify automated refactor rules without applying them
   check:types      Static analysis — catches type errors before runtime
@@ -78,6 +80,9 @@ elif [ "$1" = "dev" ]; then
 elif [ "$1" = "prod" ]; then
     sed -i '' 's/^APP_ENV=.*/APP_ENV=production/' .env
     docker compose -f compose.yaml up -d
+elif [ "$1" = "composer" ]; then
+    shift
+    docker compose $COMPOSE_FILES exec web composer "$@"
 elif [ "$1" = "test:load" ]; then
     shift
     docker compose -f compose.load-test.yaml run --rm k6 "$@"

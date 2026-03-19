@@ -16,6 +16,7 @@ Thryds — a play off of threads, is a social media platform integrating AI with
 ```
 ./run list              # print all available commands with descriptions
 ./run <script>          # docker compose exec web composer <script>
+./run composer <cmd>    # docker compose exec web composer <cmd>  (e.g. composer update, composer require …)
 ./run test:load         # docker compose -f compose.load-test.yaml run --rm k6
 ./run dev               # set APP_ENV=development, restart with dev overlay
 ./run prod              # set APP_ENV=production, restart without dev overlay
@@ -36,6 +37,7 @@ Raw PHP: `docker compose exec web php scripts/<name>.php`
 
 ```
 ./run check:all         # PRIMARY — all checks + tests, JSON summary, non-aborting
+./run check:composer    # composer validate — integrity and consistency of composer.json
 ./run check:style       # php-cs-fixer --dry-run --diff
 ./run check:rector      # rector --dry-run
 ./run check:types       # phpstan

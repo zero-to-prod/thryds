@@ -21,6 +21,7 @@ declare(strict_types=1);
 $base_dir = dirname(__DIR__);
 
 $checks = [
+    'check:composer'         => 'composer validate',
     'check:style'            => $base_dir . '/vendor/bin/php-cs-fixer fix --dry-run --diff',
     'check:rector'           => $base_dir . '/vendor/bin/rector process --dry-run',
     'check:types'            => $base_dir . '/vendor/bin/phpstan analyse',
