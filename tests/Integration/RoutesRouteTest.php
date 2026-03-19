@@ -6,20 +6,36 @@ namespace ZeroToProd\Thryds\Tests\Integration;
 
 use PHPUnit\Framework\Attributes\Test;
 use ZeroToProd\Thryds\Routes\Route;
+use ZeroToProd\Thryds\Routes\RouteManifest;
 
 final class RoutesRouteTest extends IntegrationTestCase
 {
     #[Test]
-    public function returnsJsonArrayOfNonDevRoutes(): void
+    public function returnsJsonManifestOfNonDevRoutes(): void
     {
         $ResponseInterface = $this->get(Route::routes);
 
         $this->assertSame(200, $ResponseInterface->getStatusCode());
         $this->assertStringContainsString(self::APPLICATION_JSON, $ResponseInterface->getHeaderLine('Content-Type'));
 
-        $routes = json_decode((string) $ResponseInterface->getBody(), associative: true);
-        $this->assertIsArray(actual: $routes);
-        $this->assertContains(Route::home->value, haystack: $routes);
-        $this->assertNotContains(Route::routes->value, haystack: $routes);
+        $entries = json_decode((string) $ResponseInterface->getBody(), associative: true);
+        $this->assertIsArray(actual: $entries);
+
+        $paths = array_column(array: $entries, column_key: RouteManifest::path);
+        $this->assertContains(Route::home->value, haystack: $paths);
+        $this->assertNotContains(Route::routes->value, haystack: $paths);
+
+        $first = $entries[0];
+        $this->assertArrayHasKey(RouteManifest::name, array: $first);
+        $this->assertArrayHasKey(RouteManifest::path, array: $first);
+        $this->assertArrayHasKey(RouteManifest::description, array: $first);
+        $this->assertArrayHasKey(RouteManifest::operations, array: $first);
+        $this->assertIsArray(actual: $first[RouteManifest::operations]);
+
+        $firstOp = $first[RouteManifest::operations][0];
+        $this->assertArrayHasKey(RouteManifest::method, array: $firstOp);
+        $this->assertArrayHasKey(RouteManifest::description, array: $firstOp);
+        $this->assertSame(Route::home->operations()[0]->HttpMethod->value, $firstOp[RouteManifest::method]);
+        $this->assertSame(Route::home->description(), $first[RouteManifest::description]);
     }
 }

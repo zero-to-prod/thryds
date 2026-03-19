@@ -564,6 +564,26 @@ The Route Safety section in `rector.php` covers two separate models:
 
 When working on a Route Safety rule, identify which model it belongs to before reading or modifying related rules.
 
+### Route enum attribute pattern
+
+Each `Route` enum case carries two stacked attributes:
+
+- `#[RouteInfo(string $description)]` — path/resource level description (one per case)
+- `#[RouteOperation(HttpMethod $HttpMethod, string $description)]` — operation level; `IS_REPEATABLE`, one per supported HTTP method
+
+```php
+#[RouteInfo('Login')]
+#[RouteOperation(HttpMethod::GET,  'User authentication form')]
+#[RouteOperation(HttpMethod::POST, 'Handle login submission')]
+case login = '/login';
+```
+
+`Route::operations()` returns `RouteOperation[]`. `Route::description()` returns the `RouteInfo` description. There is no `Route::method()` — always use `$Route->operations()[0]->HttpMethod->value` for single-method routes, or loop `$Route->operations()` for multi-method.
+
+### `ForbidDuplicateRouteRegistrationRector` known limitation
+
+This rule resolves the HTTP method from the first argument of `$Router->map()` by walking a property-fetch chain. It cannot parse the current call shape `->operations()[0]->HttpMethod->value` (a method-call chain). As a result, duplicate registration detection is silently disabled for all routes registered via `operations()`. This is a known gap — the rule does not fail `check:all`, it just does not detect duplicates. If this matters, the rule needs updating to handle the deeper chain.
+
 ### `StringArgToClassConstRector` config
 
 This rule requires explicit `mappings` config (`class`, `methodName`, `paramName` per entry) to do anything. An empty `mappings: []` is a valid no-op registration. The rule also writes missing constants directly into the target class file on disk.

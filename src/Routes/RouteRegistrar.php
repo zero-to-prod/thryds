@@ -9,6 +9,7 @@ use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\Response\JsonResponse;
 use League\Route\Router;
 use Psr\Http\Message\ResponseInterface;
+use ZeroToProd\Thryds\Attributes\RouteOperation;
 use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Controllers\HomeController;
@@ -19,7 +20,7 @@ readonly class RouteRegistrar
     public static function register(Router $Router, Blade $Blade, Config $Config): void
     {
         $Router->map(
-            HttpMethod::GET->value,
+            Route::home->operations()[0]->HttpMethod->value,
             Route::home->value,
             new HomeController($Blade),
         );
@@ -30,7 +31,7 @@ readonly class RouteRegistrar
             $View = View::tryFrom($Route->name);
             if ($View !== null && $Route !== Route::home && (!$Route->isDevOnly() || !$Config->isProduction())) {
                 $Router->map(
-                    HttpMethod::GET->value,
+                    $Route->operations()[0]->HttpMethod->value,
                     $Route->value,
                     fn(): ResponseInterface => new HtmlResponse(
                         html: $Blade->make(view: $View->value)->render(),
@@ -41,7 +42,7 @@ readonly class RouteRegistrar
 
         if (!$Config->isProduction()) {
             $Router->map(
-                HttpMethod::GET->value,
+                Route::opcache_status->operations()[0]->HttpMethod->value,
                 Route::opcache_status->value,
                 static fn(): ResponseInterface => new JsonResponse(
                     data: json_decode(
@@ -52,7 +53,7 @@ readonly class RouteRegistrar
             );
 
             $Router->map(
-                HttpMethod::GET->value,
+                Route::opcache_scripts->operations()[0]->HttpMethod->value,
                 Route::opcache_scripts->value,
                 static fn(): ResponseInterface => new JsonResponse(
                     data: array_keys(opcache_get_status(true)[OpcacheStatus::scripts] ?? []),
@@ -60,11 +61,22 @@ readonly class RouteRegistrar
             );
 
             $Router->map(
-                HttpMethod::GET->value,
+                Route::routes->operations()[0]->HttpMethod->value,
                 Route::routes->value,
                 static fn(): ResponseInterface => new JsonResponse(
                     data: array_values(array_map(
-                        fn(Route $Route): string => $Route->value,
+                        fn(Route $Route): array => [
+                            RouteManifest::name        => $Route->name,
+                            RouteManifest::path        => $Route->value,
+                            RouteManifest::description => $Route->description(),
+                            RouteManifest::operations  => array_map(
+                                fn(RouteOperation $RouteOperation): array => [
+                                    RouteManifest::method      => $RouteOperation->HttpMethod->value,
+                                    RouteManifest::description => $RouteOperation->description,
+                                ],
+                                $Route->operations(),
+                            ),
+                        ],
                         array_filter(Route::cases(), fn(Route $Route): bool => !$Route->isDevOnly() && $Route->params() === []),
                     )),
                 ),

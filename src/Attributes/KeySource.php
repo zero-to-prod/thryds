@@ -23,4 +23,5 @@ enum KeySource: string
     case server_env = '$_SERVER / $_ENV';
     case migrations_table = 'migrations tracking table';
     case vite_entry_points = 'Vite entry points';
+    case route_manifest = 'Route manifest JSON';
 }

@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y unzip && rm -rf /var/lib/apt/lists/*
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 COPY composer.json composer.lock /app/
+COPY migrations/ /app/migrations/
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 FROM node:22-alpine AS node
