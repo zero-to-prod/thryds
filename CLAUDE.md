@@ -50,7 +50,9 @@ Raw PHP: `docker compose exec web php scripts/<name>.php`
 ./run test:integration
 ./run test:database
 ./run test:rector       # custom Rector rule tests
+./run test:coverage     # phpunit with PCOV; coverage metrics + clover XML → var/coverage/
 ./run test:load         # k6 load test (production build)
+./run check:coverage    # same as test:coverage; pass -- <N> to enforce an N% line threshold
 ```
 
 ## Fix (modifies files)

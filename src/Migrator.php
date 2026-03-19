@@ -73,7 +73,7 @@ readonly class Migrator
      * Returns one row per migration file, ordered by id.
      *
      * Each row: {MigrationsTable::id, MigrationsTable::description, col_status, MigrationsTable::applied_at, MigrationsTable::checksum}
-     * col_status is one of: status_applied, status_pending, status_modified.
+     * col_status value is a MigrationStatus enum case (applied, pending, or modified).
      *
      * @return array<int, array<string, mixed>>
      */
@@ -112,7 +112,7 @@ readonly class Migrator
     /**
      * Applies all pending migrations in id order. Throws if any applied migration has been modified.
      *
-     * @return list<array{id: string, description: string}> Keys are MigrationsTable::id and MigrationsTable::description
+     * @return list<array{id: string, description: string}> Key names match MigrationsTable::id and MigrationsTable::description constants.
      */
     public function migrate(): array
     {
@@ -147,7 +147,7 @@ readonly class Migrator
      *
      * Returns the rolled-back migration, or null if there was nothing to roll back.
      *
-     * @return array{id: string, description: string}|null
+     * @return array{id: string, description: string}|null Key names match MigrationsTable::id and MigrationsTable::description constants.
      */
     public function rollback(): ?array
     {
@@ -224,12 +224,17 @@ readonly class Migrator
     /** @return array<string, mixed>|null */
     private function fetchLastApplied(): ?array
     {
-        return $this->Database->one($this->selectFromTable('DESC LIMIT 1'));
+        return $this->Database->one($this->selectFromTable('DESC', 1));
     }
 
-    private function selectFromTable(string $order): string
+    private function selectFromTable(string $order, ?int $limit = null): string
     {
-        return 'SELECT * FROM `' . MigrationsTable::tableName() . '` ORDER BY ' . MigrationsTable::id . ' ' . $order;
+        $sql = 'SELECT * FROM `' . MigrationsTable::tableName() . '` ORDER BY ' . MigrationsTable::id . ' ' . $order;
+        if ($limit !== null) {
+            $sql .= ' LIMIT ' . $limit;
+        }
+
+        return $sql;
     }
 
     private function checksum(string $path): string
@@ -248,14 +253,18 @@ readonly class Migrator
     private function rowStr(array $row, string $key): string
     {
         $value = $row[$key];
-        assert(is_string($value));
+        if (!is_string($value)) {
+            throw new RuntimeException("Expected string for key '$key', got " . gettype($value) . '.');
+        }
 
         return $value;
     }
 
     private function instantiate(string $class): MigrationInterface
     {
-        assert(class_exists($class));
+        if (!class_exists($class)) {
+            throw new RuntimeException("Migration class $class does not exist.");
+        }
         $instance = new ReflectionClass(objectOrClass: $class)->newInstance();
         if (!$instance instanceof MigrationInterface) {
             throw new RuntimeException("$class must implement MigrationInterface.");

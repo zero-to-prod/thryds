@@ -28,6 +28,8 @@ CHECK (read-only, safe to run anytime)
   check:blade-components Lint component usage inside Blade templates
   check:blade-templates  Lint Blade template structure and syntax
   check:blade-push       Verify @push stacks are consumed by a @stack
+  check:coverage   Run full suite with PCOV; emits per-class metrics + clover XML to var/coverage/
+                   Pass -- <N> to enforce a minimum line-coverage threshold (e.g. -- 80)
 
 TEST
   test             Run the full test suite (unit + integration + database)
@@ -35,6 +37,7 @@ TEST
   test:integration Run integration tests — exercises real app boundaries
   test:database    Run database tests — isolated transactions, real schema
   test:rector      Run tests for custom Rector rules
+  test:coverage    Alias for check:coverage — run with PCOV, report metrics, no threshold
   test:load        k6 load test against the production build
 
 FIX (modifies files)

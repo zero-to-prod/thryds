@@ -65,6 +65,8 @@
         "test:integration": "./vendor/bin/phpunit --testsuite integration",
         "test:database": "./vendor/bin/phpunit --testsuite database",
         "test:rector": "./vendor/bin/phpunit utils",
+        "test:coverage": "php scripts/check-coverage.php",
+        "check:coverage": "php scripts/check-coverage.php",
         "fix:style": "./vendor/bin/php-cs-fixer fix",
         "check:style": "./vendor/bin/php-cs-fixer fix --dry-run --diff",
         "fix:rector": "./vendor/bin/rector process",

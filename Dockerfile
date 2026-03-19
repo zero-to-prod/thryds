@@ -55,6 +55,8 @@ WORKDIR /app
 # See HOT-010
 FROM production AS development
 
+RUN install-php-extensions pcov
+
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
 COPY docker/php/opcache-dev.ini $PHP_INI_DIR/conf.d/zzz-opcache-dev.ini
