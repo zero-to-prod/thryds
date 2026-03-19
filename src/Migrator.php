@@ -165,6 +165,7 @@ readonly class Migrator
             return [];
         }
         sort(array: $files);
+        /** @var array<string, array<string, string>> $migrations */
         $migrations = [];
         foreach ($files as $path) {
             if (!preg_match('/^(\d{4})_(.+)$/', basename($path, suffix: '.php'), $matches)) {
@@ -179,6 +180,11 @@ readonly class Migrator
                 continue;
             }
             $Migration = $attrs[0]->newInstance();
+            if ($Migration->id !== $matches[1]) {
+                throw new RuntimeException(
+                    "Migration attribute id '{$Migration->id}' does not match filename prefix '{$matches[1]}' in " . basename($path) . ' — keep the attribute id and filename prefix in sync.'
+                );
+            }
             $migrations[$Migration->id] = [
                 self::key_path               => $path,
                 self::key_class              => $fqcn,
@@ -187,7 +193,7 @@ readonly class Migrator
         }
         ksort(array: $migrations);
 
-        return $migrations;
+        return $migrations; // @phpstan-ignore return.type
     }
 
     /** @return array<int, array<string, mixed>> */

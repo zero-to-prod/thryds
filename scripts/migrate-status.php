@@ -19,7 +19,9 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\DatabaseConfig;
+use ZeroToProd\Thryds\MigrationStatus;
 use ZeroToProd\Thryds\Migrator;
+use ZeroToProd\Thryds\Tables\MigrationsTable;
 
 try {
     $Migrator = new Migrator(
@@ -40,19 +42,18 @@ $modified = [];
 $applied = [];
 
 foreach ($rows as $row) {
-    $label = match ($row['status']) {
-        'applied'  => '[ OK ]',
-        'pending'  => '[PEND]',
-        'modified' => '[WARN]',
-        default    => '[????]',
+    $label = match ($row[Migrator::col_status]) {
+        MigrationStatus::applied  => '[ OK ]',
+        MigrationStatus::pending  => '[PEND]',
+        MigrationStatus::modified => '[WARN]',
     };
-    $applied_at = $row['applied_at'] !== null ? ' (applied ' . $row['applied_at'] . ')' : '';
-    echo sprintf("  %s %-8s %s %s%s\n", $label, $row['status'], $row['id'], $row['description'], $applied_at);
+    $applied_at = $row[MigrationsTable::applied_at] !== null ? ' (applied ' . $row[MigrationsTable::applied_at] . ')' : '';
+    echo sprintf("  %s %-8s %s %s%s\n", $label, $row[Migrator::col_status]->value, $row[MigrationsTable::id], $row[MigrationsTable::description], $applied_at);
 
-    match ($row['status']) {
-        'pending'  => $pending[]  = $row['id'],
-        'modified' => $modified[] = $row['id'],
-        default    => $applied[]  = $row['id'],
+    match ($row[Migrator::col_status]) {
+        MigrationStatus::pending  => $pending[]  = $row[MigrationsTable::id],
+        MigrationStatus::modified => $modified[] = $row[MigrationsTable::id],
+        MigrationStatus::applied  => $applied[]  = $row[MigrationsTable::id],
     };
 }
 

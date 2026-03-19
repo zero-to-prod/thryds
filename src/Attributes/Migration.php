@@ -13,8 +13,6 @@ use Attribute;
  *
  * The id must match the four-digit prefix of the migration filename.
  * Validated by Migrator::discover() — mismatches throw a RuntimeException.
- *
- * @see docs/migrations.md
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 readonly class Migration

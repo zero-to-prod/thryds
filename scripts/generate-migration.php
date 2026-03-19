@@ -65,16 +65,19 @@ use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\MigrationInterface;
 
 #[Migration(id: '{$next_id}', description: '{$description}')]
-final class {$class_name} implements MigrationInterface
+final readonly class {$class_name} implements MigrationInterface
 {
     public function up(Database \$Database): void
     {
-        // TODO: implement migration
+        // DDL example: CREATE TABLE IF NOT EXISTS `table` (...) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        // DML example: \$Database->execute('INSERT INTO `table` (col) VALUES (:col)', [':col' => 'value'])
     }
 
     public function down(Database \$Database): void
     {
-        // TODO: implement rollback
+        // Undo up() defensively — DDL auto-commits, so partial states are possible.
+        // DDL example: DROP TABLE IF EXISTS `table`
+        // DML example: \$Database->execute('DELETE FROM `table` WHERE col = :col', [':col' => 'value'])
     }
 }
 PHP;

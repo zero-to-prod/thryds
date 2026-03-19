@@ -17,7 +17,9 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\DatabaseConfig;
+use ZeroToProd\Thryds\MigrationStatus;
 use ZeroToProd\Thryds\Migrator;
+use ZeroToProd\Thryds\Tables\MigrationsTable;
 
 try {
     $Migrator = new Migrator(
@@ -34,11 +36,11 @@ try {
 $failures = [];
 
 foreach ($rows as $row) {
-    if ($row['status'] === 'pending') {
-        $failures[] = "[PEND] {$row['id']}: not yet applied — run: ./run migrate";
+    if ($row[Migrator::col_status] === MigrationStatus::pending) {
+        $failures[] = "[PEND] {$row[MigrationsTable::id]}: not yet applied — run: ./run migrate";
     }
-    if ($row['status'] === 'modified') {
-        $failures[] = "[WARN] {$row['id']}: checksum mismatch — file was modified after apply";
+    if ($row[Migrator::col_status] === MigrationStatus::modified) {
+        $failures[] = "[WARN] {$row[MigrationsTable::id]}: checksum mismatch — file was modified after apply";
     }
 }
 
