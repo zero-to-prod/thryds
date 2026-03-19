@@ -6,6 +6,7 @@ namespace ZeroToProd\Thryds\UI;
 
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 
+/** Allowed HTML input type values for the input component. */
 #[ClosedSet(
     Domain::input_types,
     addCase: <<<TEXT

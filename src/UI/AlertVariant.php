@@ -6,6 +6,7 @@ namespace ZeroToProd\Thryds\UI;
 
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 
+/** Visual intent variants for the alert component. */
 #[ClosedSet(
     Domain::alert_variants,
     addCase: <<<TEXT

@@ -6,6 +6,7 @@ namespace ZeroToProd\Thryds\UI;
 
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 
+/** Visual intent variants for the button component. */
 #[ClosedSet(
     Domain::button_variants,
     addCase: <<<TEXT

@@ -8,6 +8,8 @@ use ZeroToProd\Thryds\Attributes\DataModel;
 use ZeroToProd\Thryds\Attributes\ViewModel;
 
 /**
+ * HTTP error context (message, status_code) passed to the error view.
+ *
  * @method static self from(array{message: string, status_code: int} $data)
  */
 #[ViewModel]

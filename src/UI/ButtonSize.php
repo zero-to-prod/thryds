@@ -6,6 +6,7 @@ namespace ZeroToProd\Thryds\UI;
 
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 
+/** Size scale for the button component (sm, md, lg). */
 #[ClosedSet(
     Domain::button_sizes,
     addCase: <<<TEXT

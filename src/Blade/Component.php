@@ -22,10 +22,15 @@ use ZeroToProd\Thryds\UI\Domain;
 )]
 enum Component: string
 {
+    /** Inline status banner for feedback messages (info, danger, success). */
     case alert = 'alert';
+    /** Action trigger with configurable visual variant and size. */
     case button = 'button';
+    /** Contained surface for grouping related content. */
     case card = 'card';
+    /** Label + input wrapper that enforces consistent form field layout. */
     case form_group = 'form-group';
+    /** Text field bound to a typed HTML input type. */
     case input = 'input';
 
     /** Blade view name used by compiler()->component(). */
