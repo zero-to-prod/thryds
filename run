@@ -8,6 +8,7 @@ else
     COMPOSE_FILES="-f compose.yaml -f compose.development.yaml"
 fi
 
+_dispatch() {
 if [ "$1" = "list" ]; then
     cat << 'EOF'
 Thryds — ./run command reference
@@ -43,6 +44,7 @@ TEST
   test:load        k6 load test against the production build
 
 FIX (modifies files)
+  fix:all          Apply all fixes, regenerate preload, then verify with check:all
   fix:style        Auto-format all PHP files to project style
   fix:rector       Apply automated refactor rules to the codebase
 
@@ -50,12 +52,15 @@ MIGRATE
   migrate          Apply all pending migrations; emits JSON {"applied":[…],"total":N}
   migrate:status   Display → stderr; JSON {"passed":bool,"pending":[…],"modified":[…],"applied":[…]} → stdout
   migrate:rollback Undo the last migration; emits JSON {"rolled_back":{id,description}|null}
+  sync:schema      Create missing tables and sync #[Column] attributes to the live schema
+                   Pass -- --dry-run to report drift without modifying anything
 
 CACHE
   cache:views      Compile Blade templates to bytecode for production
 
 GENERATE (scaffold new files)
   generate:migration    Scaffold a new timestamped migration file
+  generate:table        Generate a Table model class from a live database table's schema
   generate:requirement  Scaffold a requirement entry + matching test stub
   generate:rector-rule  Scaffold a new custom Rector rule with tests and docs
   generate:preload      Regenerate OPcache preload manifest (run before prod:check)
@@ -63,6 +68,8 @@ GENERATE (scaffold new files)
 DATABASE (read-only)
   db:query         Execute a SELECT statement and print results as JSON
                    Pass -- "<sql>" to specify the query
+  list:routes      Print all registered routes as JSON (name, path, dev_only, description, operations)
+  list:inventory   Dependency graph: routes→controllers→views→components; JSON (default) or DOT (pass -- --format=dot)
 
 AUDIT & PRODUCTION
   prod:check       Full production readiness checklist (routes, OPcache, templates)
@@ -80,6 +87,11 @@ elif [ "$1" = "dev" ]; then
 elif [ "$1" = "prod" ]; then
     sed -i '' 's/^APP_ENV=.*/APP_ENV=production/' .env
     docker compose -f compose.yaml up -d
+elif [ "$1" = "fix:all" ]; then
+    docker compose $COMPOSE_FILES exec web composer fix:style \
+    && docker compose $COMPOSE_FILES exec web composer fix:rector \
+    && docker compose $COMPOSE_FILES exec web composer generate:preload \
+    && docker compose $COMPOSE_FILES exec web composer check:all
 elif [ "$1" = "composer" ]; then
     shift
     docker compose $COMPOSE_FILES exec web composer "$@"
@@ -89,3 +101,33 @@ elif [ "$1" = "test:load" ]; then
 else
     docker compose $COMPOSE_FILES exec web composer "$@"
 fi
+}
+
+_LOG_DIR="logs/run"
+mkdir -p "$_LOG_DIR"
+_TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+_START=$(date +%s)
+_CMD="${1:-}"
+
+_dispatch "$@"
+_EXIT=$?
+
+_END=$(date +%s)
+_S=$((_END - _START))
+
+# Build a JSON array from args beyond the command
+_ARGS_JSON="["
+_i=0
+for _a in "$@"; do
+    _i=$((_i + 1))
+    [ $_i -eq 1 ] && continue
+    [ "$_ARGS_JSON" != "[" ] && _ARGS_JSON="${_ARGS_JSON},"
+    _ARGS_JSON="${_ARGS_JSON}\"$(printf '%s' "$_a" | sed 's/\\/\\\\/g; s/"/\\"/g')\""
+done
+_ARGS_JSON="${_ARGS_JSON}]"
+
+printf '{"ts":"%s","cmd":"%s","args":%s,"env":"%s","exit":%d,"s":%d}\n' \
+    "$_TS" "$_CMD" "$_ARGS_JSON" "$APP_ENV" "$_EXIT" "$_S" \
+    >> "$_LOG_DIR/$(date +%Y-%m-%d).jsonl"
+
+exit $_EXIT

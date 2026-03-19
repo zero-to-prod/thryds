@@ -24,7 +24,7 @@ use ZeroToProd\Thryds\UI\Domain;
     TEXT
 )]
 #[Table(
-    name: 'migrations',
+    TableName: TableName::migrations,
     Engine: Engine::InnoDB,
     Charset: Charset::utf8mb4,
     Collation: Collation::utf8mb4_unicode_ci
@@ -36,9 +36,9 @@ use ZeroToProd\Thryds\UI\Domain;
  * have been applied, when, and their checksums for tamper detection.
  *
  * Use the enum case values as column name references in queries:
- * e.g. MigrationsTable::id->value === 'id'
+ * e.g. Migration::id === 'id'
  */
-class MigrationsTable
+class Migration
 {
     use DataModel;
     use HasTableName;
@@ -48,7 +48,6 @@ class MigrationsTable
     #[Column(
         DataType: DataType::VARCHAR,
         length: 20,
-        comment: 'Migration id, matching the four-digit prefix of the migration filename (e.g. 0001).',
         precision: null,
         scale: null,
         unsigned: false,
@@ -56,6 +55,7 @@ class MigrationsTable
         auto_increment: false,
         default: null,
         values: null,
+        comment: 'Migration id, matching the four-digit prefix of the migration filename (e.g. 0001).',
     )]
     #[PrimaryKey(columns: [])]
     public string $id;
@@ -65,7 +65,6 @@ class MigrationsTable
     #[Column(
         DataType: DataType::VARCHAR,
         length: 255,
-        comment: 'Human-readable description from the #[Migration] attribute on the migration class.',
         precision: null,
         scale: null,
         unsigned: false,
@@ -73,6 +72,7 @@ class MigrationsTable
         auto_increment: false,
         default: null,
         values: null,
+        comment: 'Human-readable description from the #[Migration] attribute on the migration class.',
     )]
     public string $description;
 
@@ -81,7 +81,6 @@ class MigrationsTable
     #[Column(
         DataType: DataType::VARCHAR,
         length: 64,
-        comment: 'SHA-256 hash of the migration file contents at the time it was applied.',
         precision: null,
         scale: null,
         unsigned: false,
@@ -89,6 +88,7 @@ class MigrationsTable
         auto_increment: false,
         default: null,
         values: null,
+        comment: 'SHA-256 hash of the migration file contents at the time it was applied.',
     )]
     public string $checksum;
 
@@ -96,15 +96,15 @@ class MigrationsTable
     public const string applied_at = 'applied_at';
     #[Column(
         DataType: DataType::DATETIME,
-        default: Column::CURRENT_TIMESTAMP,
-        comment: 'Timestamp when the migration was applied.',
         length: null,
         precision: null,
         scale: null,
         unsigned: false,
         nullable: false,
         auto_increment: false,
+        default: Column::CURRENT_TIMESTAMP,
         values: null,
+        comment: 'Timestamp when the migration was applied.',
     )]
     public string $applied_at;
 }

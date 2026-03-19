@@ -8,6 +8,7 @@ use Attribute;
 use ZeroToProd\Thryds\Schema\Charset;
 use ZeroToProd\Thryds\Schema\Collation;
 use ZeroToProd\Thryds\Schema\Engine;
+use ZeroToProd\Thryds\Tables\TableName;
 
 /**
  * Declares a backed enum as a database table definition.
@@ -36,7 +37,7 @@ use ZeroToProd\Thryds\Schema\Engine;
 readonly class Table
 {
     public function __construct(
-        public string $name,
+        public TableName $TableName,
         public Engine $Engine,
         public Charset $Charset,
         public Collation $Collation,

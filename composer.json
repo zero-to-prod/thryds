@@ -90,12 +90,16 @@
         "cache:views": "php scripts/cache-views.php",
         "generate:preload": "php scripts/generate-preload.php",
         "generate:migration": "php scripts/generate-migration.php",
+        "generate:table": "php scripts/generate-table.php",
         "generate:requirement": "php scripts/make-requirement.php",
         "generate:rector-rule": "php scripts/make-rector-rule.php",
         "audit:opcache": "php scripts/opcache-audit.php",
         "prod:check": "php scripts/production-checklist.php",
         "audit:profile": "php scripts/profile-endpoints.php",
         "audit:hotspots": "php scripts/analyze-access-log.php",
-        "db:query": "php scripts/db-query.php"
+        "db:query": "php scripts/db-query.php",
+        "sync:schema": "php scripts/sync-schema.php",
+        "list:routes": "php scripts/list-routes.php",
+        "list:inventory": "php scripts/inventory.php"
     }
 }

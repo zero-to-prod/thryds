@@ -8,8 +8,8 @@ use ReflectionClass;
 use RuntimeException;
 use ZeroToProd\Thryds\Attributes\KeyRegistry;
 use ZeroToProd\Thryds\Attributes\KeySource;
-use ZeroToProd\Thryds\Attributes\Migration;
-use ZeroToProd\Thryds\Tables\MigrationsTable;
+use ZeroToProd\Thryds\Attributes\Migration as MigrationAttribute;
+use ZeroToProd\Thryds\Tables\Migration;
 
 /**
  * Applies and rolls back database migrations.
@@ -29,8 +29,8 @@ use ZeroToProd\Thryds\Tables\MigrationsTable;
  */
 #[KeyRegistry(
     KeySource::migrations_table,
-    addKey: '1. Add constant. 2. Reference via Migrator::CONST_NAME where needed.',
-    superglobals: []
+    superglobals: [],
+    addKey: '1. Add constant. 2. Reference via Migrator::CONST_NAME where needed.'
 )]
 readonly class Migrator
 {
@@ -59,7 +59,7 @@ readonly class Migrator
     public function ensureTable(): void
     {
         $this->Database->execute(
-            'CREATE TABLE IF NOT EXISTS `' . MigrationsTable::tableName() . '` (
+            'CREATE TABLE IF NOT EXISTS `' . Migration::tableName() . '` (
                 id          VARCHAR(20)  NOT NULL,
                 description VARCHAR(255) NOT NULL,
                 checksum    VARCHAR(64)  NOT NULL,
@@ -72,7 +72,7 @@ readonly class Migrator
     /**
      * Returns one row per migration file, ordered by id.
      *
-     * Each row: {MigrationsTable::id, MigrationsTable::description, col_status, MigrationsTable::applied_at, MigrationsTable::checksum}
+     * Each row: {Migration::id, Migration::description, col_status, Migration::applied_at, Migration::checksum}
      * col_status value is a MigrationStatus enum case (applied, pending, or modified).
      *
      * @return array<int, array<string, mixed>>
@@ -81,7 +81,7 @@ readonly class Migrator
     {
         $applied = [];
         foreach ($this->fetchApplied() as $row) {
-            $applied[$this->rowStr($row, key: MigrationsTable::id)] = $row;
+            $applied[$this->rowStr($row, key: Migration::id)] = $row;
         }
 
         $result = [];
@@ -89,19 +89,19 @@ readonly class Migrator
             $checksum = $this->checksum(path: $info[self::key_path]);
             if (isset($applied[$id])) {
                 $result[] = [
-                    MigrationsTable::id          => $id,
-                    MigrationsTable::description => $info[MigrationsTable::description],
-                    self::col_status             => $checksum === $applied[$id][MigrationsTable::checksum] ? MigrationStatus::applied : MigrationStatus::modified,
-                    MigrationsTable::applied_at  => $applied[$id][MigrationsTable::applied_at],
-                    MigrationsTable::checksum    => $checksum,
+                    Migration::id          => $id,
+                    Migration::description => $info[Migration::description],
+                    self::col_status             => $checksum === $applied[$id][Migration::checksum] ? MigrationStatus::applied : MigrationStatus::modified,
+                    Migration::applied_at  => $applied[$id][Migration::applied_at],
+                    Migration::checksum    => $checksum,
                 ];
             } else {
                 $result[] = [
-                    MigrationsTable::id          => $id,
-                    MigrationsTable::description => $info[MigrationsTable::description],
+                    Migration::id          => $id,
+                    Migration::description => $info[Migration::description],
                     self::col_status             => MigrationStatus::pending,
-                    MigrationsTable::applied_at  => null,
-                    MigrationsTable::checksum    => $checksum,
+                    Migration::applied_at  => null,
+                    Migration::checksum    => $checksum,
                 ];
             }
         }
@@ -112,14 +112,14 @@ readonly class Migrator
     /**
      * Applies all pending migrations in id order. Throws if any applied migration has been modified.
      *
-     * @return list<array{id: string, description: string}> Key names match MigrationsTable::id and MigrationsTable::description constants.
+     * @return list<array{id: string, description: string}> Key names match Migration::id and Migration::description constants.
      */
     public function migrate(): array
     {
         $discovered = $this->discover();
         $applied = [];
         foreach ($this->status() as $row) {
-            $id = $this->rowStr($row, key: MigrationsTable::id);
+            $id = $this->rowStr($row, key: Migration::id);
             if ($row[self::col_status] === MigrationStatus::modified) {
                 throw new RuntimeException(
                     "Migration $id was modified after being applied — checksum mismatch. Restore the file or roll back."
@@ -130,12 +130,12 @@ readonly class Migrator
             }
             $this->instantiate(class: $discovered[$id][self::key_class])->up(Database: $this->Database);
             $this->Database->execute(
-                'INSERT INTO `' . MigrationsTable::tableName() . '` (id, description, checksum, applied_at) VALUES (' . self::param_id . ', ' . self::param_description . ', ' . self::param_checksum . ', NOW())',
-                [self::param_id => $id, self::param_description => $row[MigrationsTable::description], self::param_checksum => $row[MigrationsTable::checksum]]
+                'INSERT INTO `' . Migration::tableName() . '` (id, description, checksum, applied_at) VALUES (' . self::param_id . ', ' . self::param_description . ', ' . self::param_checksum . ', NOW())',
+                [self::param_id => $id, self::param_description => $row[Migration::description], self::param_checksum => $row[Migration::checksum]]
             );
             $applied[] = [
-                MigrationsTable::id          => $id,
-                MigrationsTable::description => $this->rowStr($row, key: MigrationsTable::description),
+                Migration::id          => $id,
+                Migration::description => $this->rowStr($row, key: Migration::description),
             ];
         }
 
@@ -147,7 +147,7 @@ readonly class Migrator
      *
      * Returns the rolled-back migration, or null if there was nothing to roll back.
      *
-     * @return array{id: string, description: string}|null Key names match MigrationsTable::id and MigrationsTable::description constants.
+     * @return array{id: string, description: string}|null Key names match Migration::id and Migration::description constants.
      */
     public function rollback(): ?array
     {
@@ -155,20 +155,20 @@ readonly class Migrator
         if ($last === null) {
             return null;
         }
-        $id = $this->rowStr(row: $last, key: MigrationsTable::id);
+        $id = $this->rowStr(row: $last, key: Migration::id);
         $discovered = $this->discover();
         if (!isset($discovered[$id])) {
             throw new RuntimeException("Migration $id is applied but its file was not found in {$this->migrations_dir}.");
         }
         $this->instantiate(class: $discovered[$id][self::key_class])->down(Database: $this->Database);
         $this->Database->execute(
-            'DELETE FROM `' . MigrationsTable::tableName() . '` WHERE id = ' . self::param_id,
+            'DELETE FROM `' . Migration::tableName() . '` WHERE id = ' . self::param_id,
             [self::param_id => $id]
         );
 
         return [
-            MigrationsTable::id          => $id,
-            MigrationsTable::description => $this->rowStr(row: $last, key: MigrationsTable::description),
+            Migration::id          => $id,
+            Migration::description => $this->rowStr(row: $last, key: Migration::description),
         ];
     }
 
@@ -194,7 +194,7 @@ readonly class Migrator
             if (!class_exists(class: $fqcn)) {
                 continue;
             }
-            $attrs = new ReflectionClass(objectOrClass: $fqcn)->getAttributes(Migration::class);
+            $attrs = new ReflectionClass(objectOrClass: $fqcn)->getAttributes(MigrationAttribute::class);
             if ($attrs === []) {
                 continue;
             }
@@ -207,7 +207,7 @@ readonly class Migrator
             $migrations[$Migration->id] = [
                 self::key_path               => $path,
                 self::key_class              => $fqcn,
-                MigrationsTable::description => $Migration->description,
+                Migration::description => $Migration->description,
             ];
         }
         ksort(array: $migrations);
@@ -229,7 +229,7 @@ readonly class Migrator
 
     private function selectFromTable(string $order, ?int $limit = null): string
     {
-        $sql = 'SELECT * FROM `' . MigrationsTable::tableName() . '` ORDER BY ' . MigrationsTable::id . ' ' . $order;
+        $sql = 'SELECT * FROM `' . Migration::tableName() . '` ORDER BY ' . Migration::id . ' ' . $order;
         if ($limit !== null) {
             $sql .= ' LIMIT ' . $limit;
         }

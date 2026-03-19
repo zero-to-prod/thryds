@@ -90,6 +90,8 @@ use Utils\Rector\Rector\VerticalAttributeArgsRector;
 use Utils\Rector\Rector\DetectStaleCodeReferencesRector;
 use Utils\Rector\Rector\RemoveDefaultsAndApplyAtCallsiteRector;
 use Utils\Rector\Rector\ForbidHardcodedNamespacePrefixRector;
+use Rector\CodeQuality\Rector\FuncCall\SortCallLikeNamedArgsRector;
+use Rector\CodeQuality\Rector\Attribute\SortAttributeNamedArgsRector;
 use ZeroToProd\Thryds\Attributes\Requirement;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
@@ -188,6 +190,8 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RemoveNamedArgWhenVarMatchesParamRector::class, [
         'mode' => 'auto',
     ]);
+    $rectorConfig->rule(SortCallLikeNamedArgsRector::class);
+    $rectorConfig->rule(SortAttributeNamedArgsRector::class);
 
     // --- Code Quality ---
     $rectorConfig->ruleWithConfiguration(MakeClassReadonlyRector::class, [

@@ -20,7 +20,7 @@ require __DIR__ . '/../vendor/autoload.php';
 use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\DatabaseConfig;
 use ZeroToProd\Thryds\Migrator;
-use ZeroToProd\Thryds\Tables\MigrationsTable;
+use ZeroToProd\Thryds\Tables\Migration;
 
 $Migrator = new Migrator(
     Database: new Database(DatabaseConfig::fromEnv()),
@@ -40,7 +40,7 @@ try {
 }
 
 foreach ($applied as $migration) {
-    echo '  [ OK ] applied ' . $migration[MigrationsTable::id] . ' ' . $migration[MigrationsTable::description] . "\n";
+    echo '  [ OK ] applied ' . $migration[Migration::id] . ' ' . $migration[Migration::description] . "\n";
 }
 
 if ($applied === []) {

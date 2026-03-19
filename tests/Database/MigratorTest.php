@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
 use ZeroToProd\Thryds\MigrationStatus;
 use ZeroToProd\Thryds\Migrator;
-use ZeroToProd\Thryds\Tables\MigrationsTable;
+use ZeroToProd\Thryds\Tables\Migration;
 
 // TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string '/nonexistent/migrations' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
 // TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'ZeroToProd\Thryds\Migrations\' (used 6x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
@@ -93,7 +93,7 @@ final class MigratorTest extends DatabaseTestCase
 
         $row = $this->Database->one("SELECT checksum FROM migrations WHERE id = '0001'");
         $this->assertNotNull(actual: $row);
-        $this->assertSame(hash('sha256', (string) file_get_contents(self::fixtures_dir . '/0001_TestInsertRow.php')), $row[MigrationsTable::checksum]);
+        $this->assertSame(hash('sha256', (string) file_get_contents(self::fixtures_dir . '/0001_TestInsertRow.php')), $row[Migration::checksum]);
     }
 
     #[Test]
@@ -126,8 +126,8 @@ final class MigratorTest extends DatabaseTestCase
 
         $this->assertCount(1, haystack: $rows);
         $this->assertSame(MigrationStatus::pending, $rows[0][Migrator::col_status]);
-        $this->assertSame('0001', $rows[0][MigrationsTable::id]);
-        $this->assertNull($rows[0][MigrationsTable::applied_at]);
+        $this->assertSame('0001', $rows[0][Migration::id]);
+        $this->assertNull($rows[0][Migration::applied_at]);
     }
 
     #[Test]
@@ -139,7 +139,7 @@ final class MigratorTest extends DatabaseTestCase
 
         $this->assertCount(1, haystack: $rows);
         $this->assertSame(MigrationStatus::applied, $rows[0][Migrator::col_status]);
-        $this->assertNotNull($rows[0][MigrationsTable::applied_at]);
+        $this->assertNotNull($rows[0][Migration::applied_at]);
     }
 
     #[Test]

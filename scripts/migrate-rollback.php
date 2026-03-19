@@ -17,7 +17,7 @@ require __DIR__ . '/../vendor/autoload.php';
 use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\DatabaseConfig;
 use ZeroToProd\Thryds\Migrator;
-use ZeroToProd\Thryds\Tables\MigrationsTable;
+use ZeroToProd\Thryds\Tables\Migration;
 
 $Migrator = new Migrator(
     Database: new Database(DatabaseConfig::fromEnv()),
@@ -39,7 +39,7 @@ try {
 if ($rolled_back === null) {
     echo "  Nothing to roll back.\n";
 } else {
-    echo '  [ OK ] rolled back ' . $rolled_back[MigrationsTable::id] . ' ' . $rolled_back[MigrationsTable::description] . "\n";
+    echo '  [ OK ] rolled back ' . $rolled_back[Migration::id] . ' ' . $rolled_back[Migration::description] . "\n";
 }
 
 echo "\n";

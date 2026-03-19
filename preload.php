@@ -17,6 +17,7 @@ opcache_compile_file(__DIR__ . '/src/Blade/Vite.php');
 opcache_compile_file(__DIR__ . '/src/Blade/BladeDirectives.php');
 opcache_compile_file(__DIR__ . '/src/Blade/BladeDirective.php');
 opcache_compile_file(__DIR__ . '/src/Blade/Component.php');
+opcache_compile_file(__DIR__ . '/src/Attributes/RouteOperation.php');
 opcache_compile_file(__DIR__ . '/src/Controllers/HomeController.php');
 opcache_compile_file(__DIR__ . '/src/Blade/View.php');
 opcache_compile_file(__DIR__ . '/src/UI/InputType.php');
@@ -27,8 +28,8 @@ opcache_compile_file(__DIR__ . '/src/RequestId.php');
 
 // Routes
 opcache_compile_file(__DIR__ . '/src/Routes/RouteRegistrar.php');
-opcache_compile_file(__DIR__ . '/src/Routes/HttpMethod.php');
 opcache_compile_file(__DIR__ . '/src/Routes/Route.php');
+opcache_compile_file(__DIR__ . '/src/Routes/HttpMethod.php');
 
 // ViewModels
 opcache_compile_file(__DIR__ . '/src/ViewModels/ErrorViewModel.php');

@@ -13,6 +13,6 @@ trait HasTableName
         return new ReflectionClass(self::class)
             ->getAttributes(Table::class)[0]
             ->newInstance()
-            ->name;
+            ->TableName->value;
     }
 }
