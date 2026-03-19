@@ -88,6 +88,7 @@ use Utils\Rector\Rector\ValidateRequirementIdsRector;
 use Utils\Rector\Rector\MigrateAddCaseListToHeredocRector;
 use Utils\Rector\Rector\VerticalAttributeArgsRector;
 use Utils\Rector\Rector\DetectStaleCodeReferencesRector;
+use Utils\Rector\Rector\RemoveDefaultsAndApplyAtCallsiteRector;
 use ZeroToProd\Thryds\Attributes\Requirement;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
@@ -214,6 +215,11 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
     $rectorConfig->ruleWithConfiguration(StringArgToClassConstRector::class, [
         'mappings' => [],
+        'mode' => 'auto',
+    ]);
+    // No-op registration — configure targetFunctions/targetMethods/targetAttributes
+    // to activate for a one-shot migration. See: utils/rector/docs/RemoveDefaultsAndApplyAtCallsiteRector.md
+    $rectorConfig->ruleWithConfiguration(RemoveDefaultsAndApplyAtCallsiteRector::class, [
         'mode' => 'auto',
     ]);
     $rectorConfig->ruleWithConfiguration(SuggestExtractSharedCatchLogicRector::class, [
@@ -630,4 +636,5 @@ return static function (RectorConfig $rectorConfig): void {
         'mode' => 'warn',
         'message' => "TODO: [DetectStaleCodeReferencesRector] Comment references '%s' which does not exist. Verify or remove. See: utils/rector/docs/DetectStaleCodeReferencesRector.md",
     ]);
+
 };
