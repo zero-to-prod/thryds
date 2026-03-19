@@ -94,6 +94,8 @@ use Utils\Rector\Rector\RouteInfoRequiredRector;
 use Utils\Rector\Rector\RouteOperationRequiredRector;
 use Utils\Rector\Rector\RequirePersistsOnTableReferenceRector;
 use Utils\Rector\Rector\RouteOperationRequiresRouteInfoRector;
+use Utils\Rector\Rector\AddViewModelAttributeRector;
+use Utils\Rector\Rector\RequireViewKeyConstantOnViewModelRector;
 use Rector\CodeQuality\Rector\FuncCall\SortCallLikeNamedArgsRector;
 use Rector\CodeQuality\Rector\Attribute\SortAttributeNamedArgsRector;
 use ZeroToProd\Thryds\Attributes\Requirement;
@@ -344,6 +346,11 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
 
     // --- DataModel & ViewModel ---
+    $rectorConfig->ruleWithConfiguration(AddViewModelAttributeRector::class, [
+        'namespace' => 'ZeroToProd\\Thryds\\ViewModels',
+        'attributeClass' => ViewModel::class,
+        'mode' => 'auto',
+    ]);
     $rectorConfig->ruleWithConfiguration(RequireViewModelAttributeOnDataModelRector::class, [
         'traitClasses' => [
             \ZeroToProd\Thryds\Attributes\DataModel::class,
@@ -690,4 +697,5 @@ return static function (RectorConfig $rectorConfig): void {
         'mode'                 => 'warn',
         'message'              => "TODO: [RequirePersistsOnTableReferenceRector] '%s' imports '%s' from the tables namespace but is missing #[Persists(%s::class)]. Add it so the inventory graph shows the persistence edge. See: utils/rector/docs/RequirePersistsOnTableReferenceRector.md",
     ]);
+
 };

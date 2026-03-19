@@ -1,4 +1,7 @@
-@php use ZeroToProd\Thryds\Routes\Route; @endphp
+@php
+    use ZeroToProd\Thryds\Routes\Route;
+    use ZeroToProd\Thryds\ViewModels\RegisterViewModel;
+@endphp
 @extends('base')
 
 @section('title', 'Register — Thryds')
