@@ -6,7 +6,10 @@ namespace ZeroToProd\Thryds\Attributes;
 
 use ZeroToProd\Thryds\UI\Domain;
 
-#[ClosedSet(Domain::source_of_truth_concepts, addCase: '1. Add enum case. No other changes needed — SourceOfTruth consumers discover it by type.')]
+#[ClosedSet(
+    Domain::source_of_truth_concepts,
+    addCase: '1. Add enum case. No other changes needed — SourceOfTruth consumers discover it by type.'
+)]
 /**
  * Closed set of concept names used by #[SourceOfTruth].
  *

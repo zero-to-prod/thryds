@@ -9,8 +9,8 @@ use RuntimeException;
 use ZeroToProd\Thryds\Attributes\KeyRegistry;
 use ZeroToProd\Thryds\Attributes\KeySource;
 use ZeroToProd\Thryds\Attributes\Migration;
+use ZeroToProd\Thryds\Tables\MigrationsTable;
 
-// TODO: [SuggestEnumForInternalOnlyConstantsRector] Migrator has 8 string constants only referenced internally — consider migrating to a backed enum. See: utils/rector/docs/SuggestEnumForInternalOnlyConstantsRector.md
 /**
  * Applies and rolls back database migrations.
  *
@@ -33,29 +33,11 @@ use ZeroToProd\Thryds\Attributes\Migration;
 )]
 readonly class Migrator
 {
-    // --- Public API keys (keys in the arrays returned by status()) ---
-
-    public const string col_id = 'id';
-
-    public const string col_description = 'description';
-
-    public const string col_checksum = 'checksum';
-
-    public const string col_applied_at = 'applied_at';
+    // --- Public status key ---
 
     public const string col_status = 'status';
 
-    // --- Public status values (possible values of col_status) ---
-
-    public const string status_pending = 'pending';
-
-    public const string status_applied = 'applied';
-
-    public const string status_modified = 'modified';
-
     // --- Private implementation constants ---
-
-    private const string table = 'migrations';
 
     private const string key_path = 'path';
 
@@ -75,7 +57,7 @@ readonly class Migrator
     public function ensureTable(): void
     {
         $this->Database->execute(
-            'CREATE TABLE IF NOT EXISTS `' . self::table . '` (
+            'CREATE TABLE IF NOT EXISTS `' . MigrationsTable::tableName() . '` (
                 id          VARCHAR(20)  NOT NULL,
                 description VARCHAR(255) NOT NULL,
                 checksum    VARCHAR(64)  NOT NULL,
@@ -88,7 +70,7 @@ readonly class Migrator
     /**
      * Returns one row per migration file, ordered by id.
      *
-     * Each row: {col_id, col_description, col_status, col_applied_at, col_checksum}
+     * Each row: {MigrationsTable::id, MigrationsTable::description, col_status, MigrationsTable::applied_at, MigrationsTable::checksum}
      * col_status is one of: status_applied, status_pending, status_modified.
      *
      * @return array<int, array<string, mixed>>
@@ -97,7 +79,7 @@ readonly class Migrator
     {
         $applied = [];
         foreach ($this->fetchApplied() as $row) {
-            $applied[$this->rowStr($row, key: self::col_id)] = $row;
+            $applied[$this->rowStr($row, key: MigrationsTable::id)] = $row;
         }
 
         $result = [];
@@ -105,19 +87,19 @@ readonly class Migrator
             $checksum = $this->checksum(path: $info[self::key_path]);
             if (isset($applied[$id])) {
                 $result[] = [
-                    self::col_id          => $id,
-                    self::col_description => $info[self::col_description],
-                    self::col_status      => $checksum === $applied[$id][self::col_checksum] ? self::status_applied : self::status_modified,
-                    self::col_applied_at  => $applied[$id][self::col_applied_at],
-                    self::col_checksum    => $checksum,
+                    MigrationsTable::id          => $id,
+                    MigrationsTable::description => $info[MigrationsTable::description],
+                    self::col_status             => $checksum === $applied[$id][MigrationsTable::checksum] ? MigrationStatus::applied : MigrationStatus::modified,
+                    MigrationsTable::applied_at  => $applied[$id][MigrationsTable::applied_at],
+                    MigrationsTable::checksum    => $checksum,
                 ];
             } else {
                 $result[] = [
-                    self::col_id          => $id,
-                    self::col_description => $info[self::col_description],
-                    self::col_status      => self::status_pending,
-                    self::col_applied_at  => null,
-                    self::col_checksum    => $checksum,
+                    MigrationsTable::id          => $id,
+                    MigrationsTable::description => $info[MigrationsTable::description],
+                    self::col_status             => MigrationStatus::pending,
+                    MigrationsTable::applied_at  => null,
+                    MigrationsTable::checksum    => $checksum,
                 ];
             }
         }
@@ -130,21 +112,21 @@ readonly class Migrator
     {
         $discovered = $this->discover();
         foreach ($this->status() as $row) {
-            $id = $this->rowStr($row, key: self::col_id);
-            if ($row[self::col_status] === self::status_modified) {
+            $id = $this->rowStr($row, key: MigrationsTable::id);
+            if ($row[self::col_status] === MigrationStatus::modified) {
                 throw new RuntimeException(
                     "Migration $id was modified after being applied — checksum mismatch. Restore the file or roll back."
                 );
             }
-            if ($row[self::col_status] !== self::status_pending) {
+            if ($row[self::col_status] !== MigrationStatus::pending) {
                 continue;
             }
             $this->instantiate(class: $discovered[$id][self::key_class])->up(Database: $this->Database);
             $this->Database->execute(
-                'INSERT INTO `' . self::table . '` (id, description, checksum, applied_at) VALUES (' . self::param_id . ', ' . self::param_description . ', ' . self::param_checksum . ', NOW())',
-                [self::param_id => $id, self::param_description => $row[self::col_description], self::param_checksum => $row[self::col_checksum]]
+                'INSERT INTO `' . MigrationsTable::tableName() . '` (id, description, checksum, applied_at) VALUES (' . self::param_id . ', ' . self::param_description . ', ' . self::param_checksum . ', NOW())',
+                [self::param_id => $id, self::param_description => $row[MigrationsTable::description], self::param_checksum => $row[MigrationsTable::checksum]]
             );
-            echo '  [ OK ] applied ' . $id . ' ' . $this->rowStr($row, key: self::col_description) . "\n";
+            echo '  [ OK ] applied ' . $id . ' ' . $this->rowStr($row, key: MigrationsTable::description) . "\n";
         }
     }
 
@@ -157,17 +139,17 @@ readonly class Migrator
 
             return;
         }
-        $id = $this->rowStr(row: $last, key: self::col_id);
+        $id = $this->rowStr(row: $last, key: MigrationsTable::id);
         $discovered = $this->discover();
         if (!isset($discovered[$id])) {
             throw new RuntimeException("Migration $id is applied but its file was not found in {$this->migrations_dir}.");
         }
         $this->instantiate(class: $discovered[$id][self::key_class])->down(Database: $this->Database);
         $this->Database->execute(
-            'DELETE FROM `' . self::table . '` WHERE id = ' . self::param_id,
+            'DELETE FROM `' . MigrationsTable::tableName() . '` WHERE id = ' . self::param_id,
             [self::param_id => $id]
         );
-        echo '  [ OK ] rolled back ' . $id . ' ' . $this->rowStr(row: $last, key: self::col_description) . "\n";
+        echo '  [ OK ] rolled back ' . $id . ' ' . $this->rowStr(row: $last, key: MigrationsTable::description) . "\n";
     }
 
     /**
@@ -197,9 +179,9 @@ readonly class Migrator
             }
             $Migration = $attrs[0]->newInstance();
             $migrations[$Migration->id] = [
-                self::key_path        => $path,
-                self::key_class       => $fqcn,
-                self::col_description => $Migration->description,
+                self::key_path               => $path,
+                self::key_class              => $fqcn,
+                MigrationsTable::description => $Migration->description,
             ];
         }
         ksort(array: $migrations);
@@ -221,7 +203,7 @@ readonly class Migrator
 
     private function selectFromTable(string $order): string
     {
-        return 'SELECT * FROM `' . self::table . '` ORDER BY ' . self::col_id . ' ' . $order;
+        return 'SELECT * FROM `' . MigrationsTable::tableName() . '` ORDER BY ' . MigrationsTable::id . ' ' . $order;
     }
 
     private function checksum(string $path): string

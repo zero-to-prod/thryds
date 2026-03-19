@@ -6,10 +6,13 @@ namespace ZeroToProd\Thryds\UI;
 
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 
-#[ClosedSet(Domain::input_types, addCase: <<<TEXT
+#[ClosedSet(
+    Domain::input_types,
+    addCase: <<<TEXT
     1. Add enum case.
     2. Verify the value is a valid HTML input type.
-TEXT)]
+    TEXT
+)]
 enum InputType: string
 {
     case text = 'text';

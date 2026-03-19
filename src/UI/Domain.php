@@ -6,7 +6,10 @@ namespace ZeroToProd\Thryds\UI;
 
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 
-#[ClosedSet(Domain::closed_set_domains, addCase: 'Add enum case. Then use it in a #[ClosedSet] attribute on a new backed enum.')]
+#[ClosedSet(
+    Domain::closed_set_domains,
+    addCase: 'Add enum case. Then use it in a #[ClosedSet] attribute on a new backed enum.'
+)]
 /**
  * Closed set of domain names used by #[ClosedSet].
  *
@@ -31,4 +34,11 @@ enum Domain: string
     case button_sizes = 'button_sizes';
     case alert_variants = 'alert_variants';
     case input_types = 'input_types';
+    case sql_data_types = 'sql_data_types';
+    case sql_storage_engines = 'sql_storage_engines';
+    case sql_charsets = 'sql_charsets';
+    case sql_collations = 'sql_collations';
+    case sql_referential_actions = 'sql_referential_actions';
+    case database_table_columns = 'database_table_columns';
+    case migration_statuses = 'migration_statuses';
 }

@@ -15,7 +15,10 @@ use ZeroToProd\Thryds\Attributes\Requirement;
  *
  * @see SEC-001
  */
-#[Requirement('TRACE-001', 'SEC-001')]
+#[Requirement(
+    'TRACE-001',
+    'SEC-001'
+)]
 class RequestId
 {
     private static ?string $current = null;

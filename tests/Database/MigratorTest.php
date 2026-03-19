@@ -6,7 +6,9 @@ namespace ZeroToProd\Thryds\Tests\Database;
 
 use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
+use ZeroToProd\Thryds\MigrationStatus;
 use ZeroToProd\Thryds\Migrator;
+use ZeroToProd\Thryds\Tables\MigrationsTable;
 
 /**
  * Tests the Migrator infrastructure: table creation, apply, rollback, and
@@ -93,7 +95,7 @@ final class MigratorTest extends DatabaseTestCase
 
         $row = $this->Database->one("SELECT checksum FROM migrations WHERE id = '0001'");
         $this->assertNotNull(actual: $row);
-        $this->assertSame(hash('sha256', (string) file_get_contents(self::fixtures_dir . '/0001_TestInsertRow.php')), $row[Migrator::col_checksum]);
+        $this->assertSame(hash('sha256', (string) file_get_contents(self::fixtures_dir . '/0001_TestInsertRow.php')), $row[MigrationsTable::checksum]);
     }
 
     #[Test]
@@ -125,9 +127,9 @@ final class MigratorTest extends DatabaseTestCase
         $rows = $this->Migrator->status();
 
         $this->assertCount(1, haystack: $rows);
-        $this->assertSame(Migrator::status_pending, $rows[0][Migrator::col_status]);
-        $this->assertSame('0001', $rows[0][Migrator::col_id]);
-        $this->assertNull($rows[0][Migrator::col_applied_at]);
+        $this->assertSame(MigrationStatus::pending, $rows[0][Migrator::col_status]);
+        $this->assertSame('0001', $rows[0][MigrationsTable::id]);
+        $this->assertNull($rows[0][MigrationsTable::applied_at]);
     }
 
     #[Test]
@@ -138,8 +140,8 @@ final class MigratorTest extends DatabaseTestCase
         $rows = $this->Migrator->status();
 
         $this->assertCount(1, haystack: $rows);
-        $this->assertSame(Migrator::status_applied, $rows[0][Migrator::col_status]);
-        $this->assertNotNull($rows[0][Migrator::col_applied_at]);
+        $this->assertSame(MigrationStatus::applied, $rows[0][Migrator::col_status]);
+        $this->assertNotNull($rows[0][MigrationsTable::applied_at]);
     }
 
     #[Test]
@@ -152,7 +154,7 @@ final class MigratorTest extends DatabaseTestCase
             self::tamper_checksum
         );
 
-        $this->assertSame(Migrator::status_modified, $this->Migrator->status()[0][Migrator::col_status]);
+        $this->assertSame(MigrationStatus::modified, $this->Migrator->status()[0][Migrator::col_status]);
     }
 
     #[Test]

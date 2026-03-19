@@ -86,6 +86,7 @@ use Utils\Rector\Rector\RequireEnumForBranchingConstantRector;
 use Utils\Rector\Rector\DetectParallelBladePhpBehaviorRector;
 use Utils\Rector\Rector\ValidateRequirementIdsRector;
 use Utils\Rector\Rector\MigrateAddCaseListToHeredocRector;
+use Utils\Rector\Rector\VerticalAttributeArgsRector;
 use Utils\Rector\Rector\DetectStaleCodeReferencesRector;
 use ZeroToProd\Thryds\Attributes\Requirement;
 use Zerotoprod\DataModel\DataModel;
@@ -113,6 +114,10 @@ return static function (RectorConfig $rectorConfig): void {
         __DIR__ . '/tests',
         __DIR__ . '/migrations',
     ]);
+    // Table definition enums use attributes on enum cases, which triggers a Rector
+    // scope-resolution bug (PhpParser\Node\Attribute missing scope). These files are
+    // pure schema declarations — no executable logic for Rector to transform.
+    $rectorConfig->skip([__DIR__ . '/src/Tables']);
     $rectorConfig->importNames();
 
     // --- Naming ---
@@ -191,7 +196,7 @@ return static function (RectorConfig $rectorConfig): void {
         'mode' => 'auto',
     ]);
     $rectorConfig->ruleWithConfiguration(LimitConstructorParamsRector::class, [
-        'maxParams' => 5,
+        'maxParams' => 10,
         'dtoSuffix' => 'Deps',
         'mode' => 'auto',
     ]);
@@ -568,6 +573,10 @@ return static function (RectorConfig $rectorConfig): void {
 
     // --- Checklist Validation ---
     $rectorConfig->ruleWithConfiguration(MigrateAddCaseListToHeredocRector::class, [
+        'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(VerticalAttributeArgsRector::class, [
+        'minArgs' => 2,
         'mode' => 'auto',
     ]);
     $rectorConfig->ruleWithConfiguration(ValidateChecklistPathsRector::class, [

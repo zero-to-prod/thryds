@@ -6,7 +6,10 @@ namespace ZeroToProd\Thryds\Attributes;
 
 use ZeroToProd\Thryds\UI\Domain;
 
-#[ClosedSet(Domain::key_sources, addCase: 'Add enum case. Then use it in a #[KeyRegistry] attribute on a new constants class.')]
+#[ClosedSet(
+    Domain::key_sources,
+    addCase: 'Add enum case. Then use it in a #[KeyRegistry] attribute on a new constants class.'
+)]
 /**
  * Closed set of data source names used by #[KeyRegistry].
  *

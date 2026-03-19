@@ -15,7 +15,10 @@ use ZeroToProd\Thryds\MigrationInterface;
  * The table `_migration_fixture` must already exist — created in
  * MigratorTest::setUpDatabase() as a TEMPORARY TABLE before the transaction opens.
  */
-#[Migration(id: '0001', description: 'Insert fixture row')]
+#[Migration(
+    id: '0001',
+    description: 'Insert fixture row'
+)]
 final readonly class TestInsertRow implements MigrationInterface
 {
     public function up(Database $Database): void

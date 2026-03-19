@@ -7,7 +7,10 @@ namespace ZeroToProd\Thryds;
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 use ZeroToProd\Thryds\UI\Domain;
 
-#[ClosedSet(Domain::dev_path_groups, addCase: 'Add enum case. Then use it in a #[Group] attribute on DevPath cases.')]
+#[ClosedSet(
+    Domain::dev_path_groups,
+    addCase: 'Add enum case. Then use it in a #[Group] attribute on DevPath cases.'
+)]
 /**
  * Groups for dev-only path filters.
  */
