@@ -473,6 +473,14 @@ function decorateNode(array $node, string $projectRoot, string $templatesDir, ar
             break;
     }
 
+    // Bubble up a top-level missing flag when any declared source file is absent.
+    foreach ($node['sources'] ?? [] as $src) {
+        if ($src['missing'] ?? false) {
+            $node['missing'] = true;
+            break;
+        }
+    }
+
     return $node;
 }
 
@@ -524,8 +532,15 @@ foreach ([
         $extensionGuides[$key] = $attrs[0]->newInstance()->addCase;
     }
 }
-$extensionGuides['model']     = Table::addCase;
-$extensionGuides['viewmodel'] = ViewModel::addCase;
+$extensionGuides['model']      = Table::addCase;
+$extensionGuides['viewmodel']  = ViewModel::addCase;
+$extensionGuides['controller'] = implode("\n", [
+    '1. Create src/Controllers/<ClassName>.php.',
+    '2. Apply #[Persists(ModelClass::class)] for each model the controller writes to — inventory emits a persists edge automatically.',
+    '3. Apply #[RedirectsTo(Route::caseName)] for the route the controller redirects to on success — inventory emits a redirects_to edge automatically.',
+    '4. Register the controller in $explicitControllers in scripts/inventory.php.',
+    '5. Add integration test.',
+]);
 
 if ($format === 'dot') {
     // Node shapes by type for visual distinction.
