@@ -15,12 +15,12 @@ Use `public const string` when a value is an **identifier** — a key, label, he
 
 | Example | File | What it names |
 |---------|------|---------------|
-| `Log::event` | `src/Log.php` | Key in a log context array |
-| `View::home` | `src/Helpers/View.php` | Blade template identifier |
+| `LogContext::event` | `src/LogContext.php` | Key in a log context array |
+| `View::home->value` | `src/Blade/View.php` | Blade template identifier |
 | `Config::blade_cache_dir` | `src/Config.php` | Property key for `DataModel::from()` |
 | `ErrorViewModel::view_key` | `src/ViewModels/ErrorViewModel.php` | Array key when passing data to Blade |
-| `RequestId::header` | `src/RequestId.php` | HTTP header name `X-Request-ID` |
-| `Server::MAX_REQUESTS` | `src/Server.php` | `$_SERVER` key |
+| `Header::request_id` | `src/Header.php` | HTTP header name `X-Request-ID` |
+| `Env::MAX_REQUESTS` | `src/Env.php` | `$_SERVER` key |
 
 **Rule of thumb:** if a string appears as an array key, method argument, or identifier more than once — or could be misspelled — it should be a constant.
 

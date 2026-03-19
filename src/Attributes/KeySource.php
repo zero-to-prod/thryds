@@ -18,5 +18,6 @@ enum KeySource: string
     case log_context_array = 'Log context array';
     case opcache_get_status = 'opcache_get_status()';
     case server_env = '$_SERVER / $_ENV';
+    case migrations_table = 'migrations tracking table';
     case vite_entry_points = 'Vite entry points';
 }

@@ -53,6 +53,7 @@ use Utils\Rector\Rector\RequireConstForRepeatedArrayKeyRector;
 use Utils\Rector\Rector\RequireEnumValueAccessRector;
 use Utils\Rector\Rector\RequireFragmentIfForBladeRenderRector;
 use Utils\Rector\Rector\RequireLogEventRector;
+use Utils\Rector\Rector\RequireDownMigrationRector;
 use Utils\Rector\Rector\RequireMethodAnnotationForDataModelRector;
 use Utils\Rector\Rector\RequireNamedArgForBoolParamRector;
 use Utils\Rector\Rector\RequireNamesKeysOnConstantsClassRector;
@@ -110,6 +111,7 @@ return static function (RectorConfig $rectorConfig): void {
         __DIR__ . '/src',
         __DIR__ . '/public',
         __DIR__ . '/tests',
+        __DIR__ . '/migrations',
     ]);
     $rectorConfig->importNames();
 
@@ -586,6 +588,9 @@ return static function (RectorConfig $rectorConfig): void {
 
     $rectorConfig->ruleWithConfiguration(SuggestEnumForInternalOnlyConstantsRector::class, [
         'mode' => 'warn',
+        'excludedAttributes' => [
+            KeyRegistry::class,
+        ],
         'message' => 'TODO: [SuggestEnumForInternalOnlyConstantsRector] %s has %d string constants only referenced internally — consider migrating to a backed enum. See: utils/rector/docs/SuggestEnumForInternalOnlyConstantsRector.md',
     ]);
 
@@ -598,6 +603,12 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(DetectParallelBladePhpBehaviorRector::class, [
         'mode' => 'warn',
         'message' => "TODO: [DetectParallelBladePhpBehaviorRector] Use %s::%s instead of hardcoded '%s'. See: utils/rector/docs/DetectParallelBladePhpBehaviorRector.md",
+    ]);
+
+    // --- Migrations ---
+    $rectorConfig->ruleWithConfiguration(RequireDownMigrationRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: [RequireDownMigrationRector] Migration class is missing a down() method — add it to support rollback. See: utils/rector/docs/RequireDownMigrationRector.md',
     ]);
 
     // --- Requirement Tracing ---

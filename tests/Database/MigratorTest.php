@@ -1,0 +1,169 @@
+<?php
+
+declare(strict_types=1);
+
+namespace ZeroToProd\Thryds\Tests\Database;
+
+use PHPUnit\Framework\Attributes\Test;
+use RuntimeException;
+use ZeroToProd\Thryds\Migrator;
+
+/**
+ * Tests the Migrator infrastructure: table creation, apply, rollback, and
+ * checksum-based modification detection.
+ *
+ * Fixture migrations live in tests/Database/Fixtures/Migrations/ and use only
+ * DML (INSERT/DELETE) so they run inside the transaction that DatabaseTestCase
+ * rolls back in tearDown(). The `migrations` tracking table itself is created
+ * as a TEMPORARY TABLE in setUpDatabase() for the same reason.
+ *
+ * Note: ensureTable() normally creates a real InnoDB table. Here we CREATE a
+ * TEMPORARY TABLE named `migrations` first — MySQL will use the temporary table
+ * in preference to the permanent one for the duration of the session, giving us
+ * full transaction isolation without touching the real schema.
+ */
+final class MigratorTest extends DatabaseTestCase
+{
+    private const string fixtures_dir = __DIR__ . '/Fixtures/Migrations';
+
+    private const string count_migrations = 'SELECT COUNT(*) FROM migrations';
+
+    private const string count_fixture = 'SELECT COUNT(*) FROM _migration_fixture';
+
+    private const string tamper_checksum = "UPDATE migrations SET checksum = 'tampered' WHERE id = '0001'";
+
+    private Migrator $Migrator;
+
+    protected function setUpDatabase(): void
+    {
+        // Create a TEMPORARY TABLE named `migrations` so Migrator::ensureTable()
+        // skips its CREATE (IF NOT EXISTS finds the temp table), and all writes
+        // stay within the session and are rolled back in tearDown.
+        $this->Database->execute(
+            'CREATE TEMPORARY TABLE migrations (
+                id          VARCHAR(20)  NOT NULL,
+                description VARCHAR(255) NOT NULL,
+                checksum    VARCHAR(64)  NOT NULL,
+                applied_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
+        );
+
+        // Fixture table for test migrations to INSERT into
+        $this->Database->execute(
+            'CREATE TEMPORARY TABLE _migration_fixture (id INT NOT NULL)'
+        );
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->Migrator = new Migrator(
+            Database: $this->Database,
+            migrations_dir: self::fixtures_dir,
+        );
+        $this->Migrator->ensureTable();
+    }
+
+    #[Test]
+    public function ensureTable_is_idempotent(): void
+    {
+        // ensureTable() was already called in setUp() — a second call must not throw
+        $this->Migrator->ensureTable();
+
+        $this->assertSame(0, (int) $this->Database->scalar(self::count_migrations));
+    }
+
+    #[Test]
+    public function migrate_applies_pending_migration(): void
+    {
+        $this->assertSame(0, (int) $this->Database->scalar(self::count_migrations));
+
+        $this->Migrator->migrate();
+
+        $this->assertSame(1, (int) $this->Database->scalar(self::count_migrations));
+        $this->assertSame(1, (int) $this->Database->scalar("SELECT COUNT(*) FROM migrations WHERE id = '0001'"));
+        $this->assertSame(1, (int) $this->Database->scalar(self::count_fixture));
+    }
+
+    #[Test]
+    public function migrate_stores_sha256_checksum(): void
+    {
+        $this->Migrator->migrate();
+
+        $row = $this->Database->one("SELECT checksum FROM migrations WHERE id = '0001'");
+        $this->assertNotNull(actual: $row);
+        $this->assertSame(hash('sha256', (string) file_get_contents(self::fixtures_dir . '/0001_TestInsertRow.php')), $row[Migrator::col_checksum]);
+    }
+
+    #[Test]
+    public function migrate_is_idempotent(): void
+    {
+        $this->Migrator->migrate();
+        $this->Migrator->migrate();
+
+        // Applied once, not twice
+        $this->assertSame(1, (int) $this->Database->scalar(self::count_migrations));
+        $this->assertSame(1, (int) $this->Database->scalar(self::count_fixture));
+    }
+
+    #[Test]
+    public function rollback_calls_down_and_removes_row(): void
+    {
+        $this->Migrator->migrate();
+        $this->assertSame(1, (int) $this->Database->scalar(self::count_fixture));
+
+        $this->Migrator->rollback();
+
+        $this->assertSame(0, (int) $this->Database->scalar(self::count_migrations));
+        $this->assertSame(0, (int) $this->Database->scalar(self::count_fixture));
+    }
+
+    #[Test]
+    public function status_returns_pending_before_migrate(): void
+    {
+        $rows = $this->Migrator->status();
+
+        $this->assertCount(1, haystack: $rows);
+        $this->assertSame(Migrator::status_pending, $rows[0][Migrator::col_status]);
+        $this->assertSame('0001', $rows[0][Migrator::col_id]);
+        $this->assertNull($rows[0][Migrator::col_applied_at]);
+    }
+
+    #[Test]
+    public function status_returns_applied_after_migrate(): void
+    {
+        $this->Migrator->migrate();
+
+        $rows = $this->Migrator->status();
+
+        $this->assertCount(1, haystack: $rows);
+        $this->assertSame(Migrator::status_applied, $rows[0][Migrator::col_status]);
+        $this->assertNotNull($rows[0][Migrator::col_applied_at]);
+    }
+
+    #[Test]
+    public function status_detects_modified_checksum(): void
+    {
+        $this->Migrator->migrate();
+
+        // Tamper with the stored checksum to simulate a modified file
+        $this->Database->execute(
+            self::tamper_checksum
+        );
+
+        $this->assertSame(Migrator::status_modified, $this->Migrator->status()[0][Migrator::col_status]);
+    }
+
+    #[Test]
+    public function migrate_throws_on_modified_migration(): void
+    {
+        $this->Migrator->migrate();
+        $this->Database->execute(self::tamper_checksum);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/0001.*modified/');
+
+        $this->Migrator->migrate();
+    }
+}

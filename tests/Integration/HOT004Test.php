@@ -8,10 +8,12 @@ use PHPUnit\Framework\Attributes\Test;
 use ZeroToProd\Thryds\Env;
 use ZeroToProd\Thryds\Routes\Route;
 
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'idiomorph' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'frankenphp-hot-reload:url' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
 final class HOT004Test extends IntegrationTestCase
 {
+    private const string meta_mercure_url = 'frankenphp-hot-reload:url';
+
+    private const string script_idiomorph = 'idiomorph';
+
     #[Test]
     // Criterion: HOT-004-a — When FRANKENPHP_HOT_RELOAD is not set, the rendered HTML contains no hot-reload meta tag or CDN script tags
     public function test_HOT_004_a(): void
@@ -20,8 +22,8 @@ final class HOT004Test extends IntegrationTestCase
 
         $body = (string) $this->get(Route::home)->getBody();
 
-        $this->assertStringNotContainsString('frankenphp-hot-reload:url', haystack: $body);
-        $this->assertStringNotContainsString('idiomorph', haystack: $body);
+        $this->assertStringNotContainsString(self::meta_mercure_url, haystack: $body);
+        $this->assertStringNotContainsString(self::script_idiomorph, haystack: $body);
         $this->assertStringNotContainsString('frankenphp-hot-reload', haystack: $body);
     }
 
@@ -33,8 +35,8 @@ final class HOT004Test extends IntegrationTestCase
 
         $body = (string) $this->get(Route::home)->getBody();
 
-        $this->assertStringContainsString('frankenphp-hot-reload:url', haystack: $body);
-        $this->assertStringContainsString('idiomorph', haystack: $body);
+        $this->assertStringContainsString(self::meta_mercure_url, haystack: $body);
+        $this->assertStringContainsString(self::script_idiomorph, haystack: $body);
         $this->assertStringContainsString('frankenphp-hot-reload/+esm', haystack: $body);
     }
 
