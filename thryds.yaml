@@ -158,6 +158,10 @@ enums:
     cases: [primary, danger, secondary]
   InputType:
     cases: [text, email, password]
+  Layout:
+    cases: [base]
+  Props:
+    cases: [variant, size, type, label, error]
 
 tables:
 

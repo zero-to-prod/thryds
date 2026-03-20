@@ -6,7 +6,6 @@ namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
 
-// TODO: [RequireNamesKeysOnConstantsClassRector] ViewModel contains only string constants — add #[NamesKeys] to declare what they name (ADR-007). See: utils/rector/docs/RequireNamesKeysOnConstantsClassRector.md
 /**
  * Marker attribute: signals that this class is a Blade view model.
  *

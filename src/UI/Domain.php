@@ -34,6 +34,8 @@ enum Domain: string
     case button_sizes = 'button_sizes';
     case alert_variants = 'alert_variants';
     case input_types = 'input_types';
+    case component_props = 'component_props';
+    case layouts = 'layouts';
     case sql_data_types = 'sql_data_types';
     case sql_storage_engines = 'sql_storage_engines';
     case sql_charsets = 'sql_charsets';
@@ -41,4 +43,5 @@ enum Domain: string
     case sql_referential_actions = 'sql_referential_actions';
     case database_table_columns = 'database_table_columns';
     case migration_statuses = 'migration_statuses';
+    case scalar_defaults = 'scalar_defaults';
 }

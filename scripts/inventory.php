@@ -189,7 +189,7 @@ foreach (Component::cases() as $Component) {
         $enumShort = $prop->enum !== null
             ? substr(strrchr($prop->enum, '\\') ?: ('\\' . $prop->enum), 1)
             : null;
-        $props[] = ['name' => $prop->name, 'default' => $prop->default, 'enum' => $enumShort];
+        $props[] = ['name' => $prop->Props->value, 'default' => $prop->default, 'enum' => $enumShort];
 
         if ($enumShort !== null) {
             $addNode('ui_enum:' . $enumShort, 'ui_enum', $enumShort);
@@ -198,6 +198,9 @@ foreach (Component::cases() as $Component) {
     }
     $nodes[$componentId]['props'] = $props;
 }
+
+$addNode('ui_enum:Layout', 'ui_enum', 'Layout');
+$addNode('ui_enum:Props', 'ui_enum', 'Props');
 
 /**
  * Extract the human-readable description from a PHP docblock string.

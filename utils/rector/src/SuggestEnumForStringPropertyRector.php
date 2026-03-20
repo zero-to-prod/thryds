@@ -34,6 +34,9 @@ final class SuggestEnumForStringPropertyRector extends AbstractRector implements
     /** @var string[] */
     private array $describeAttrs = [];
 
+    /** @var string[] Basename patterns to skip (e.g. 'View.php'). */
+    private array $excludedFiles = [];
+
     private string $mode = 'warn';
 
     private string $message = 'TODO: $%s has known values: %s — consider extracting to an enum';
@@ -48,6 +51,7 @@ final class SuggestEnumForStringPropertyRector extends AbstractRector implements
     {
         $this->dataModelTraits = $configuration['dataModelTraits'] ?? [];
         $this->describeAttrs = $configuration['describeAttrs'] ?? [];
+        $this->excludedFiles = $configuration['excludedFiles'] ?? [];
         $this->mode = $configuration['mode'] ?? 'warn';
         $this->message = $configuration['message'] ?? 'TODO: $%s has known values: %s — consider extracting to an enum';
         $this->callSiteMessage = $configuration['callSiteMessage'] ?? 'TODO: %s is a value of %s::$%s — consider replacing with an enum case';
@@ -108,6 +112,10 @@ CODE_SAMPLE,
         }
 
         if ($this->dataModelTraits === []) {
+            return null;
+        }
+
+        if ($this->isExcludedFile($node)) {
             return null;
         }
 
@@ -468,6 +476,19 @@ CODE_SAMPLE,
         // Also unwrap coalesce: ($context['prop'] ?? 'fallback') === 'value'
         if ($node instanceof Coalesce) {
             return $this->isPropertyReference($node->left, $propName);
+        }
+
+        return false;
+    }
+
+    private function isExcludedFile(Node $node): bool
+    {
+        $filePath = $this->file->getFilePath();
+        $basename = basename($filePath);
+        foreach ($this->excludedFiles as $pattern) {
+            if ($basename === $pattern) {
+                return true;
+            }
         }
 
         return false;

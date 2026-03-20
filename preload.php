@@ -20,6 +20,8 @@ opcache_compile_file(__DIR__ . '/src/Blade/Component.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/RouteOperation.php');
 opcache_compile_file(__DIR__ . '/src/Controllers/HomeController.php');
 opcache_compile_file(__DIR__ . '/src/Blade/View.php');
+opcache_compile_file(__DIR__ . '/src/Attributes/ReceivesViewModel.php');
+opcache_compile_file(__DIR__ . '/src/Blade/ScalarDefault.php');
 opcache_compile_file(__DIR__ . '/src/UI/InputType.php');
 opcache_compile_file(__DIR__ . '/src/UI/ButtonVariant.php');
 opcache_compile_file(__DIR__ . '/src/UI/ButtonSize.php');
@@ -33,7 +35,6 @@ opcache_compile_file(__DIR__ . '/src/Routes/HttpMethod.php');
 
 // ViewModels
 opcache_compile_file(__DIR__ . '/src/ViewModels/ErrorViewModel.php');
-opcache_compile_file(__DIR__ . '/src/ViewModels/ErrorMessages.php');
 opcache_compile_file(__DIR__ . '/src/ViewModels/RegisterViewModel.php');
 
 // Entrypoint

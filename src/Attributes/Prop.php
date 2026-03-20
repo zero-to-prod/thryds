@@ -5,29 +5,35 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
+use BackedEnum;
+use ZeroToProd\Thryds\UI\Props;
 
 /**
  * Declares a prop accepted by a Blade component.
  *
  * Applied to Component enum cases. Replaces @props() parsing as the structural metadata source.
+ * Pass a BackedEnum case as default to auto-derive the enum constraint.
  *
  * @example
- * #[Prop('variant', default: 'primary', enum: ButtonVariant::class)]
- * #[Prop('size', default: 'md', enum: ButtonSize::class)]
- * #[Prop('type', default: 'button')]
+ * #[Prop(Props::variant, ButtonVariant::primary)]
+ * #[Prop(Props::size, ButtonSize::md)]
+ * #[Prop(Props::type, 'button')]
  * case button = 'button';
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT | Attribute::IS_REPEATABLE)]
 readonly class Prop
 {
-    /**
-     * @param string $name Prop name as used in the template
-     * @param string $default Default value (the resolved string, not the enum expression)
-     * @param class-string|null $enum Backing enum class if the prop is enum-constrained, null otherwise
-     */
+    /** Resolved default value from the backing enum or a plain string. */
+    public int|string $default;
+
+    /** @var class-string|null Backing enum class, derived when default is a BackedEnum. */
+    public ?string $enum;
+
     public function __construct(
-        public string $name,
-        public string $default,
-        public ?string $enum,
-    ) {}
+        public Props $Props,
+        BackedEnum|string $default,
+    ) {
+        $this->default = is_string(value: $default) ? $default : $default->value;
+        $this->enum = is_string(value: $default) ? null : $default::class;
+    }
 }

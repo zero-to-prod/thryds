@@ -11,10 +11,8 @@ use ZeroToProd\Thryds\UI\ButtonSize;
 use ZeroToProd\Thryds\UI\ButtonVariant;
 use ZeroToProd\Thryds\UI\Domain;
 use ZeroToProd\Thryds\UI\InputType;
+use ZeroToProd\Thryds\UI\Props;
 
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'button' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'type' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'variant' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
 /**
  * Blade component identifiers. Each case maps to templates/components/{value}.blade.php.
  *
@@ -31,53 +29,48 @@ use ZeroToProd\Thryds\UI\InputType;
 )]
 enum Component: string
 {
+    public const string BUTTON = 'button';
+
     /** Inline status banner for feedback messages (info, danger, success). */
     #[Prop(
-        'variant',
-        default: 'info',
-        enum: AlertVariant::class
+        Props::variant,
+        AlertVariant::info
     )]
     case alert = 'alert';
 
     /** Action trigger with configurable visual variant and size. */
     #[Prop(
-        'variant',
-        default: 'primary',
-        enum: ButtonVariant::class
+        Props::variant,
+        ButtonVariant::primary
     )]
     #[Prop(
-        'size',
-        default: 'md',
-        enum: ButtonSize::class
+        Props::size,
+        ButtonSize::md
     )]
     #[Prop(
-        'type',
-        default: 'button',
-        enum: null
+        Props::type,
+        self::BUTTON
     )]
-    case button = 'button';
+    case button = self::BUTTON;
 
     /** Contained surface for grouping related content. */
     case card = 'card';
 
     /** Label + input wrapper that enforces consistent form field layout. */
     #[Prop(
-        'label',
-        default: '',
-        enum: null
+        Props::label,
+        ''
     )]
     #[Prop(
-        'error',
-        default: '',
-        enum: null
+        Props::error,
+        ''
     )]
     case form_group = 'form-group';
 
     /** Text field bound to a typed HTML input type. */
     #[Prop(
-        'type',
-        default: 'text',
-        enum: InputType::class
+        Props::type,
+        InputType::text
     )]
     case input = 'input';
 

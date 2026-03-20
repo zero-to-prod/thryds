@@ -271,6 +271,7 @@ return static function (RectorConfig $rectorConfig): void {
             Describe::class,
             \ZeroToProd\Thryds\Attributes\Describe::class,
         ],
+        'excludedFiles' => ['View.php'],
         'mode' => 'warn',
         'message' => 'TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. $%s has values: %s. Extract to a backed enum. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md',
         'callSiteMessage' => 'TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. %s is a value of %s::$%s. Replace with enum case. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md',
@@ -547,6 +548,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RequireNamesKeysOnConstantsClassRector::class, [
         'attributeClass' => KeyRegistry::class,
         'excludedAttributes' => [
+            \Attribute::class,
             ViewModel::class,
         ],
         'mode' => 'warn',

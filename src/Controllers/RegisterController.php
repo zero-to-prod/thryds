@@ -13,6 +13,7 @@ use ZeroToProd\Thryds\Attributes\Persists;
 use ZeroToProd\Thryds\Attributes\RedirectsTo;
 use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Database;
+use ZeroToProd\Thryds\Routes\HttpMethod;
 use ZeroToProd\Thryds\Routes\Route;
 use ZeroToProd\Thryds\Tables\User;
 use ZeroToProd\Thryds\ViewModels\RegisterViewModel;
@@ -29,8 +30,7 @@ readonly class RegisterController
 
     public function __invoke(ServerRequestInterface $ServerRequestInterface): ResponseInterface
     {
-        // TODO: [RequireEnumOrConstInStringComparisonRector] Raw string 'POST' in comparison must be backed by an enum or constant. Constants name things, enumerations define sets. See: utils/rector/docs/RequireEnumOrConstInStringComparisonRector.md
-        if ($ServerRequestInterface->getMethod() === 'POST') {
+        if ($ServerRequestInterface->getMethod() === HttpMethod::POST->value) {
             return $this->handleRegistration($ServerRequestInterface);
         }
 

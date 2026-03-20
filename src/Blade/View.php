@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Blade;
 
+use ReflectionClass;
+use ReflectionEnumUnitCase;
+use ReflectionException;
+use ReflectionNamedType;
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 use ZeroToProd\Thryds\Attributes\ExtendsLayout;
 use ZeroToProd\Thryds\Attributes\PageTitle;
 use ZeroToProd\Thryds\Attributes\ReceivesViewModel;
 use ZeroToProd\Thryds\Attributes\UsesComponent;
 use ZeroToProd\Thryds\UI\Domain;
-use ZeroToProd\Thryds\ViewModels\ErrorMessages;
+use ZeroToProd\Thryds\UI\Layout;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 use ZeroToProd\Thryds\ViewModels\RegisterViewModel;
 
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'base' (used 6x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
 /**
  * Blade template identifiers. Each case maps to templates/{value}.blade.php.
  *
@@ -32,12 +35,12 @@ use ZeroToProd\Thryds\ViewModels\RegisterViewModel;
 )]
 enum View: string
 {
-    #[ExtendsLayout('base')]
+    #[ExtendsLayout(Layout::base)]
     #[PageTitle('About — Thryds')]
     #[UsesComponent(Component::card)]
     case about = 'about';
 
-    #[ExtendsLayout('base')]
+    #[ExtendsLayout(Layout::base)]
     #[PageTitle('Error — Thryds')]
     #[UsesComponent(
         Component::alert,
@@ -46,7 +49,7 @@ enum View: string
     #[ReceivesViewModel(ErrorViewModel::class)]
     case error = 'error';
 
-    #[ExtendsLayout('base')]
+    #[ExtendsLayout(Layout::base)]
     #[PageTitle('Thryds')]
     #[UsesComponent(
         Component::card,
@@ -54,7 +57,7 @@ enum View: string
     )]
     case home = 'home';
 
-    #[ExtendsLayout('base')]
+    #[ExtendsLayout(Layout::base)]
     #[PageTitle('Login — Thryds')]
     #[UsesComponent(
         Component::card,
@@ -64,7 +67,7 @@ enum View: string
     )]
     case login = 'login';
 
-    #[ExtendsLayout('base')]
+    #[ExtendsLayout(Layout::base)]
     #[PageTitle('Register — Thryds')]
     #[UsesComponent(
         Component::card,
@@ -75,7 +78,7 @@ enum View: string
     #[ReceivesViewModel(RegisterViewModel::class)]
     case register = 'register';
 
-    #[ExtendsLayout('base')]
+    #[ExtendsLayout(Layout::base)]
     #[PageTitle('Styleguide — Thryds')]
     #[UsesComponent(
         Component::alert,
@@ -86,33 +89,31 @@ enum View: string
     )]
     case styleguide = 'styleguide';
 
-    /** @return array<string, mixed> Returns stub data for preload rendering. Most views need none; views with ViewModels return their minimum required data. */
+    /**
+     * @return array<string, mixed> Returns stub data for preload rendering. Most views need none; views with ViewModels return their minimum required data.
+     * @throws ReflectionException
+     */
     public function stubData(): array
     {
-        return match ($this) {
-            self::error => [
-                ErrorViewModel::view_key => ErrorViewModel::from([
-                    ErrorViewModel::message => ErrorMessages::test->value,
-                    ErrorViewModel::status_code => 500,
-                ]),
-            ],
-            self::register => [
-                RegisterViewModel::view_key => RegisterViewModel::from([
-                    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. '' is a value of RegisterViewModel::$name. Replace with enum case. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md
-                    RegisterViewModel::name => '',
-                    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. '' is a value of RegisterViewModel::$email. Replace with enum case. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md
-                    RegisterViewModel::email => '',
-                    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. '' is a value of RegisterViewModel::$name_error. Replace with enum case. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md
-                    RegisterViewModel::name_error => '',
-                    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. '' is a value of RegisterViewModel::$email_error. Replace with enum case. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md
-                    RegisterViewModel::email_error => '',
-                    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. '' is a value of RegisterViewModel::$password_error. Replace with enum case. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md
-                    RegisterViewModel::password_error => '',
-                    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. '' is a value of RegisterViewModel::$password_confirmation_error. Replace with enum case. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md
-                    RegisterViewModel::password_confirmation_error => '',
-                ]),
-            ],
-            default => [],
-        };
+        $attrs = new ReflectionEnumUnitCase(self::class, $this->name)
+            ->getAttributes(ReceivesViewModel::class);
+
+        if ($attrs === []) {
+            return [];
+        }
+
+        $data = [];
+        foreach ($attrs[0]->newInstance()->view_models as $vmClass) {
+            $defaults = [];
+            foreach (new ReflectionClass(objectOrClass: $vmClass)->getProperties() as $prop) {
+                $type = $prop->getType();
+                $defaults[$prop->getName()] = ($type instanceof ReflectionNamedType
+                    ? ScalarDefault::tryFrom($type->getName())
+                    : null)?->zeroValue();
+            }
+            $data[$vmClass::view_key] = $vmClass::from($defaults);
+        }
+
+        return $data;
     }
 }
