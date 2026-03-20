@@ -2,6 +2,7 @@
     "name": "zero-to-prod/thryds",
     "description": "An AI integrated social media site.",
     "type": "project",
+    "license": "proprietary",
     "require": {
         "php": "^8.5",
         "league/route": "^6.2",

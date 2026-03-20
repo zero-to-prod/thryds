@@ -124,12 +124,12 @@ CODE_SAMPLE,
                 return null;
             }
 
-            if ($inner->left instanceof String_) {
+            if ($inner->left instanceof String_ && $inner->left->value !== '') {
                 $found = $inner->left->value;
                 return \PhpParser\NodeVisitor::STOP_TRAVERSAL;
             }
 
-            if ($inner->right instanceof String_) {
+            if ($inner->right instanceof String_ && $inner->right->value !== '') {
                 $found = $inner->right->value;
                 return \PhpParser\NodeVisitor::STOP_TRAVERSAL;
             }
