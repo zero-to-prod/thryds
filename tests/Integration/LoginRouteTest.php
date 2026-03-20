@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Tests\Integration;
 
 use PHPUnit\Framework\Attributes\Test;
+use ZeroToProd\Thryds\Attributes\CoversRoute;
 use ZeroToProd\Thryds\Routes\Route;
 
+#[CoversRoute(Route::login)]
 final class LoginRouteTest extends IntegrationTestCase
 {
     #[Test]

@@ -38,6 +38,7 @@ No side effects — safe to run anytime.
 ### Check
 ```
 ./run check:all           # PRIMARY — all checks + tests; JSON summary, non-aborting
+./run check:manifest      # diff thryds.yaml against attribute graph
 ./run check:composer      # validate composer.json integrity
 ./run check:style         # php-cs-fixer --dry-run --diff
 ./run check:rector        # rector --dry-run
@@ -65,6 +66,7 @@ No side effects — safe to run anytime.
 ### Inspect
 ```
 ./run list:routes         # → JSON [{name, path, params, dev_only, description, operations}]
+./run list:manifest       # generate thryds.yaml-format YAML from attributes
 ./run migrate:status      # → stderr (display); → stdout JSON {passed, pending, modified, applied}
 ./run db:query -- "<sql>" # SELECT only → JSON rows
 ```
@@ -82,7 +84,8 @@ No side effects — safe to run anytime.
 
 ### Fix
 ```
-./run fix:all           # fix:style → fix:rector → generate:preload → check:all
+./run fix:all           # sync:manifest → fix:style → fix:rector → generate:preload → check:all
+./run sync:manifest     # scaffold code for entities in thryds.yaml missing from code
 ./run fix:style         # php-cs-fixer fix
 ./run fix:rector        # rector process
 ```
@@ -133,3 +136,20 @@ logs/php/error.log           # PHP errors, warnings, deprecations
 - Constants name things
 - Enumerations define sets
 - PHP Attributes define properties
+
+## Manifest
+
+`thryds.yaml` at the project root declares the desired project structure. Every value maps to a PHP attribute. The attribute graph (read via reflection by `list:inventory`) is the actual state.
+
+### Workflow
+1. Read `thryds.yaml` to understand the project
+2. Edit `thryds.yaml` to declare new entities
+3. Run `./run sync:manifest` to scaffold code with correct attributes
+4. Implement business logic in generated stubs
+5. Run `./run fix:all` (includes `check:manifest` — fails if drift remains)
+
+### Enforcement
+- `check:manifest` is part of `check:all` — runs on every task completion
+- `sync:manifest` is part of `fix:all` — runs on every fix cycle
+- Drift categories: `missing_from_code`, `missing_from_manifest`, `property_drift`
+- Output is structured JSON — agents parse it directly

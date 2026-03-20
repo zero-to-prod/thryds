@@ -5,9 +5,9 @@ declare(strict_types=1);
 /**
  * Generate a dependency graph of routes → controllers → views → components/layouts.
  *
- * Outputs DOT (Graphviz) or JSON based on --format= argument.
+ * Outputs DOT (Graphviz), JSON, or YAML based on --format= argument.
  *
- * Usage: docker compose exec web php scripts/inventory.php [--format=dot|json]
+ * Usage: docker compose exec web php scripts/inventory.php [--format=dot|json|yaml]
  * Via Composer: ./run list:inventory [-- --format=dot]
  *
  * Exit 0 on success.
@@ -15,12 +15,18 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use Symfony\Component\Yaml\Yaml;
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 use ZeroToProd\Thryds\Attributes\Column;
+use ZeroToProd\Thryds\Attributes\CoversRoute;
+use ZeroToProd\Thryds\Attributes\ExtendsLayout;
 use ZeroToProd\Thryds\Attributes\Persists;
+use ZeroToProd\Thryds\Attributes\Prop;
+use ZeroToProd\Thryds\Attributes\ReceivesViewModel;
 use ZeroToProd\Thryds\Attributes\RedirectsTo;
 use ZeroToProd\Thryds\Attributes\RouteOperation;
 use ZeroToProd\Thryds\Attributes\Table;
+use ZeroToProd\Thryds\Attributes\UsesComponent;
 use ZeroToProd\Thryds\Attributes\ViewModel;
 use ZeroToProd\Thryds\Blade\Component;
 use ZeroToProd\Thryds\Blade\View;
@@ -33,6 +39,10 @@ foreach ($argv as $arg) {
         $format = substr($arg, strlen('--format='));
     }
 }
+if (! in_array($format, ['json', 'dot', 'yaml'], true)) {
+    fwrite(STDERR, "Unknown format: $format. Use json, dot, or yaml.\n");
+    exit(1);
+}
 
 $projectRoot  = realpath(__DIR__ . '/../') . '/';
 $templatesDir = $projectRoot . 'templates';
@@ -42,90 +52,6 @@ $explicitControllers = [
     'home'     => 'HomeController',
     'register' => 'RegisterController',
 ];
-
-/** All registered component names (the x- tag suffix). */
-$componentNames = array_map(fn(Component $c): string => $c->value, Component::cases());
-
-/** All route case names, for validating template references. */
-$routeNames = array_map(fn(Route $r): string => $r->name, Route::cases());
-
-/**
- * Parse @props([...]) from a component template and return structured prop definitions.
- *
- * Resolves enum-backed defaults (e.g. ButtonVariant::primary->value) to their string values.
- * Props without a resolvable enum default use null for the enum field.
- *
- * @return array<int, array{name: string, default: string, enum: string|null}>
- */
-function parseComponentProps(string $source): array
-{
-    if (! preg_match('/@props\(\[(.*?)\]\)/s', $source, $block)) {
-        return [];
-    }
-
-    $props = [];
-    foreach (preg_split('/\r?\n/', $block[1]) as $line) {
-        $line = trim($line);
-        if (! preg_match('/^[\'"](\w+)[\'"]\s*=>\s*(.+?)(?:,)?\s*$/', $line, $m)) {
-            continue;
-        }
-
-        $name  = $m[1];
-        $value = trim($m[2]);
-
-        if (preg_match('/^(\w+)::(\w+)->value$/', $value, $enumMatch)) {
-            $enumName = $enumMatch[1];
-            $caseName = $enumMatch[2];
-            $fqcn     = 'ZeroToProd\\Thryds\\UI\\' . $enumName;
-            try {
-                $default = constant($fqcn . '::' . $caseName)->value;
-            } catch (\Throwable) {
-                $default = $caseName;
-            }
-            $props[] = ['name' => $name, 'default' => $default, 'enum' => $enumName];
-        } else {
-            $props[] = ['name' => $name, 'default' => trim($value, '\'"'), 'enum' => null];
-        }
-    }
-
-    return $props;
-}
-
-/**
- * Parse a Blade template file and return its direct dependencies.
- *
- * @return array{layout:string|null, includes:string[], components:string[], view_models:string[]}
- */
-function parseTemplate(string $path): array
-{
-    $source = file_get_contents($path);
-
-    // @extends('name') or @extends("name")
-    preg_match('/@extends\([\'"]([^\'"]+)[\'"]\)/', $source, $extendsMatch);
-    $layout = $extendsMatch[1] ?? null;
-
-    // @include('name') or @include("name")
-    preg_match_all('/@include\([\'"]([^\'"]+)[\'"]\)/', $source, $includeMatches);
-    $includes = $includeMatches[1] ?? [];
-
-    // <x-name> tags — capture the component slug
-    preg_match_all('/<x-([\w-]+)/', $source, $componentMatches);
-    $components = array_values(array_unique($componentMatches[1] ?? []));
-
-    // `use` statements inside @php blocks referencing the ViewModels namespace
-    preg_match_all('/use\s+\S+\\\\ViewModels\\\\(\w+)\s*;/', $source, $viewModelMatches);
-    $view_models = array_values(array_unique($viewModelMatches[1] ?? []));
-
-    // `use` statements inside @php blocks referencing the UI namespace
-    preg_match_all('/use\s+\S+\\\\UI\\\\(\w+)\s*;/', $source, $uiEnumMatches);
-    $ui_enums = array_values(array_unique($uiEnumMatches[1] ?? []));
-
-    // Route::caseName references anywhere in the template
-    preg_match_all('/\bRoute::(\w+)\b/', $source, $routeRefMatches);
-    $route_refs = array_values(array_unique($routeRefMatches[1] ?? []));
-
-    return ['layout' => $layout, 'includes' => $includes, 'components' => $components, 'view_models' => $view_models, 'ui_enums' => $ui_enums, 'route_refs' => $route_refs];
-}
 
 // Build the graph as an adjacency list: node id → {type, label, edges:[target ids]}.
 $nodes = [];
@@ -218,64 +144,59 @@ foreach ($explicitControllers as $controllerName) {
     }
 }
 
-// Walk each view template, connecting to layout / components.
+// Walk each View enum case — relationships come from attributes, not templates.
 foreach (View::cases() as $View) {
-    $templatePath = $templatesDir . '/' . $View->value . '.blade.php';
-    if (! file_exists($templatePath)) {
-        continue;
-    }
-
     $viewId = 'view:' . $View->value;
     $addNode($viewId, 'view', $View->value);
-    $deps   = parseTemplate($templatePath);
 
-    if ($deps['layout'] !== null) {
-        $layoutId = 'layout:' . $deps['layout'];
-        $addNode($layoutId, 'layout', $deps['layout']);
+    $ref = new ReflectionEnumUnitCase(View::class, $View->name);
+
+    $layoutAttrs = $ref->getAttributes(ExtendsLayout::class);
+    if ($layoutAttrs !== []) {
+        $layoutName = $layoutAttrs[0]->newInstance()->layout;
+        $layoutId   = 'layout:' . $layoutName;
+        $addNode($layoutId, 'layout', $layoutName);
         $addEdge($viewId, $layoutId, 'extends');
     }
 
-    foreach ($deps['includes'] as $include) {
-        $includeId = 'view:' . $include;
-        $addNode($includeId, 'view', $include);
-        $addEdge($viewId, $includeId, 'includes');
-    }
-
-    foreach ($deps['components'] as $component) {
-        if (in_array($component, $componentNames, true)) {
-            $addEdge($viewId, 'component:' . $component, 'uses');
+    $componentAttrs = $ref->getAttributes(UsesComponent::class);
+    if ($componentAttrs !== []) {
+        foreach ($componentAttrs[0]->newInstance()->components as $component) {
+            $addEdge($viewId, 'component:' . $component->value, 'uses');
         }
     }
 
-    foreach ($deps['route_refs'] as $routeName) {
-        if (in_array($routeName, $routeNames, true)) {
-            $addEdge($viewId, 'route:' . $routeName, 'references');
+    $viewModelAttrs = $ref->getAttributes(ReceivesViewModel::class);
+    if ($viewModelAttrs !== []) {
+        foreach ($viewModelAttrs[0]->newInstance()->view_models as $vmClass) {
+            $shortName = substr(strrchr($vmClass, '\\') ?: ('\\' . $vmClass), 1);
+            $addNode('viewmodel:' . $shortName, 'viewmodel', $shortName);
+            $addEdge($viewId, 'viewmodel:' . $shortName, 'receives');
         }
-    }
-
-    foreach ($deps['view_models'] as $viewModel) {
-        $addNode('viewmodel:' . $viewModel, 'viewmodel', $viewModel);
-        $addEdge($viewId, 'viewmodel:' . $viewModel, 'receives');
     }
 }
 
-// Walk each component template, connecting to UI enums and extracting props.
+// Walk each Component enum case — props come from #[Prop] attributes, not @props().
 foreach (Component::cases() as $Component) {
-    $templatePath = $templatesDir . '/components/' . $Component->value . '.blade.php';
-    if (! file_exists($templatePath)) {
-        continue;
+    $componentId = 'component:' . $Component->value;
+    $addNode($componentId, 'component', $Component->value);
+
+    $ref      = new ReflectionEnumUnitCase(Component::class, $Component->name);
+    $propAttrs = $ref->getAttributes(Prop::class, ReflectionAttribute::IS_INSTANCEOF);
+    $props     = [];
+    foreach ($propAttrs as $attr) {
+        $prop      = $attr->newInstance();
+        $enumShort = $prop->enum !== null
+            ? substr(strrchr($prop->enum, '\\') ?: ('\\' . $prop->enum), 1)
+            : null;
+        $props[] = ['name' => $prop->name, 'default' => $prop->default, 'enum' => $enumShort];
+
+        if ($enumShort !== null) {
+            $addNode('ui_enum:' . $enumShort, 'ui_enum', $enumShort);
+            $addEdge($componentId, 'ui_enum:' . $enumShort, 'uses_enum');
+        }
     }
-
-    $componentId    = 'component:' . $Component->value;
-    $templateSource = file_get_contents($templatePath);
-    $deps           = parseTemplate($templatePath);
-
-    $nodes[$componentId]['props'] = parseComponentProps($templateSource);
-
-    foreach ($deps['ui_enums'] as $uiEnum) {
-        $addNode('ui_enum:' . $uiEnum, 'ui_enum', $uiEnum);
-        $addEdge($componentId, 'ui_enum:' . $uiEnum, 'uses_enum');
-    }
+    $nodes[$componentId]['props'] = $props;
 }
 
 /**
@@ -484,29 +405,30 @@ function decorateNode(array $node, string $projectRoot, string $templatesDir, ar
     return $node;
 }
 
-// Scan Integration test files and wire covers edges to routes and controllers.
+// Walk each integration test — coverage comes from #[CoversRoute], not regex.
 $testsDir = $projectRoot . 'tests/Integration';
 foreach (glob($testsDir . '/*Test.php') ?: [] as $testFile) {
     $className = basename($testFile, '.php');
-    $testId    = 'test:' . $className;
+    $fqcn      = 'ZeroToProd\\Thryds\\Tests\\Integration\\' . $className;
+    if (! class_exists($fqcn)) {
+        continue;
+    }
+
+    $testId = 'test:' . $className;
     $addNode($testId, 'test', $className);
 
-    // Convention: strip Test suffix — if result is a known controller, it covers it.
-    $bare = substr($className, 0, -4); // remove 'Test'
-    if (in_array($bare, $explicitControllers, true)) {
-        $controllerId = 'controller:' . $bare;
-        if (isset($nodes[$controllerId])) {
-            $addEdge($testId, $controllerId, 'covers');
+    $ref        = new ReflectionClass($fqcn);
+    $coversAttrs = $ref->getAttributes(CoversRoute::class);
+    if ($coversAttrs !== []) {
+        foreach ($coversAttrs[0]->newInstance()->routes as $route) {
+            $addEdge($testId, 'route:' . $route->name, 'covers');
         }
     }
 
-    // Parse Route::caseName references in the file body.
-    $fileSource = file_get_contents($testFile);
-    preg_match_all('/\bRoute::(\w+)\b/', $fileSource, $routeRefMatches);
-    foreach (array_unique($routeRefMatches[1] ?? []) as $routeName) {
-        if (in_array($routeName, $routeNames, true)) {
-            $addEdge($testId, 'route:' . $routeName, 'covers');
-        }
+    // Convention: if test name matches a controller, wire that edge too.
+    $bare = substr($className, 0, -4); // remove 'Test'
+    if (in_array($bare, $explicitControllers, true)) {
+        $addEdge($testId, 'controller:' . $bare, 'covers');
     }
 }
 
@@ -535,14 +457,363 @@ foreach ([
 $extensionGuides['model']      = Table::addCase;
 $extensionGuides['viewmodel']  = ViewModel::addCase;
 $extensionGuides['controller'] = implode("\n", [
-    '1. Create src/Controllers/<ClassName>.php.',
-    '2. Apply #[Persists(ModelClass::class)] for each model the controller writes to — inventory emits a persists edge automatically.',
-    '3. Apply #[RedirectsTo(Route::caseName)] for the route the controller redirects to on success — inventory emits a redirects_to edge automatically.',
-    '4. Register the controller in $explicitControllers in scripts/inventory.php.',
-    '5. Add integration test.',
+    '1. Add entry to thryds.yaml controllers section.',
+    '2. Run ./run sync:manifest.',
+    '3. Implement controller logic.',
+    '4. Run ./run fix:all.',
 ]);
 
-if ($format === 'dot') {
+/**
+ * Transform the flat node/edge graph into the grouped YAML manifest matching the thryds.yaml schema.
+ *
+ * @param array<int, array<string, mixed>> $decoratedNodes
+ * @param array<int, array{from: string, to: string, rel: string}> $edges
+ */
+function buildYamlManifest(array $decoratedNodes, array $edges): string
+{
+    $edgesFrom = [];
+    foreach ($edges as $e) {
+        $edgesFrom[$e['from']][] = $e;
+    }
+
+    $nodeById = [];
+    foreach ($decoratedNodes as $n) {
+        $nodeById[$n['id']] = $n;
+    }
+
+    $compValueToName = [];
+    foreach (Component::cases() as $c) {
+        $compValueToName[$c->value] = $c->name;
+    }
+
+    $yaml = "# thryds.yaml — project structure manifest\n";
+    $yaml .= "# Enforcement: ./run check:manifest (diff against attribute graph)\n";
+    $yaml .= "# Sync: ./run sync:manifest (scaffold missing code)\n";
+
+    // === Routes ===
+    $routeData = [];
+    foreach (Route::cases() as $Route) {
+        $routeId = 'route:' . $Route->name;
+        $entry = [];
+        $entry['path'] = $Route->value;
+        $entry['description'] = $Route->description();
+        $entry['dev_only'] = $Route->isDevOnly();
+        $ops = [];
+        foreach ($Route->operations() as $op) {
+            $ops[$op->HttpMethod->value] = $op->description;
+        }
+        $entry['operations'] = $ops;
+
+        foreach ($edgesFrom[$routeId] ?? [] as $edge) {
+            if ($edge['rel'] === 'handled_by') {
+                $entry['controller'] = substr($edge['to'], strlen('controller:'));
+            }
+        }
+
+        $viewName = null;
+        foreach ($edgesFrom[$routeId] ?? [] as $edge) {
+            if ($edge['rel'] === 'renders') {
+                $viewName = substr($edge['to'], strlen('view:'));
+            }
+        }
+        if ($viewName === null && isset($entry['controller'])) {
+            foreach ($edgesFrom['controller:' . $entry['controller']] ?? [] as $edge) {
+                if ($edge['rel'] === 'renders') {
+                    $viewName = substr($edge['to'], strlen('view:'));
+                }
+            }
+        }
+        if ($viewName !== null) {
+            $entry['view'] = $viewName;
+        }
+
+        $routeData[$Route->name] = $entry;
+    }
+    ksort($routeData);
+    $yaml .= "\n" . Yaml::dump(['routes' => $routeData], 4, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE);
+
+    // === Controllers ===
+    $controllerData = [];
+    foreach ($decoratedNodes as $n) {
+        if ($n['type'] !== 'controller') {
+            continue;
+        }
+        $name = $n['label'];
+        $controllerId = 'controller:' . $name;
+        $entry = [];
+
+        // Find which route this controller handles
+        foreach ($edges as $e) {
+            if ($e['to'] === $controllerId && $e['rel'] === 'handled_by') {
+                $routeCaseName = substr($e['from'], strlen('route:'));
+                $entry['route'] = $routeCaseName;
+                $routeEnum = null;
+                foreach (Route::cases() as $r) {
+                    if ($r->name === $routeCaseName) {
+                        $routeEnum = $r;
+                        break;
+                    }
+                }
+                if ($routeEnum !== null) {
+                    $ops = [];
+                    foreach ($routeEnum->operations() as $op) {
+                        $ops[$op->HttpMethod->value] = $op->description;
+                    }
+                    $entry['operations'] = $ops;
+                }
+                break;
+            }
+        }
+
+        $renders = null;
+        $persists = [];
+        $redirectsTo = [];
+        foreach ($edgesFrom[$controllerId] ?? [] as $edge) {
+            match ($edge['rel']) {
+                'renders' => $renders = substr($edge['to'], strlen('view:')),
+                'persists' => $persists[] = substr($edge['to'], strlen('model:')),
+                'redirects_to' => $redirectsTo[] = substr($edge['to'], strlen('route:')),
+                default => null,
+            };
+        }
+        if ($renders !== null) {
+            $entry['renders'] = $renders;
+        }
+        $entry['persists'] = $persists;
+        $entry['redirects_to'] = $redirectsTo;
+
+        $controllerData[$name] = $entry;
+    }
+    ksort($controllerData);
+    $yaml .= "\n" . Yaml::dump(['controllers' => $controllerData], 4, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE);
+
+    // === Views ===
+    $viewData = [];
+    foreach (View::cases() as $View) {
+        $viewId = 'view:' . $View->value;
+        $entry = [];
+
+        $ref = new \ReflectionEnumUnitCase(View::class, $View->name);
+
+        $layoutAttrs = $ref->getAttributes(\ZeroToProd\Thryds\Attributes\ExtendsLayout::class);
+        $entry['layout'] = $layoutAttrs !== [] ? $layoutAttrs[0]->newInstance()->layout : '';
+
+        $titleAttrs = $ref->getAttributes(\ZeroToProd\Thryds\Attributes\PageTitle::class);
+        $entry['title'] = $titleAttrs !== [] ? $titleAttrs[0]->newInstance()->title : '';
+
+        $components = [];
+        foreach ($edgesFrom[$viewId] ?? [] as $edge) {
+            if ($edge['rel'] === 'uses') {
+                $compValue = substr($edge['to'], strlen('component:'));
+                $components[] = $compValueToName[$compValue] ?? $compValue;
+            }
+        }
+        $entry['components'] = $components;
+
+        $viewmodels = [];
+        foreach ($edgesFrom[$viewId] ?? [] as $edge) {
+            if ($edge['rel'] === 'receives') {
+                $viewmodels[] = substr($edge['to'], strlen('viewmodel:'));
+            }
+        }
+        $entry['viewmodels'] = $viewmodels;
+
+        $viewData[$View->value] = $entry;
+    }
+    ksort($viewData);
+    $yaml .= "\n" . Yaml::dump(['views' => $viewData], 3, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE);
+
+    // === Components ===
+    $componentData = [];
+    foreach (Component::cases() as $Component) {
+        $componentId = 'component:' . $Component->value;
+        $node = $nodeById[$componentId] ?? null;
+        $entry = [];
+        $entry['description'] = $node['description'] ?? '';
+        $props = [];
+        foreach ($node['props'] ?? [] as $prop) {
+            $propEntry = [];
+            if ($prop['default'] !== '') {
+                $propEntry['default'] = $prop['default'];
+            }
+            if ($prop['enum'] !== null) {
+                $propEntry['enum'] = $prop['enum'];
+            }
+            $props[$prop['name']] = $propEntry === [] ? (object) [] : $propEntry;
+        }
+        $entry['props'] = $props === [] ? (object) [] : $props;
+        $componentData[$Component->name] = $entry;
+    }
+    ksort($componentData);
+    $yaml .= "\n" . Yaml::dump(['components' => $componentData], 4, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE | Yaml::DUMP_OBJECT_AS_MAP);
+
+    // === ViewModels ===
+    $vmData = [];
+    foreach ($decoratedNodes as $n) {
+        if ($n['type'] !== 'viewmodel') {
+            continue;
+        }
+        $entry = [];
+        $entry['view_key'] = $n['view_key'] ?? '';
+        $fields = [];
+        foreach ($n['fields'] ?? [] as $field) {
+            $fields[$field['name']] = $field['type'];
+        }
+        $entry['fields'] = $fields;
+        $vmData[$n['label']] = $entry;
+    }
+    ksort($vmData);
+    $yaml .= "\n" . Yaml::dump(['viewmodels' => $vmData], 4, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE);
+
+    // === Enums ===
+    $enumData = [];
+    foreach ($decoratedNodes as $n) {
+        if ($n['type'] !== 'ui_enum') {
+            continue;
+        }
+        $enumData[$n['label']] = ['cases' => $n['cases'] ?? []];
+    }
+    ksort($enumData);
+    $yaml .= "\n" . Yaml::dump(['enums' => $enumData], 3, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE);
+
+    // === Tables ===
+    $tableData = [];
+    foreach ($decoratedNodes as $n) {
+        if ($n['type'] !== 'model') {
+            continue;
+        }
+        $label = $n['label'];
+        $fqcn = 'ZeroToProd\\Thryds\\Tables\\' . $label;
+        $entry = [];
+        $entry['table'] = $n['table_name'] ?? '';
+
+        if (class_exists($fqcn)) {
+            $ref = new \ReflectionClass($fqcn);
+            $tableAttr = $ref->getAttributes(Table::class)[0] ?? null;
+            if ($tableAttr !== null) {
+                $entry['engine'] = $tableAttr->newInstance()->Engine->value;
+            }
+
+            // Primary key
+            $pkColumns = [];
+            $classPk = $ref->getAttributes(\ZeroToProd\Thryds\Attributes\PrimaryKey::class);
+            if ($classPk !== []) {
+                $pkColumns = $classPk[0]->newInstance()->columns;
+            } else {
+                foreach ($ref->getProperties(\ReflectionProperty::IS_PUBLIC) as $prop) {
+                    if ($prop->isStatic()) {
+                        continue;
+                    }
+                    $propPk = $prop->getAttributes(\ZeroToProd\Thryds\Attributes\PrimaryKey::class);
+                    if ($propPk !== []) {
+                        $cols = $propPk[0]->newInstance()->columns;
+                        $pkColumns = $cols !== [] ? $cols : [$prop->getName()];
+                    }
+                }
+            }
+            $entry['primary_key'] = $pkColumns;
+
+            // Indexes
+            $indexes = [];
+            foreach ($ref->getAttributes(\ZeroToProd\Thryds\Attributes\Index::class, \ReflectionAttribute::IS_INSTANCEOF) as $attr) {
+                $idx = $attr->newInstance();
+                $idxEntry = ['columns' => $idx->columns];
+                if ($idx->unique) {
+                    $idxEntry['unique'] = true;
+                }
+                if ($idx->name !== '') {
+                    $idxEntry['name'] = $idx->name;
+                }
+                $indexes[] = $idxEntry;
+            }
+            $entry['indexes'] = $indexes;
+
+            // Columns with compact format
+            $columns = [];
+            foreach ($ref->getProperties(\ReflectionProperty::IS_PUBLIC) as $prop) {
+                if ($prop->isStatic()) {
+                    continue;
+                }
+                $colAttrs = $prop->getAttributes(Column::class);
+                if ($colAttrs === []) {
+                    continue;
+                }
+                $col = $colAttrs[0]->newInstance();
+                $colEntry = ['type' => $col->DataType->value];
+                if ($col->length !== null) {
+                    $colEntry['length'] = $col->length;
+                }
+                if ($col->precision !== null) {
+                    $colEntry['precision'] = $col->precision;
+                }
+                if ($col->scale !== null) {
+                    $colEntry['scale'] = $col->scale;
+                }
+                if ($col->nullable) {
+                    $colEntry['nullable'] = true;
+                }
+                if ($col->unsigned) {
+                    $colEntry['unsigned'] = true;
+                }
+                if ($col->auto_increment) {
+                    $colEntry['auto_increment'] = true;
+                }
+                if ($col->default !== null) {
+                    $colEntry['default'] = $col->default;
+                }
+                if ($col->values !== null) {
+                    $colEntry['values'] = $col->values;
+                }
+                $colEntry['comment'] = $col->comment;
+                $columns[$prop->getName()] = $colEntry;
+            }
+            $entry['columns'] = $columns;
+        }
+
+        $tableData[$label] = $entry;
+    }
+    ksort($tableData);
+    $yaml .= "\ntables:\n";
+    foreach ($tableData as $name => $tbl) {
+        $columns = $tbl['columns'] ?? [];
+        unset($tbl['columns']);
+        // Dump header fields (primary_key/indexes inline at depth 1 within entry)
+        $yaml .= "\n  $name:\n";
+        $yaml .= preg_replace('/^/m', '    ', trim(Yaml::dump($tbl, 1, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE))) . "\n";
+        // Dump columns with inline map per column
+        $yaml .= "    columns:\n";
+        foreach ($columns as $colName => $colDef) {
+            $yaml .= '      ' . $colName . ': ' . trim(Yaml::dump($colDef, 0, 2)) . "\n";
+        }
+    }
+
+    // === Tests ===
+    $testData = [];
+    foreach ($decoratedNodes as $n) {
+        if ($n['type'] !== 'test') {
+            continue;
+        }
+        $testId = 'test:' . $n['label'];
+        $entry = [];
+        $entry['type'] = 'integration';
+        $coversRoutes = [];
+        foreach ($edgesFrom[$testId] ?? [] as $edge) {
+            if ($edge['rel'] === 'covers' && str_starts_with($edge['to'], 'route:')) {
+                $coversRoutes[] = substr($edge['to'], strlen('route:'));
+            }
+        }
+        $entry['covers_routes'] = $coversRoutes;
+        $testData[$n['label']] = $entry;
+    }
+    ksort($testData);
+    $yaml .= "\n" . Yaml::dump(['tests' => $testData], 3, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE);
+
+    return $yaml;
+}
+
+if ($format === 'yaml') {
+    echo buildYamlManifest($decoratedNodes, $edges);
+} elseif ($format === 'dot') {
     // Node shapes by type for visual distinction.
     $shapes = [
         'route'      => 'ellipse',

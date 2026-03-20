@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Thryds Project Manifest",
+  "description": "Declares the desired project structure — every entity, property, and relationship.",
+  "type": "object",
+  "properties": {
+    "routes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["path", "description", "operations"],
+        "properties": {
+          "path": { "type": "string" },
+          "description": { "type": "string" },
+          "dev_only": { "type": "boolean", "default": false },
+          "operations": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          },
+          "controller": { "type": "string" },
+          "view": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "controllers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["route", "operations", "renders"],
+        "properties": {
+          "route": { "type": "string" },
+          "operations": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          },
+          "renders": { "type": "string" },
+          "persists": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "redirects_to": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "views": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["layout", "title", "components", "viewmodels"],
+        "properties": {
+          "layout": { "type": "string" },
+          "title": { "type": "string" },
+          "components": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "viewmodels": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["description", "props"],
+        "properties": {
+          "description": { "type": "string" },
+          "props": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "default": { "type": "string" },
+                "enum": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "viewmodels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["view_key", "fields"],
+        "properties": {
+          "view_key": { "type": "string" },
+          "fields": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "enums": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["cases"],
+        "properties": {
+          "cases": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "tables": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["table", "engine", "primary_key", "columns"],
+        "properties": {
+          "table": { "type": "string" },
+          "engine": { "type": "string" },
+          "primary_key": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "indexes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["columns"],
+              "properties": {
+                "columns": { "type": "array", "items": { "type": "string" } },
+                "unique": { "type": "boolean" },
+                "name": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "columns": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": ["type", "comment"],
+              "properties": {
+                "type": { "type": "string" },
+                "length": { "type": "integer" },
+                "precision": { "type": "integer" },
+                "scale": { "type": "integer" },
+                "nullable": { "type": "boolean" },
+                "unsigned": { "type": "boolean" },
+                "auto_increment": { "type": "boolean" },
+                "default": { "type": ["string", "number", "boolean"] },
+                "values": { "type": "array", "items": { "type": "string" } },
+                "comment": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "tests": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["type", "covers_routes"],
+        "properties": {
+          "type": { "type": "string", "enum": ["integration", "unit", "database"] },
+          "covers_routes": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

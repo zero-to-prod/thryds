@@ -1,0 +1,223 @@
+# thryds.yaml — project structure manifest
+# Enforcement: ./run check:manifest (diff against attribute graph)
+# Sync: ./run sync:manifest (scaffold missing code)
+
+routes:
+  about:
+    path: /about
+    description: About
+    dev_only: false
+    operations:
+      GET: 'Company and product information'
+    view: about
+  home:
+    path: /
+    description: Home
+    dev_only: false
+    operations:
+      GET: 'Marketing home page'
+    controller: HomeController
+    view: home
+  login:
+    path: /login
+    description: Login
+    dev_only: false
+    operations:
+      GET: 'User authentication form'
+    view: login
+  opcache_scripts:
+    path: /_opcache/scripts
+    description: 'OPcache scripts'
+    dev_only: true
+    operations:
+      GET: 'Scripts loaded in OPcache'
+  opcache_status:
+    path: /_opcache/status
+    description: 'OPcache status'
+    dev_only: true
+    operations:
+      GET: 'OPcache runtime statistics'
+  register:
+    path: /register
+    description: Register
+    dev_only: false
+    operations:
+      GET: 'New user registration form'
+      POST: 'Handle registration submission'
+    controller: RegisterController
+    view: register
+  routes:
+    path: /_routes
+    description: Routes
+    dev_only: true
+    operations:
+      GET: 'Machine-readable manifest of all registered routes'
+  styleguide:
+    path: /_styleguide
+    description: 'Style guide'
+    dev_only: true
+    operations:
+      GET: 'UI component and design token reference'
+    view: styleguide
+
+controllers:
+  HomeController:
+    route: home
+    operations:
+      GET: 'Marketing home page'
+    renders: home
+    persists: []
+    redirects_to: []
+  RegisterController:
+    route: register
+    operations:
+      GET: 'New user registration form'
+      POST: 'Handle registration submission'
+    renders: register
+    persists: []
+    redirects_to: []
+
+views:
+  about:
+    layout: base
+    title: 'About — Thryds'
+    components: [card]
+    viewmodels: []
+  error:
+    layout: base
+    title: 'Error — Thryds'
+    components: [alert, card]
+    viewmodels: [ErrorViewModel]
+  home:
+    layout: base
+    title: Thryds
+    components: [card, button]
+    viewmodels: []
+  login:
+    layout: base
+    title: 'Login — Thryds'
+    components: [card, form_group, input, button]
+    viewmodels: []
+  register:
+    layout: base
+    title: 'Register — Thryds'
+    components: [card, form_group, input, button]
+    viewmodels: [RegisterViewModel]
+  styleguide:
+    layout: base
+    title: 'Styleguide — Thryds'
+    components: [alert, button, card, form_group, input]
+    viewmodels: []
+
+components:
+  alert:
+    description: 'Inline status banner for feedback messages (info, danger, success).'
+    props:
+      variant: { default: info, enum: AlertVariant }
+  button:
+    description: 'Action trigger with configurable visual variant and size.'
+    props:
+      variant: { default: primary, enum: ButtonVariant }
+      size: { default: md, enum: ButtonSize }
+      type: { default: button }
+  card:
+    description: 'Contained surface for grouping related content.'
+    props: {  }
+  form_group:
+    description: 'Label + input wrapper that enforces consistent form field layout.'
+    props:
+      label: {  }
+      error: {  }
+  input:
+    description: 'Text field bound to a typed HTML input type.'
+    props:
+      type: { default: text, enum: InputType }
+
+viewmodels:
+  ErrorViewModel:
+    view_key: ErrorViewModel
+    fields:
+      message: string
+      status_code: int
+  RegisterViewModel:
+    view_key: RegisterViewModel
+    fields:
+      name: string
+      email: string
+      name_error: string
+      email_error: string
+      password_error: string
+      password_confirmation_error: string
+
+enums:
+  AlertVariant:
+    cases: [info, danger, success]
+  ButtonSize:
+    cases: [sm, md, lg]
+  ButtonVariant:
+    cases: [primary, danger, secondary]
+  InputType:
+    cases: [text, email, password]
+
+tables:
+
+  Migration:
+    table: migrations
+    engine: InnoDB
+    primary_key: [id]
+    indexes: []
+    columns:
+      id: { type: VARCHAR, length: 20, comment: 'Migration id, matching the four-digit prefix of the migration filename (e.g. 0001).' }
+      description: { type: VARCHAR, length: 255, comment: 'Human-readable description from the #[Migration] attribute on the migration class.' }
+      checksum: { type: VARCHAR, length: 64, comment: 'SHA-256 hash of the migration file contents at the time it was applied.' }
+      applied_at: { type: DATETIME, default: CURRENT_TIMESTAMP, comment: 'Timestamp when the migration was applied.' }
+
+  User:
+    table: users
+    engine: InnoDB
+    primary_key: [id]
+    indexes: []
+    columns:
+      id: { type: CHAR, length: 26, comment: 'Primary key' }
+      name: { type: VARCHAR, length: 255, comment: 'Display name' }
+      handle: { type: VARCHAR, length: 30, comment: 'Unique public username' }
+      email: { type: VARCHAR, length: 255, nullable: true, comment: 'Contact email address' }
+      email_verified_at: { type: TIMESTAMP, nullable: true, comment: 'Timestamp of email verification' }
+      password: { type: VARCHAR, length: 255, comment: 'Hashed password' }
+      created_at: { type: TIMESTAMP, default: CURRENT_TIMESTAMP, comment: 'Record creation time' }
+      updated_at: { type: TIMESTAMP, default: CURRENT_TIMESTAMP, comment: 'Record last update time' }
+
+tests:
+  AboutRouteTest:
+    type: integration
+    covers_routes: [about]
+  BladeCacheTest:
+    type: integration
+    covers_routes: []
+  HOT004Test:
+    type: integration
+    covers_routes: []
+  HomeControllerTest:
+    type: integration
+    covers_routes: [home]
+  LoginRouteTest:
+    type: integration
+    covers_routes: [login]
+  OpcacheScriptsRouteTest:
+    type: integration
+    covers_routes: [opcache_scripts]
+  OpcacheStatusRouteTest:
+    type: integration
+    covers_routes: [opcache_status]
+  RegisterRouteTest:
+    type: integration
+    covers_routes: [register]
+  RoutesRouteTest:
+    type: integration
+    covers_routes: [routes]
+  StyleguideRouteTest:
+    type: integration
+    covers_routes: [styleguide]
+  TRACE001Test:
+    type: integration
+    covers_routes: []

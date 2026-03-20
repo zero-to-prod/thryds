@@ -23,11 +23,8 @@ readonly class ViewModel
      * Checklist for adding a new ViewModel — read by the inventory script to generate extension_guides.
      */
     public const string addCase
-        = "1. Create src/ViewModels/<ClassName>ViewModel.php:\n"
-        . "   - Mark readonly class with #[ViewModel] and use DataModel.\n"
-        . "   - Rector will add `public const string view_key = '<ClassName>ViewModel';` automatically.\n"
-        . "   - For each field: add a typed public property and a matching string constant with the same name.\n"
-        . "2. In src/Blade/View.php, add a case to stubData() returning representative sample data.\n"
-        . "3. Use the ViewModel in a template via @php + use statement — inventory emits a receives edge automatically.\n"
-        . '4. Pass the ViewModel from the controller: <ClassName>ViewModel::from([...]).';
+        = "1. Add entry to thryds.yaml viewmodels section.\n"
+        . "2. Run ./run sync:manifest.\n"
+        . "3. Add stub data to View::stubData() if used by a view.\n"
+        . '4. Run ./run fix:all.';
 }

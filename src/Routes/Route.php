@@ -15,11 +15,10 @@ use ZeroToProd\Thryds\UI\Domain;
 #[ClosedSet(
     Domain::url_routes,
     addCase: <<<TEXT
-    1. Add enum case with #[RouteInfo('<route description>')] and one or more #[RouteOperation(HttpMethod::<METHOD>, '<operation description>')] attributes.
-    2. If the route is a simple read-only view: add a matching View case with the same name — RouteRegistrar::register() auto-registers it via View::tryFrom(\$Route->name). If the route needs stateful or complex logic: add an explicit \$Router->map() call in RouteRegistrar::register() instead.
-    3. Create controller (if needed) + template.
-    4. Add integration test.
-    5. Add template render in generate-preload.php.
+    1. Add entry to thryds.yaml routes section.
+    2. Run ./run sync:manifest.
+    3. Implement controller logic (if controller route).
+    4. Run ./run fix:all.
     TEXT
 )]
 enum Route: string

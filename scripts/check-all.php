@@ -21,6 +21,7 @@ declare(strict_types=1);
 $base_dir = dirname(__DIR__);
 
 $checks = [
+    'check:manifest'         => 'php ' . escapeshellarg($base_dir . '/scripts/check-manifest.php'),
     'check:composer'         => 'composer validate',
     'check:style'            => $base_dir . '/vendor/bin/php-cs-fixer fix --dry-run --diff',
     'check:rector'           => $base_dir . '/vendor/bin/rector process --dry-run',
@@ -35,8 +36,9 @@ $checks = [
 ];
 
 $fixes = [
-    'check:style'  => './run fix:style',
-    'check:rector' => './run fix:rector',
+    'check:manifest' => './run sync:manifest',
+    'check:style'    => './run fix:style',
+    'check:rector'   => './run fix:rector',
 ];
 
 fwrite(STDERR, "\n╔══════════════════════════════════════╗\n");

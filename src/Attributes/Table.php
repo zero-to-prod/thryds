@@ -40,10 +40,10 @@ readonly class Table
      * Checklist for adding a new model — read by the inventory script to generate extension_guides.
      */
     public const string addCase
-        = "1. Add a TableName enum case for the new table.\n"
-        . "2. Create src/Tables/<ClassName>.php with #[Table] and #[Column] attributes.\n"
+        = "1. Add entry to thryds.yaml tables section.\n"
+        . "2. Run ./run sync:manifest.\n"
         . "3. Write a migration to CREATE TABLE ...\n"
-        . '4. Run ./run migrate to apply.';
+        . '4. Run ./run fix:all.';
 
     public function __construct(
         public TableName $TableName,
