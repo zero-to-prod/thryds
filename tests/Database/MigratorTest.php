@@ -10,6 +10,8 @@ use ZeroToProd\Thryds\MigrationStatus;
 use ZeroToProd\Thryds\Migrator;
 use ZeroToProd\Thryds\Tables\Migration;
 
+// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string ' = '0001'' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
+// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string ' WHERE ' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
 // TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string '/nonexistent/migrations' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
 // TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'ZeroToProd\Thryds\Migrations\' (used 6x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
 /**
@@ -82,7 +84,7 @@ final class MigratorTest extends DatabaseTestCase
         $this->Migrator->migrate();
 
         $this->assertSame(1, (int) $this->Database->scalar(self::count_migrations));
-        $this->assertSame(1, (int) $this->Database->scalar("SELECT COUNT(*) FROM migrations WHERE id = '0001'"));
+        $this->assertSame(1, (int) $this->Database->scalar('SELECT COUNT(*) FROM ' . Migration::tableName() . ' WHERE ' . Migration::id . ' = \'0001\''));
         $this->assertSame(1, (int) $this->Database->scalar(self::count_fixture));
     }
 
@@ -91,7 +93,7 @@ final class MigratorTest extends DatabaseTestCase
     {
         $this->Migrator->migrate();
 
-        $row = $this->Database->one("SELECT checksum FROM migrations WHERE id = '0001'");
+        $row = $this->Database->one('SELECT ' . Migration::checksum . ' FROM ' . Migration::tableName() . ' WHERE ' . Migration::id . ' = \'0001\'');
         $this->assertNotNull(actual: $row);
         $this->assertSame(hash('sha256', (string) file_get_contents(self::fixtures_dir . '/0001_TestInsertRow.php')), $row[Migration::checksum]);
     }

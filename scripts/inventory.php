@@ -538,6 +538,10 @@ function buildYamlManifest(array $decoratedNodes, array $edges): string
         if ($n['type'] !== 'controller') {
             continue;
         }
+        // Skip controllers with missing source files — they belong in desired state only.
+        if ($n['missing'] ?? false) {
+            continue;
+        }
         $name = $n['label'];
         $controllerId = 'controller:' . $name;
         $entry = [];

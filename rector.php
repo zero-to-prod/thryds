@@ -97,6 +97,8 @@ use Utils\Rector\Rector\RequireViewModelDataInMakeCallRector;
 use Utils\Rector\Rector\RouteOperationRequiresRouteInfoRector;
 use Utils\Rector\Rector\AddViewModelAttributeRector;
 use Utils\Rector\Rector\RequireViewKeyConstantOnViewModelRector;
+use Utils\Rector\Rector\UseColumnConstantsInQueriesRector;
+use Utils\Rector\Rector\RequireEnumOrConstInStringComparisonRector;
 use Rector\CodeQuality\Rector\FuncCall\SortCallLikeNamedArgsRector;
 use Rector\CodeQuality\Rector\Attribute\SortAttributeNamedArgsRector;
 use ZeroToProd\Thryds\Attributes\Requirement;
@@ -117,6 +119,8 @@ use ZeroToProd\Thryds\LogContext;
 use ZeroToProd\Thryds\LogLevel;
 use ZeroToProd\Thryds\OpcacheStatus;
 use ZeroToProd\Thryds\Routes\HttpMethod;
+use ZeroToProd\Thryds\Tables\Migration;
+use ZeroToProd\Thryds\Tables\User;
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->paths([
@@ -278,6 +282,10 @@ return static function (RectorConfig $rectorConfig): void {
         'excludedClasses' => [Log::class],
         'mode' => 'warn',
         'message' => "TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value '%s' on the appropriate class. See: utils/rector/docs/ForbidMagicStringArrayKeyRector.md",
+    ]);
+    $rectorConfig->ruleWithConfiguration(RequireEnumOrConstInStringComparisonRector::class, [
+        'mode' => 'warn',
+        'message' => "TODO: [RequireEnumOrConstInStringComparisonRector] Raw string '%s' in comparison must be backed by an enum or constant. Constants name things, enumerations define sets. See: utils/rector/docs/RequireEnumOrConstInStringComparisonRector.md",
     ]);
 
     // --- Forbidden Constructs ---
@@ -709,6 +717,12 @@ return static function (RectorConfig $rectorConfig): void {
         'controllersNamespace' => 'ZeroToProd\\Thryds\\Controllers',
         'mode'                 => 'warn',
         'message'              => "TODO: [RequirePersistsOnTableReferenceRector] '%s' imports '%s' from the tables namespace but is missing #[Persists(%s::class)]. Add it so the inventory graph shows the persistence edge. See: utils/rector/docs/RequirePersistsOnTableReferenceRector.md",
+    ]);
+
+
+    $rectorConfig->ruleWithConfiguration(UseColumnConstantsInQueriesRector::class, [
+        'mode' => 'auto',
+        'tableClasses' => [User::class, Migration::class],
     ]);
 
 };

@@ -96,6 +96,22 @@ enum View: string
                     ErrorViewModel::status_code => 500,
                 ]),
             ],
+            self::register => [
+                RegisterViewModel::view_key => RegisterViewModel::from([
+                    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. '' is a value of RegisterViewModel::$name. Replace with enum case. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md
+                    RegisterViewModel::name => '',
+                    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. '' is a value of RegisterViewModel::$email. Replace with enum case. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md
+                    RegisterViewModel::email => '',
+                    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. '' is a value of RegisterViewModel::$name_error. Replace with enum case. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md
+                    RegisterViewModel::name_error => '',
+                    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. '' is a value of RegisterViewModel::$email_error. Replace with enum case. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md
+                    RegisterViewModel::email_error => '',
+                    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. '' is a value of RegisterViewModel::$password_error. Replace with enum case. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md
+                    RegisterViewModel::password_error => '',
+                    // TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. '' is a value of RegisterViewModel::$password_confirmation_error. Replace with enum case. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md
+                    RegisterViewModel::password_confirmation_error => '',
+                ]),
+            ],
             default => [],
         };
     }

@@ -34,6 +34,7 @@ opcache_compile_file(__DIR__ . '/src/Routes/HttpMethod.php');
 // ViewModels
 opcache_compile_file(__DIR__ . '/src/ViewModels/ErrorViewModel.php');
 opcache_compile_file(__DIR__ . '/src/ViewModels/ErrorMessages.php');
+opcache_compile_file(__DIR__ . '/src/ViewModels/RegisterViewModel.php');
 
 // Entrypoint
 opcache_compile_file(__DIR__ . '/public/index.php');

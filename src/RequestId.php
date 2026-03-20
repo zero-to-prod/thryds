@@ -29,6 +29,7 @@ class RequestId
     {
         $header = $ServerRequestInterface->getHeaderLine(Header::request_id);
 
+        // TODO: [RequireEnumOrConstInStringComparisonRector] Raw string '' in comparison must be backed by an enum or constant. Constants name things, enumerations define sets. See: utils/rector/docs/RequireEnumOrConstInStringComparisonRector.md
         self::$current = $header !== '' ? $header : self::generate();
 
         return self::$current;

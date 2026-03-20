@@ -34,8 +34,8 @@ $Config = Config::from([
     Config::template_dir => $base_dir . '/templates',
 ]);
 
-if (!mkdir($concurrentDirectory = $Config->blade_cache_dir, 0o755, true) && !is_dir($concurrentDirectory)) {
-    throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
+if (!is_dir($Config->blade_cache_dir) && !mkdir($Config->blade_cache_dir, 0o755, true)) {
+    throw new RuntimeException(sprintf('Directory "%s" was not created', $Config->blade_cache_dir));
 }
 
 $Blade = App::bootBlade($Config, $base_dir);

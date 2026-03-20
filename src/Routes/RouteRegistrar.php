@@ -13,11 +13,13 @@ use ZeroToProd\Thryds\Attributes\RouteOperation;
 use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Controllers\HomeController;
+use ZeroToProd\Thryds\Controllers\RegisterController;
+use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\OpcacheStatus;
 
 readonly class RouteRegistrar
 {
-    public static function register(Router $Router, Blade $Blade, Config $Config): void
+    public static function register(Router $Router, Blade $Blade, Config $Config, ?Database $Database = null): void
     {
         $Router->map(
             Route::home->operations()[0]->HttpMethod->value,
@@ -25,11 +27,18 @@ readonly class RouteRegistrar
             new HomeController($Blade),
         );
 
+        if ($Database !== null) {
+            $RegisterController = new RegisterController($Blade, $Database);
+            foreach (Route::register->operations() as $op) {
+                $Router->map($op->HttpMethod->value, Route::register->value, handler: $RegisterController);
+            }
+        }
+
         // Auto-register simple view routes by convention: Route::foo → View::foo (matched by name).
-        // home is excluded — it uses HomeController above.
+        // home and register are excluded — they use explicit controllers above.
         foreach (Route::cases() as $Route) {
             $View = View::tryFrom($Route->name);
-            if ($View !== null && $Route !== Route::home && (!$Route->isDevOnly() || !$Config->isProduction())) {
+            if ($View !== null && $Route !== Route::home && $Route !== Route::register && (!$Route->isDevOnly() || !$Config->isProduction())) {
                 $Router->map(
                     $Route->operations()[0]->HttpMethod->value,
                     $Route->value,

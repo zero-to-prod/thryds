@@ -74,8 +74,8 @@ controllers:
       GET: 'New user registration form'
       POST: 'Handle registration submission'
     renders: register
-    persists: []
-    redirects_to: []
+    persists: [User]
+    redirects_to: [login]
 
 views:
   about:
