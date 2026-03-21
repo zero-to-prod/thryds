@@ -35,6 +35,7 @@ trait DataModel
     {
         $result = [];
 
+        // TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md
         foreach (new ReflectionClass(objectOrClass: $this)->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
             if ($property->isStatic() || !$property->isInitialized(object: $this)) {
                 continue;

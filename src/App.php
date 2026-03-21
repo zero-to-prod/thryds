@@ -6,8 +6,11 @@ namespace ZeroToProd\Thryds;
 
 use Illuminate\Container\Container;
 use Illuminate\Contracts\View\Factory;
+use Illuminate\View\Engines\CompilerEngine;
+use Illuminate\View\Engines\EngineResolver;
 use Jenssegers\Blade\Blade;
 use Jenssegers\Blade\Container as BladeContainer;
+use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use League\Route\Cache\FileCache;
 use League\Route\Cache\Router as CachedRouter;
 use League\Route\Router;
@@ -26,6 +29,8 @@ readonly class App
         public Config $Config,
         #[Bind]
         public Blade $Blade,
+        public CompilerEngine $CompilerEngine,
+        public SapiEmitter $SapiEmitter,
         public CachedRouter $Router,
         #[Bind]
         public Database $Database,
@@ -36,6 +41,7 @@ readonly class App
     public function registerBindings(): void
     {
         $Container = Container::getInstance();
+        // TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md
         foreach (new ReflectionClass(self::class)->getProperties() as $Property) {
             if ($Property->getAttributes(Bind::class) === []) {
                 continue;
@@ -55,6 +61,7 @@ readonly class App
 
         $Blade = new Blade(viewPaths: $Config->template_dir, cachePath: $Config->blade_cache_dir, container: $Container);
 
+        $Container->alias('view.engine.resolver', EngineResolver::class);
         $Container->instance(Vite::class, instance: $Vite);
 
         BladeDirectives::register($Blade, $Config, $Vite);
@@ -90,7 +97,11 @@ readonly class App
             cacheEnabled: false,
         );
 
-        $App = new self($Config, $Blade, $Router, $Database, new ExceptionHandler($Config));
+        $Engine = Container::getInstance()->make(EngineResolver::class)->resolve('blade');
+        assert($Engine instanceof CompilerEngine);
+
+        $SapiEmitter = new SapiEmitter();
+        $App = new self($Config, $Blade, CompilerEngine: $Engine, SapiEmitter: $SapiEmitter, Router: $Router, Database: $Database, ExceptionHandler: new ExceptionHandler($Config, EmitterInterface: $SapiEmitter));
         $App->registerBindings();
 
         return $App;

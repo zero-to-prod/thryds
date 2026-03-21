@@ -186,6 +186,7 @@ readonly class Migrator
         sort(array: $files);
         /** @var array<string, array<string, string>> $migrations */
         $migrations = [];
+        // TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md
         foreach ($files as $path) {
             if (!preg_match('/^(\d{4})_(.+)$/', basename($path, suffix: '.php'), $matches)) {
                 continue;
@@ -265,6 +266,7 @@ readonly class Migrator
         if (!class_exists($class)) {
             throw new RuntimeException("Migration class $class does not exist."); // @codeCoverageIgnore
         }
+        // TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md
         $instance = new ReflectionClass(objectOrClass: $class)->newInstance();
         if (!$instance instanceof MigrationInterface) {
             throw new RuntimeException("$class must implement MigrationInterface.");

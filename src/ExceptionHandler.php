@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds;
 
 use Laminas\Diactoros\Response\HtmlResponse;
-use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
+use Laminas\HttpHandlerRunner\Emitter\EmitterInterface;
 use League\Route\Http\Exception as HttpException;
 use ReflectionClass;
 use ReflectionMethod;
@@ -16,7 +16,10 @@ use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 readonly class ExceptionHandler
 {
-    public function __construct(private Config $Config) {}
+    public function __construct(
+        private Config $Config,
+        private EmitterInterface $EmitterInterface,
+    ) {}
 
     #[HandlesException(HttpException::class)]
     public function handleHttpException(HttpException $Exception): void
@@ -63,6 +66,7 @@ readonly class ExceptionHandler
     {
         $matches = [];
 
+        // TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md
         foreach (new ReflectionClass(self::class)->getMethods(ReflectionMethod::IS_PUBLIC) as $Method) {
             $attributes = $Method->getAttributes(HandlesException::class);
             if ($attributes === []) {
@@ -83,7 +87,7 @@ readonly class ExceptionHandler
 
     private function emitErrorPage(string $message, int $status_code): void
     {
-        new SapiEmitter()->emit(
+        $this->EmitterInterface->emit(
             response: new HtmlResponse(
                 html: blade()->make(view: View::error->value, data: [
                     ErrorViewModel::view_key => ErrorViewModel::from([

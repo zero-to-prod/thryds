@@ -101,6 +101,7 @@ use Utils\Rector\Rector\UseColumnConstantsInQueriesRector;
 use Utils\Rector\Rector\RequireEnumOrConstInStringComparisonRector;
 use Utils\Rector\Rector\RequireHandlesExceptionParamMatchRector;
 use Utils\Rector\Rector\RequireHandlesExceptionOnPublicHandlerMethodRector;
+use Utils\Rector\Rector\ForbidReflectionInInstanceMethodRector;
 use Rector\CodeQuality\Rector\FuncCall\SortCallLikeNamedArgsRector;
 use Rector\CodeQuality\Rector\Attribute\SortAttributeNamedArgsRector;
 use ZeroToProd\Thryds\Attributes\Requirement;
@@ -747,5 +748,10 @@ return static function (RectorConfig $rectorConfig): void {
         'handlerAttributeClass' => 'ZeroToProd\\Thryds\\Attributes\\HandlesException',
         'throwableClass' => 'Throwable',
         'excludeMethods' => ['handle'],
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(ForbidReflectionInInstanceMethodRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md',
     ]);
 };

@@ -112,6 +112,7 @@ enum View: string
         }
 
         $data = [];
+        // TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md
         foreach ($attrs[0]->newInstance()->view_models as $vmClass) {
             $defaults = [];
             foreach (new ReflectionClass(objectOrClass: $vmClass)->getProperties() as $prop) {

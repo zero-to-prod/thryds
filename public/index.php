@@ -6,9 +6,7 @@ $base_dir = dirname(__DIR__);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Illuminate\Container\Container;
 use Laminas\Diactoros\ServerRequestFactory;
-use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\Env;
 use ZeroToProd\Thryds\Header;
@@ -19,12 +17,8 @@ use ZeroToProd\Thryds\RequestId;
 // See HOT-001, PERF-001
 $App = App::boot($base_dir);
 
-// Resolved once at boot; forgetCompiledOrNotExpired() is called per-request to
-// discard template state accumulated during the request. Must follow App::boot().
-$bladeEngine = Container::getInstance()->make('view.engine.resolver')->resolve('blade');
-
 // Request handler — called for each incoming request
-$handler = static function () use ($App, $bladeEngine): void {
+$handler = static function () use ($App): void {
     $ServerRequestInterface = ServerRequestFactory::fromGlobals(
         server: $_SERVER,
         query: $_GET,
@@ -34,7 +28,7 @@ $handler = static function () use ($App, $bladeEngine): void {
     );
 
     try {
-        new SapiEmitter()->emit(
+        $App->SapiEmitter->emit(
             response: $App->Router->dispatch(request: $ServerRequestInterface)->withHeader(
                 Header::request_id,
                 value: RequestId::init($ServerRequestInterface)
@@ -47,7 +41,7 @@ $handler = static function () use ($App, $bladeEngine): void {
         // clear per-request state so it does not bleed into the next request.
         // See SEC-001, HOT-007
         RequestId::reset();
-        $bladeEngine->forgetCompiledOrNotExpired();
+        $App->CompilerEngine->forgetCompiledOrNotExpired();
     }
 };
 
