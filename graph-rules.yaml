@@ -65,6 +65,24 @@ node:
     message: "Table node has no #[Column] attributes on any case"
     fix: "Add #[Column(...)] attributes to enum cases to define the table schema"
 
+  # Every attribute definition must be applied somewhere in the graph
+  unused-attribute:
+    filter:
+      is_attribute: true
+    exclude:
+      # Used in tests/ and migrations/ (outside the graph scan scope)
+      - src/Attributes/CoversRoute.php
+      - src/Attributes/Migration.php
+      # Schema attributes — defined for future table columns
+      - src/Attributes/ForeignKey.php
+      - src/Attributes/Index.php
+      - src/Attributes/OnDelete.php
+      - src/Attributes/OnUpdate.php
+      - src/Attributes/ValidateWith.php
+    assert: used_as_attribute
+    message: "Attribute definition is never applied to any class, property, method, or case"
+    fix: "Apply this attribute somewhere in the codebase, or remove the unused attribute class"
+
 edge:
   # Every ViewModel must be consumed by at least one View
   viewmodel-has-consumer:

@@ -521,9 +521,14 @@ foreach ($classes as $fqcn => $relPath) {
         $entry[$key] = $constants;
     }
 
-    // Skip classes with no attributes anywhere.
-    if (! isset($entry['attributes']) && ! isset($entry['properties']) && ! isset($entry['methods']) && ! isset($entry['cases']) && ! isset($entry['constants'])) {
+    // Skip classes with no attributes anywhere — unless they are PHP attribute definitions.
+    $isAttributeDefinition = $ref->getAttributes(Attribute::class) !== [];
+    if (! $isAttributeDefinition && ! isset($entry['attributes']) && ! isset($entry['properties']) && ! isset($entry['methods']) && ! isset($entry['cases']) && ! isset($entry['constants'])) {
         continue;
+    }
+
+    if ($isAttributeDefinition) {
+        $entry['is_attribute'] = true;
     }
 
     $graph[$fqcn] = $entry;

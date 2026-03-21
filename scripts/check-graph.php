@@ -183,9 +183,21 @@ function filterNodes(array $nodes, array $fqcnToShort, array $filter): array
         $kinds = (array) $filter['kind'];
         $result = array_filter($result, static fn(array $e): bool => in_array($e['kind'], $kinds, true));
     }
+    if (isset($filter['is_attribute']) && $filter['is_attribute'] === true) {
+        $result = array_filter($result, static fn(array $e): bool => ($e['is_attribute'] ?? false) === true);
+    }
 
     return $result;
 }
+
+// ── Build derived indexes ───────────────────────────────────────
+
+// All attribute names used across the entire graph (short names).
+$allUsedAttrNames = [];
+foreach ($nodes as $entry) {
+    $allUsedAttrNames = [...$allUsedAttrNames, ...collectAllAttrNames($entry)];
+}
+$allUsedAttrNames = array_flip(array_unique($allUsedAttrNames));
 
 // ── Evaluate discovery rules ────────────────────────────────────
 
@@ -245,8 +257,12 @@ foreach ($rules['node'] ?? [] as $ruleName => $rule) {
     $filter = $rule['filter'] ?? [];
     $matching = filterNodes($nodes, $fqcnToShort, $filter);
     $assert = $rule['assert'] ?? '';
+    $excludes = array_flip($rule['exclude'] ?? []);
 
     foreach ($matching as $fqcn => $entry) {
+        if (isset($excludes[$entry['file']])) {
+            continue;
+        }
         $pass = false;
 
         if ($assert === 'has_attributes') {
@@ -255,6 +271,9 @@ foreach ($rules['node'] ?? [] as $ruleName => $rule) {
             $targetAttr = $rule['attr'] ?? '';
             $allAttrs = collectAllAttrNames($entry);
             $pass = in_array($targetAttr, $allAttrs, true);
+        } elseif ($assert === 'used_as_attribute') {
+            $short = $fqcnToShort[$fqcn] ?? '';
+            $pass = isset($allUsedAttrNames[$short]);
         }
 
         if (! $pass) {
