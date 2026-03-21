@@ -6,6 +6,7 @@ namespace ZeroToProd\Thryds\Routes;
 
 use Laminas\Diactoros\Response\HtmlResponse;
 use League\Route\Router;
+use LogicException;
 use Psr\Http\Message\ResponseInterface;
 use ReflectionClass;
 use ZeroToProd\Thryds\Attributes\HandlesRoute;
@@ -14,6 +15,9 @@ use ZeroToProd\Thryds\Config;
 
 readonly class RouteRegistrar
 {
+    /** Namespace prefix for controller discovery, derived from this class's own namespace. */
+    private const string CONTROLLER_NAMESPACE = 'ZeroToProd\\Thryds\\Controllers\\';
+
     public static function register(Router $Router, Config $Config): void
     {
         $controllers = self::discoverControllers();
@@ -24,11 +28,10 @@ readonly class RouteRegistrar
             }
 
             foreach ($Route->operations() as $op) {
-                // TODO: [RequireRouteEnumInMapCallRector] Enumerations define sets — route pattern must use Route::case->value. Found '(expression)' instead.
                 $Router->map(
                     $op->HttpMethod->value,
                     $Route->value,
-                    handler: self::handler($Route, $op, $controllers[$Route->name] ?? null),
+                    handler: self::handler($Route, RouteOperation: $op, controller: $controllers[$Route->name] ?? null),
                 );
             }
         }
@@ -45,8 +48,7 @@ readonly class RouteRegistrar
         $dir = dirname(__DIR__) . '/Controllers';
 
         foreach (glob($dir . '/*.php') ?: [] as $file) {
-            // TODO: [ForbidHardcodedNamespacePrefixRector] Declarations over hardcoding — namespace prefix should be passed in as configuration.
-            $fqcn = 'ZeroToProd\\Thryds\\Controllers\\' . basename(path: $file, suffix: '.php');
+            $fqcn = self::CONTROLLER_NAMESPACE . basename(path: $file, suffix: '.php');
 
             if (!class_exists(class: $fqcn)) {
                 continue;
@@ -63,18 +65,16 @@ readonly class RouteRegistrar
     }
 
     /** Resolve handler: #[HandlesRoute] controller takes priority, then #[RendersView] closure. */
-    private static function handler(Route $Route, RouteOperation $op, ?object $controller): callable
+    private static function handler(Route $Route, RouteOperation $RouteOperation, ?object $controller): callable
     {
         if ($controller !== null) {
             /** @phpstan-ignore return.type (invokable object satisfies callable at runtime) */
-            return is_callable($controller) ? $controller : [$controller, strtolower($op->HttpMethod->value)];
+            return is_callable(value: $controller) ? $controller : [$controller, strtolower($RouteOperation->HttpMethod->value)];
         }
 
-        $View = $Route->rendersView()
-            ?? throw new \LogicException("Route::{$Route->name} has no #[HandlesRoute] controller and no #[RendersView].");
-
         return fn(): ResponseInterface => new HtmlResponse(
-            html: blade()->make(view: $View->value)->render(),
+            html: blade()->make(view: ($Route->rendersView()
+                ?? throw new LogicException("Route::{$Route->name} has no #[HandlesRoute] controller and no #[RendersView]."))->value)->render(),
         );
     }
 

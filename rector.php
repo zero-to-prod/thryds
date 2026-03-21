@@ -490,7 +490,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RequireRoutePatternConstRector::class, [
         'classSuffix' => 'Route',
         'constName' => 'pattern',
-        'excludedClasses' => ['ZeroToProd\Thryds\Attributes\CoversRoute'],
+        'excludedClasses' => ['ZeroToProd\Thryds\Attributes\CoversRoute', 'ZeroToProd\Thryds\Attributes\HandlesRoute'],
         'mode' => 'warn',
         'message' => "TODO: [RequireRoutePatternConstRector] Constants name things — route class '%s' is missing a '%s' constant. Define: public const string %s = '/...'.",
     ]);

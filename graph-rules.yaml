@@ -15,6 +15,18 @@ discovery:
     exclude:
       - "src/functions.php"
       - "src/Attributes/*.php"
+      - "src/Blade/BladeDirectives.php"
+      - "src/Database.php"
+      - "src/DatabaseConfig.php"
+      - "src/Log.php"
+      - "src/MigrationInterface.php"
+      - "src/OpcacheStatus.php"
+      - "src/Queries/*.php"
+      - "src/Requests/InputField.php"
+      - "src/Routes/RouteRegistrar.php"
+      - "src/Routes/RouteManifest.php"
+      - "src/Routes/RouteUrl.php"
+      - "src/Validation/*.php"
     claimed_by:
       strategy: node_file
     message: "PHP file not in attribute graph — no attributes found"

@@ -7,7 +7,6 @@ namespace ZeroToProd\Thryds\Attributes;
 use Attribute;
 use ZeroToProd\Thryds\Routes\Route;
 
-// TODO: [RequireRoutePatternConstRector] Constants name things — route class 'ZeroToProd\Thryds\Attributes\HandlesRoute' is missing a 'pattern' constant. Define: public const string pattern = '/...'.
 /**
  * Declares which route a controller handles.
  *
