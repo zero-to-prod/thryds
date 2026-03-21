@@ -8,6 +8,7 @@ use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\Response\RedirectResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Random\RandomException;
 use ZeroToProd\Thryds\Attributes\Persists;
 use ZeroToProd\Thryds\Attributes\RedirectsTo;
 use ZeroToProd\Thryds\Blade\View;
@@ -24,6 +25,9 @@ use ZeroToProd\Thryds\ViewModels\RegisterViewModel;
 #[RedirectsTo(Route::login)]
 readonly class RegisterController
 {
+    /**
+     * @throws RandomException
+     */
     public function __invoke(ServerRequestInterface $ServerRequestInterface): ResponseInterface
     {
 

@@ -166,3 +166,28 @@ logs/php/error.log           # PHP errors, warnings, deprecations
 - `sync:manifest` is part of `fix:all` — runs on every fix cycle
 - Drift categories: `missing_from_code`, `missing_from_manifest`, `property_drift`
 - Output is structured JSON — agents parse it directly
+
+## JetBrains MCP Tools
+
+| Tool | Purpose |
+|------|---------|
+| `execute_terminal_command` | Run shell command in IDE terminal |
+| `get_file_text_by_path` | Read file contents by project-relative path |
+| `replace_text_in_file` | Find-and-replace text in a file |
+| `create_new_file` | Create a new file (auto-creates parent dirs) |
+| `open_file_in_editor` | Open file in IDE editor |
+| `reformat_file` | Apply IDE code formatting |
+| `rename_refactoring` | Rename symbol across project (structure-aware) |
+| `get_file_problems` | Inspect file for errors/warnings |
+| `get_symbol_info` | Quick documentation for symbol at position |
+| `search_in_files_by_text` | Substring search across project |
+| `search_in_files_by_regex` | Regex search across project |
+| `find_files_by_name_keyword` | Find files by name substring (fast, indexed) |
+| `find_files_by_glob` | Find files by glob pattern (recursive) |
+| `list_directory_tree` | Tree view of a directory |
+| `get_all_open_file_paths` | List open editor tabs |
+| `get_run_configurations` | List IDE run configurations |
+| `execute_run_configuration` | Run a named run configuration |
+| `get_project_dependencies` | List project library dependencies |
+| `get_project_modules` | List project modules and types |
+| `get_repositories` | List VCS roots in project |

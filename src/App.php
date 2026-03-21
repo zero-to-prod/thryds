@@ -11,6 +11,9 @@ use Jenssegers\Blade\Container as BladeContainer;
 use League\Route\Cache\FileCache;
 use League\Route\Cache\Router as CachedRouter;
 use League\Route\Router;
+use ReflectionClass;
+use ReflectionNamedType;
+use ZeroToProd\Thryds\Attributes\Bind;
 use ZeroToProd\Thryds\Attributes\Requirement;
 use ZeroToProd\Thryds\Blade\BladeDirectives;
 use ZeroToProd\Thryds\Blade\Component;
@@ -21,10 +24,26 @@ readonly class App
 {
     public function __construct(
         public Config $Config,
+        #[Bind]
         public Blade $Blade,
         public CachedRouter $Router,
+        #[Bind]
         public Database $Database,
     ) {}
+
+    /** Reflects on own properties and registers those marked with #[Bind] as container instances. */
+    public function registerBindings(): void
+    {
+        $Container = Container::getInstance();
+        foreach (new ReflectionClass(self::class)->getProperties() as $Property) {
+            if ($Property->getAttributes(Bind::class) === []) {
+                continue;
+            }
+            $Type = $Property->getType();
+            assert($Type instanceof ReflectionNamedType);
+            $Container->instance($Type->getName(), instance: $this->{$Property->getName()});
+        }
+    }
 
     public static function bootBlade(Config $Config, Vite $Vite): Blade
     {
@@ -60,11 +79,6 @@ readonly class App
         // Blade captured in route handler closures (Blade contains non-serializable container bindings).
         $Database = new Database($DatabaseConfig ?? DatabaseConfig::fromEnv());
 
-        // ── Container bindings ──────────────────────────────────────
-        $Container = Container::getInstance();
-        $Container->instance(Blade::class, instance: $Blade);
-        $Container->instance(Database::class, instance: $Database);
-
         $Router = new CachedRouter(
             builder: static function (Router $Router) use ($Config): Router {
                 RouteRegistrar::register($Router, $Config);
@@ -75,6 +89,9 @@ readonly class App
             cacheEnabled: false,
         );
 
-        return new self($Config, $Blade, $Router, $Database);
+        $App = new self($Config, $Blade, $Router, $Database);
+        $App->registerBindings();
+
+        return $App;
     }
 }
