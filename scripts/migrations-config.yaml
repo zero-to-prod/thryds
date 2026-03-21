@@ -1,0 +1,8 @@
+directory: migrations
+namespace: ZeroToProd\Thryds\Migrations
+imports:
+  - ZeroToProd\Thryds\Attributes\Migration
+  - ZeroToProd\Thryds\Database
+  - ZeroToProd\Thryds\MigrationInterface
+interface: MigrationInterface
+attribute: Migration

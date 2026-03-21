@@ -8,18 +8,19 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Config;
+use ZeroToProd\Thryds\ConfigKey;
 
 final class ConfigIsProductionTest extends TestCase
 {
     #[Test]
     public function trueWhenAppEnvIsProduction(): void
     {
-        $this->assertTrue(Config::from([Config::AppEnv => AppEnv::production->value])->isProduction());
+        $this->assertTrue(Config::from([ConfigKey::AppEnv->value => AppEnv::production->value])->isProduction());
     }
 
     #[Test]
     public function falseWhenAppEnvIsNotProduction(): void
     {
-        $this->assertFalse(Config::from([Config::AppEnv => AppEnv::development->value])->isProduction());
+        $this->assertFalse(Config::from([ConfigKey::AppEnv->value => AppEnv::development->value])->isProduction());
     }
 }

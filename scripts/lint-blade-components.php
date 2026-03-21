@@ -18,27 +18,21 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$template_dir = __DIR__ . '/../templates';
+use Symfony\Component\Yaml\Yaml;
+
+$config       = Yaml::parseFile(__DIR__ . '/blade-config.yaml');
+$template_dir = __DIR__ . '/../' . $config['template_dir'];
 
 $files = scanBladeFiles($template_dir);
 
-$tag_rules = [
-    '/<button\b/' => [
-        'rule'    => 'raw-html-button',
-        'message' => 'raw <button> tag',
-        'fix'     => 'Use <x-button> component instead',
-    ],
-    '/<input\b/' => [
-        'rule'    => 'raw-html-input',
-        'message' => 'raw <input> tag',
-        'fix'     => 'Use <x-input> component instead',
-    ],
-    '/<div\s[^>]*role\s*=\s*["\']alert["\']/' => [
-        'rule'    => 'raw-html-alert',
-        'message' => 'raw <div role="alert"> tag',
-        'fix'     => 'Use <x-alert> component instead',
-    ],
-];
+$tag_rules = [];
+foreach ($config['tag_rules'] as $entry) {
+    $tag_rules[$entry['pattern']] = [
+        'rule'    => $entry['rule'],
+        'message' => $entry['message'],
+        'fix'     => $entry['fix'],
+    ];
+}
 
 $violations = [];
 $base_path = realpath(path: __DIR__ . '/..');

@@ -1,0 +1,32 @@
+testable_verifications:
+  integration-test: Integration
+  unit-test: Unit
+known_authority_types:
+  - rfc
+  - w3c
+  - ietf-draft
+  - iso
+  - ecma
+known_link_rels:
+  - adr
+  - issue
+  - pr
+  - prior-art
+  - discussion
+all_verifications:
+  - integration-test
+  - unit-test
+  - rector-rule
+  - architecture
+  - manual
+test_namespaces:
+  integration-test:
+    namespace: ZeroToProd\Thryds\Tests\Integration
+    extends: IntegrationTestCase
+    extra_use: ""
+  unit-test:
+    namespace: ZeroToProd\Thryds\Tests\Unit
+    extends: TestCase
+    extra_use: "use PHPUnit\\Framework\\TestCase;"
+rector_rules_dir: utils/rector/src
+tests_dir: tests

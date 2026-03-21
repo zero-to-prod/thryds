@@ -19,29 +19,40 @@ declare(strict_types=1);
  * Usage: ./run check:all
  */
 
+require __DIR__ . '/../vendor/autoload.php';
+
+use Symfony\Component\Yaml\Yaml;
+
 $base_dir = dirname(__DIR__);
+$config   = Yaml::parseFile(__DIR__ . '/checks-config.yaml');
 
-$checks = [
-    'check:manifest'         => 'php ' . escapeshellarg($base_dir . '/scripts/check-manifest.php'),
-    'check:composer'         => 'composer validate',
-    'check:style'            => $base_dir . '/vendor/bin/php-cs-fixer fix --dry-run --diff',
-    'check:rector'           => $base_dir . '/vendor/bin/rector process --dry-run',
-    'check:types'            => $base_dir . '/vendor/bin/phpstan analyse',
-    'check:migrations'       => 'php ' . escapeshellarg($base_dir . '/scripts/check-migrations.php'),
-    'check:requirements'     => 'php ' . escapeshellarg($base_dir . '/scripts/check-requirement-coverage.php'),
-    'check:blade-routes'     => 'php ' . escapeshellarg($base_dir . '/scripts/lint-blade-routes.php'),
-    'check:blade-components' => 'php ' . escapeshellarg($base_dir . '/scripts/lint-blade-components.php'),
-    'check:blade-templates'  => 'php ' . escapeshellarg($base_dir . '/scripts/lint-blade-templates.php'),
-    'check:blade-push'       => 'php ' . escapeshellarg($base_dir . '/scripts/check-blade-push.php'),
-    'check:graph'            => 'php ' . escapeshellarg($base_dir . '/scripts/check-graph.php'),
-    'test'                   => $base_dir . '/vendor/bin/paratest',
-];
+$checks = [];
+$fixes  = [];
 
-$fixes = [
-    'check:manifest' => './run sync:manifest',
-    'check:style'    => './run fix:style',
-    'check:rector'   => './run fix:rector',
-];
+foreach ($config['checks'] as $name => $entry) {
+    $checks[$name] = resolveCommand($entry['command'], $base_dir);
+    if (isset($entry['fix'])) {
+        $fixes[$name] = $entry['fix'];
+    }
+}
+
+function resolveCommand(string $cmd, string $base_dir): string
+{
+    if (str_starts_with($cmd, 'php ')) {
+        $script = substr($cmd, 4);
+
+        return 'php ' . escapeshellarg($base_dir . '/' . $script);
+    }
+
+    $parts = explode(' ', $cmd, 2);
+    if (str_starts_with($parts[0], 'vendor/')) {
+        $parts[0] = $base_dir . '/' . $parts[0];
+
+        return implode(' ', $parts);
+    }
+
+    return $cmd;
+}
 
 fwrite(STDERR, "\n╔══════════════════════════════════════╗\n");
 fwrite(STDERR, "║            Check: All                ║\n");

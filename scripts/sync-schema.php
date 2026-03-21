@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use Symfony\Component\Yaml\Yaml;
 use ZeroToProd\Thryds\Attributes\Column;
 use ZeroToProd\Thryds\Attributes\Index;
 use ZeroToProd\Thryds\Attributes\PrimaryKey;
@@ -25,35 +26,17 @@ use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\DatabaseConfig;
 use ZeroToProd\Thryds\Schema\DataType;
 
+$tables_config  = Yaml::parseFile(__DIR__ . '/tables-config.yaml');
+$tables_dir     = $tables_config['directory'];
+$tables_ns      = $tables_config['namespace'];
+$data_type_enum = $tables_config['data_type_enum'];
+
 $dry_run = in_array('--dry-run', $argv, true);
 
-$data_type_map = [
-    'bigint'     => DataType::BIGINT,
-    'binary'     => DataType::BINARY,
-    'blob'       => DataType::BLOB,
-    'char'       => DataType::CHAR,
-    'date'       => DataType::DATE,
-    'datetime'   => DataType::DATETIME,
-    'decimal'    => DataType::DECIMAL,
-    'double'     => DataType::DOUBLE,
-    'enum'       => DataType::ENUM,
-    'float'      => DataType::FLOAT,
-    'int'        => DataType::INT,
-    'json'       => DataType::JSON,
-    'longblob'   => DataType::LONGBLOB,
-    'longtext'   => DataType::LONGTEXT,
-    'mediumblob' => DataType::MEDIUMBLOB,
-    'mediumtext' => DataType::MEDIUMTEXT,
-    'set'        => DataType::SET,
-    'smallint'   => DataType::SMALLINT,
-    'text'       => DataType::TEXT,
-    'time'       => DataType::TIME,
-    'timestamp'  => DataType::TIMESTAMP,
-    'tinyint'    => DataType::TINYINT,
-    'varbinary'  => DataType::VARBINARY,
-    'varchar'    => DataType::VARCHAR,
-    'year'       => DataType::YEAR,
-];
+$data_type_map = [];
+foreach ($tables_config['data_type_map'] as $mysql_type => $enum_case) {
+    $data_type_map[$mysql_type] = constant($data_type_enum . '::' . $enum_case);
+}
 
 try {
     $database = new Database(DatabaseConfig::fromEnv());
@@ -70,9 +53,9 @@ $result = [
     'no_changes'                 => [],
 ];
 
-foreach (glob(__DIR__ . '/../src/Tables/*.php') as $path) {
+foreach (glob(__DIR__ . '/../' . $tables_dir . '/*.php') as $path) {
     $basename = basename($path, '.php');
-    $fqcn     = 'ZeroToProd\\Thryds\\Tables\\' . $basename;
+    $fqcn     = $tables_ns . '\\' . $basename;
 
     try {
         $rc = new ReflectionClass($fqcn);
@@ -138,7 +121,7 @@ foreach (glob(__DIR__ . '/../src/Tables/*.php') as $path) {
             }
         }
 
-        $result['created'][] = ['table' => $table_name, 'class' => $fqcn, 'file' => "src/Tables/{$basename}.php"];
+        $result['created'][] = ['table' => $table_name, 'class' => $fqcn, 'file' => "{$tables_dir}/{$basename}.php"];
 
         continue;
     }
@@ -274,7 +257,7 @@ foreach (glob(__DIR__ . '/../src/Tables/*.php') as $path) {
             $result['synced'][] = [
                 'table'   => $table_name,
                 'class'   => $fqcn,
-                'file'    => "src/Tables/{$basename}.php",
+                'file'    => "{$tables_dir}/{$basename}.php",
                 'changes' => $all_diffs,
             ];
         } else {
@@ -399,7 +382,7 @@ foreach (glob(__DIR__ . '/../src/Tables/*.php') as $path) {
         $result['synced'][] = [
             'table'   => $table_name,
             'class'   => $fqcn,
-            'file'    => "src/Tables/{$basename}.php",
+            'file'    => "{$tables_dir}/{$basename}.php",
             'changes' => $all_diffs,
         ];
     } else {

@@ -26,8 +26,8 @@ function buildActualGraph(string $projectRoot): array
 
     $actual = Yaml::parse($yaml);
 
-    $sections = ['routes', 'controllers', 'views', 'components', 'viewmodels', 'enums', 'tables', 'tests'];
-    foreach ($sections as $section) {
+    $config = Yaml::parseFile(__DIR__ . '/manifest-config.yaml');
+    foreach ($config['sections'] as $section) {
         $actual[$section] ??= [];
     }
 

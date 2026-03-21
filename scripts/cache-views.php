@@ -17,11 +17,13 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use Jenssegers\Blade\Blade;
+use Symfony\Component\Yaml\Yaml;
 use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Blade\Vite;
 use ZeroToProd\Thryds\Config;
+use ZeroToProd\Thryds\ConfigKey;
 
 /**
  * Compiles all Blade templates by rendering every View case with stub data.
@@ -38,19 +40,19 @@ function compileAllTemplates(Blade $Blade): void
 if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'] ?? '')) {
     $base_dir = dirname(__DIR__);
 
+    $bladeConfig = Yaml::parseFile(__DIR__ . '/blade-config.yaml');
+
     $Config = Config::from([
-        Config::AppEnv => AppEnv::production->value,
-        Config::blade_cache_dir => $base_dir . '/var/cache/blade',
-        Config::template_dir => $base_dir . '/templates',
+        ConfigKey::AppEnv->value => AppEnv::production->value,
+        ConfigKey::blade_cache_dir->value => $base_dir . '/' . $bladeConfig['cache_dir'],
+        ConfigKey::template_dir->value => $base_dir . '/' . $bladeConfig['template_dir'],
     ]);
 
     if (!is_dir($Config->blade_cache_dir)) {
         mkdir($Config->blade_cache_dir, 0o755, true);
     }
 
-    $Vite = new Vite($Config, baseDir: $base_dir, entry_css: [
-        Vite::app_entry => [Vite::app_css],
-    ]);
+    $Vite = new Vite($Config, baseDir: $base_dir, entry_css: $bladeConfig['vite']['entry_css']);
     $Blade = App::bootBlade($Config, $Vite);
 
     echo "Compiling templates...\n";

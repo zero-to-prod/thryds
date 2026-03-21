@@ -15,25 +15,34 @@ declare(strict_types=1);
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
-use ZeroToProd\Thryds\OpcacheStatus;
-use ZeroToProd\Thryds\Routes\Route;
+use Symfony\Component\Yaml\Yaml;
+
+$config          = Yaml::parseFile(__DIR__ . '/opcache-config.yaml');
+$routeClass      = $config['route_class'];
+$statusClass     = $config['status_class'];
+$devPathEnum     = $config['dev_path_enum'];
+$sourceDirs      = $config['source_dirs'];
+$statusEndpoint  = $config['status_endpoint'];
+$scriptsEndpoint = $config['scripts_endpoint'];
+$preloadMarker   = $config['preload_marker'];
+$preloadFile     = $config['preload_file'];
 
 $isDev = (bool) ini_get('opcache.validate_timestamps');
 $base_url = 'http://localhost:' . ltrim(getenv('SERVER_NAME') ?: ':80', ':');
 
 // Warm the cache, then measure hit rate from a clean baseline
-warmRoutes($base_url, requests_per_route: 5);
-$before = fetchWorkerStatus($base_url);
-warmRoutes($base_url, requests_per_route: 50);
-$after = fetchWorkerStatus($base_url);
+warmRoutes($base_url, $routeClass, requests_per_route: 5);
+$before = fetchWorkerStatus($base_url, $statusEndpoint);
+warmRoutes($base_url, $routeClass, requests_per_route: 50);
+$after = fetchWorkerStatus($base_url, $statusEndpoint);
 
-$result = opcacheAudit($isDev, $base_url, $after, $before);
+$result = opcacheAudit($isDev, $base_url, $after, $before, $statusClass, $sourceDirs, $scriptsEndpoint, $devPathEnum, $preloadMarker, $preloadFile);
 echo $result;
 exit(str_contains($result, '[FAIL]') ? 1 : 0);
 
-function warmRoutes(string $base_url, int $requests_per_route = 20): void
+function warmRoutes(string $base_url, string $routeClass, int $requests_per_route = 20): void
 {
-    $routes = array_column(Route::cases(), 'value');
+    $routes = array_column($routeClass::cases(), 'value');
 
     foreach ($routes as $route) {
         for ($i = 0; $i < $requests_per_route; $i++) {
@@ -42,9 +51,9 @@ function warmRoutes(string $base_url, int $requests_per_route = 20): void
     }
 }
 
-function fetchWorkerStatus(string $base_url): array|false
+function fetchWorkerStatus(string $base_url, string $statusEndpoint): array|false
 {
-    $json = @file_get_contents($base_url . Route::opcache_status->value);
+    $json = @file_get_contents($base_url . $statusEndpoint);
     if ($json === false) {
         return false;
     }
@@ -52,7 +61,7 @@ function fetchWorkerStatus(string $base_url): array|false
     return json_decode($json, true);
 }
 
-function opcacheAudit(bool $isDev, string $base_url, array|false $worker_status, array|false $baseline = false): string
+function opcacheAudit(bool $isDev, string $base_url, array|false $worker_status, array|false $baseline, string $statusClass, array $sourceDirs, string $scriptsEndpoint, string $devPathEnum, string $preloadMarker, string $preloadFile): string
 {
     $failures = [];
     $warnings = [];
@@ -82,7 +91,7 @@ function opcacheAudit(bool $isDev, string $base_url, array|false $worker_status,
             $failures[] = 'opcache.preload is empty — no scripts are preloaded into shared memory';
         }
     } else {
-        $preloadCount = $worker_status[OpcacheStatus::preload_statistics][OpcacheStatus::scripts] ?? [];
+        $preloadCount = $worker_status[$statusClass::preload_statistics][$statusClass::scripts] ?? [];
         $passes[] = sprintf('opcache.preload is set (%s) — %d scripts preloaded', $preload, count($preloadCount));
     }
 
@@ -115,18 +124,21 @@ function opcacheAudit(bool $isDev, string $base_url, array|false $worker_status,
     }
 
     // 6. Count all PHP files in the project vs max_accelerated_files
-    $appFiles = countPhpFiles('/app/src');
-    $vendorFiles = countPhpFiles('/app/vendor');
-    $totalFiles = $appFiles + $vendorFiles;
+    $fileCounts = [];
+    $totalFiles = 0;
+    foreach ($sourceDirs as $dir) {
+        $count = countPhpFiles($dir);
+        $fileCounts[] = sprintf('%d %s', $count, basename($dir));
+        $totalFiles += $count;
+    }
     $maxFiles = (int) ini_get('opcache.max_accelerated_files');
 
     if ($totalFiles > $maxFiles) {
         $failures[] = sprintf(
-            'opcache.max_accelerated_files=%d but project has %d PHP files (%d app + %d vendor) — cache will evict scripts',
+            'opcache.max_accelerated_files=%d but project has %d PHP files (%s) — cache will evict scripts',
             $maxFiles,
             $totalFiles,
-            $appFiles,
-            $vendorFiles,
+            implode(' + ', $fileCounts),
         );
     } else {
         $passes[] = sprintf(
@@ -139,8 +151,8 @@ function opcacheAudit(bool $isDev, string $base_url, array|false $worker_status,
     // Runtime checks — require worker status
     if ($worker_status !== false) {
         // 7. Cache hit rate (delta: after warm-up traffic only)
-        $hits = ($worker_status[OpcacheStatus::opcache_statistics][OpcacheStatus::hits] ?? 0) - ($baseline ? ($baseline[OpcacheStatus::opcache_statistics][OpcacheStatus::hits] ?? 0) : 0);
-        $misses = ($worker_status[OpcacheStatus::opcache_statistics][OpcacheStatus::misses] ?? 0) - ($baseline ? ($baseline[OpcacheStatus::opcache_statistics][OpcacheStatus::misses] ?? 0) : 0);
+        $hits = ($worker_status[$statusClass::opcache_statistics][$statusClass::hits] ?? 0) - ($baseline ? ($baseline[$statusClass::opcache_statistics][$statusClass::hits] ?? 0) : 0);
+        $misses = ($worker_status[$statusClass::opcache_statistics][$statusClass::misses] ?? 0) - ($baseline ? ($baseline[$statusClass::opcache_statistics][$statusClass::misses] ?? 0) : 0);
         $totalRequests = $hits + $misses;
         if ($totalRequests > 0) {
             $hitRate = ($hits / $totalRequests) * 100;
@@ -152,13 +164,13 @@ function opcacheAudit(bool $isDev, string $base_url, array|false $worker_status,
         }
 
         // 8. Cached scripts and preload coverage
-        $cachedScripts = $worker_status[OpcacheStatus::opcache_statistics][OpcacheStatus::num_cached_scripts] ?? 0;
-        $preloadScripts = count($worker_status[OpcacheStatus::preload_statistics][OpcacheStatus::scripts] ?? []);
+        $cachedScripts = $worker_status[$statusClass::opcache_statistics][$statusClass::num_cached_scripts] ?? 0;
+        $preloadScripts = count($worker_status[$statusClass::preload_statistics][$statusClass::scripts] ?? []);
         if ($cachedScripts > 0) {
             // Scripts that are expected to not be preloaded:
             // blade cache (generated at runtime), dev vendor bootstraps,
             // $PRELOAD$ internal marker, preload.php itself
-            $expected_non_preloaded = countExpectedNonPreloaded($base_url);
+            $expected_non_preloaded = countExpectedNonPreloaded($base_url, $scriptsEndpoint, $devPathEnum, $preloadMarker, $preloadFile);
             $nonPreloaded = $cachedScripts - $preloadScripts - $expected_non_preloaded;
             if ($nonPreloaded > 0 && !empty($preload)) {
                 $warnings[] = sprintf(
@@ -176,9 +188,9 @@ function opcacheAudit(bool $isDev, string $base_url, array|false $worker_status,
         }
 
         // 9. Memory usage
-        $memUsed = $worker_status[OpcacheStatus::memory_usage][OpcacheStatus::used_memory] ?? 0;
-        $memFree = $worker_status[OpcacheStatus::memory_usage][OpcacheStatus::free_memory] ?? 0;
-        $memWasted = $worker_status[OpcacheStatus::memory_usage][OpcacheStatus::wasted_memory] ?? 0;
+        $memUsed = $worker_status[$statusClass::memory_usage][$statusClass::used_memory] ?? 0;
+        $memFree = $worker_status[$statusClass::memory_usage][$statusClass::free_memory] ?? 0;
+        $memWasted = $worker_status[$statusClass::memory_usage][$statusClass::wasted_memory] ?? 0;
         $memTotal = $memUsed + $memFree + $memWasted;
         if ($memTotal > 0) {
             $wastedPct = ($memWasted / $memTotal) * 100;
@@ -210,9 +222,9 @@ function opcacheAudit(bool $isDev, string $base_url, array|false $worker_status,
  * blade cache (runtime-generated), dev vendor bootstraps,
  * $PRELOAD$ marker, preload.php itself.
  */
-function countExpectedNonPreloaded(string $base_url): int
+function countExpectedNonPreloaded(string $base_url, string $scriptsEndpoint, string $devPathEnum, string $preloadMarker, string $preloadFile): int
 {
-    $json = @file_get_contents($base_url . Route::opcache_scripts->value);
+    $json = @file_get_contents($base_url . $scriptsEndpoint);
     if ($json === false) {
         return 0;
     }
@@ -221,9 +233,9 @@ function countExpectedNonPreloaded(string $base_url): int
     $count = 0;
 
     foreach ($scripts as $path) {
-        if (array_any(\ZeroToProd\Thryds\DevPath::cases(), fn($devPath): bool => str_contains(haystack: $path, needle: $devPath->value))
-            || $path === '/app/preload.php'
-            || $path === '$PRELOAD$'
+        if (array_any($devPathEnum::cases(), fn($devPath): bool => str_contains(haystack: $path, needle: $devPath->value))
+            || $path === $preloadFile
+            || $path === $preloadMarker
         ) {
             $count++;
         }

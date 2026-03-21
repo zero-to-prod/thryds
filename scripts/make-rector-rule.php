@@ -18,7 +18,12 @@ declare(strict_types=1);
  * Appends import and registration to rector.php.
  */
 
+require __DIR__ . '/../vendor/autoload.php';
+
+use Symfony\Component\Yaml\Yaml;
+
 $base_dir = realpath(path: __DIR__ . '/..');
+$scaffold = Yaml::parseFile(__DIR__ . '/rector-scaffold-config.yaml');
 
 // --- Parse arguments ---
 
@@ -71,15 +76,15 @@ if ($mode === 'warn' && $message === '') {
 }
 
 // Auto-append doc pointer to message if not already present
-$doc_pointer = "See: utils/rector/docs/{$rule_name}.md";
+$doc_pointer = "See: {$scaffold['docs_dir']}/{$rule_name}.md";
 if ($message !== '' && !str_contains(haystack: $message, needle: $doc_pointer)) {
     $message = rtrim(string: $message, characters: '.') . '. ' . $doc_pointer;
 }
 
-$rule_path = $base_dir . '/utils/rector/src/' . $rule_name . '.php';
+$rule_path = $base_dir . '/' . $scaffold['rule_dir'] . '/' . $rule_name . '.php';
 
 if (file_exists(filename: $rule_path)) {
-    echo "Error: Rule already exists at utils/rector/src/{$rule_name}.php\n";
+    echo "Error: Rule already exists at {$scaffold['rule_dir']}/{$rule_name}.php\n";
     exit(1);
 }
 
@@ -92,7 +97,7 @@ $rule_content = <<<PHP
 
 declare(strict_types=1);
 
-namespace Utils\Rector\Rector;
+namespace {$scaffold['rule_namespace']};
 
 use PhpParser\Node;
 use Rector\Contract\Rector\ConfigurableRectorInterface;
@@ -151,7 +156,7 @@ $test_content = <<<PHP
 
 declare(strict_types=1);
 
-namespace Utils\Rector\Tests\\{$rule_name};
+namespace {$scaffold['test_namespace']}\\{$rule_name};
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use Rector\Testing\PHPUnit\AbstractRectorTestCase;
@@ -185,7 +190,7 @@ $config_content = <<<PHP
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
-use Utils\Rector\Rector\\{$rule_name};
+use {$scaffold['rule_namespace']}\\{$rule_name};
 
 return static function (RectorConfig \$rectorConfig): void {
     \$rectorConfig->ruleWithConfiguration({$rule_name}::class, [
@@ -304,7 +309,7 @@ MD;
 
 // --- Write files ---
 
-$test_dir = $base_dir . '/utils/rector/tests/' . $rule_name;
+$test_dir = $base_dir . '/' . $scaffold['test_dir'] . '/' . $rule_name;
 $config_dir = $test_dir . '/config';
 $fixture_dir = $test_dir . '/Fixture';
 
@@ -315,7 +320,7 @@ foreach ($dirs as $dir) {
     }
 }
 
-$docs_dir = $base_dir . '/utils/rector/docs';
+$docs_dir = $base_dir . '/' . $scaffold['docs_dir'];
 
 $files = [
     $rule_path => $rule_content,
@@ -338,12 +343,12 @@ foreach ($files as $path => $content) {
 
 // --- Append to rector.php ---
 
-$rector_path = $base_dir . '/rector.php';
+$rector_path = $base_dir . '/' . $scaffold['rector_config'];
 $rector_content = file_get_contents(filename: $rector_path);
 $warnings = [];
 
 if ($rector_content === false) {
-    $warnings[] = 'Could not read rector.php — add the import and registration manually';
+    $warnings[] = "Could not read {$scaffold['rector_config']} — add the import and registration manually";
     echo json_encode(
         value: [
             'created'    => $created,
@@ -356,13 +361,13 @@ if ($rector_content === false) {
     exit(0);
 }
 
-// Add import: find the last "use Utils\Rector\Rector\" line and insert after it
-$import_line = "use Utils\\Rector\\Rector\\{$rule_name};";
+// Add import: find the last "use <rule_namespace>\" line and insert after it
+$import_line = "use {$scaffold['rule_namespace']}\\{$rule_name};";
 
 if (str_contains(haystack: $rector_content, needle: $import_line)) {
-    echo "\n  Import already exists in rector.php\n";
+    echo "\n  Import already exists in {$scaffold['rector_config']}\n";
 } else {
-    $last_import_pos = strrpos(haystack: $rector_content, needle: 'use Utils\\Rector\\Rector\\');
+    $last_import_pos = strrpos(haystack: $rector_content, needle: "use {$scaffold['rule_namespace']}\\");
     if ($last_import_pos !== false) {
         $end_of_line = strpos(haystack: $rector_content, needle: "\n", offset: $last_import_pos);
         if ($end_of_line !== false) {
@@ -391,16 +396,16 @@ if ($closing_pos !== false) {
 }
 
 file_put_contents(filename: $rector_path, data: $rector_content);
-$updated = ['rector.php'];
+$updated = [$scaffold['rector_config']];
 
 echo json_encode(
     value: [
         'created'    => $created,
         'updated'    => $updated,
         'next_steps' => [
-            ['action' => "Implement getNodeTypes() and refactor() in utils/rector/src/{$rule_name}.php"],
-            ['action' => "Replace fixture TODOs in utils/rector/tests/{$rule_name}/Fixture/example.php.inc"],
-            ['action' => "Fill in utils/rector/docs/{$rule_name}.md (rationale, examples, resolution steps)"],
+            ['action' => "Implement getNodeTypes() and refactor() in {$scaffold['rule_dir']}/{$rule_name}.php"],
+            ['action' => "Replace fixture TODOs in {$scaffold['test_dir']}/{$rule_name}/Fixture/example.php.inc"],
+            ['action' => "Fill in {$scaffold['docs_dir']}/{$rule_name}.md (rationale, examples, resolution steps)"],
             ['action' => 'Run rule tests', 'command' => './run test:rector'],
         ],
     ],

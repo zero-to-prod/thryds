@@ -1,0 +1,22 @@
+checks:
+  - name: Route Cache
+    command: "php scripts/verify-route-cache.php"
+  - name: OPcache
+    command: "php scripts/opcache-audit.php"
+  - name: Template Cache
+    type: template-cache
+  - name: Component @push Directives
+    type: component-push
+
+template_dir: templates
+component_dir: templates/components
+cache_dir: var/cache/blade
+
+namespaces:
+  app: ZeroToProd\Thryds\App
+  view: ZeroToProd\Thryds\Blade\View
+  component: ZeroToProd\Thryds\Blade\Component
+  vite: ZeroToProd\Thryds\Blade\Vite
+  config: ZeroToProd\Thryds\Config
+  config_key: ZeroToProd\Thryds\ConfigKey
+  app_env: ZeroToProd\Thryds\AppEnv

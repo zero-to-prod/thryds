@@ -16,10 +16,21 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use Symfony\Component\Yaml\Yaml;
 use ZeroToProd\Thryds\Attributes\Column;
 use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\DatabaseConfig;
 use ZeroToProd\Thryds\Schema\DataType;
+
+$tables_config  = Yaml::parseFile(__DIR__ . '/tables-config.yaml');
+$tables_dir     = $tables_config['directory'];
+$tables_ns      = $tables_config['namespace'];
+$data_type_enum = $tables_config['data_type_enum'];
+
+$data_type_map = [];
+foreach ($tables_config['data_type_map'] as $mysql_type => $enum_case) {
+    $data_type_map[$mysql_type] = constant($data_type_enum . '::' . $enum_case);
+}
 
 $args       = array_values(array_filter(array_slice($argv, 1), static fn(string $a): bool => ! str_starts_with($a, '--')));
 $force      = in_array('--force', $argv, true);
@@ -30,34 +41,6 @@ if ($table_name === '') {
     fwrite(STDERR, "Example: ./run generate:table -- users\n");
     exit(1);
 }
-
-$data_type_map = [
-    'bigint'     => DataType::BIGINT,
-    'binary'     => DataType::BINARY,
-    'blob'       => DataType::BLOB,
-    'char'       => DataType::CHAR,
-    'date'       => DataType::DATE,
-    'datetime'   => DataType::DATETIME,
-    'decimal'    => DataType::DECIMAL,
-    'double'     => DataType::DOUBLE,
-    'enum'       => DataType::ENUM,
-    'float'      => DataType::FLOAT,
-    'int'        => DataType::INT,
-    'json'       => DataType::JSON,
-    'longblob'   => DataType::LONGBLOB,
-    'longtext'   => DataType::LONGTEXT,
-    'mediumblob' => DataType::MEDIUMBLOB,
-    'mediumtext' => DataType::MEDIUMTEXT,
-    'set'        => DataType::SET,
-    'smallint'   => DataType::SMALLINT,
-    'text'       => DataType::TEXT,
-    'time'       => DataType::TIME,
-    'timestamp'  => DataType::TIMESTAMP,
-    'tinyint'    => DataType::TINYINT,
-    'varbinary'  => DataType::VARBINARY,
-    'varchar'    => DataType::VARCHAR,
-    'year'       => DataType::YEAR,
-];
 
 $int_types   = [DataType::INT, DataType::BIGINT, DataType::SMALLINT, DataType::TINYINT];
 $float_types = [DataType::FLOAT, DataType::DOUBLE, DataType::DECIMAL];
@@ -116,16 +99,17 @@ $pk_rows    = $db->all(
 $pk_columns = array_column($pk_rows, 'COLUMN_NAME');
 
 // snake_case → PascalCase
-$class_name = implode('', array_map('ucfirst', explode('_', $table_name)));
-$base_dir   = dirname(__DIR__);
-$out_path   = $base_dir . '/src/Tables/' . $class_name . '.php';
+$class_name     = implode('', array_map('ucfirst', explode('_', $table_name)));
+$base_dir       = dirname(__DIR__);
+$table_name_enum = $tables_config['table_name_enum'];
+$out_path       = $base_dir . '/' . $tables_dir . '/' . $class_name . '.php';
 
 if (file_exists($out_path) && ! $force) {
-    fwrite(STDERR, "Error: src/Tables/{$class_name}.php already exists. Use --force to overwrite.\n");
+    fwrite(STDERR, "Error: {$tables_dir}/{$class_name}.php already exists. Use --force to overwrite.\n");
     exit(1);
 }
 
-$table_name_path    = $base_dir . '/src/Tables/TableName.php';
+$table_name_path    = $base_dir . '/' . $tables_dir . '/' . $table_name_enum . '.php';
 $table_name_content = file_get_contents($table_name_path);
 
 if (! str_contains($table_name_content, "case {$table_name} =")) {
@@ -135,7 +119,7 @@ if (! str_contains($table_name_content, "case {$table_name} =")) {
         $table_name_content,
     );
     file_put_contents($table_name_path, $table_name_content);
-    fwrite(STDERR, "Added TableName::{$table_name} to src/Tables/TableName.php\n");
+    fwrite(STDERR, "Added {$table_name_enum}::{$table_name} to {$tables_dir}/{$table_name_enum}.php\n");
 }
 
 $prop_blocks     = [];
@@ -218,28 +202,29 @@ foreach ($col_rows as $row) {
 }
 
 $props_str  = implode("\n\n", $prop_blocks);
-$pk_use     = $needs_pk_import ? "\nuse ZeroToProd\\Thryds\\Attributes\\PrimaryKey;" : '';
 $engine     = $engine_val;
 $charset    = $charset_val;
 $collation  = $collation_val;
+
+$pk_import_fqcn = $tables_ns . '\\Attributes\\PrimaryKey';
+$use_lines = [];
+foreach ($tables_config['imports'] as $import) {
+    // Skip PrimaryKey when no PK columns exist
+    if (! $needs_pk_import && str_ends_with($import, '\\PrimaryKey')) {
+        continue;
+    }
+    $use_lines[] = 'use ' . str_replace('/', '\\', $import) . ';';
+}
+$use_block = implode("\n", $use_lines);
 
 $content = <<<PHP
 <?php
 
 declare(strict_types=1);
 
-namespace ZeroToProd\Thryds\Tables;
+namespace {$tables_ns};
 
-use ZeroToProd\Thryds\Attributes\ClosedSet;
-use ZeroToProd\Thryds\Attributes\Column;
-use ZeroToProd\Thryds\Attributes\DataModel;
-use ZeroToProd\Thryds\Attributes\HasTableName;{$pk_use}
-use ZeroToProd\Thryds\Attributes\Table;
-use ZeroToProd\Thryds\Schema\Charset;
-use ZeroToProd\Thryds\Schema\Collation;
-use ZeroToProd\Thryds\Schema\DataType;
-use ZeroToProd\Thryds\Schema\Engine;
-use ZeroToProd\Thryds\UI\Domain;
+{$use_block}
 
 #[ClosedSet(
     Domain::database_table_columns,
@@ -249,7 +234,7 @@ use ZeroToProd\Thryds\UI\Domain;
     TEXT
 )]
 #[Table(
-    TableName: TableName::{$table_name},
+    TableName: {$table_name_enum}::{$table_name},
     Engine: Engine::{$engine},
     Charset: Charset::{$charset},
     Collation: Collation::{$collation}
@@ -270,15 +255,15 @@ class {$class_name}
 PHP;
 
 file_put_contents($out_path, $content . "\n");
-fwrite(STDERR, "Generated src/Tables/{$class_name}.php\n");
+fwrite(STDERR, "Generated {$tables_dir}/{$class_name}.php\n");
 
 echo json_encode(
     [
-        'created'    => ["src/Tables/{$class_name}.php", 'src/Tables/TableName.php'],
+        'created'    => ["{$tables_dir}/{$class_name}.php", "{$tables_dir}/{$table_name_enum}.php"],
         'table'      => $table_name,
-        'class'      => "ZeroToProd\\Thryds\\Tables\\{$class_name}",
+        'class'      => "{$tables_ns}\\{$class_name}",
         'next_steps' => [
-            ['action' => "Review the generated src/Tables/{$class_name}.php"],
+            ['action' => "Review the generated {$tables_dir}/{$class_name}.php"],
             ['action' => 'Verify column attributes match the live schema', 'command' => './run sync:schema -- --dry-run'],
         ],
     ],

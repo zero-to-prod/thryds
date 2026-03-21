@@ -13,12 +13,16 @@ declare(strict_types=1);
  */
 
 require __DIR__ . '/../vendor/autoload.php';
+
+use Symfony\Component\Yaml\Yaml;
+
 require __DIR__ . '/parse-manifest.php';
 require __DIR__ . '/build-actual-graph.php';
 require __DIR__ . '/manifest-diff.php';
 
 $projectRoot  = realpath(__DIR__ . '/../') . '/';
-$manifestPath = $projectRoot . 'thryds.yaml';
+$config       = Yaml::parseFile(__DIR__ . '/manifest-config.yaml');
+$manifestPath = $projectRoot . $config['manifest_file'];
 
 $desired = parseManifest($manifestPath);
 $actual  = buildActualGraph($projectRoot);

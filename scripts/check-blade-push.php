@@ -17,13 +17,15 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use ZeroToProd\Thryds\Blade\Component;
+use Symfony\Component\Yaml\Yaml;
 
-$template_dir = __DIR__ . '/../templates/components';
+$config         = Yaml::parseFile(__DIR__ . '/blade-config.yaml');
+$template_dir   = __DIR__ . '/../' . $config['component_dir'];
+$componentClass = $config['namespaces']['component'];
 
 $violations = [];
 
-foreach (Component::cases() as $component) {
+foreach ($componentClass::cases() as $component) {
     $path = $template_dir . '/' . $component->value . '.blade.php';
     $relative = 'templates/components/' . $component->value . '.blade.php';
 

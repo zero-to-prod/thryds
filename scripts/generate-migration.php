@@ -19,6 +19,12 @@ declare(strict_types=1);
 
 $base_dir = dirname(__DIR__);
 
+require $base_dir . '/vendor/autoload.php';
+
+use Symfony\Component\Yaml\Yaml;
+
+$config = Yaml::parseFile(__DIR__ . '/migrations-config.yaml');
+
 $args = array_values(array_filter(array_slice($argv, 1), static fn(string $a): bool => !str_starts_with($a, '--')));
 
 if ($args === []) {
@@ -35,7 +41,8 @@ if (!preg_match('/^[A-Z][a-zA-Z0-9]+$/', $class_name)) {
 }
 
 // Auto-determine next id
-$existing = glob($base_dir . '/migrations/[0-9][0-9][0-9][0-9]_*.php') ?: [];
+$migrations_dir = $config['directory'];
+$existing = glob($base_dir . '/' . $migrations_dir . '/[0-9][0-9][0-9][0-9]_*.php') ?: [];
 $max_id   = 0;
 foreach ($existing as $file) {
     if (preg_match('/^(\d{4})_/', basename($file), $m)) {
@@ -43,7 +50,7 @@ foreach ($existing as $file) {
     }
 }
 $next_id  = str_pad((string) ($max_id + 1), 4, '0', STR_PAD_LEFT);
-$filename = "migrations/{$next_id}_{$class_name}.php";
+$filename = "{$migrations_dir}/{$next_id}_{$class_name}.php";
 $path     = $base_dir . '/' . $filename;
 
 if (file_exists($path)) {
@@ -53,27 +60,31 @@ if (file_exists($path)) {
 
 $description = preg_replace('/(?<!^)[A-Z]/', ' $0', $class_name) ?? $class_name;
 
+$namespace  = $config['namespace'];
+$imports    = implode("\n", array_map(static fn(string $fqcn): string => "use {$fqcn};", $config['imports']));
+$interface  = $config['interface'];
+$attribute  = $config['attribute'];
+$db_class   = new ReflectionClass($config['imports'][1])->getShortName();
+
 $content = <<<PHP
 <?php
 
 declare(strict_types=1);
 
-namespace ZeroToProd\Thryds\Migrations;
+namespace {$namespace};
 
-use ZeroToProd\Thryds\Attributes\Migration;
-use ZeroToProd\Thryds\Database;
-use ZeroToProd\Thryds\MigrationInterface;
+{$imports}
 
-#[Migration(id: '{$next_id}', description: '{$description}')]
-final readonly class {$class_name} implements MigrationInterface
+#[{$attribute}(id: '{$next_id}', description: '{$description}')]
+final readonly class {$class_name} implements {$interface}
 {
-    public function up(Database \$Database): void
+    public function up({$db_class} \$Database): void
     {
         // DDL example: CREATE TABLE IF NOT EXISTS `table` (...) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         // DML example: \$Database->execute('INSERT INTO `table` (col) VALUES (:col)', [':col' => 'value'])
     }
 
-    public function down(Database \$Database): void
+    public function down({$db_class} \$Database): void
     {
         // Undo up() defensively — DDL auto-commits, so partial states are possible.
         // DDL example: DROP TABLE IF EXISTS `table`

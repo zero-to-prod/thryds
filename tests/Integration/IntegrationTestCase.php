@@ -15,6 +15,7 @@ use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Config;
+use ZeroToProd\Thryds\ConfigKey;
 use ZeroToProd\Thryds\DatabaseConfig;
 use ZeroToProd\Thryds\Header;
 use ZeroToProd\Thryds\RequestId;
@@ -45,10 +46,11 @@ abstract class IntegrationTestCase extends TestCase
         $this->cache_dir = sys_get_temp_dir() . '/thryds_test_' . uniqid('', more_entropy: true);
         mkdir($this->cache_dir, 0o755, recursive: true);
         $this->App = App::boot(self::base_dir, Config::from([
-            Config::AppEnv => AppEnv::development->value,
-            Config::blade_cache_dir => $this->cache_dir,
-            Config::template_dir => self::base_dir . '/templates',
-        ]), new DatabaseConfig(host: '0.0.0.0', port: 0, database: '', username: '', password: ''));
+            ConfigKey::AppEnv->value => AppEnv::development->value,
+            ConfigKey::blade_cache_dir->value => $this->cache_dir,
+            ConfigKey::template_dir->value => self::base_dir . '/templates',
+            ConfigKey::DatabaseConfig->value => DatabaseConfig::from([]),
+        ]));
     }
 
     protected function tearDown(): void

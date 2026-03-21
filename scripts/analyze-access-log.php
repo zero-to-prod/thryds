@@ -16,9 +16,11 @@ declare(strict_types=1);
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
-use ZeroToProd\Thryds\Routes\Route;
+use Symfony\Component\Yaml\Yaml;
 
-$logPath = $argv[1] ?? dirname(__DIR__) . '/logs/frankenphp/access.log';
+$config     = Yaml::parseFile(__DIR__ . '/audit-config.yaml');
+$routeClass = $config['route_class'];
+$logPath    = $argv[1] ?? dirname(__DIR__) . '/' . $config['access_log'];
 
 echo "\n=== Access Log Hotspot Analysis ===\n";
 echo "Log: {$logPath}\n";
@@ -31,7 +33,7 @@ if (!file_exists($logPath)) {
 
 // Index of known app routes (all cases, including dev-only) for fast lookup.
 /** @var array<string, true> $knownRoutes */
-$knownRoutes = array_fill_keys(array_column(Route::cases(), 'value'), true);
+$knownRoutes = array_fill_keys(array_column($routeClass::cases(), 'value'), true);
 
 // Parse the log line by line to avoid loading the entire file into memory.
 /** @var array<string, array{durations: float[], errors: int, total: int}> $byRoute */

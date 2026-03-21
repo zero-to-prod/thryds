@@ -16,23 +16,40 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use Symfony\Component\Yaml\Yaml;
-use ZeroToProd\Thryds\Attributes\ClosedSet;
-use ZeroToProd\Thryds\Attributes\Column;
-use ZeroToProd\Thryds\Attributes\CoversRoute;
-use ZeroToProd\Thryds\Attributes\ExtendsLayout;
-use ZeroToProd\Thryds\Attributes\HandlesRoute;
-use ZeroToProd\Thryds\Attributes\Persists;
-use ZeroToProd\Thryds\Attributes\Prop;
-use ZeroToProd\Thryds\Attributes\ReceivesViewModel;
-use ZeroToProd\Thryds\Attributes\RedirectsTo;
-use ZeroToProd\Thryds\Attributes\RendersView;
-use ZeroToProd\Thryds\Attributes\RouteOperation;
-use ZeroToProd\Thryds\Attributes\Table;
-use ZeroToProd\Thryds\Attributes\UsesComponent;
-use ZeroToProd\Thryds\Attributes\ViewModel;
-use ZeroToProd\Thryds\Blade\Component;
-use ZeroToProd\Thryds\Blade\View;
-use ZeroToProd\Thryds\Routes\Route;
+
+$inventoryConfig = Yaml::parseFile(__DIR__ . '/inventory-config.yaml');
+
+// Resolve attribute classes from config.
+$HandlesRoute      = $inventoryConfig['attributes']['handles_route'];
+$CoversRoute       = $inventoryConfig['attributes']['covers_route'];
+$ExtendsLayout     = $inventoryConfig['attributes']['extends_layout'];
+$PageTitle         = $inventoryConfig['attributes']['page_title'];
+$ReceivesViewModel = $inventoryConfig['attributes']['receives_viewmodel'];
+$RendersView       = $inventoryConfig['attributes']['renders_view'];
+$UsesComponent     = $inventoryConfig['attributes']['uses_component'];
+$ViewModelAttr     = $inventoryConfig['attributes']['view_model'];
+$TableAttr         = $inventoryConfig['attributes']['table'];
+$ColumnAttr        = $inventoryConfig['attributes']['column'];
+$PrimaryKeyAttr    = $inventoryConfig['attributes']['primary_key'];
+$IndexAttr         = $inventoryConfig['attributes']['index'];
+$Persists          = $inventoryConfig['attributes']['persists'];
+$RedirectsTo       = $inventoryConfig['attributes']['redirects_to'];
+$RouteOperation    = $inventoryConfig['attributes']['route_operation'];
+$Prop              = $inventoryConfig['attributes']['prop'];
+$ClosedSet         = $inventoryConfig['attributes']['closed_set'];
+
+// Resolve enum classes from config.
+$Route     = $inventoryConfig['enums']['route'];
+$View      = $inventoryConfig['enums']['view'];
+$Component = $inventoryConfig['enums']['component'];
+
+// Resolve namespaces and paths from config.
+$controllersNamespace     = $inventoryConfig['namespaces']['controllers'];
+$tablesNamespace          = $inventoryConfig['namespaces']['tables'];
+$viewmodelsNamespace      = $inventoryConfig['namespaces']['viewmodels'];
+$uiNamespace              = $inventoryConfig['namespaces']['ui'];
+$testsIntegrationNamespace = $inventoryConfig['namespaces']['tests_integration'];
+$sourcePaths              = $inventoryConfig['source_paths'];
 
 // Parse --format= argument; default to json.
 $format = 'json';
@@ -47,19 +64,19 @@ if (! in_array($format, ['json', 'dot', 'yaml'], true)) {
 }
 
 $projectRoot  = realpath(__DIR__ . '/../') . '/';
-$templatesDir = $projectRoot . 'templates';
+$templatesDir = $projectRoot . $inventoryConfig['template_dir'];
 
 /** Controllers discovered via #[HandlesRoute] attribute (route name → short class name). */
 $explicitControllers = [];
-$controllersDir = $projectRoot . 'src/Controllers';
+$controllersDir = $projectRoot . $inventoryConfig['controllers_dir'];
 foreach (glob($controllersDir . '/*.php') ?: [] as $controllerFile) {
     $controllerClassName = basename($controllerFile, '.php');
-    $controllerFqcn = 'ZeroToProd\\Thryds\\Controllers\\' . $controllerClassName;
+    $controllerFqcn = $controllersNamespace . '\\' . $controllerClassName;
     if (!class_exists($controllerFqcn)) {
         continue;
     }
     $controllerRef = new ReflectionClass($controllerFqcn);
-    $handlesRouteAttrs = $controllerRef->getAttributes(HandlesRoute::class);
+    $handlesRouteAttrs = $controllerRef->getAttributes($HandlesRoute);
     if ($handlesRouteAttrs !== []) {
         $handledRoute = $handlesRouteAttrs[0]->newInstance()->Route;
         $explicitControllers[$handledRoute->name] = $controllerClassName;
@@ -80,20 +97,20 @@ $addEdge = function (string $from, string $to, string $rel) use (&$edges): void 
 
 // Register layout and component nodes.
 $addNode('layout:base', 'layout', 'base');
-foreach (Component::cases() as $Component) {
-    $addNode('component:' . $Component->value, 'component', $Component->value);
+foreach ($Component::cases() as $componentCase) {
+    $addNode('component:' . $componentCase->value, 'component', $componentCase->value);
 }
 
 // Scan Table classes (models) — each carries its own schema via #[Column] attributes.
-$tablesDir = $projectRoot . 'src/Tables';
+$tablesDir = $projectRoot . $inventoryConfig['tables_dir'];
 foreach (glob($tablesDir . '/*.php') ?: [] as $tableFile) {
     $className = basename($tableFile, '.php');
-    $fqcn      = 'ZeroToProd\\Thryds\\Tables\\' . $className;
+    $fqcn      = $tablesNamespace . '\\' . $className;
     if (! class_exists($fqcn)) {
         continue;
     }
     $ref        = new ReflectionClass($fqcn);
-    $tableAttrs = $ref->getAttributes(Table::class);
+    $tableAttrs = $ref->getAttributes($TableAttr);
     if ($tableAttrs === []) {
         continue;
     }
@@ -101,14 +118,14 @@ foreach (glob($tablesDir . '/*.php') ?: [] as $tableFile) {
 }
 
 // Walk each route.
-foreach (Route::cases() as $Route) {
-    $routeId = 'route:' . $Route->name;
-    $addNode($routeId, 'route', $Route->value . ($Route->isDevOnly() ? ' [dev]' : ''));
-    $nodes[$routeId]['methods']  = array_map(fn(RouteOperation $op): string => $op->HttpMethod->value, $Route->operations());
-    $nodes[$routeId]['dev_only'] = $Route->isDevOnly();
+foreach ($Route::cases() as $routeCase) {
+    $routeId = 'route:' . $routeCase->name;
+    $addNode($routeId, 'route', $routeCase->value . ($routeCase->isDevOnly() ? ' [dev]' : ''));
+    $nodes[$routeId]['methods']  = array_map(fn($op): string => $op->HttpMethod->value, $routeCase->operations());
+    $nodes[$routeId]['dev_only'] = $routeCase->isDevOnly();
 
-    $controller = $explicitControllers[$Route->name] ?? null;
-    $view       = $Route->rendersView();
+    $controller = $explicitControllers[$routeCase->name] ?? null;
+    $view       = $routeCase->rendersView();
 
     if ($controller !== null) {
         $nodes[$routeId]['registration'] = 'explicit';
@@ -117,9 +134,9 @@ foreach (Route::cases() as $Route) {
         $addEdge($routeId, $controllerId, 'handled_by');
 
         // Controller→View edge comes from #[RendersView] on the controller class.
-        $controllerFqcn = 'ZeroToProd\\Thryds\\Controllers\\' . $controller;
+        $controllerFqcn = $controllersNamespace . '\\' . $controller;
         if (class_exists($controllerFqcn)) {
-            $rvAttrs = new ReflectionClass($controllerFqcn)->getAttributes(RendersView::class);
+            $rvAttrs = new ReflectionClass($controllerFqcn)->getAttributes($RendersView);
             if ($rvAttrs !== []) {
                 $controllerView = $rvAttrs[0]->newInstance()->View;
                 $viewId = 'view:' . $controllerView->value;
@@ -141,12 +158,12 @@ foreach (Route::cases() as $Route) {
 
 // Wire persists and redirects_to edges from controllers via attributes.
 foreach ($explicitControllers as $controllerName) {
-    $fqcn = 'ZeroToProd\\Thryds\\Controllers\\' . $controllerName;
+    $fqcn = $controllersNamespace . '\\' . $controllerName;
     if (! class_exists($fqcn)) {
         continue;
     }
     $ref = new ReflectionClass($fqcn);
-    foreach ($ref->getAttributes(Persists::class) as $attr) {
+    foreach ($ref->getAttributes($Persists) as $attr) {
         $modelFqcn = $attr->newInstance()->model;
         $shortName = substr(strrchr($modelFqcn, '\\') ?: ('\\' . $modelFqcn), 1);
         $modelId   = 'model:' . $shortName;
@@ -154,7 +171,7 @@ foreach ($explicitControllers as $controllerName) {
             $addEdge('controller:' . $controllerName, $modelId, 'persists');
         }
     }
-    foreach ($ref->getAttributes(RedirectsTo::class) as $attr) {
+    foreach ($ref->getAttributes($RedirectsTo) as $attr) {
         $route   = $attr->newInstance()->Route;
         $routeId = 'route:' . $route->name;
         if (isset($nodes[$routeId])) {
@@ -164,13 +181,13 @@ foreach ($explicitControllers as $controllerName) {
 }
 
 // Walk each View enum case — relationships come from attributes, not templates.
-foreach (View::cases() as $View) {
-    $viewId = 'view:' . $View->value;
-    $addNode($viewId, 'view', $View->value);
+foreach ($View::cases() as $viewCase) {
+    $viewId = 'view:' . $viewCase->value;
+    $addNode($viewId, 'view', $viewCase->value);
 
-    $ref = new ReflectionEnumUnitCase(View::class, $View->name);
+    $ref = new ReflectionEnumUnitCase($View, $viewCase->name);
 
-    $layoutAttrs = $ref->getAttributes(ExtendsLayout::class);
+    $layoutAttrs = $ref->getAttributes($ExtendsLayout);
     if ($layoutAttrs !== []) {
         $layoutName = $layoutAttrs[0]->newInstance()->layout;
         $layoutId   = 'layout:' . $layoutName;
@@ -178,14 +195,14 @@ foreach (View::cases() as $View) {
         $addEdge($viewId, $layoutId, 'extends');
     }
 
-    $componentAttrs = $ref->getAttributes(UsesComponent::class);
+    $componentAttrs = $ref->getAttributes($UsesComponent);
     if ($componentAttrs !== []) {
-        foreach ($componentAttrs[0]->newInstance()->components as $component) {
-            $addEdge($viewId, 'component:' . $component->value, 'uses');
+        foreach ($componentAttrs[0]->newInstance()->components as $comp) {
+            $addEdge($viewId, 'component:' . $comp->value, 'uses');
         }
     }
 
-    $viewModelAttrs = $ref->getAttributes(ReceivesViewModel::class);
+    $viewModelAttrs = $ref->getAttributes($ReceivesViewModel);
     if ($viewModelAttrs !== []) {
         foreach ($viewModelAttrs[0]->newInstance()->view_models as $vmClass) {
             $shortName = substr(strrchr($vmClass, '\\') ?: ('\\' . $vmClass), 1);
@@ -196,12 +213,12 @@ foreach (View::cases() as $View) {
 }
 
 // Walk each Component enum case — props come from #[Prop] attributes, not @props().
-foreach (Component::cases() as $Component) {
-    $componentId = 'component:' . $Component->value;
-    $addNode($componentId, 'component', $Component->value);
+foreach ($Component::cases() as $componentCase) {
+    $componentId = 'component:' . $componentCase->value;
+    $addNode($componentId, 'component', $componentCase->value);
 
-    $ref      = new ReflectionEnumUnitCase(Component::class, $Component->name);
-    $propAttrs = $ref->getAttributes(Prop::class, ReflectionAttribute::IS_INSTANCEOF);
+    $ref      = new ReflectionEnumUnitCase($Component, $componentCase->name);
+    $propAttrs = $ref->getAttributes($Prop, ReflectionAttribute::IS_INSTANCEOF);
     $props     = [];
     foreach ($propAttrs as $attr) {
         $prop      = $attr->newInstance();
@@ -260,7 +277,7 @@ function findCaseLine(string $filePath, string $caseName): ?int
  *
  * @param array<string,string> $routeDescriptions Route case name → description string.
  */
-function decorateNode(array $node, string $projectRoot, string $templatesDir, array $routeDescriptions): array
+function decorateNode(array $node, string $projectRoot, string $templatesDir, array $routeDescriptions, array $inventoryConfig): array
 {
     $relPath = static fn(string $abs): string => str_replace($projectRoot, '', $abs);
 
@@ -280,7 +297,7 @@ function decorateNode(array $node, string $projectRoot, string $templatesDir, ar
     switch ($node['type']) {
         case 'route':
             $caseName  = substr($node['id'], strlen('route:'));
-            $routeFile = $projectRoot . 'src/Routes/Route.php';
+            $routeFile = $projectRoot . $inventoryConfig['source_paths']['route'];
             $node['description'] = $routeDescriptions[$caseName] ?? '';
             $node['sources']     = [
                 $source('definition', $routeFile, findCaseLine($routeFile, $caseName)),
@@ -290,7 +307,7 @@ function decorateNode(array $node, string $projectRoot, string $templatesDir, ar
         case 'view':
             $templateAbs = $templatesDir . '/' . $label . '.blade.php';
             $sources     = [$source('template', $templateAbs)];
-            $viewFile    = $projectRoot . 'src/Blade/View.php';
+            $viewFile    = $projectRoot . $inventoryConfig['source_paths']['view'];
             $line        = findCaseLine($viewFile, $label);
             if ($line !== null) {
                 $sources[] = $source('definition', $viewFile, $line);
@@ -303,11 +320,12 @@ function decorateNode(array $node, string $projectRoot, string $templatesDir, ar
             $description   = '';
             $templateAbs   = $templatesDir . '/components/' . $label . '.blade.php';
             $sources       = [$source('template', $templateAbs)];
-            $componentFile = $projectRoot . 'src/Blade/Component.php';
-            foreach (Component::cases() as $case) {
+            $componentClass = $inventoryConfig['enums']['component'];
+            $componentFile = $projectRoot . $inventoryConfig['source_paths']['component'];
+            foreach ($componentClass::cases() as $case) {
                 if ($case->value === $label) {
                     $description = docblockDescription(
-                        new ReflectionEnumUnitCase(Component::class, $case->name)->getDocComment(),
+                        new ReflectionEnumUnitCase($componentClass, $case->name)->getDocComment(),
                     );
                     $sources[] = $source('definition', $componentFile, findCaseLine($componentFile, $case->name));
                     break;
@@ -319,12 +337,12 @@ function decorateNode(array $node, string $projectRoot, string $templatesDir, ar
             break;
 
         case 'controller':
-            $fqcn = 'ZeroToProd\\Thryds\\Controllers\\' . $label;
+            $fqcn = $inventoryConfig['namespaces']['controllers'] . '\\' . $label;
             $node['description'] = class_exists($fqcn)
                 ? docblockDescription(new ReflectionClass($fqcn)->getDocComment())
                 : '';
             $node['sources'] = [
-                $source('class', $projectRoot . 'src/Controllers/' . $label . '.php'),
+                $source('class', $projectRoot . $inventoryConfig['source_paths']['controllers'] . '/' . $label . '.php'),
             ];
             break;
 
@@ -336,7 +354,7 @@ function decorateNode(array $node, string $projectRoot, string $templatesDir, ar
             break;
 
         case 'viewmodel':
-            $fqcn = 'ZeroToProd\\Thryds\\ViewModels\\' . $label;
+            $fqcn = $inventoryConfig['namespaces']['viewmodels'] . '\\' . $label;
             if (class_exists($fqcn)) {
                 $ref                 = new ReflectionClass($fqcn);
                 $node['description'] = docblockDescription($ref->getDocComment());
@@ -355,12 +373,12 @@ function decorateNode(array $node, string $projectRoot, string $templatesDir, ar
                 $node['fields']      = [];
             }
             $node['sources'] = [
-                $source('class', $projectRoot . 'src/ViewModels/' . $label . '.php'),
+                $source('class', $projectRoot . $inventoryConfig['source_paths']['viewmodels'] . '/' . $label . '.php'),
             ];
             break;
 
         case 'ui_enum':
-            $fqcn = 'ZeroToProd\\Thryds\\UI\\' . $label;
+            $fqcn = $inventoryConfig['namespaces']['ui'] . '\\' . $label;
             if (enum_exists($fqcn)) {
                 $ref                 = new ReflectionEnum($fqcn);
                 $node['description'] = docblockDescription($ref->getDocComment());
@@ -370,23 +388,23 @@ function decorateNode(array $node, string $projectRoot, string $templatesDir, ar
                 $node['cases']       = [];
             }
             $node['sources'] = [
-                $source('definition', $projectRoot . 'src/UI/' . $label . '.php'),
+                $source('definition', $projectRoot . $inventoryConfig['source_paths']['ui'] . '/' . $label . '.php'),
             ];
             break;
 
         case 'model':
-            $fqcn = 'ZeroToProd\\Thryds\\Tables\\' . $label;
+            $fqcn = $inventoryConfig['namespaces']['tables'] . '\\' . $label;
             if (class_exists($fqcn)) {
                 $ref                 = new ReflectionClass($fqcn);
                 $node['description'] = docblockDescription($ref->getDocComment());
-                $tableAttr           = $ref->getAttributes(Table::class)[0] ?? null;
+                $tableAttr           = $ref->getAttributes($inventoryConfig['attributes']['table'])[0] ?? null;
                 $node['table_name']  = $tableAttr ? $tableAttr->newInstance()->TableName->value : '';
                 $fields              = [];
                 foreach ($ref->getProperties(ReflectionProperty::IS_PUBLIC) as $prop) {
                     if ($prop->isStatic()) {
                         continue;
                     }
-                    $colAttrs = $prop->getAttributes(Column::class);
+                    $colAttrs = $prop->getAttributes($inventoryConfig['attributes']['column']);
                     if ($colAttrs === []) {
                         continue;
                     }
@@ -405,13 +423,13 @@ function decorateNode(array $node, string $projectRoot, string $templatesDir, ar
                 $node['fields']      = [];
             }
             $node['sources'] = [
-                $source('class', $projectRoot . 'src/Tables/' . $label . '.php'),
+                $source('class', $projectRoot . $inventoryConfig['source_paths']['tables'] . '/' . $label . '.php'),
             ];
             break;
 
         case 'test':
             $node['sources'] = [
-                $source('class', $projectRoot . 'tests/Integration/' . $label . '.php'),
+                $source('class', $projectRoot . $inventoryConfig['source_paths']['tests_integration'] . '/' . $label . '.php'),
             ];
             break;
     }
@@ -428,10 +446,10 @@ function decorateNode(array $node, string $projectRoot, string $templatesDir, ar
 }
 
 // Walk each integration test — coverage comes from #[CoversRoute], not regex.
-$testsDir = $projectRoot . 'tests/Integration';
+$testsDir = $projectRoot . $inventoryConfig['tests_dir'];
 foreach (glob($testsDir . '/*Test.php') ?: [] as $testFile) {
     $className = basename($testFile, '.php');
-    $fqcn      = 'ZeroToProd\\Thryds\\Tests\\Integration\\' . $className;
+    $fqcn      = $testsIntegrationNamespace . '\\' . $className;
     if (! class_exists($fqcn)) {
         continue;
     }
@@ -440,7 +458,7 @@ foreach (glob($testsDir . '/*Test.php') ?: [] as $testFile) {
     $addNode($testId, 'test', $className);
 
     $ref        = new ReflectionClass($fqcn);
-    $coversAttrs = $ref->getAttributes(CoversRoute::class);
+    $coversAttrs = $ref->getAttributes($CoversRoute);
     if ($coversAttrs !== []) {
         foreach ($coversAttrs[0]->newInstance()->routes as $route) {
             $addEdge($testId, 'route:' . $route->name, 'covers');
@@ -455,29 +473,29 @@ foreach (glob($testsDir . '/*Test.php') ?: [] as $testFile) {
 }
 
 $routeDescriptions = [];
-foreach (Route::cases() as $Route) {
-    $routeDescriptions[$Route->name] = $Route->description();
+foreach ($Route::cases() as $routeCase) {
+    $routeDescriptions[$routeCase->name] = $routeCase->description();
 }
 
 $decoratedNodes = array_map(
-    fn(array $node): array => decorateNode($node, $projectRoot, $templatesDir, $routeDescriptions),
+    fn(array $node): array => decorateNode($node, $projectRoot, $templatesDir, $routeDescriptions, $inventoryConfig),
     array_values($nodes),
 );
 
 /** Read #[ClosedSet] addCase instructions from closed-set enums exposed in the graph. */
 $extensionGuides = [];
 foreach ([
-    'route'     => Route::class,
-    'view'      => View::class,
-    'component' => Component::class,
+    'route'     => $Route,
+    'view'      => $View,
+    'component' => $Component,
 ] as $key => $enumClass) {
-    $attrs = new ReflectionEnum($enumClass)->getAttributes(ClosedSet::class);
+    $attrs = new ReflectionEnum($enumClass)->getAttributes($ClosedSet);
     if ($attrs !== []) {
         $extensionGuides[$key] = $attrs[0]->newInstance()->addCase;
     }
 }
-$extensionGuides['model']      = Table::addCase;
-$extensionGuides['viewmodel']  = ViewModel::addCase;
+$extensionGuides['model']      = $TableAttr::addCase;
+$extensionGuides['viewmodel']  = $ViewModelAttr::addCase;
 $extensionGuides['controller'] = implode("\n", [
     '1. Add entry to thryds.yaml controllers section.',
     '2. Run ./run sync:manifest.',
@@ -491,7 +509,7 @@ $extensionGuides['controller'] = implode("\n", [
  * @param array<int, array<string, mixed>> $decoratedNodes
  * @param array<int, array{from: string, to: string, rel: string}> $edges
  */
-function buildYamlManifest(array $decoratedNodes, array $edges): string
+function buildYamlManifest(array $decoratedNodes, array $edges, array $inventoryConfig): string
 {
     $edgesFrom = [];
     foreach ($edges as $e) {
@@ -503,8 +521,9 @@ function buildYamlManifest(array $decoratedNodes, array $edges): string
         $nodeById[$n['id']] = $n;
     }
 
+    $componentClass = $inventoryConfig['enums']['component'];
     $compValueToName = [];
-    foreach (Component::cases() as $c) {
+    foreach ($componentClass::cases() as $c) {
         $compValueToName[$c->value] = $c->name;
     }
 
@@ -513,15 +532,16 @@ function buildYamlManifest(array $decoratedNodes, array $edges): string
     $yaml .= "# Sync: ./run sync:manifest (scaffold missing code)\n";
 
     // === Routes ===
+    $routeClass = $inventoryConfig['enums']['route'];
     $routeData = [];
-    foreach (Route::cases() as $Route) {
-        $routeId = 'route:' . $Route->name;
+    foreach ($routeClass::cases() as $routeCase) {
+        $routeId = 'route:' . $routeCase->name;
         $entry = [];
-        $entry['path'] = $Route->value;
-        $entry['description'] = $Route->description();
-        $entry['dev_only'] = $Route->isDevOnly();
+        $entry['path'] = $routeCase->value;
+        $entry['description'] = $routeCase->description();
+        $entry['dev_only'] = $routeCase->isDevOnly();
         $ops = [];
-        foreach ($Route->operations() as $op) {
+        foreach ($routeCase->operations() as $op) {
             $ops[$op->HttpMethod->value] = $op->description;
         }
         $entry['operations'] = $ops;
@@ -549,7 +569,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges): string
             $entry['view'] = $viewName;
         }
 
-        $routeData[$Route->name] = $entry;
+        $routeData[$routeCase->name] = $entry;
     }
     ksort($routeData);
     $yaml .= "\n" . Yaml::dump(['routes' => $routeData], 4, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE);
@@ -574,7 +594,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges): string
                 $routeCaseName = substr($e['from'], strlen('route:'));
                 $entry['route'] = $routeCaseName;
                 $routeEnum = null;
-                foreach (Route::cases() as $r) {
+                foreach ($routeClass::cases() as $r) {
                     if ($r->name === $routeCaseName) {
                         $routeEnum = $r;
                         break;
@@ -614,17 +634,20 @@ function buildYamlManifest(array $decoratedNodes, array $edges): string
     $yaml .= "\n" . Yaml::dump(['controllers' => $controllerData], 4, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE);
 
     // === Views ===
+    $viewClass = $inventoryConfig['enums']['view'];
+    $extendsLayoutAttr = $inventoryConfig['attributes']['extends_layout'];
+    $pageTitleAttr = $inventoryConfig['attributes']['page_title'];
     $viewData = [];
-    foreach (View::cases() as $View) {
-        $viewId = 'view:' . $View->value;
+    foreach ($viewClass::cases() as $viewCase) {
+        $viewId = 'view:' . $viewCase->value;
         $entry = [];
 
-        $ref = new \ReflectionEnumUnitCase(View::class, $View->name);
+        $ref = new \ReflectionEnumUnitCase($viewClass, $viewCase->name);
 
-        $layoutAttrs = $ref->getAttributes(\ZeroToProd\Thryds\Attributes\ExtendsLayout::class);
+        $layoutAttrs = $ref->getAttributes($extendsLayoutAttr);
         $entry['layout'] = $layoutAttrs !== [] ? $layoutAttrs[0]->newInstance()->layout : '';
 
-        $titleAttrs = $ref->getAttributes(\ZeroToProd\Thryds\Attributes\PageTitle::class);
+        $titleAttrs = $ref->getAttributes($pageTitleAttr);
         $entry['title'] = $titleAttrs !== [] ? $titleAttrs[0]->newInstance()->title : '';
 
         $components = [];
@@ -644,15 +667,15 @@ function buildYamlManifest(array $decoratedNodes, array $edges): string
         }
         $entry['viewmodels'] = $viewmodels;
 
-        $viewData[$View->value] = $entry;
+        $viewData[$viewCase->value] = $entry;
     }
     ksort($viewData);
     $yaml .= "\n" . Yaml::dump(['views' => $viewData], 3, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE);
 
     // === Components ===
     $componentData = [];
-    foreach (Component::cases() as $Component) {
-        $componentId = 'component:' . $Component->value;
+    foreach ($componentClass::cases() as $componentCase) {
+        $componentId = 'component:' . $componentCase->value;
         $node = $nodeById[$componentId] ?? null;
         $entry = [];
         $entry['description'] = $node['description'] ?? '';
@@ -668,7 +691,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges): string
             $props[$prop['name']] = $propEntry === [] ? (object) [] : $propEntry;
         }
         $entry['props'] = $props === [] ? (object) [] : $props;
-        $componentData[$Component->name] = $entry;
+        $componentData[$componentCase->name] = $entry;
     }
     ksort($componentData);
     $yaml .= "\n" . Yaml::dump(['components' => $componentData], 4, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE | Yaml::DUMP_OBJECT_AS_MAP);
@@ -709,20 +732,20 @@ function buildYamlManifest(array $decoratedNodes, array $edges): string
             continue;
         }
         $label = $n['label'];
-        $fqcn = 'ZeroToProd\\Thryds\\Tables\\' . $label;
+        $fqcn = $inventoryConfig['namespaces']['tables'] . '\\' . $label;
         $entry = [];
         $entry['table'] = $n['table_name'] ?? '';
 
         if (class_exists($fqcn)) {
             $ref = new \ReflectionClass($fqcn);
-            $tableAttr = $ref->getAttributes(Table::class)[0] ?? null;
+            $tableAttr = $ref->getAttributes($inventoryConfig['attributes']['table'])[0] ?? null;
             if ($tableAttr !== null) {
                 $entry['engine'] = $tableAttr->newInstance()->Engine->value;
             }
 
             // Primary key
             $pkColumns = [];
-            $classPk = $ref->getAttributes(\ZeroToProd\Thryds\Attributes\PrimaryKey::class);
+            $classPk = $ref->getAttributes($inventoryConfig['attributes']['primary_key']);
             if ($classPk !== []) {
                 $pkColumns = $classPk[0]->newInstance()->columns;
             } else {
@@ -730,7 +753,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges): string
                     if ($prop->isStatic()) {
                         continue;
                     }
-                    $propPk = $prop->getAttributes(\ZeroToProd\Thryds\Attributes\PrimaryKey::class);
+                    $propPk = $prop->getAttributes($inventoryConfig['attributes']['primary_key']);
                     if ($propPk !== []) {
                         $cols = $propPk[0]->newInstance()->columns;
                         $pkColumns = $cols !== [] ? $cols : [$prop->getName()];
@@ -741,7 +764,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges): string
 
             // Indexes
             $indexes = [];
-            foreach ($ref->getAttributes(\ZeroToProd\Thryds\Attributes\Index::class, \ReflectionAttribute::IS_INSTANCEOF) as $attr) {
+            foreach ($ref->getAttributes($inventoryConfig['attributes']['index'], \ReflectionAttribute::IS_INSTANCEOF) as $attr) {
                 $idx = $attr->newInstance();
                 $idxEntry = ['columns' => $idx->columns];
                 if ($idx->unique) {
@@ -760,7 +783,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges): string
                 if ($prop->isStatic()) {
                     continue;
                 }
-                $colAttrs = $prop->getAttributes(Column::class);
+                $colAttrs = $prop->getAttributes($inventoryConfig['attributes']['column']);
                 if ($colAttrs === []) {
                     continue;
                 }
@@ -838,7 +861,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges): string
 }
 
 if ($format === 'yaml') {
-    echo buildYamlManifest($decoratedNodes, $edges);
+    echo buildYamlManifest($decoratedNodes, $edges, $inventoryConfig);
 } elseif ($format === 'dot') {
     // Node shapes by type for visual distinction.
     $shapes = [

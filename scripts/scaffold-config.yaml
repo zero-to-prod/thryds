@@ -1,0 +1,23 @@
+namespaces:
+  viewmodels: ZeroToProd\Thryds\ViewModels
+  tests_integration: ZeroToProd\Thryds\Tests\Integration
+  controllers: ZeroToProd\Thryds\Controllers
+  tables: ZeroToProd\Thryds\Tables
+  routes: ZeroToProd\Thryds\Routes
+  blade: ZeroToProd\Thryds\Blade
+
+directories:
+  templates: templates
+  components: templates/components
+  viewmodels: src/ViewModels
+  tests_integration: tests/Integration
+  controllers: src/Controllers
+
+attributes:
+  viewmodel: ZeroToProd\Thryds\Attributes\ViewModel
+  data_model: ZeroToProd\Thryds\Attributes\DataModel
+  handles_route: ZeroToProd\Thryds\Attributes\HandlesRoute
+  covers_route: ZeroToProd\Thryds\Attributes\CoversRoute
+  persists: ZeroToProd\Thryds\Attributes\Persists
+  redirects_to: ZeroToProd\Thryds\Attributes\RedirectsTo
+  renders_view: ZeroToProd\Thryds\Attributes\RendersView

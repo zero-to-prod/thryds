@@ -16,9 +16,14 @@ declare(strict_types=1);
  *        ./run check:coverage -- 80
  */
 
+require __DIR__ . '/../vendor/autoload.php';
+
+use Symfony\Component\Yaml\Yaml;
+
 $base_dir     = dirname(__DIR__);
-$coverage_dir = $base_dir . '/var/coverage';
-$clover_file  = $coverage_dir . '/clover.xml';
+$config       = Yaml::parseFile(__DIR__ . '/coverage-config.yaml');
+$coverage_dir = $base_dir . '/' . $config['coverage_dir'];
+$clover_file  = $base_dir . '/' . $config['clover_file'];
 $threshold    = isset($argv[1]) ? (int) $argv[1] : 0;
 
 if (! is_dir($coverage_dir)) {

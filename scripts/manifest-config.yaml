@@ -1,0 +1,19 @@
+manifest_file: thryds.yaml
+sections:
+  - routes
+  - controllers
+  - views
+  - components
+  - viewmodels
+  - enums
+  - tables
+  - tests
+column_defaults:
+  nullable: false
+  unsigned: false
+  auto_increment: false
+  default: null
+  precision: null
+  scale: null
+  values: null
+  length: null

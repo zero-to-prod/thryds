@@ -1,0 +1,24 @@
+template_dir: templates
+component_dir: templates/components
+cache_dir: var/cache/blade
+known_layouts:
+  - base
+namespaces:
+  view: ZeroToProd\Thryds\Blade\View
+  component: ZeroToProd\Thryds\Blade\Component
+tag_rules:
+  - pattern: '/<button\b/'
+    rule: raw-html-button
+    message: 'raw <button> tag'
+    fix: 'Use <x-button> component instead'
+  - pattern: '/<input\b/'
+    rule: raw-html-input
+    message: 'raw <input> tag'
+    fix: 'Use <x-input> component instead'
+  - pattern: "/<div\\s[^>]*role\\s*=\\s*[\"']alert[\"']/"
+    rule: raw-html-alert
+    message: 'raw <div role="alert"> tag'
+    fix: 'Use <x-alert> component instead'
+vite:
+  entry_css:
+    "resources/js/app.js": ["resources/css/app.css"]

@@ -14,17 +14,21 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use Symfony\Component\Yaml\Yaml;
 use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\DatabaseConfig;
 use ZeroToProd\Thryds\MigrationStatus;
 use ZeroToProd\Thryds\Migrator;
 use ZeroToProd\Thryds\Tables\Migration;
 
+$base_dir = dirname(__DIR__);
+$config   = Yaml::parseFile(__DIR__ . '/migrations-config.yaml');
+
 try {
     $Migrator = new Migrator(
         Database: new Database(DatabaseConfig::fromEnv()),
-        migrations_dir: __DIR__ . '/../migrations',
-        migrations_namespace: 'ZeroToProd\\Thryds\\Migrations\\',
+        migrations_dir: $base_dir . '/' . $config['directory'],
+        migrations_namespace: $config['namespace'] . '\\',
     );
     $Migrator->ensureTable();
     $rows = $Migrator->status();

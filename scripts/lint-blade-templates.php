@@ -22,18 +22,19 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use ZeroToProd\Thryds\Blade\Component;
-use ZeroToProd\Thryds\Blade\View;
+use Symfony\Component\Yaml\Yaml;
 
-$template_dir = __DIR__ . '/../templates';
+$config         = Yaml::parseFile(__DIR__ . '/blade-config.yaml');
+$template_dir   = __DIR__ . '/../' . $config['template_dir'];
+$known_layouts  = $config['known_layouts'];
+$viewClass      = $config['namespaces']['view'];
+$componentClass = $config['namespaces']['component'];
+
 $violations = [];
-
-// Layouts are shared parent templates extended via @extends — not routable views.
-$known_layouts = ['base'];
 
 // ── Views ────────────────────────────────────────────────────────────────────
 
-$view_values = array_map(static fn(View $v) => $v->value, View::cases());
+$view_values = array_map(static fn($v) => $v->value, $viewClass::cases());
 
 foreach (glob($template_dir . '/*.blade.php') ?: [] as $file) {
     $stem = basename($file, '.blade.php');
@@ -54,7 +55,7 @@ foreach (glob($template_dir . '/*.blade.php') ?: [] as $file) {
 
 // ── Components ───────────────────────────────────────────────────────────────
 
-$component_values = array_map(static fn(Component $c) => $c->value, Component::cases());
+$component_values = array_map(static fn($c) => $c->value, $componentClass::cases());
 
 foreach (glob($template_dir . '/components/*.blade.php') ?: [] as $file) {
     $stem = basename($file, '.blade.php');

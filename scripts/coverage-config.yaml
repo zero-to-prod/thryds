@@ -1,0 +1,2 @@
+coverage_dir: var/coverage
+clover_file: var/coverage/clover.xml

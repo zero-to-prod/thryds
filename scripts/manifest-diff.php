@@ -14,16 +14,13 @@ declare(strict_types=1);
 /** Expand compact column format to full defaults for stable comparison. */
 function expandColumnDefaults(array $column): array
 {
-    return array_merge([
-        'nullable' => false,
-        'unsigned' => false,
-        'auto_increment' => false,
-        'default' => null,
-        'precision' => null,
-        'scale' => null,
-        'values' => null,
-        'length' => null,
-    ], $column);
+    static $defaults = null;
+    if ($defaults === null) {
+        $config   = \Symfony\Component\Yaml\Yaml::parseFile(__DIR__ . '/manifest-config.yaml');
+        $defaults = $config['column_defaults'];
+    }
+
+    return array_merge($defaults, $column);
 }
 
 /** Normalize a value for comparison: sort arrays, cast types consistently. */
@@ -60,7 +57,7 @@ function diffGraphs(array $desired, array $actual): array
     $missingFromManifest = [];
     $propertyDrift       = [];
 
-    $sections = ['routes', 'controllers', 'views', 'components', 'viewmodels', 'enums', 'tables', 'tests'];
+    $sections = array_unique(array_merge(array_keys($desired), array_keys($actual)));
 
     foreach ($sections as $section) {
         $desiredEntries = $desired[$section] ?? [];

@@ -29,6 +29,7 @@ readonly class App
     private array $bindings;
 
     public function __construct(
+        #[Bind]
         public Config $Config,
         #[Bind]
         public Blade $Blade,
@@ -79,13 +80,9 @@ readonly class App
     }
 
     #[Requirement('PERF-001')]
-    public static function boot(string $base_dir, ?Config $Config = null, ?DatabaseConfig $DatabaseConfig = null): self
+    public static function boot(string $base_dir, ?Config $Config = null): self
     {
-        $Config ??= Config::from([
-            Config::AppEnv => AppEnv::fromEnv(),
-            Config::blade_cache_dir => $base_dir . '/var/cache/blade',
-            Config::template_dir => $base_dir . '/templates',
-        ]);
+        $Config ??= Config::fromEnv($base_dir);
         $Blade = self::bootBlade($Config, new Vite($Config, baseDir: $base_dir, entry_css: [
             Vite::app_entry => [Vite::app_css],
         ]));
@@ -93,7 +90,7 @@ readonly class App
         // cacheEnabled is always false: FrankenPHP worker mode boots once and reuses the router
         // in-memory across all requests, so disk caching provides no benefit and breaks with
         // Blade captured in route handler closures (Blade contains non-serializable container bindings).
-        $Database = new Database($DatabaseConfig ?? DatabaseConfig::fromEnv());
+        $Database = new Database($Config->DatabaseConfig);
 
         $Router = new CachedRouter(
             builder: static function (Router $Router) use ($Config): Router {

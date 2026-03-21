@@ -24,8 +24,10 @@ use League\Route\Cache\FileCache;
 use League\Route\Cache\Router as CachedRouter;
 use League\Route\Router;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\Yaml\Yaml;
 
-$cache_file = __DIR__ . '/../var/cache/route-verify.cache';
+$config     = Yaml::parseFile(__DIR__ . '/cache-config.yaml');
+$cache_file = __DIR__ . '/../' . $config['route_verify_cache'];
 $failures = [];
 $passes = [];
 

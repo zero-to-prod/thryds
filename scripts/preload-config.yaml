@@ -1,0 +1,38 @@
+container_prefix: /app/
+
+dev_path_enum: ZeroToProd\Thryds\DevPath
+
+# Classes that must be autoloaded for get_included_files() discovery.
+# class_exists() is called on each — sufficient to trigger the autoloader.
+force_load_classes:
+  - Laminas\Diactoros\Response\JsonResponse
+  - Laminas\Diactoros\ServerRequestFilter\IPRange
+  - League\Route\Cache\Router
+  - League\Route\Cache\FileCache
+  - ZeroToProd\Thryds\App
+  - ZeroToProd\Thryds\RequestId
+  - Illuminate\Support\Collection
+  - Illuminate\Support\Stringable
+  - Illuminate\View\Compilers\ComponentTagCompiler
+  - Laravel\SerializableClosure\Support\ClosureStream
+  - Laravel\SerializableClosure\Support\ClosureScope
+  - Psr\SimpleCache\CacheInterface
+
+# Ordered group classification for the generated preload.php.
+# Each script is assigned to the first matching group.
+# "match" = exact relative path, "prefix" = starts-with check.
+groups:
+  Autoload:
+    match: vendor/autoload.php
+  Helpers:
+    prefix: src/Helpers/
+  Routes:
+    prefix: src/Routes/
+  ViewModels:
+    prefix: src/ViewModels/
+  Entrypoint:
+    prefix: public/
+  Core:
+    prefix: src/
+  Vendor:
+    prefix: vendor/

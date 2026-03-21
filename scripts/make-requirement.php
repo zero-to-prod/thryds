@@ -46,10 +46,18 @@ foreach ($args as $arg) {
     }
 }
 
+// ── Load config ──────────────────────────────────────────────────────────────
+
+require_once $base_dir . '/vendor/autoload.php';
+
+$config               = \Symfony\Component\Yaml\Yaml::parseFile(__DIR__ . '/requirements-config.yaml');
+$valid_verifications  = $config['all_verifications'];
+$testable_verifications = $config['testable_verifications'];
+$test_namespace_map   = $config['test_namespaces'];
+
 // ── Validate ──────────────────────────────────────────────────────────────────
 
 $valid_types = ['functional', 'non-functional'];
-$valid_verifications = ['integration-test', 'unit-test', 'rector-rule', 'architecture', 'manual'];
 
 if ($id === null) {
     echo "Error: Requirement ID is required (e.g. AUTH-001).\n";
@@ -82,8 +90,6 @@ if (! in_array(needle: $verification, haystack: $valid_verifications, strict: tr
 }
 
 // ── Check for duplicate ID ────────────────────────────────────────────────────
-
-require_once $base_dir . '/vendor/autoload.php';
 
 $requirements_file = $base_dir . '/requirements.yaml';
 
@@ -119,12 +125,11 @@ YAML;
 
 // ── Build test stub ───────────────────────────────────────────────────────────
 
-$testable = ['integration-test' => 'Integration', 'unit-test' => 'Unit'];
 $test_file = null;
 $test_content = null;
 
-if (isset($testable[$verification])) {
-    $subdir = $testable[$verification];
+if (isset($testable_verifications[$verification])) {
+    $subdir = $testable_verifications[$verification];
     $test_file = $base_dir . '/tests/' . $subdir . '/' . $test_class . '.php';
 
     if (file_exists(filename: $test_file)) {
@@ -132,15 +137,10 @@ if (isset($testable[$verification])) {
         exit(1);
     }
 
-    if ($verification === 'integration-test') {
-        $namespace = 'ZeroToProd\\Thryds\\Tests\\Integration';
-        $extends = 'IntegrationTestCase';
-        $extra_use = '';
-    } else {
-        $namespace = 'ZeroToProd\\Thryds\\Tests\\Unit';
-        $extends = 'TestCase';
-        $extra_use = "\nuse PHPUnit\\Framework\\TestCase;";
-    }
+    $ns_config = $test_namespace_map[$verification];
+    $namespace = $ns_config['namespace'];
+    $extends   = $ns_config['extends'];
+    $extra_use = $ns_config['extra_use'] !== '' ? "\n" . $ns_config['extra_use'] : '';
 
     $test_content = <<<PHP
 <?php

@@ -112,4 +112,7 @@ enum Domain: string
 
     #[Group(EdgeKind::type_system)]
     case namespace_layers = 'namespace_layers';
+
+    #[Group(EdgeKind::data_flow)]
+    case config_keys = 'config_keys';
 }

@@ -1,0 +1,30 @@
+checks:
+  check:manifest:
+    command: "php scripts/check-manifest.php"
+    fix: "./run sync:manifest"
+  check:composer:
+    command: "composer validate"
+  check:style:
+    command: "vendor/bin/php-cs-fixer fix --dry-run --diff"
+    fix: "./run fix:style"
+  check:rector:
+    command: "vendor/bin/rector process --dry-run"
+    fix: "./run fix:rector"
+  check:types:
+    command: "vendor/bin/phpstan analyse"
+  check:migrations:
+    command: "php scripts/check-migrations.php"
+  check:requirements:
+    command: "php scripts/check-requirement-coverage.php"
+  check:blade-routes:
+    command: "php scripts/lint-blade-routes.php"
+  check:blade-components:
+    command: "php scripts/lint-blade-components.php"
+  check:blade-templates:
+    command: "php scripts/lint-blade-templates.php"
+  check:blade-push:
+    command: "php scripts/check-blade-push.php"
+  check:graph:
+    command: "php scripts/check-graph.php"
+  test:
+    command: "vendor/bin/paratest"

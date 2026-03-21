@@ -24,8 +24,13 @@ declare(strict_types=1);
  * Output: JSON { ok: bool, violations: [{ file, line, rule, message, fix }] }
  */
 
-$template_dir = __DIR__ . '/../templates';
-$pattern = $template_dir . '/**/*.blade.php';
+require __DIR__ . '/../vendor/autoload.php';
+
+use Symfony\Component\Yaml\Yaml;
+
+$config       = Yaml::parseFile(__DIR__ . '/blade-config.yaml');
+$template_dir = __DIR__ . '/../' . $config['template_dir'];
+$pattern      = $template_dir . '/**/*.blade.php';
 
 $files = glob($pattern, GLOB_BRACE);
 

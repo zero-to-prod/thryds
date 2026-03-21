@@ -10,78 +10,67 @@ declare(strict_types=1);
  * Usage: docker compose exec web php /app/scripts/production-checklist.php
  * Via Composer: ./run prod:check
  *
- * Checks:
- *   1. Route caching    — scripts/verify-route-cache.php
- *   2. OPcache          — scripts/opcache-audit.php
- *   3. Template caching — compiled Blade templates are written to disk and reused
- *   4. Component @push  — component templates must use @pushOnce, never bare @push
+ * Checks are defined in production-config.yaml. Command-based checks run as
+ * sub-processes; inline checks (template-cache, component-push) use reflection
+ * on the classes declared in the config.
  */
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use ZeroToProd\Thryds\App;
-use ZeroToProd\Thryds\AppEnv;
-use ZeroToProd\Thryds\Blade\Component;
-use ZeroToProd\Thryds\Blade\View;
-use ZeroToProd\Thryds\Blade\Vite;
-use ZeroToProd\Thryds\Config;
+use Symfony\Component\Yaml\Yaml;
 
-$base_dir = dirname(__DIR__);
-$overall_exit = 0;
+$base_dir      = dirname(__DIR__);
+$config        = Yaml::parseFile(__DIR__ . '/production-config.yaml');
+$overall_exit  = 0;
+
+$appClass       = $config['namespaces']['app'];
+$viewClass      = $config['namespaces']['view'];
+$componentClass = $config['namespaces']['component'];
+$viteClass      = $config['namespaces']['vite'];
+$configClass    = $config['namespaces']['config'];
+$configKeyClass = $config['namespaces']['config_key'];
+$appEnvClass    = $config['namespaces']['app_env'];
+
+$template_dir  = $base_dir . '/' . $config['template_dir'];
+$component_dir = $base_dir . '/' . $config['component_dir'];
+$cache_dir     = $base_dir . '/' . $config['cache_dir'];
 
 echo "\n╔══════════════════════════════════════╗\n";
 echo "║     Production Readiness Checklist   ║\n";
 echo "╚══════════════════════════════════════╝\n";
 
-// ── 1. Route Cache ──────────────────────────────────────────────
+// ── Run checks ───────────────────────────────────────────────────
 
-echo "\n┌─ 1/4 Route Cache ─────────────────────\n";
+$check_results = [];
 
-$route_exit = runScript('php ' . escapeshellarg(__DIR__ . '/verify-route-cache.php'));
-if ($route_exit !== 0) {
-    $overall_exit = 1;
+foreach ($config['checks'] as $i => $check) {
+    $num   = $i + 1;
+    $total = count($config['checks']);
+    $name  = $check['name'];
+
+    echo sprintf("\n┌─ %d/%d %s ─────────────────────\n", $num, $total, $name);
+
+    if (isset($check['command'])) {
+        $exit_code = runScript('php ' . escapeshellarg($base_dir . '/' . preg_replace('/^php\s+/', '', $check['command'])));
+    } elseif (($check['type'] ?? '') === 'template-cache') {
+        $exit_code = verifyTemplateCache($base_dir, $cache_dir, $template_dir, $appClass, $viewClass, $componentClass, $viteClass, $configClass, $configKeyClass, $appEnvClass);
+    } elseif (($check['type'] ?? '') === 'component-push') {
+        $exit_code = verifyComponentPushDirectives($component_dir, $componentClass);
+    } else {
+        $exit_code = 1;
+    }
+
+    $check_results[] = [$name, $exit_code];
+
+    if ($exit_code !== 0) {
+        $overall_exit = 1;
+    }
 }
-
-// ── 2. OPcache ──────────────────────────────────────────────────
-
-echo "┌─ 2/4 OPcache ─────────────────────────\n";
-
-$opcache_exit = runScript('php ' . escapeshellarg(__DIR__ . '/opcache-audit.php'));
-if ($opcache_exit !== 0) {
-    $overall_exit = 1;
-}
-
-// ── 3. Template Cache ───────────────────────────────────────────
-
-echo "┌─ 3/4 Template Cache ──────────────────\n";
-
-$template_exit = verifyTemplateCache($base_dir);
-if ($template_exit !== 0) {
-    $overall_exit = 1;
-}
-
-// ── 4. Component @push directives ───────────────────────────────
-
-echo "┌─ 4/4 Component @push Directives ──────\n";
-
-$push_exit = verifyComponentPushDirectives($base_dir);
-if ($push_exit !== 0) {
-    $overall_exit = 1;
-}
-
-// ── Summary ─────────────────────────────────────────────────────
-
-$checks = [
-    ['Route Cache', $route_exit],
-    ['OPcache', $opcache_exit],
-    ['Template Cache', $template_exit],
-    ['Component @push Directives', $push_exit],
-];
 
 echo "┌─ Summary ─────────────────────────────\n\n";
 
 $failed = 0;
-foreach ($checks as [$name, $exit_code]) {
+foreach ($check_results as [$name, $exit_code]) {
     $status = $exit_code === 0 ? '[ OK ]' : '[FAIL]';
     if ($exit_code !== 0) {
         $failed++;
@@ -89,7 +78,7 @@ foreach ($checks as [$name, $exit_code]) {
     echo "  $status $name\n";
 }
 
-echo sprintf("\nResult: %d/%d checks passed\n", count($checks) - $failed, count($checks));
+echo sprintf("\nResult: %d/%d checks passed\n", count($check_results) - $failed, count($check_results));
 
 if ($overall_exit !== 0) {
     echo "Verdict: NOT production ready\n\n";
@@ -108,17 +97,15 @@ function runScript(string $command): int
     return $exit_code;
 }
 
-function verifyComponentPushDirectives(string $base_dir): int
+function verifyComponentPushDirectives(string $component_dir, string $componentClass): int
 {
-    $template_dir = $base_dir . '/templates/components';
-
     $failures = [];
     $passes = [];
 
     echo "\n=== Component @push Directive Verification ===\n\n";
 
-    foreach (Component::cases() as $component) {
-        $path = $template_dir . '/' . $component->value . '.blade.php';
+    foreach ($componentClass::cases() as $component) {
+        $path = $component_dir . '/' . $component->value . '.blade.php';
 
         if (!file_exists($path)) {
             $failures[] = sprintf('Missing component template: %s', $path);
@@ -165,10 +152,18 @@ function verifyComponentPushDirectives(string $base_dir): int
     return 0;
 }
 
-function verifyTemplateCache(string $base_dir): int
-{
-    $cache_dir = $base_dir . '/var/cache/blade';
-
+function verifyTemplateCache(
+    string $base_dir,
+    string $cache_dir,
+    string $template_dir,
+    string $appClass,
+    string $viewClass,
+    string $componentClass,
+    string $viteClass,
+    string $configClass,
+    string $configKeyClass,
+    string $appEnvClass,
+): int {
     $failures = [];
     $passes = [];
 
@@ -184,7 +179,7 @@ function verifyTemplateCache(string $base_dir): int
 
     // 2. Verify the real cache has files for all views and components
     $cached_files = glob($cache_dir . '/*.php') ?: [];
-    $expected_min = count(View::cases()) + count(Component::cases());
+    $expected_min = count($viewClass::cases()) + count($componentClass::cases());
 
     if (count($cached_files) >= $expected_min) {
         $passes[] = sprintf('%d compiled files in %s (expected ≥ %d)', count($cached_files), $cache_dir, $expected_min);
@@ -200,17 +195,17 @@ function verifyTemplateCache(string $base_dir): int
 
     sleep(1);
 
-    $Config = Config::from([
-        Config::AppEnv => AppEnv::production->value,
-        Config::blade_cache_dir => $cache_dir,
-        Config::template_dir => $base_dir . '/templates',
+    $Config = $configClass::from([
+        $configKeyClass::AppEnv->value => $appEnvClass::production->value,
+        $configKeyClass::blade_cache_dir->value => $cache_dir,
+        $configKeyClass::template_dir->value => $template_dir,
     ]);
-    $Vite = new Vite($Config, baseDir: $base_dir, entry_css: [
-        Vite::app_entry => [Vite::app_css],
+    $Vite = new $viteClass($Config, baseDir: $base_dir, entry_css: [
+        $viteClass::app_entry => [$viteClass::app_css],
     ]);
-    $Blade = App::bootBlade($Config, $Vite);
+    $Blade = $appClass::bootBlade($Config, $Vite);
 
-    foreach (View::cases() as $view) {
+    foreach ($viewClass::cases() as $view) {
         $Blade->make($view->value, $view->stubData())->render();
     }
 

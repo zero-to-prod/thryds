@@ -1,0 +1,6 @@
+rule_namespace: Utils\Rector\Rector
+test_namespace: Utils\Rector\Tests
+rule_dir: utils/rector/src
+test_dir: utils/rector/tests
+docs_dir: utils/rector/docs
+rector_config: rector.php

@@ -16,8 +16,12 @@ declare(strict_types=1);
  */
 
 $base_dir = dirname(__DIR__);
+require_once $base_dir . '/vendor/autoload.php';
+
 $requirements_file = $base_dir . '/requirements.yaml';
-$tests_dir = $base_dir . '/tests';
+
+$config    = \Symfony\Component\Yaml\Yaml::parseFile(__DIR__ . '/requirements-config.yaml');
+$tests_dir = $base_dir . '/' . $config['tests_dir'];
 
 if (! file_exists($requirements_file)) {
     echo json_encode(
@@ -37,11 +41,11 @@ if (! file_exists($requirements_file)) {
 $requirements = parse_requirements($requirements_file);
 $violations = [];
 
-$testable = ['integration-test', 'unit-test'];
-$test_subdir = ['integration-test' => 'Integration', 'unit-test' => 'Unit'];
-
-$known_authority_types = ['rfc', 'w3c', 'ietf-draft', 'iso', 'ecma'];
-$known_link_rels = ['adr', 'issue', 'pr', 'prior-art', 'discussion'];
+$test_subdir           = $config['testable_verifications'];
+$testable              = array_keys($test_subdir);
+$known_authority_types = $config['known_authority_types'];
+$known_link_rels       = $config['known_link_rels'];
+$rector_rules_dir      = $base_dir . '/' . $config['rector_rules_dir'];
 
 // ── Authority validation ──────────────────────────────────────────────────────
 
@@ -134,7 +138,7 @@ foreach ($requirements as $req_id => $req) {
 
 foreach ($requirements as $req_id => $req) {
     foreach ($req['enforced-by'] as $rule) {
-        $file = $base_dir . '/utils/rector/src/' . $rule . '.php';
+        $file = $rector_rules_dir . '/' . $rule . '.php';
 
         if (! file_exists($file)) {
             $violations[] = [
@@ -270,10 +274,10 @@ foreach ($requirements as $req_id => $req) {
 
 // ── Fix 2: Orphan detection ───────────────────────────────────────────────────
 
-$test_files = array_merge(
-    glob("{$tests_dir}/Integration/*.php") ?: [],
-    glob("{$tests_dir}/Unit/*.php") ?: [],
-);
+$test_files = [];
+foreach ($test_subdir as $subdir) {
+    $test_files = array_merge($test_files, glob("{$tests_dir}/{$subdir}/*.php") ?: []);
+}
 
 foreach ($test_files as $test_file) {
     $source = (string) file_get_contents($test_file);
@@ -286,8 +290,9 @@ foreach ($test_files as $test_file) {
 
             if (! isset($live_criterion_ids[$criterion_id])) {
                 $base = basename($test_file);
+                $rel  = str_replace($tests_dir . '/', '', $test_file);
                 $violations[] = [
-                    'file'    => 'tests/' . (str_contains($test_file, '/Integration/') ? 'Integration' : 'Unit') . "/{$base}",
+                    'file'    => $config['tests_dir'] . '/' . $rel,
                     'rule'    => 'orphaned-test-method',
                     'message' => "{$base}::{$method} references criterion '{$criterion_id}' not found in requirements.yaml",
                     'fix'     => "Add criterion '{$criterion_id}' to requirements.yaml or rename/remove the test method",

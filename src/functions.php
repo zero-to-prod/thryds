@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Container\Container;
 use Jenssegers\Blade\Blade;
+use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Database;
 
 function app(): Container
@@ -14,6 +15,11 @@ function app(): Container
 function blade(): Blade
 {
     return app()->make(Blade::class);
+}
+
+function config(): Config
+{
+    return app()->make(Config::class);
 }
 
 function db(): Database

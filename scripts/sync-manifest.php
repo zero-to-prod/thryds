@@ -18,8 +18,11 @@ require __DIR__ . '/parse-manifest.php';
 require __DIR__ . '/build-actual-graph.php';
 require __DIR__ . '/manifest-diff.php';
 
+use Symfony\Component\Yaml\Yaml;
+
 $projectRoot  = realpath(__DIR__ . '/../') . '/';
 $manifestPath = $projectRoot . 'thryds.yaml';
+$scaffold     = Yaml::parseFile(__DIR__ . '/scaffold-config.yaml');
 
 $desired = parseManifest($manifestPath);
 $actual  = buildActualGraph($projectRoot);
@@ -36,11 +39,11 @@ foreach ($diff['missing_from_code'] as $item) {
 
     try {
         match ($section) {
-            'views' => scaffoldView($name, $props, $projectRoot, $created),
-            'components' => scaffoldComponent($name, $props, $projectRoot, $created),
-            'viewmodels' => scaffoldViewModel($name, $props, $projectRoot, $created),
-            'tests' => scaffoldTest($name, $props, $projectRoot, $created),
-            'controllers' => scaffoldController($name, $props, $projectRoot, $created),
+            'views' => scaffoldView($name, $props, $projectRoot, $scaffold, $created),
+            'components' => scaffoldComponent($name, $props, $projectRoot, $scaffold, $created),
+            'viewmodels' => scaffoldViewModel($name, $props, $projectRoot, $scaffold, $created),
+            'tests' => scaffoldTest($name, $props, $projectRoot, $scaffold, $created),
+            'controllers' => scaffoldController($name, $props, $projectRoot, $scaffold, $created),
             default => $skipped[] = ['section' => $section, 'name' => $name, 'reason' => "No scaffold handler for $section"],
         };
     } catch (\Throwable $e) {
@@ -66,9 +69,11 @@ exit(0);
 
 // --- Scaffold functions ---
 
-function scaffoldView(string $name, array $props, string $root, array &$created): void
+function scaffoldView(string $name, array $props, string $root, array $scaffold, array &$created): void
 {
-    $templatePath = $root . 'templates/' . $name . '.blade.php';
+    $templateDir  = $scaffold['directories']['templates'];
+    $vmNamespace  = $scaffold['namespaces']['viewmodels'];
+    $templatePath = $root . $templateDir . '/' . $name . '.blade.php';
     $files        = [];
 
     if (! file_exists($templatePath)) {
@@ -78,12 +83,12 @@ function scaffoldView(string $name, array $props, string $root, array &$created)
 
         $useLines = '';
         foreach ($viewModels as $vm) {
-            $useLines .= "    use ZeroToProd\\Thryds\\ViewModels\\$vm;\n";
+            $useLines .= "    use $vmNamespace\\$vm;\n";
         }
 
         $template = "@php\n{$useLines}@endphp\n@extends('$layout')\n\n@section('title', '$title')\n\n@section('body')\n    {{-- TODO: implement $name view --}}\n@endsection\n";
         file_put_contents($templatePath, $template);
-        $files[] = "templates/$name.blade.php";
+        $files[] = "$templateDir/$name.blade.php";
     }
 
     if ($files !== []) {
@@ -91,10 +96,11 @@ function scaffoldView(string $name, array $props, string $root, array &$created)
     }
 }
 
-function scaffoldComponent(string $name, array $props, string $root, array &$created): void
+function scaffoldComponent(string $name, array $props, string $root, array $scaffold, array &$created): void
 {
+    $componentDir = $scaffold['directories']['components'];
     $value        = str_replace('_', '-', $name);
-    $templatePath = $root . 'templates/components/' . $value . '.blade.php';
+    $templatePath = $root . $componentDir . '/' . $value . '.blade.php';
     $files        = [];
 
     if (! file_exists($templatePath)) {
@@ -105,7 +111,7 @@ function scaffoldComponent(string $name, array $props, string $root, array &$cre
         }
         $template = "@props([\n{$propsLines}])\n<div {{ \$attributes }}>\n    {{ \$slot }}\n</div>\n";
         file_put_contents($templatePath, $template);
-        $files[] = "templates/components/$value.blade.php";
+        $files[] = "$componentDir/$value.blade.php";
     }
 
     if ($files !== []) {
@@ -113,10 +119,14 @@ function scaffoldComponent(string $name, array $props, string $root, array &$cre
     }
 }
 
-function scaffoldViewModel(string $name, array $props, string $root, array &$created): void
+function scaffoldViewModel(string $name, array $props, string $root, array $scaffold, array &$created): void
 {
-    $classPath = $root . 'src/ViewModels/' . $name . '.php';
-    $files     = [];
+    $vmDir       = $scaffold['directories']['viewmodels'];
+    $vmNamespace = $scaffold['namespaces']['viewmodels'];
+    $dataModel   = $scaffold['attributes']['data_model'];
+    $viewModel   = $scaffold['attributes']['viewmodel'];
+    $classPath   = $root . $vmDir . '/' . $name . '.php';
+    $files       = [];
 
     if (! file_exists($classPath)) {
         $fields = $props['fields'] ?? [];
@@ -127,20 +137,23 @@ function scaffoldViewModel(string $name, array $props, string $root, array &$cre
             $properties .= "    public $fieldType \$$fieldName;\n";
         }
 
+        $dataModelShort  = basename(str_replace('\\', '/', $dataModel));
+        $viewModelShort  = basename(str_replace('\\', '/', $viewModel));
+
         $class = <<<PHP
             <?php
 
             declare(strict_types=1);
 
-            namespace ZeroToProd\\Thryds\\ViewModels;
+            namespace $vmNamespace;
 
-            use ZeroToProd\\Thryds\\Attributes\\DataModel;
-            use ZeroToProd\\Thryds\\Attributes\\ViewModel;
+            use $dataModel;
+            use $viewModel;
 
-            #[ViewModel]
+            #[$viewModelShort]
             readonly class $name
             {
-                use DataModel;
+                use $dataModelShort;
 
             $consts
             $properties}
@@ -150,7 +163,7 @@ function scaffoldViewModel(string $name, array $props, string $root, array &$cre
         // Remove common leading whitespace from heredoc
         $class = preg_replace('/^ {12}/m', '', $class);
         file_put_contents($classPath, $class);
-        $files[] = "src/ViewModels/$name.php";
+        $files[] = "$vmDir/$name.php";
     }
 
     if ($files !== []) {
@@ -158,20 +171,25 @@ function scaffoldViewModel(string $name, array $props, string $root, array &$cre
     }
 }
 
-function scaffoldTest(string $name, array $props, string $root, array &$created): void
+function scaffoldTest(string $name, array $props, string $root, array $scaffold, array &$created): void
 {
-    $classPath = $root . 'tests/Integration/' . $name . '.php';
-    $files     = [];
+    $testDir        = $scaffold['directories']['tests_integration'];
+    $testNamespace  = $scaffold['namespaces']['tests_integration'];
+    $coversRoute    = $scaffold['attributes']['covers_route'];
+    $routeNamespace = $scaffold['namespaces']['routes'];
+    $classPath      = $root . $testDir . '/' . $name . '.php';
+    $files          = [];
 
     if (! file_exists($classPath)) {
-        $coversRoutes = $props['covers_routes'] ?? [];
-        $useLines     = "use PHPUnit\\Framework\\Attributes\\Test;\n";
-        $attrLine     = '';
+        $coversRoutes     = $props['covers_routes'] ?? [];
+        $coversRouteShort = basename(str_replace('\\', '/', $coversRoute));
+        $useLines         = "use PHPUnit\\Framework\\Attributes\\Test;\n";
+        $attrLine         = '';
         if ($coversRoutes !== []) {
-            $useLines .= "use ZeroToProd\\Thryds\\Attributes\\CoversRoute;\n";
-            $useLines .= "use ZeroToProd\\Thryds\\Routes\\Route;\n";
+            $useLines .= "use $coversRoute;\n";
+            $useLines .= "use $routeNamespace\\Route;\n";
             $routeArgs = implode(', ', array_map(fn(string $r): string => "Route::$r", $coversRoutes));
-            $attrLine  = "#[CoversRoute($routeArgs)]\n";
+            $attrLine  = "#[$coversRouteShort($routeArgs)]\n";
         }
 
         $class = <<<PHP
@@ -179,7 +197,7 @@ function scaffoldTest(string $name, array $props, string $root, array &$created)
 
             declare(strict_types=1);
 
-            namespace ZeroToProd\\Thryds\\Tests\\Integration;
+            namespace $testNamespace;
 
             $useLines
             {$attrLine}final class $name extends IntegrationTestCase
@@ -195,7 +213,7 @@ function scaffoldTest(string $name, array $props, string $root, array &$created)
 
         $class = preg_replace('/^ {12}/m', '', $class);
         file_put_contents($classPath, $class);
-        $files[] = "tests/Integration/$name.php";
+        $files[] = "$testDir/$name.php";
     }
 
     if ($files !== []) {
@@ -203,48 +221,62 @@ function scaffoldTest(string $name, array $props, string $root, array &$created)
     }
 }
 
-function scaffoldController(string $name, array $props, string $root, array &$created): void
+function scaffoldController(string $name, array $props, string $root, array $scaffold, array &$created): void
 {
-    $classPath = $root . 'src/Controllers/' . $name . '.php';
-    $files     = [];
+    $ctrlDir         = $scaffold['directories']['controllers'];
+    $ctrlNamespace   = $scaffold['namespaces']['controllers'];
+    $routeNamespace  = $scaffold['namespaces']['routes'];
+    $tablesNamespace = $scaffold['namespaces']['tables'];
+    $bladeNamespace  = $scaffold['namespaces']['blade'];
+    $handlesRoute    = $scaffold['attributes']['handles_route'];
+    $persistsAttr    = $scaffold['attributes']['persists'];
+    $redirectsToAttr = $scaffold['attributes']['redirects_to'];
+    $rendersViewAttr = $scaffold['attributes']['renders_view'];
+    $classPath       = $root . $ctrlDir . '/' . $name . '.php';
+    $files           = [];
 
     if (! file_exists($classPath)) {
-        $renders    = $props['renders'] ?? null;
-        $persists   = $props['persists'] ?? [];
+        $renders     = $props['renders'] ?? null;
+        $persists    = $props['persists'] ?? [];
         $redirectsTo = $props['redirects_to'] ?? [];
 
         $routeName = $props['route'] ?? null;
+
+        $handlesRouteShort  = basename(str_replace('\\', '/', $handlesRoute));
+        $persistsShort      = basename(str_replace('\\', '/', $persistsAttr));
+        $redirectsToShort   = basename(str_replace('\\', '/', $redirectsToAttr));
+        $rendersViewShort   = basename(str_replace('\\', '/', $rendersViewAttr));
 
         $useLines = '';
         $attrs    = '';
 
         if ($routeName !== null) {
-            $useLines .= "use ZeroToProd\\Thryds\\Attributes\\HandlesRoute;\n";
-            $useLines .= "use ZeroToProd\\Thryds\\Routes\\Route;\n";
-            $attrs    .= "#[HandlesRoute(Route::$routeName)]\n";
+            $useLines .= "use $handlesRoute;\n";
+            $useLines .= "use $routeNamespace\\Route;\n";
+            $attrs    .= "#[$handlesRouteShort(Route::$routeName)]\n";
         }
 
         if ($renders !== null) {
-            $useLines .= "use ZeroToProd\\Thryds\\Attributes\\RendersView;\n";
-            if (!str_contains($useLines, 'use ZeroToProd\\Thryds\\Blade\\View;')) {
-                $useLines .= "use ZeroToProd\\Thryds\\Blade\\View;\n";
+            $useLines .= "use $rendersViewAttr;\n";
+            if (!str_contains($useLines, "use $bladeNamespace\\View;")) {
+                $useLines .= "use $bladeNamespace\\View;\n";
             }
-            $attrs .= "#[RendersView(View::$renders)]\n";
+            $attrs .= "#[$rendersViewShort(View::$renders)]\n";
         }
 
         foreach ($persists as $model) {
-            $useLines .= "use ZeroToProd\\Thryds\\Attributes\\Persists;\n";
-            $useLines .= "use ZeroToProd\\Thryds\\Tables\\$model;\n";
-            $attrs    .= "#[Persists($model::class)]\n";
+            $useLines .= "use $persistsAttr;\n";
+            $useLines .= "use $tablesNamespace\\$model;\n";
+            $attrs    .= "#[$persistsShort($model::class)]\n";
         }
         foreach ($redirectsTo as $route) {
-            if (!str_contains($useLines, 'use ZeroToProd\\Thryds\\Attributes\\RedirectsTo;')) {
-                $useLines .= "use ZeroToProd\\Thryds\\Attributes\\RedirectsTo;\n";
+            if (!str_contains($useLines, "use $redirectsToAttr;")) {
+                $useLines .= "use $redirectsToAttr;\n";
             }
-            if (!str_contains($useLines, 'use ZeroToProd\\Thryds\\Routes\\Route;')) {
-                $useLines .= "use ZeroToProd\\Thryds\\Routes\\Route;\n";
+            if (!str_contains($useLines, "use $routeNamespace\\Route;")) {
+                $useLines .= "use $routeNamespace\\Route;\n";
             }
-            $attrs    .= "#[RedirectsTo(Route::$route)]\n";
+            $attrs    .= "#[$redirectsToShort(Route::$route)]\n";
         }
 
         $class = <<<PHP
@@ -252,7 +284,7 @@ function scaffoldController(string $name, array $props, string $root, array &$cr
 
             declare(strict_types=1);
 
-            namespace ZeroToProd\\Thryds\\Controllers;
+            namespace $ctrlNamespace;
 
             use Psr\\Http\\Message\\ResponseInterface;
             use Psr\\Http\\Message\\ServerRequestInterface;
@@ -270,7 +302,7 @@ function scaffoldController(string $name, array $props, string $root, array &$cr
 
         $class = preg_replace('/^ {12}/m', '', $class);
         file_put_contents($classPath, $class);
-        $files[] = "src/Controllers/$name.php";
+        $files[] = "$ctrlDir/$name.php";
     }
 
     if ($files !== []) {

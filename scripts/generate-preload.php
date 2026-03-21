@@ -18,11 +18,15 @@ $base_dir = dirname(__DIR__);
 require $base_dir . '/vendor/autoload.php';
 
 use League\Route\Router;
+use Symfony\Component\Yaml\Yaml;
 use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Blade\Vite;
 use ZeroToProd\Thryds\Config;
+use ZeroToProd\Thryds\ConfigKey;
 use ZeroToProd\Thryds\Routes\RouteRegistrar;
+
+$preload_config = Yaml::parseFile(__DIR__ . '/preload-config.yaml');
 
 require __DIR__ . '/cache-views.php';
 
@@ -30,9 +34,9 @@ require __DIR__ . '/cache-views.php';
 echo "Booting app...\n";
 
 $Config = Config::from([
-    Config::AppEnv => $_ENV[Config::AppEnv] ?? AppEnv::production->value,
-    Config::blade_cache_dir => $base_dir . '/var/cache/blade',
-    Config::template_dir => $base_dir . '/templates',
+    ConfigKey::AppEnv->value => $_ENV[ConfigKey::AppEnv->value] ?? AppEnv::production->value,
+    ConfigKey::blade_cache_dir->value => $base_dir . '/var/cache/blade',
+    ConfigKey::template_dir->value => $base_dir . '/templates',
 ]);
 
 if (!is_dir($Config->blade_cache_dir) && !mkdir($Config->blade_cache_dir, 0o755, true)) {
@@ -64,55 +68,43 @@ try {
 }
 
 // Force-load classes not reachable via boot/dispatch simulation
-new \Laminas\Diactoros\Response\JsonResponse(data: []);
-\Laminas\Diactoros\ServerRequestFilter\IPRange::matches('127.0.0.1', '127.0.0.0/8');
-
-// Force-load classes only reachable via full App::boot() / HTTP request path
-new \League\Route\Cache\Router(
-    builder: static fn(Router $r): Router => $r,
-    cache: new \League\Route\Cache\FileCache(cacheFilePath: '/dev/null', ttl: 0),
-    cacheEnabled: false,
-);
-class_exists(\ZeroToProd\Thryds\App::class);
-new \ZeroToProd\Thryds\RequestId();
-new \Illuminate\Support\Collection();
-new \Illuminate\Support\Stringable('');
-new \Illuminate\View\Compilers\ComponentTagCompiler();
-class_exists(\Laravel\SerializableClosure\Support\ClosureStream::class);
-class_exists(\Laravel\SerializableClosure\Support\ClosureScope::class);
-class_exists(\Psr\SimpleCache\CacheInterface::class);
+foreach ($preload_config['force_load_classes'] as $fqcn) {
+    class_exists($fqcn);
+}
 
 // Discover all loaded scripts (plus the entrypoint, which FrankenPHP loads directly)
 $scripts = get_included_files();
 $scripts[] = $base_dir . '/public/index.php';
 echo sprintf("Discovered %d loaded scripts\n", count($scripts));
 
-$app_scripts = filterAppScripts($scripts);
+$app_scripts = filterAppScripts($scripts, $preload_config);
 echo sprintf("Filtered to %d app scripts (excluded temp/cache/dev files)\n", count($app_scripts));
 
 $ordered = resolveOrder($app_scripts);
 
 $preload_path = $base_dir . '/preload.php';
-writePreload($preload_path, $ordered);
+writePreload($preload_path, $ordered, $preload_config);
 
 echo sprintf("Wrote %s with %d scripts\n", $preload_path, count($ordered));
 
-function filterAppScripts(array $scripts): array
+function filterAppScripts(array $scripts, array $config): array
 {
-    $filtered = [];
+    $container_prefix = $config['container_prefix'];
+    $devPathEnum      = $config['dev_path_enum'];
+    $filtered         = [];
 
     foreach ($scripts as $path) {
-        // Only /app/ paths (docker) or project-relative paths
-        if (!str_starts_with($path, '/app/') && !str_starts_with($path, dirname(__DIR__) . '/')) {
+        // Only container paths or project-relative paths
+        if (!str_starts_with($path, $container_prefix) && !str_starts_with($path, dirname(__DIR__) . '/')) {
             continue;
         }
 
-        // Normalize to /app/ prefix for consistency
-        $path = str_replace(dirname(__DIR__), '/app', $path);
+        // Normalize to container prefix for consistency
+        $path = str_replace(dirname(__DIR__), rtrim($container_prefix, '/'), $path);
 
         // Skip scripts/, dev vendors, cache, tests, utils
         if (str_contains($path, '/scripts/') || array_any(
-            \ZeroToProd\Thryds\DevPath::cases(),
+            $devPathEnum::cases(),
             fn($devPath): bool => str_contains(haystack: $path, needle: $devPath->value)
         )
         ) {
@@ -353,38 +345,33 @@ function resolveClassName(string $name, string $namespace, string $contents): st
     return $name;
 }
 
-function writePreload(string $path, array $scripts): void
+function writePreload(string $path, array $scripts, array $config): void
 {
-    $lines = ["<?php\n", "\ndeclare(strict_types=1);\n"];
+    $container_prefix = $config['container_prefix'];
+    $lines            = ["<?php\n", "\ndeclare(strict_types=1);\n"];
 
-    // Group scripts
-    $groups = [
-        'Autoload' => [],
-        'Helpers' => [],
-        'Core' => [],
-        'Routes' => [],
-        'ViewModels' => [],
-        'Entrypoint' => [],
-        'Vendor' => [],
-    ];
+    // Build empty groups in config order
+    $groups = [];
+    foreach ($config['groups'] as $label => $_) {
+        $groups[$label] = [];
+    }
 
+    // Classify each script into the first matching group
     foreach ($scripts as $script) {
-        $rel = str_replace('/app/', '', $script);
+        $rel = str_replace($container_prefix, '', $script);
 
-        if ($rel === 'vendor/autoload.php') {
-            $groups['Autoload'][] = $script;
-        } elseif (str_starts_with($rel, 'src/Helpers/')) {
-            $groups['Helpers'][] = $script;
-        } elseif (str_starts_with($rel, 'src/Routes/')) {
-            $groups['Routes'][] = $script;
-        } elseif (str_starts_with($rel, 'src/ViewModels/')) {
-            $groups['ViewModels'][] = $script;
-        } elseif (str_starts_with($rel, 'public/')) {
-            $groups['Entrypoint'][] = $script;
-        } elseif (str_starts_with($rel, 'src/')) {
-            $groups['Core'][] = $script;
-        } elseif (str_starts_with($rel, 'vendor/')) {
-            $groups['Vendor'][] = $script;
+        foreach ($config['groups'] as $label => $rule) {
+            if (isset($rule['match']) && $rel === $rule['match']) {
+                $groups[$label][] = $script;
+
+                break;
+            }
+
+            if (isset($rule['prefix']) && str_starts_with($rel, $rule['prefix'])) {
+                $groups[$label][] = $script;
+
+                break;
+            }
         }
     }
 
@@ -396,7 +383,7 @@ function writePreload(string $path, array $scripts): void
         $lines[] = "\n// $label";
 
         foreach ($group_scripts as $script) {
-            $rel = str_replace('/app/', '', $script);
+            $rel = str_replace($container_prefix, '', $script);
             $lines[] = sprintf("opcache_compile_file(__DIR__ . '/%s');", $rel);
         }
     }

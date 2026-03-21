@@ -1,0 +1,45 @@
+template_dir: templates
+controllers_dir: src/Controllers
+tables_dir: src/Tables
+tests_dir: tests/Integration
+
+namespaces:
+  controllers: ZeroToProd\Thryds\Controllers
+  tables: ZeroToProd\Thryds\Tables
+  viewmodels: ZeroToProd\Thryds\ViewModels
+  ui: ZeroToProd\Thryds\UI
+  tests_integration: ZeroToProd\Thryds\Tests\Integration
+
+source_paths:
+  route: src/Routes/Route.php
+  view: src/Blade/View.php
+  component: src/Blade/Component.php
+  controllers: src/Controllers
+  viewmodels: src/ViewModels
+  ui: src/UI
+  tables: src/Tables
+  tests_integration: tests/Integration
+
+attributes:
+  handles_route: ZeroToProd\Thryds\Attributes\HandlesRoute
+  covers_route: ZeroToProd\Thryds\Attributes\CoversRoute
+  extends_layout: ZeroToProd\Thryds\Attributes\ExtendsLayout
+  page_title: ZeroToProd\Thryds\Attributes\PageTitle
+  receives_viewmodel: ZeroToProd\Thryds\Attributes\ReceivesViewModel
+  renders_view: ZeroToProd\Thryds\Attributes\RendersView
+  uses_component: ZeroToProd\Thryds\Attributes\UsesComponent
+  view_model: ZeroToProd\Thryds\Attributes\ViewModel
+  table: ZeroToProd\Thryds\Attributes\Table
+  column: ZeroToProd\Thryds\Attributes\Column
+  primary_key: ZeroToProd\Thryds\Attributes\PrimaryKey
+  index: ZeroToProd\Thryds\Attributes\Index
+  persists: ZeroToProd\Thryds\Attributes\Persists
+  redirects_to: ZeroToProd\Thryds\Attributes\RedirectsTo
+  route_operation: ZeroToProd\Thryds\Attributes\RouteOperation
+  prop: ZeroToProd\Thryds\Attributes\Prop
+  closed_set: ZeroToProd\Thryds\Attributes\ClosedSet
+
+enums:
+  route: ZeroToProd\Thryds\Routes\Route
+  view: ZeroToProd\Thryds\Blade\View
+  component: ZeroToProd\Thryds\Blade\Component

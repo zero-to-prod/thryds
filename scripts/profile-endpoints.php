@@ -17,12 +17,15 @@ declare(strict_types=1);
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
-use ZeroToProd\Thryds\Routes\Route;
+use Symfony\Component\Yaml\Yaml;
+
+$config     = Yaml::parseFile(__DIR__ . '/audit-config.yaml');
+$routeClass = $config['route_class'];
 
 $base_url = 'http://localhost:' . ltrim(getenv('SERVER_NAME') ?: ':80', ':');
 $samples  = max(5, (int) ($argv[1] ?? 20));
 
-$publicRoutes = array_values(array_filter(Route::cases(), fn(Route $r) => !$r->isDevOnly()));
+$publicRoutes = array_values(array_filter($routeClass::cases(), fn($r) => !$r->isDevOnly()));
 
 echo "\n=== Endpoint Profiler ===\n";
 echo "Base URL: {$base_url}\n";

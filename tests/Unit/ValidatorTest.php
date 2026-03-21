@@ -22,6 +22,8 @@ final class ValidatorTest extends TestCase
 
     private const string short_password = 'short';
 
+    private const string mismatched_password = 'different';
+
     #[Test]
     public function validInputProducesNoErrors(): void
     {
@@ -91,8 +93,7 @@ final class ValidatorTest extends TestCase
             RegisterRequest::handle => self::valid_handle,
             RegisterRequest::email => self::valid_email,
             RegisterRequest::password => self::valid_password,
-            // TODO: [SuggestEnumForStringPropertyRector] Enumerations define sets — 'different' is a value of RegisterRequest::$password_confirmation. Replace with an enum case.
-            RegisterRequest::password_confirmation => 'different',
+            RegisterRequest::password_confirmation => self::mismatched_password,
         ]));
 
         $this->assertArrayNotHasKey(RegisterViewModel::name_error, array: $errors);
