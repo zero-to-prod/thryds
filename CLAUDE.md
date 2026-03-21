@@ -73,7 +73,7 @@ No side effects — safe to run anytime.
 
 ```
 ./run list:routes         # → JSON [{name, path, params, dev_only, description, operations}]
-./run list:manifest       # generate thryds.yaml-format YAML from attributes
+./run list:attributes     # attribute graph — YAML (default), JSON, Markdown, or Mermaid
 ./run migrate:status      # → stderr (display); → stdout JSON {passed, pending, modified, applied}
 ./run db:query -- "<sql>" # SELECT only → JSON rows
 ```
@@ -150,7 +150,7 @@ logs/php/error.log           # PHP errors, warnings, deprecations
 
 ## Manifest
 
-`thryds.yaml` at the project root declares the desired project structure. Every value maps to a PHP attribute. The attribute graph (read via reflection by `list:inventory`) is the actual state.
+`thryds.yaml` at the project root declares the desired project structure. Every value maps to a PHP attribute. The attribute graph (read via reflection by `scripts/attribute-graph.php`) is the actual state.
 
 ### Workflow
 
@@ -166,6 +166,74 @@ logs/php/error.log           # PHP errors, warnings, deprecations
 - `sync:manifest` is part of `fix:all` — runs on every fix cycle
 - Drift categories: `missing_from_code`, `missing_from_manifest`, `property_drift`
 - Output is structured JSON — agents parse it directly
+
+## Attribute Graph (`scripts/attribute-graph.php`)
+
+The attribute graph is the primary way to understand the codebase. It reflects every PHP attribute across all classes, enums, interfaces, and traits into a structured graph of nodes and edges. AI agents should query it first when orienting on unfamiliar code.
+
+### Invocation
+
+```
+./run list:attributes                                          # full graph, YAML
+./run list:attributes -- --format=json                         # full graph, JSON
+./run list:attributes -- --format=markdown                     # full graph, readable document
+./run list:attributes -- --format=mermaid                      # full graph, class diagram
+./run list:attributes -- --format=yaml --output=var/graph.yaml # write to file
+```
+
+Raw: `docker compose exec web php scripts/attribute-graph.php [options]`
+
+### Filters (combinable — AND across types, OR within same type)
+
+```
+--node=<ShortName>   # include node + its one-hop neighbors via edges
+--layer=<layer>      # filter by semantic layer (core, views, controllers, etc.)
+--kind=<kind>        # filter by kind (class, enum, interface, trait)
+--attr=<Attribute>   # filter to nodes carrying a specific attribute name
+--rel=<rel>          # filter edges to specific relationship types
+--file=<substring>   # filter to nodes whose file path contains substring
+```
+
+### Examples
+
+```
+# Explore a single controller and everything it touches
+./run list:attributes -- --node=RegisterController
+
+# All view models
+./run list:attributes -- --layer=viewmodels
+
+# Every class carrying #[Table]
+./run list:attributes -- --attr=Table
+
+# Enums only, as Markdown
+./run list:attributes -- --kind=enum --format=markdown
+
+# Edges of a specific relationship type
+./run list:attributes -- --rel=receivesviewmodel
+```
+
+### Output structure (YAML/JSON)
+
+| Key              | Content                                                        |
+|------------------|----------------------------------------------------------------|
+| `_index`         | Layer → sorted list of short class names                       |
+| `_instructions`  | Mutation instructions (addCase/addKey) extracted from attributes |
+| `_dependents`    | Reverse-edge index: target node → list of dependents           |
+| `edges`          | Directed edges: from, to, rel, kind, source, args, file paths  |
+| `nodes`          | Keyed by FQCN: file, kind, layer, attributes, properties, methods, cases |
+
+### Configuration
+
+`attribute-graph.yaml` at the project root externalizes all codebase-specific class references (ClosedSet, Group, EdgeKind, Layer) so the script is reusable across any AOP project.
+
+### How an AI agent benefits
+
+1. **Orient** — run `--format=yaml` (or `--format=json`) unfiltered to get the full graph; parse `_index` to see what layers and nodes exist.
+2. **Focus** — use `--node=X` to pull a single node and its neighbors; read the edges to understand how it connects.
+3. **Query** — combine `--layer`, `--attr`, `--kind`, and `--rel` to answer targeted questions ("which controllers use #[ReceivesViewModel]?").
+4. **Follow instructions** — read `_instructions` for mutation recipes (e.g., how to add a new enum case or map key).
+5. **Trace dependents** — read `_dependents` to know what breaks if a node changes.
 
 ## JetBrains MCP Tools
 

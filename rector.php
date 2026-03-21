@@ -103,6 +103,7 @@ use Utils\Rector\Rector\RequireHandlesExceptionParamMatchRector;
 use Utils\Rector\Rector\RequireHandlesExceptionOnPublicHandlerMethodRector;
 use Utils\Rector\Rector\ForbidReflectionInInstanceMethodRector;
 use Utils\Rector\Rector\ForbidReflectionInClosureRector;
+use Utils\Rector\Rector\ForbidHttpMethodBranchingInControllerRector;
 use Rector\CodeQuality\Rector\FuncCall\SortCallLikeNamedArgsRector;
 use Rector\CodeQuality\Rector\Attribute\SortAttributeNamedArgsRector;
 use ZeroToProd\Thryds\Attributes\Requirement;
@@ -360,6 +361,10 @@ return static function (RectorConfig $rectorConfig): void {
         'controllerNamespaces' => ['ZeroToProd\Thryds\Controllers'],
         'genericInterface' => 'Psr\Http\Message\ResponseInterface',
         'mode' => 'auto',
+    ]);
+    $rectorConfig->ruleWithConfiguration(ForbidHttpMethodBranchingInControllerRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: [ForbidHttpMethodBranchingInControllerRector] Controllers must not branch on HTTP method — declare separate #[RouteOperation] handler methods and let the router dispatch. See: utils/rector/docs/ForbidHttpMethodBranchingInControllerRector.md',
     ]);
 
     // --- DataModel & ViewModel ---

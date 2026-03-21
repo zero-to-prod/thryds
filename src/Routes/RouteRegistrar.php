@@ -27,7 +27,7 @@ readonly class RouteRegistrar
 
         $RegisterController = new RegisterController();
         foreach (Route::register->operations() as $op) {
-            $Router->map($op->HttpMethod->value, Route::register->value, handler: $RegisterController);
+            $Router->map($op->HttpMethod->value, Route::register->value, handler: [$RegisterController, strtolower($op->HttpMethod->value)]);
         }
 
         // Auto-register simple view routes by convention: Route::foo → View::foo (matched by name).

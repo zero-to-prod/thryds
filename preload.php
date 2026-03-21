@@ -69,9 +69,9 @@ opcache_compile_file(__DIR__ . '/vendor/symfony/polyfill-intl-grapheme/bootstrap
 opcache_compile_file(__DIR__ . '/vendor/symfony/polyfill-intl-grapheme/bootstrap80.php');
 opcache_compile_file(__DIR__ . '/vendor/symfony/polyfill-intl-normalizer/bootstrap.php');
 opcache_compile_file(__DIR__ . '/vendor/symfony/polyfill-intl-normalizer/bootstrap80.php');
+opcache_compile_file(__DIR__ . '/vendor/symfony/string/Resources/functions.php');
 opcache_compile_file(__DIR__ . '/vendor/illuminate/events/functions.php');
 opcache_compile_file(__DIR__ . '/vendor/illuminate/filesystem/functions.php');
-opcache_compile_file(__DIR__ . '/vendor/symfony/string/Resources/functions.php');
 opcache_compile_file(__DIR__ . '/vendor/nikic/fast-route/src/functions.php');
 opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-diactoros/src/functions/create_uploaded_file.php');
 opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-diactoros/src/functions/marshal_headers_from_sapi.php');

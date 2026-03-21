@@ -50,7 +50,8 @@
         "phpunit/phpunit": "^13.0",
         "friendsofphp/php-cs-fixer": "^3.94",
         "phpstan/phpstan": "^2.1",
-        "symfony/yaml": "^8.0"
+        "symfony/yaml": "^8.0",
+        "brianium/paratest": "^7.19"
     },
     "replace": {
         "symfony/polyfill-php80": "*",
@@ -64,10 +65,10 @@
         }
     },
     "scripts": {
-        "test": "./vendor/bin/phpunit",
-        "test:unit": "./vendor/bin/phpunit --testsuite unit",
-        "test:integration": "./vendor/bin/phpunit --testsuite integration",
-        "test:database": "./vendor/bin/phpunit --testsuite database",
+        "test": "./vendor/bin/paratest",
+        "test:unit": "./vendor/bin/paratest --testsuite unit",
+        "test:integration": "./vendor/bin/paratest --testsuite integration",
+        "test:database": "./vendor/bin/paratest --testsuite database",
         "test:rector": "./vendor/bin/phpunit utils",
         "test:coverage": "php scripts/check-coverage.php",
         "check:coverage": "php scripts/check-coverage.php",
