@@ -1,0 +1,74 @@
+# Declarative graph invariants enforced by check:graph.
+#
+# Rule types: discovery, node, edge, layer.
+# The engine loads the attribute graph (JSON) and evaluates each rule.
+# Violations emit structured JSON: { rule, file, message, fix }
+#
+# Discovery strategies:
+#   node_file        — file's relative path must match a node's file field
+#   enum_case_value  — file stem must match a backed enum case value in the named node
+
+discovery:
+  # Every PHP class in src/ must carry at least one attribute
+  unclaimed-src-class:
+    glob: "src/**/*.php"
+    exclude:
+      - "src/functions.php"
+      - "src/Attributes/*.php"
+    claimed_by:
+      strategy: node_file
+    message: "PHP file not in attribute graph — no attributes found"
+    fix: "Add at least one PHP attribute to the class, or add the path to graph-rules.yaml exclude list"
+
+  # Every view template needs a View enum case
+  unclaimed-view-template:
+    glob: "templates/*.blade.php"
+    exclude:
+      - "templates/base.blade.php"
+    claimed_by:
+      strategy: enum_case_value
+      node: View
+      strip_suffix: ".blade.php"
+    message: "View template not claimed by a View enum case"
+    fix: "Add a View enum case whose value matches the template filename stem"
+
+  # Every component template needs a Component enum case
+  unclaimed-component-template:
+    glob: "templates/components/*.blade.php"
+    claimed_by:
+      strategy: enum_case_value
+      node: Component
+      strip_suffix: ".blade.php"
+    message: "Component template not claimed by a Component enum case"
+    fix: "Add a Component enum case whose value matches the component filename stem"
+
+node:
+  # Table classes must define at least one Column
+  table-has-columns:
+    filter:
+      layer: [tables]
+      attr: [Table]
+    assert: cases_have_attr
+    attr: Column
+    message: "Table node has no #[Column] attributes on any case"
+    fix: "Add #[Column(...)] attributes to enum cases to define the table schema"
+
+edge:
+  # Every ViewModel must be consumed by at least one View
+  viewmodel-has-consumer:
+    filter:
+      layer: [viewmodels]
+      attr: [ViewModel]
+    assert: min_incoming
+    rel: receivesviewmodel
+    min: 1
+    message: "ViewModel has no incoming #[ReceivesViewModel] edge — no View consumes it"
+    fix: "Add #[ReceivesViewModel(ThisViewModel::class)] to a View enum case"
+
+layer:
+  # Controllers must not reference other controllers
+  no-controller-to-controller:
+    layer: controllers
+    assert: no_intra_layer_edges
+    message: "Controller has an edge to another controller — use a shared service or route redirect"
+    fix: "Remove the cross-controller dependency"

@@ -84,6 +84,7 @@
         "check:blade-components": "php scripts/lint-blade-components.php",
         "check:blade-templates": "php scripts/lint-blade-templates.php",
         "check:blade-push": "php scripts/check-blade-push.php",
+        "check:graph": "php scripts/check-graph.php",
         "prod:route-cache": "php scripts/verify-route-cache.php",
         "check:all": "php scripts/check-all.php",
         "check:migrations": "php scripts/check-migrations.php",

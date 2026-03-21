@@ -33,6 +33,7 @@ $checks = [
     'check:blade-components' => 'php ' . escapeshellarg($base_dir . '/scripts/lint-blade-components.php'),
     'check:blade-templates'  => 'php ' . escapeshellarg($base_dir . '/scripts/lint-blade-templates.php'),
     'check:blade-push'       => 'php ' . escapeshellarg($base_dir . '/scripts/check-blade-push.php'),
+    'check:graph'            => 'php ' . escapeshellarg($base_dir . '/scripts/check-graph.php'),
     'test'                   => $base_dir . '/vendor/bin/paratest',
 ];
 
