@@ -213,16 +213,37 @@ function scaffoldController(string $name, array $props, string $root, array &$cr
         $persists   = $props['persists'] ?? [];
         $redirectsTo = $props['redirects_to'] ?? [];
 
+        $routeName = $props['route'] ?? null;
+
         $useLines = '';
         $attrs    = '';
+
+        if ($routeName !== null) {
+            $useLines .= "use ZeroToProd\\Thryds\\Attributes\\HandlesRoute;\n";
+            $useLines .= "use ZeroToProd\\Thryds\\Routes\\Route;\n";
+            $attrs    .= "#[HandlesRoute(Route::$routeName)]\n";
+        }
+
+        if ($renders !== null) {
+            $useLines .= "use ZeroToProd\\Thryds\\Attributes\\RendersView;\n";
+            if (!str_contains($useLines, 'use ZeroToProd\\Thryds\\Blade\\View;')) {
+                $useLines .= "use ZeroToProd\\Thryds\\Blade\\View;\n";
+            }
+            $attrs .= "#[RendersView(View::$renders)]\n";
+        }
+
         foreach ($persists as $model) {
             $useLines .= "use ZeroToProd\\Thryds\\Attributes\\Persists;\n";
             $useLines .= "use ZeroToProd\\Thryds\\Tables\\$model;\n";
             $attrs    .= "#[Persists($model::class)]\n";
         }
         foreach ($redirectsTo as $route) {
-            $useLines .= "use ZeroToProd\\Thryds\\Attributes\\RedirectsTo;\n";
-            $useLines .= "use ZeroToProd\\Thryds\\Routes\\Route;\n";
+            if (!str_contains($useLines, 'use ZeroToProd\\Thryds\\Attributes\\RedirectsTo;')) {
+                $useLines .= "use ZeroToProd\\Thryds\\Attributes\\RedirectsTo;\n";
+            }
+            if (!str_contains($useLines, 'use ZeroToProd\\Thryds\\Routes\\Route;')) {
+                $useLines .= "use ZeroToProd\\Thryds\\Routes\\Route;\n";
+            }
             $attrs    .= "#[RedirectsTo(Route::$route)]\n";
         }
 

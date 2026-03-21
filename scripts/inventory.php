@@ -20,10 +20,12 @@ use ZeroToProd\Thryds\Attributes\ClosedSet;
 use ZeroToProd\Thryds\Attributes\Column;
 use ZeroToProd\Thryds\Attributes\CoversRoute;
 use ZeroToProd\Thryds\Attributes\ExtendsLayout;
+use ZeroToProd\Thryds\Attributes\HandlesRoute;
 use ZeroToProd\Thryds\Attributes\Persists;
 use ZeroToProd\Thryds\Attributes\Prop;
 use ZeroToProd\Thryds\Attributes\ReceivesViewModel;
 use ZeroToProd\Thryds\Attributes\RedirectsTo;
+use ZeroToProd\Thryds\Attributes\RendersView;
 use ZeroToProd\Thryds\Attributes\RouteOperation;
 use ZeroToProd\Thryds\Attributes\Table;
 use ZeroToProd\Thryds\Attributes\UsesComponent;
@@ -47,11 +49,22 @@ if (! in_array($format, ['json', 'dot', 'yaml'], true)) {
 $projectRoot  = realpath(__DIR__ . '/../') . '/';
 $templatesDir = $projectRoot . 'templates';
 
-/** Controllers explicitly mapped in RouteRegistrar (route name → short class name). */
-$explicitControllers = [
-    'home'     => 'HomeController',
-    'register' => 'RegisterController',
-];
+/** Controllers discovered via #[HandlesRoute] attribute (route name → short class name). */
+$explicitControllers = [];
+$controllersDir = $projectRoot . 'src/Controllers';
+foreach (glob($controllersDir . '/*.php') ?: [] as $controllerFile) {
+    $controllerClassName = basename($controllerFile, '.php');
+    $controllerFqcn = 'ZeroToProd\\Thryds\\Controllers\\' . $controllerClassName;
+    if (!class_exists($controllerFqcn)) {
+        continue;
+    }
+    $controllerRef = new ReflectionClass($controllerFqcn);
+    $handlesRouteAttrs = $controllerRef->getAttributes(HandlesRoute::class);
+    if ($handlesRouteAttrs !== []) {
+        $handledRoute = $handlesRouteAttrs[0]->newInstance()->Route;
+        $explicitControllers[$handledRoute->name] = $controllerClassName;
+    }
+}
 
 // Build the graph as an adjacency list: node id → {type, label, edges:[target ids]}.
 $nodes = [];
@@ -95,7 +108,7 @@ foreach (Route::cases() as $Route) {
     $nodes[$routeId]['dev_only'] = $Route->isDevOnly();
 
     $controller = $explicitControllers[$Route->name] ?? null;
-    $view       = View::tryFrom($Route->name);
+    $view       = $Route->rendersView();
 
     if ($controller !== null) {
         $nodes[$routeId]['registration'] = 'explicit';
@@ -103,19 +116,25 @@ foreach (Route::cases() as $Route) {
         $addNode($controllerId, 'controller', $controller);
         $addEdge($routeId, $controllerId, 'handled_by');
 
-        if ($view !== null) {
-            $viewId = 'view:' . $view->value;
-            $addNode($viewId, 'view', $view->value);
-            $addEdge($controllerId, $viewId, 'renders');
+        // Controller→View edge comes from #[RendersView] on the controller class.
+        $controllerFqcn = 'ZeroToProd\\Thryds\\Controllers\\' . $controller;
+        if (class_exists($controllerFqcn)) {
+            $rvAttrs = new ReflectionClass($controllerFqcn)->getAttributes(RendersView::class);
+            if ($rvAttrs !== []) {
+                $controllerView = $rvAttrs[0]->newInstance()->View;
+                $viewId = 'view:' . $controllerView->value;
+                $addNode($viewId, 'view', $controllerView->value);
+                $addEdge($controllerId, $viewId, 'renders');
+            }
         }
     } elseif ($view !== null) {
-        // Convention-registered: route renders the view directly.
-        $nodes[$routeId]['registration'] = 'convention';
+        // View-only route: #[RendersView] on the Route case.
+        $nodes[$routeId]['registration'] = 'attribute';
         $viewId = 'view:' . $view->value;
         $addNode($viewId, 'view', $view->value);
         $addEdge($routeId, $viewId, 'renders');
     } else {
-        // No view match — JSON endpoint or similar.
+        // No view — JSON endpoint or similar.
         $nodes[$routeId]['registration'] = 'none';
     }
 }

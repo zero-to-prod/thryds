@@ -8,8 +8,10 @@ use ReflectionAttribute;
 use ReflectionEnumUnitCase;
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 use ZeroToProd\Thryds\Attributes\DevOnly;
+use ZeroToProd\Thryds\Attributes\RendersView;
 use ZeroToProd\Thryds\Attributes\RouteInfo;
 use ZeroToProd\Thryds\Attributes\RouteOperation;
+use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\UI\Domain;
 
 #[ClosedSet(
@@ -28,6 +30,7 @@ enum Route: string
         HttpMethod::GET,
         'Marketing home page'
     )]
+    #[RendersView(View::home)]
     case home = '/';
 
     #[RouteInfo('About')]
@@ -35,6 +38,7 @@ enum Route: string
         HttpMethod::GET,
         'Company and product information'
     )]
+    #[RendersView(View::about)]
     case about = '/about';
 
     #[RouteInfo('Login')]
@@ -42,6 +46,7 @@ enum Route: string
         HttpMethod::GET,
         'User authentication form'
     )]
+    #[RendersView(View::login)]
     case login = '/login';
 
     #[RouteInfo('Register')]
@@ -53,6 +58,7 @@ enum Route: string
         HttpMethod::POST,
         'Handle registration submission'
     )]
+    #[RendersView(View::register)]
     case register = '/register';
 
     #[DevOnly]
@@ -77,6 +83,7 @@ enum Route: string
         HttpMethod::GET,
         'UI component and design token reference'
     )]
+    #[RendersView(View::styleguide)]
     case styleguide = '/_styleguide';
 
     #[DevOnly]
@@ -89,13 +96,21 @@ enum Route: string
 
     public function isDevOnly(): bool
     {
-        return !empty(new ReflectionEnumUnitCase(self::class, $this->name)->getAttributes(DevOnly::class));
+        /** @var array<string, bool> $cache */
+        static $cache = [];
+
+        return $cache[$this->name] ??= !empty(
+            new ReflectionEnumUnitCase(self::class, $this->name)->getAttributes(DevOnly::class)
+        );
     }
 
     /** Returns the route-level description declared via #[RouteInfo]. */
     public function description(): string
     {
-        return new ReflectionEnumUnitCase(self::class, $this->name)
+        /** @var array<string, string> $cache */
+        static $cache = [];
+
+        return $cache[$this->name] ??= new ReflectionEnumUnitCase(self::class, $this->name)
             ->getAttributes(RouteInfo::class)[0]
             ->newInstance()
             ->description;
@@ -104,11 +119,29 @@ enum Route: string
     /** @return RouteOperation[] HTTP operations declared on this route via #[RouteOperation]. */
     public function operations(): array
     {
-        return array_map(
+        /** @var array<string, RouteOperation[]> $cache */
+        static $cache = [];
+
+        return $cache[$this->name] ??= array_map(
             static fn(ReflectionAttribute $ReflectionAttribute): RouteOperation => $ReflectionAttribute->newInstance(),
             new ReflectionEnumUnitCase(self::class, $this->name)
                 ->getAttributes(RouteOperation::class),
         );
+    }
+
+    /** Returns the view declared via #[RendersView], or null if this route has no view. */
+    public function rendersView(): ?View
+    {
+        /** @var array<string, ?View> $cache */
+        static $cache = [];
+
+        if (!array_key_exists($this->name, array: $cache)) {
+            $attrs = new ReflectionEnumUnitCase(self::class, $this->name)
+                ->getAttributes(RendersView::class);
+            $cache[$this->name] = $attrs !== [] ? $attrs[0]->newInstance()->View : null;
+        }
+
+        return $cache[$this->name];
     }
 
     /** @return string[] Parameter names extracted from {placeholders} in the route pattern. */

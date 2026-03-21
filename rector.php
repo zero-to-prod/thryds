@@ -104,6 +104,7 @@ use Utils\Rector\Rector\RequireHandlesExceptionOnPublicHandlerMethodRector;
 use Utils\Rector\Rector\ForbidReflectionInInstanceMethodRector;
 use Utils\Rector\Rector\ForbidReflectionInClosureRector;
 use Utils\Rector\Rector\ForbidHttpMethodBranchingInControllerRector;
+use Utils\Rector\Rector\RequireHandlesRouteAttributeRector;
 use Rector\CodeQuality\Rector\FuncCall\SortCallLikeNamedArgsRector;
 use Rector\CodeQuality\Rector\Attribute\SortAttributeNamedArgsRector;
 use ZeroToProd\Thryds\Attributes\Requirement;
@@ -764,5 +765,13 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(ForbidReflectionInClosureRector::class, [
         'mode' => 'warn',
         'message' => 'Reflection in closures runs per-invocation; hoist to the enclosing boot scope. See: utils/rector/docs/ForbidReflectionInClosureRector.md',
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(RequireHandlesRouteAttributeRector::class, [
+        'mode' => 'warn',
+        'attributeClass' => \ZeroToProd\Thryds\Attributes\HandlesRoute::class,
+        'controllerSuffixes' => ['Controller', 'Handler'],
+        'controllersNamespace' => 'ZeroToProd\\Thryds\\Controllers',
+        'message' => 'TODO: [RequireHandlesRouteAttributeRector] Attributes define properties — %s in Controllers/ is missing #[HandlesRoute]. Every controller must declare which route it handles so the router can discover it via reflection. See: utils/rector/docs/RequireHandlesRouteAttributeRector.md',
     ]);
 };

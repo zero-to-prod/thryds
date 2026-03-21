@@ -9,8 +9,10 @@ use Laminas\Diactoros\Response\RedirectResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Random\RandomException;
+use ZeroToProd\Thryds\Attributes\HandlesRoute;
 use ZeroToProd\Thryds\Attributes\Persists;
 use ZeroToProd\Thryds\Attributes\RedirectsTo;
+use ZeroToProd\Thryds\Attributes\RendersView;
 use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Queries\CreateUserQuery;
 use ZeroToProd\Thryds\Requests\InputField;
@@ -20,6 +22,8 @@ use ZeroToProd\Thryds\Tables\User;
 use ZeroToProd\Thryds\Validation\Validator;
 use ZeroToProd\Thryds\ViewModels\RegisterViewModel;
 
+#[HandlesRoute(Route::register)]
+#[RendersView(View::register)]
 #[Persists(User::class)]
 #[RedirectsTo(Route::login)]
 readonly class RegisterController

@@ -31,12 +31,14 @@ routes:
     dev_only: true
     operations:
       GET: 'Scripts loaded in OPcache'
+    controller: OpcacheScriptsHandler
   opcache_status:
     path: /_opcache/status
     description: 'OPcache status'
     dev_only: true
     operations:
       GET: 'OPcache runtime statistics'
+    controller: OpcacheStatusHandler
   register:
     path: /register
     description: Register
@@ -52,6 +54,7 @@ routes:
     dev_only: true
     operations:
       GET: 'Machine-readable manifest of all registered routes'
+    controller: RouteManifestHandler
   styleguide:
     path: /_styleguide
     description: 'Style guide'
@@ -68,6 +71,20 @@ controllers:
     renders: home
     persists: []
     redirects_to: []
+  OpcacheScriptsHandler:
+    route: opcache_scripts
+    operations:
+      GET: 'Scripts loaded in OPcache'
+    renders: ~
+    persists: []
+    redirects_to: []
+  OpcacheStatusHandler:
+    route: opcache_status
+    operations:
+      GET: 'OPcache runtime statistics'
+    renders: ~
+    persists: []
+    redirects_to: []
   RegisterController:
     route: register
     operations:
@@ -76,6 +93,13 @@ controllers:
     renders: register
     persists: [User]
     redirects_to: [login]
+  RouteManifestHandler:
+    route: routes
+    operations:
+      GET: 'Machine-readable manifest of all registered routes'
+    renders: ~
+    persists: []
+    redirects_to: []
 
 views:
   about:

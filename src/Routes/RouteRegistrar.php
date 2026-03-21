@@ -5,88 +5,77 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Routes;
 
 use Laminas\Diactoros\Response\HtmlResponse;
-use Laminas\Diactoros\Response\JsonResponse;
 use League\Route\Router;
 use Psr\Http\Message\ResponseInterface;
+use ReflectionClass;
+use ZeroToProd\Thryds\Attributes\HandlesRoute;
 use ZeroToProd\Thryds\Attributes\RouteOperation;
-use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Config;
-use ZeroToProd\Thryds\Controllers\HomeController;
-use ZeroToProd\Thryds\Controllers\RegisterController;
-use ZeroToProd\Thryds\OpcacheStatus;
 
 readonly class RouteRegistrar
 {
     public static function register(Router $Router, Config $Config): void
     {
-        $Router->map(
-            Route::home->operations()[0]->HttpMethod->value,
-            Route::home->value,
-            new HomeController(),
-        );
+        $controllers = self::discoverControllers();
 
-        $RegisterController = new RegisterController();
-        foreach (Route::register->operations() as $op) {
-            $Router->map($op->HttpMethod->value, Route::register->value, handler: [$RegisterController, strtolower($op->HttpMethod->value)]);
-        }
-
-        // Auto-register simple view routes by convention: Route::foo → View::foo (matched by name).
-        // home and register are excluded — they use explicit controllers above.
         foreach (Route::cases() as $Route) {
-            $View = View::tryFrom($Route->name);
-            if ($View !== null && $Route !== Route::home && $Route !== Route::register && (!$Route->isDevOnly() || !$Config->isProduction())) {
+            if ($Route->isDevOnly() && $Config->isProduction()) {
+                continue;
+            }
+
+            foreach ($Route->operations() as $op) {
+                // TODO: [RequireRouteEnumInMapCallRector] Enumerations define sets — route pattern must use Route::case->value. Found '(expression)' instead.
                 $Router->map(
-                    $Route->operations()[0]->HttpMethod->value,
+                    $op->HttpMethod->value,
                     $Route->value,
-                    fn(): ResponseInterface => new HtmlResponse(
-                        html: blade()->make(view: $View->value)->render(),
-                    ),
+                    handler: self::handler($Route, $op, $controllers[$Route->name] ?? null),
                 );
             }
         }
+    }
 
-        if (!$Config->isProduction()) {
-            $Router->map(
-                Route::opcache_status->operations()[0]->HttpMethod->value,
-                Route::opcache_status->value,
-                static fn(): ResponseInterface => new JsonResponse(
-                    data: json_decode(
-                        (string) json_encode(value: opcache_get_status(false), flags: JSON_PARTIAL_OUTPUT_ON_ERROR),
-                        associative: true,
-                    ),
-                ),
-            );
+    /**
+     * Scan src/Controllers/ for classes carrying #[HandlesRoute] and return instances keyed by Route case name.
+     *
+     * @return array<string, object>
+     */
+    private static function discoverControllers(): array
+    {
+        $controllers = [];
+        $dir = dirname(__DIR__) . '/Controllers';
 
-            $Router->map(
-                Route::opcache_scripts->operations()[0]->HttpMethod->value,
-                Route::opcache_scripts->value,
-                static fn(): ResponseInterface => new JsonResponse(
-                    data: array_keys(opcache_get_status(true)[OpcacheStatus::scripts] ?? []),
-                ),
-            );
+        foreach (glob($dir . '/*.php') ?: [] as $file) {
+            // TODO: [ForbidHardcodedNamespacePrefixRector] Declarations over hardcoding — namespace prefix should be passed in as configuration.
+            $fqcn = 'ZeroToProd\\Thryds\\Controllers\\' . basename(path: $file, suffix: '.php');
 
-            $Router->map(
-                Route::routes->operations()[0]->HttpMethod->value,
-                Route::routes->value,
-                static fn(): ResponseInterface => new JsonResponse(
-                    data: array_values(array_map(
-                        fn(Route $Route): array => [
-                            RouteManifest::name        => $Route->name,
-                            RouteManifest::path        => $Route->value,
-                            RouteManifest::description => $Route->description(),
-                            RouteManifest::operations  => array_map(
-                                fn(RouteOperation $RouteOperation): array => [
-                                    RouteManifest::method      => $RouteOperation->HttpMethod->value,
-                                    RouteManifest::description => $RouteOperation->description,
-                                ],
-                                $Route->operations(),
-                            ),
-                        ],
-                        array_filter(Route::cases(), fn(Route $Route): bool => !$Route->isDevOnly() && $Route->params() === []),
-                    )),
-                ),
-            );
+            if (!class_exists(class: $fqcn)) {
+                continue;
+            }
+            $attrs = new ReflectionClass(objectOrClass: $fqcn)->getAttributes(HandlesRoute::class);
+
+            if ($attrs === []) {
+                continue;
+            }
+            $controllers[$attrs[0]->newInstance()->Route->name] = new $fqcn();
         }
+
+        return $controllers;
+    }
+
+    /** Resolve handler: #[HandlesRoute] controller takes priority, then #[RendersView] closure. */
+    private static function handler(Route $Route, RouteOperation $op, ?object $controller): callable
+    {
+        if ($controller !== null) {
+            /** @phpstan-ignore return.type (invokable object satisfies callable at runtime) */
+            return is_callable($controller) ? $controller : [$controller, strtolower($op->HttpMethod->value)];
+        }
+
+        $View = $Route->rendersView()
+            ?? throw new \LogicException("Route::{$Route->name} has no #[HandlesRoute] controller and no #[RendersView].");
+
+        return fn(): ResponseInterface => new HtmlResponse(
+            html: blade()->make(view: $View->value)->render(),
+        );
     }
 
 }
