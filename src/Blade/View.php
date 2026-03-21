@@ -8,6 +8,7 @@ use ReflectionClass;
 use ReflectionEnumUnitCase;
 use ReflectionException;
 use ReflectionNamedType;
+use ReflectionProperty;
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 use ZeroToProd\Thryds\Attributes\ExtendsLayout;
 use ZeroToProd\Thryds\Attributes\PageTitle;
@@ -99,23 +100,41 @@ enum View: string
     }
 
     /**
+     * @param class-string $class
+     * @return list<ReflectionProperty>
+     */
+    private static function viewModelProperties(string $class): array
+    {
+        /** @var array<class-string, list<ReflectionProperty>> */
+        static $cache = [];
+
+        return $cache[$class] ??= new ReflectionClass(objectOrClass: $class)->getProperties();
+    }
+
+    /**
      * @return array<string, mixed> Returns stub data for preload rendering. Most views need none; views with ViewModels return their minimum required data.
      * @throws ReflectionException
      */
     public function stubData(): array
     {
+        /** @var array<string, array<string, mixed>> */
+        static $cache = [];
+
+        if (isset($cache[$this->name])) {
+            return $cache[$this->name];
+        }
+
         $attrs = new ReflectionEnumUnitCase(self::class, $this->name)
             ->getAttributes(ReceivesViewModel::class);
 
         if ($attrs === []) {
-            return [];
+            return $cache[$this->name] = [];
         }
 
         $data = [];
-        // TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md
         foreach ($attrs[0]->newInstance()->view_models as $vmClass) {
             $defaults = [];
-            foreach (new ReflectionClass(objectOrClass: $vmClass)->getProperties() as $prop) {
+            foreach (self::viewModelProperties(class: $vmClass) as $prop) {
                 $type = $prop->getType();
                 $defaults[$prop->getName()] = ($type instanceof ReflectionNamedType
                     ? ScalarDefault::tryFrom($type->getName())
@@ -124,6 +143,6 @@ enum View: string
             $data[$vmClass::view_key] = $vmClass::from($defaults);
         }
 
-        return $data;
+        return $cache[$this->name] = $data;
     }
 }

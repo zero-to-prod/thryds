@@ -217,16 +217,14 @@ final class MigratorTest extends DatabaseTestCase
     #[Test]
     public function discover_throws_when_migration_attribute_id_mismatches_filename(): void
     {
-        $Migrator = new Migrator(
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/does not match filename prefix/');
+
+        new Migrator(
             Database: $this->Database,
             migrations_dir: __DIR__ . '/Fixtures/MigrationsWrongId',
             migrations_namespace: self::migrations_namespace,
         );
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessageMatches('/does not match filename prefix/');
-
-        $Migrator->status();
     }
 
     #[Test]

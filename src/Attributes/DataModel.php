@@ -30,14 +30,28 @@ trait DataModel
     use \Zerotoprod\DataModel\DataModel;
     private const string toArray = 'toArray';
 
+    /**
+     * @param class-string $class
+     * @return list<ReflectionProperty>
+     */
+    private static function publicInstanceProperties(string $class): array
+    {
+        /** @var array<class-string, list<ReflectionProperty>> */
+        static $cache = [];
+
+        return $cache[$class] ??= array_values(array_filter(
+            new ReflectionClass(objectOrClass: $class)->getProperties(ReflectionProperty::IS_PUBLIC),
+            static fn(ReflectionProperty $ReflectionProperty): bool => !$ReflectionProperty->isStatic(),
+        ));
+    }
+
     /** @return array<string, mixed> */
     public function toArray(): array
     {
         $result = [];
 
-        // TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md
-        foreach (new ReflectionClass(objectOrClass: $this)->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
-            if ($property->isStatic() || !$property->isInitialized(object: $this)) {
+        foreach (self::publicInstanceProperties(static::class) as $property) {
+            if (!$property->isInitialized(object: $this)) {
                 continue;
             }
 

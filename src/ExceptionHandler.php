@@ -16,10 +16,23 @@ use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 readonly class ExceptionHandler
 {
+    /** @var list<array{ReflectionMethod, class-string<Throwable>}> */
+    private array $handlers;
+
     public function __construct(
         private Config $Config,
         private EmitterInterface $EmitterInterface,
-    ) {}
+    ) {
+        $handlers = [];
+        foreach (new ReflectionClass(self::class)->getMethods(ReflectionMethod::IS_PUBLIC) as $Method) {
+            $attributes = $Method->getAttributes(HandlesException::class);
+            if ($attributes === []) {
+                continue;
+            }
+            $handlers[] = [$Method, $attributes[0]->newInstance()->exception];
+        }
+        $this->handlers = $handlers;
+    }
 
     #[HandlesException(HttpException::class)]
     public function handleHttpException(HttpException $Exception): void
@@ -57,29 +70,21 @@ readonly class ExceptionHandler
     }
 
     /**
-     * Reflects on public methods to find the one whose #[HandlesException] type
-     * is the most specific match for the given exception.
+     * Filters pre-resolved handlers to find those matching the given exception,
+     * sorted most-specific first.
      *
-     * @return array{ReflectionMethod, class-string<Throwable>}[]
+     * @return list<array{ReflectionMethod, class-string<Throwable>}>
      */
     private function candidates(Throwable $Throwable): array
     {
         $matches = [];
 
-        // TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md
-        foreach (new ReflectionClass(self::class)->getMethods(ReflectionMethod::IS_PUBLIC) as $Method) {
-            $attributes = $Method->getAttributes(HandlesException::class);
-            if ($attributes === []) {
-                continue;
-            }
-            $exception_class = $attributes[0]->newInstance()->exception;
-
+        foreach ($this->handlers as [$Method, $exception_class]) {
             if ($Throwable instanceof $exception_class) {
                 $matches[] = [$Method, $exception_class];
             }
         }
 
-        // Sort so the most specific (deepest) exception type comes first.
         usort(array: $matches, callback: static fn(array $a, array $b): int => is_subclass_of(object_or_class: $a[1], class: $b[1]) ? -1 : 1);
 
         return $matches;

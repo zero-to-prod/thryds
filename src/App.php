@@ -25,6 +25,9 @@ use ZeroToProd\Thryds\Routes\RouteRegistrar;
 
 readonly class App
 {
+    /** @var list<array{string, string}> Property name and type name pairs for #[Bind] properties. */
+    private array $bindings;
+
     public function __construct(
         public Config $Config,
         #[Bind]
@@ -35,20 +38,25 @@ readonly class App
         #[Bind]
         public Database $Database,
         public ExceptionHandler $ExceptionHandler,
-    ) {}
-
-    /** Reflects on own properties and registers those marked with #[Bind] as container instances. */
-    public function registerBindings(): void
-    {
-        $Container = Container::getInstance();
-        // TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md
+    ) {
+        $bindings = [];
         foreach (new ReflectionClass(self::class)->getProperties() as $Property) {
             if ($Property->getAttributes(Bind::class) === []) {
                 continue;
             }
             $Type = $Property->getType();
             assert($Type instanceof ReflectionNamedType);
-            $Container->instance($Type->getName(), instance: $this->{$Property->getName()});
+            $bindings[] = [$Property->getName(), $Type->getName()];
+        }
+        $this->bindings = $bindings;
+    }
+
+    /** Registers properties marked with #[Bind] as container instances using pre-resolved metadata. */
+    public function registerBindings(): void
+    {
+        $Container = Container::getInstance();
+        foreach ($this->bindings as [$propertyName, $typeName]) {
+            $Container->instance(abstract: $typeName, instance: $this->{$propertyName});
         }
     }
 

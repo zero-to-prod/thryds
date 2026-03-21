@@ -50,11 +50,16 @@ readonly class Migrator
 
     private const string param_checksum = ':checksum';
 
+    /** @var array<string, array<string, string>> */
+    private array $discovered;
+
     public function __construct(
         private Database $Database,
         private string $migrations_dir,
         private string $migrations_namespace,
-    ) {}
+    ) {
+        $this->discovered = self::discover($this->migrations_dir, $this->migrations_namespace);
+    }
 
     public function ensureTable(): void
     {
@@ -85,7 +90,7 @@ readonly class Migrator
         }
 
         $result = [];
-        foreach ($this->discover() as $id => $info) {
+        foreach ($this->discovered as $id => $info) {
             $checksum = $this->checksum(path: $info[self::key_path]);
             if (isset($applied[$id])) {
                 $result[] = [
@@ -116,7 +121,6 @@ readonly class Migrator
      */
     public function migrate(): array
     {
-        $discovered = $this->discover();
         $applied = [];
         foreach ($this->status() as $row) {
             $id = $this->rowStr($row, key: Migration::id);
@@ -128,7 +132,7 @@ readonly class Migrator
             if ($row[self::col_status] !== MigrationStatus::pending) {
                 continue;
             }
-            $this->instantiate(class: $discovered[$id][self::key_class])->up(Database: $this->Database);
+            $this->instantiate(class: $this->discovered[$id][self::key_class])->up(Database: $this->Database);
             $this->Database->execute(
                 'INSERT INTO `' . Migration::tableName() . '` (id, description, checksum, applied_at) VALUES (' . self::param_id . ', ' . self::param_description . ', ' . self::param_checksum . ', NOW())',
                 [self::param_id => $id, self::param_description => $row[Migration::description], self::param_checksum => $row[Migration::checksum]]
@@ -156,11 +160,10 @@ readonly class Migrator
             return null;
         }
         $id = $this->rowStr(row: $last, key: Migration::id);
-        $discovered = $this->discover();
-        if (!isset($discovered[$id])) {
+        if (!isset($this->discovered[$id])) {
             throw new RuntimeException("Migration $id is applied but its file was not found in {$this->migrations_dir}.");
         }
-        $this->instantiate(class: $discovered[$id][self::key_class])->down(Database: $this->Database);
+        $this->instantiate(class: $this->discovered[$id][self::key_class])->down(Database: $this->Database);
         $this->Database->execute(
             'DELETE FROM `' . Migration::tableName() . '` WHERE id = ' . self::param_id,
             [self::param_id => $id]
@@ -177,21 +180,20 @@ readonly class Migrator
      *
      * @return array<string, array<string, string>>
      */
-    private function discover(): array
+    private static function discover(string $migrations_dir, string $migrations_namespace): array
     {
-        $files = glob($this->migrations_dir . '/[0-9][0-9][0-9][0-9]_*.php');
+        $files = glob($migrations_dir . '/[0-9][0-9][0-9][0-9]_*.php');
         if ($files === false || $files === []) {
             return [];
         }
         sort(array: $files);
         /** @var array<string, array<string, string>> $migrations */
         $migrations = [];
-        // TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md
         foreach ($files as $path) {
             if (!preg_match('/^(\d{4})_(.+)$/', basename($path, suffix: '.php'), $matches)) {
                 continue;
             }
-            $fqcn = $this->migrations_namespace . $matches[2];
+            $fqcn = $migrations_namespace . $matches[2];
             if (!class_exists(class: $fqcn)) {
                 continue;
             }
@@ -266,8 +268,7 @@ readonly class Migrator
         if (!class_exists($class)) {
             throw new RuntimeException("Migration class $class does not exist."); // @codeCoverageIgnore
         }
-        // TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md
-        $instance = new ReflectionClass(objectOrClass: $class)->newInstance();
+        $instance = new $class();
         if (!$instance instanceof MigrationInterface) {
             throw new RuntimeException("$class must implement MigrationInterface.");
         }
