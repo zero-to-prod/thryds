@@ -9,7 +9,6 @@ use ReflectionClass;
 use ReflectionProperty;
 use UnitEnum;
 
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'toArray' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
 /**
  * Project alias for {@see \Zerotoprod\DataModel\DataModel}.
  *
@@ -29,6 +28,7 @@ use UnitEnum;
 trait DataModel
 {
     use \Zerotoprod\DataModel\DataModel;
+    private const string toArray = 'toArray';
 
     public function toArray(): array
     {
@@ -44,9 +44,9 @@ trait DataModel
             $result[$property->getName()] = match (true) {
                 $value instanceof BackedEnum => $value->value,
                 $value instanceof UnitEnum => $value->name,
-                is_object($value) && method_exists(object_or_class: $value, method: 'toArray') => $value->toArray(),
+                is_object($value) && method_exists(object_or_class: $value, method: self::toArray) => $value->toArray(),
                 is_array($value) => array_map(
-                    static fn(mixed $item): mixed => is_object(value: $item) && method_exists(object_or_class: $item, method: 'toArray')
+                    static fn(mixed $item): mixed => is_object(value: $item) && method_exists(object_or_class: $item, method: self::toArray)
                         ? $item->toArray()
                         : ($item instanceof BackedEnum ? $item->value : $item),
                     $value

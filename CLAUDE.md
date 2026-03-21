@@ -2,13 +2,16 @@
 
 ## Project
 
-Thryds — social media platform integrating AI with humanity. PHP 8.5, FrankenPHP, Docker.
+Thryds (a play on words from _threads_) — social media platform integrating AI with humanity. PHP 8.5, FrankenPHP, Docker.
 
 ## Rules
 
-- ALWAYS use Docker. Never run PHP, Composer, or app tooling on the host.
+This project conforms and enforces the following rules **Attribute Oriented Programming (AOP)** style and **Declarative Programming (DP)** style.
+
+- ALL implementations MUST conform to the **AOP** and **DP** principles.
+- ALWAYS `./run` or Docker commands. Never run PHP, Composer, or app tooling on the host.
 - ALWAYS run `./run check:all` before completing any task.
-- ALL code implementations MUST be least invasive and straightforward, optimized for an ai-native experience.
+- ALL code implementations MUST be least invasive and straightforward, optimized for AOP/DP and an agentic experience.
 - ALL code comments MUST be evergreen and not bound to a specific implementation.
 
 ## Invocation
@@ -26,16 +29,18 @@ Raw PHP: `docker compose exec web php scripts/<name>.php`
 
 ## Environment
 
-| File | Purpose |
-|---|---|
-| `compose.yaml` | Base (dev + prod). Always loaded. |
+| File                       | Purpose                                                             |
+|----------------------------|---------------------------------------------------------------------|
+| `compose.yaml`             | Base (dev + prod). Always loaded.                                   |
 | `compose.development.yaml` | Dev overrides — hot reload, file-watching worker. Never production. |
-| `compose.load-test.yaml` | Production load test target. |
+| `compose.load-test.yaml`   | Production load test target.                                        |
 
 ## Read-only Commands
+
 No side effects — safe to run anytime.
 
 ### Check
+
 ```
 ./run check:all           # PRIMARY — all checks + tests; JSON summary, non-aborting
 ./run check:manifest      # diff thryds.yaml against attribute graph
@@ -53,6 +58,7 @@ No side effects — safe to run anytime.
 ```
 
 ### Test
+
 ```
 ./run test              # full suite (unit + integration + database)
 ./run test:unit
@@ -64,6 +70,7 @@ No side effects — safe to run anytime.
 ```
 
 ### Inspect
+
 ```
 ./run list:routes         # → JSON [{name, path, params, dev_only, description, operations}]
 ./run list:manifest       # generate thryds.yaml-format YAML from attributes
@@ -72,6 +79,7 @@ No side effects — safe to run anytime.
 ```
 
 ### Audit
+
 ```
 ./run prod:check        # route cache + OPcache + template cache + @push readiness
 ./run prod:route-cache  # route cache only
@@ -83,6 +91,7 @@ No side effects — safe to run anytime.
 ## Mutating Commands
 
 ### Fix
+
 ```
 ./run fix:all           # sync:manifest → fix:style → fix:rector → generate:preload → check:all
 ./run sync:manifest     # scaffold code for entities in thryds.yaml missing from code
@@ -91,6 +100,7 @@ No side effects — safe to run anytime.
 ```
 
 ### Migrate & Cache
+
 ```
 ./run migrate           # apply pending → JSON {applied:[{id,description}…], total}
 ./run migrate:rollback  # undo last → JSON {rolled_back:{id,description}|null}
@@ -100,6 +110,7 @@ No side effects — safe to run anytime.
 ```
 
 ### Scaffold
+
 ```
 ./run generate:migration -- <PascalCaseClassName>
   # → migrations/NNNN_<ClassName>.php
@@ -142,6 +153,7 @@ logs/php/error.log           # PHP errors, warnings, deprecations
 `thryds.yaml` at the project root declares the desired project structure. Every value maps to a PHP attribute. The attribute graph (read via reflection by `list:inventory`) is the actual state.
 
 ### Workflow
+
 1. Read `thryds.yaml` to understand the project
 2. Edit `thryds.yaml` to declare new entities
 3. Run `./run sync:manifest` to scaffold code with correct attributes
@@ -149,6 +161,7 @@ logs/php/error.log           # PHP errors, warnings, deprecations
 5. Run `./run fix:all` (includes `check:manifest` — fails if drift remains)
 
 ### Enforcement
+
 - `check:manifest` is part of `check:all` — runs on every task completion
 - `sync:manifest` is part of `fix:all` — runs on every fix cycle
 - Drift categories: `missing_from_code`, `missing_from_manifest`, `property_drift`

@@ -10,10 +10,6 @@ use ZeroToProd\Thryds\MigrationStatus;
 use ZeroToProd\Thryds\Migrator;
 use ZeroToProd\Thryds\Tables\Migration;
 
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string ' = '0001'' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string ' WHERE ' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string '/nonexistent/migrations' (used 2x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string 'ZeroToProd\Thryds\Migrations\' (used 6x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
 /**
  * Tests the Migrator infrastructure: table creation, apply, rollback, and
  * checksum-based modification detection.

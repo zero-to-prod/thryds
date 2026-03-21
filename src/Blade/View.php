@@ -89,6 +89,15 @@ enum View: string
     )]
     case styleguide = 'styleguide';
 
+    /** Reads the title declared via {@see PageTitle} on this case. */
+    public function pageTitle(): string
+    {
+        return new ReflectionEnumUnitCase(self::class, $this->name)
+            ->getAttributes(PageTitle::class)[0]
+            ->newInstance()
+            ->title;
+    }
+
     /**
      * @return array<string, mixed> Returns stub data for preload rendering. Most views need none; views with ViewModels return their minimum required data.
      * @throws ReflectionException

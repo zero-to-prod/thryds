@@ -7,7 +7,6 @@ namespace ZeroToProd\Thryds\Queries;
 use Random\RandomException;
 use ZeroToProd\Thryds\Tables\User;
 
-// TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string ', :' (used 4x) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
 /**
  * @method static bool create(string $name, string $handle, string $email, string $password)
  */

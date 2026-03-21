@@ -142,12 +142,19 @@ viewmodels:
   RegisterViewModel:
     view_key: RegisterViewModel
     fields:
-      name: string
-      email: string
       name_error: string
       email_error: string
+      handle_error: string
       password_error: string
       password_confirmation_error: string
+      id: string
+      name: string
+      handle: string
+      email: string
+      email_verified_at: string
+      password: string
+      created_at: string
+      updated_at: string
 
 enums:
   AlertVariant:
