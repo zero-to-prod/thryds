@@ -5,10 +5,10 @@ declare(strict_types=1);
 /**
  * Generate a complete graph of all PHP attributes in the project.
  *
- * Outputs YAML, JSON (structured data) or Mermaid (class diagram) based on --format= argument.
+ * Outputs YAML, JSON (structured data), Markdown (readable document), or Mermaid (class diagram) based on --format= argument.
  *
- * Usage: docker compose exec web php scripts/attribute-graph.php [--format=yaml|json|mermaid] [--output=FILE] [--dir=src] [filters...]
- * Via Composer: ./run list:attributes [-- --format=json --node=RegisterController --layer=controllers]
+ * Usage: docker compose exec web php scripts/attribute-graph.php [--config=FILE] [--format=yaml|json|markdown|mermaid] [--output=FILE] [--dir=src] [filters...]
+ * Via Composer: ./run list:attributes [-- --format=markdown --node=RegisterController --layer=controllers]
  *
  * Filters (all repeatable, combined with AND across types, OR within same type):
  *   --node=<ShortName>   Include node and its one-hop neighbors via edges
@@ -27,6 +27,7 @@ use Symfony\Component\Yaml\Yaml;
 
 $format = 'yaml';
 $output = null;
+$configPath = null;
 $dirs = ['src'];
 $filterNodes = [];
 $filterLayers = [];
@@ -40,6 +41,8 @@ foreach ($argv as $arg) {
         $format = substr($arg, strlen('--format='));
     } elseif (str_starts_with($arg, '--output=')) {
         $output = substr($arg, strlen('--output='));
+    } elseif (str_starts_with($arg, '--config=')) {
+        $configPath = substr($arg, strlen('--config='));
     } elseif (str_starts_with($arg, '--dir=')) {
         $dirs = explode(',', substr($arg, strlen('--dir=')));
     } elseif (str_starts_with($arg, '--node=')) {
@@ -59,12 +62,18 @@ foreach ($argv as $arg) {
 
 $hasFilters = $filterNodes !== [] || $filterLayers !== [] || $filterKinds !== [] || $filterAttrs !== [] || $filterRels !== [] || $filterFiles !== [];
 
-if (! in_array($format, ['yaml', 'json', 'mermaid'], true)) {
+if (! in_array($format, ['yaml', 'json', 'markdown', 'mermaid'], true)) {
     fwrite(STDERR, "Unknown format: $format. Use yaml, json or mermaid.\n");
     exit(1);
 }
 
 $projectRoot = realpath(__DIR__ . '/../') . '/';
+
+// --- Load configuration ---
+$configFile = $configPath !== null
+    ? (str_starts_with($configPath, '/') ? $configPath : $projectRoot . $configPath)
+    : $projectRoot . 'attribute-graph.yaml';
+$config = is_file($configFile) ? Yaml::parseFile($configFile) : [];
 
 // --- Step 1: Discover classes ---
 
@@ -265,8 +274,90 @@ function extractClassRefs(array $args): array
     return $refs;
 }
 
+/** Check if an attribute constructor has a typed (non-string) parameter matching the target. */
+function isTypedParameterReference(string $attributeClass, string $targetFqcn): bool
+{
+    try {
+        $params = new ReflectionClass($attributeClass)->getConstructor()?->getParameters() ?? [];
+    } catch (ReflectionException) {
+        return false;
+    }
+    foreach ($params as $param) {
+        $type = $param->getType();
+        if ($type instanceof ReflectionNamedType && ! $type->isBuiltin()) {
+            if ($targetFqcn === $type->getName() || is_a($targetFqcn, $type->getName(), true)) {
+                return true;
+            }
+        }
+        if ($type instanceof ReflectionUnionType) {
+            foreach ($type->getTypes() as $subType) {
+                if ($subType instanceof ReflectionNamedType && ! $subType->isBuiltin()) {
+                    if ($targetFqcn === $subType->getName() || is_a($targetFqcn, $subType->getName(), true)) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+/** Resolve EdgeKind from a target's ClosedSet Domain case via its #[Group(EdgeKind)] attribute. */
+function resolveEdgeKindFromTarget(string $targetFqcn, array $config): ?string
+{
+    static $cache = [];
+    if (array_key_exists($targetFqcn, $cache)) {
+        return $cache[$targetFqcn];
+    }
+
+    $closedSetClass = $config['closedset']['class'] ?? null;
+    $domainProperty = $config['closedset']['domain_property'] ?? null;
+    $groupClass = $config['group']['class'] ?? null;
+    $groupValueProperty = $config['group']['value_property'] ?? null;
+    $edgeKindClass = $config['edge_kind']['class'] ?? null;
+
+    if ($closedSetClass === null || $groupClass === null || $edgeKindClass === null) {
+        return $cache[$targetFqcn] = null;
+    }
+
+    if (! class_exists($targetFqcn) && ! enum_exists($targetFqcn)) {
+        return $cache[$targetFqcn] = null;
+    }
+    $ref = new ReflectionClass($targetFqcn);
+    $closedSetAttrs = $ref->getAttributes($closedSetClass);
+    if ($closedSetAttrs === []) {
+        return $cache[$targetFqcn] = null;
+    }
+    $domainCase = $closedSetAttrs[0]->newInstance()->{$domainProperty};
+    $caseRef = new ReflectionEnumBackedCase($domainCase::class, $domainCase->name);
+    $groupAttrs = $caseRef->getAttributes($groupClass);
+    if ($groupAttrs === []) {
+        return $cache[$targetFqcn] = null;
+    }
+    $group = $groupAttrs[0]->newInstance();
+    $groupValue = $group->{$groupValueProperty};
+    if ($groupValue instanceof $edgeKindClass) {
+        return $cache[$targetFqcn] = $groupValue->value;
+    }
+    return $cache[$targetFqcn] = null;
+}
+
+/**
+ * Infer the semantic edge kind from the attribute's constructor signature and the target's Domain.
+ *
+ * Typed parameters → look up target's ClosedSet Domain → Domain case's Group(EdgeKind).
+ * String (class-string) parameters → data-flow (runtime reference).
+ */
+function resolveEdgeKind(string $attributeClass, string $targetFqcn, array $config): ?string
+{
+    if (isTypedParameterReference($attributeClass, $targetFqcn)) {
+        return resolveEdgeKindFromTarget($targetFqcn, $config);
+    }
+    return $config['edge_kind']['default'] ?? null;
+}
+
 /** Collect raw edges from ReflectionAttribute instances for a given source. */
-function collectEdges(array $reflectionAttributes, string $fromFqcn, string $source, array &$rawEdges): void
+function collectEdges(array $reflectionAttributes, string $fromFqcn, string $source, array &$rawEdges, array $config): void
 {
     foreach ($reflectionAttributes as $attr) {
         if ($attr->getName() === Attribute::class) {
@@ -283,53 +374,84 @@ function collectEdges(array $reflectionAttributes, string $fromFqcn, string $sou
                     'target_fqcn' => $targetFqcn,
                     'source' => $source,
                     'args' => $args,
+                    'kind' => resolveEdgeKind($attr->getName(), $targetFqcn, $config),
                 ];
             }
         }
     }
 }
 
-/** Derive a semantic layer from a FQCN based on the namespace segment after the project root. */
-function deriveLayer(string $fqcn): string
+/** Read the PSR-4 root namespace for a source directory from composer.json. */
+function resolveRootNamespace(string $projectRoot, string $dir): ?string
 {
-    // Strip the project root namespace.
-    $relative = preg_replace('/^ZeroToProd\\\\Thryds\\\\/', '', $fqcn);
+    $composerPath = $projectRoot . 'composer.json';
+    if (! is_file($composerPath)) {
+        return null;
+    }
+    $composer = json_decode(file_get_contents($composerPath), true);
+    $psr4 = array_merge($composer['autoload']['psr-4'] ?? [], $composer['autoload-dev']['psr-4'] ?? []);
+    foreach ($psr4 as $namespace => $path) {
+        if (rtrim($path, '/') === rtrim($dir, '/')) {
+            return $namespace;
+        }
+    }
+    return null;
+}
+
+/** Build the namespace-segment-to-layer map from the Layer enum via reflection. */
+function buildLayerMap(array $config): array
+{
+    $layerClass = $config['layer']['class'] ?? null;
+    $segmentAttribute = $config['layer']['segment_attribute'] ?? null;
+    $segmentProperty = $config['layer']['segment_property'] ?? 'namespace';
+
+    if ($layerClass === null || ! enum_exists($layerClass)) {
+        return [];
+    }
+
+    $map = [];
+    foreach ($layerClass::cases() as $case) {
+        $caseRef = new ReflectionEnumBackedCase($layerClass, $case->name);
+        if ($segmentAttribute !== null) {
+            $segmentAttrs = $caseRef->getAttributes($segmentAttribute);
+            $segment = $segmentAttrs !== [] ? $segmentAttrs[0]->newInstance()->{$segmentProperty} : ucfirst($case->name);
+        } else {
+            $segment = ucfirst($case->name);
+        }
+        $map[$segment] = $case->value;
+    }
+    return $map;
+}
+
+/** Derive a semantic layer from a FQCN based on the namespace segment after the project root. */
+function deriveLayer(string $fqcn, string $rootNamespace, array $layerMap): string
+{
+    $relative = preg_replace('/^' . preg_quote($rootNamespace, '/') . '/', '', $fqcn);
     if ($relative === $fqcn) {
-        // Not under the project namespace — use first segment.
         $parts = explode('\\', $fqcn);
         return strtolower($parts[0]);
     }
 
-    // Map the first namespace segment to a layer.
     $firstSegment = explode('\\', $relative)[0];
 
-    return match ($firstSegment) {
-        'Attributes' => 'attributes',
-        'Blade' => 'views',
-        'Controllers' => 'controllers',
-        'Requests' => 'requests',
-        'Routes' => 'routing',
-        'Schema' => 'schema',
-        'Tables' => 'tables',
-        'UI' => 'ui',
-        'Validation' => 'validation',
-        'ViewModels' => 'viewmodels',
-        default => str_contains($relative, '\\') ? strtolower($firstSegment) : 'core',
-    };
+    return $layerMap[$firstSegment] ?? (str_contains($relative, '\\') ? strtolower($firstSegment) : 'core');
 }
+
+$rootNamespace = resolveRootNamespace($projectRoot, $dirs[0]) ?? '';
+$layerMap = buildLayerMap($config);
 
 foreach ($classes as $fqcn => $relPath) {
     $ref = new ReflectionClass($fqcn);
     $entry = [
         'file' => $relPath,
         'kind' => classKind($ref),
-        'layer' => deriveLayer($fqcn),
+        'layer' => deriveLayer($fqcn, $rootNamespace, $layerMap),
     ];
 
     // Class-level attributes.
     $refAttrs = $ref->getAttributes();
     $classAttrs = collectAttributes($refAttrs);
-    collectEdges($refAttrs, $fqcn, 'class', $rawEdges);
+    collectEdges($refAttrs, $fqcn, 'class', $rawEdges, $config);
     if ($classAttrs !== []) {
         $entry['attributes'] = $classAttrs;
     }
@@ -342,7 +464,7 @@ foreach ($classes as $fqcn => $relPath) {
         }
         $propRefAttrs = $prop->getAttributes();
         $propAttrs = collectAttributes($propRefAttrs);
-        collectEdges($propRefAttrs, $fqcn, 'property:' . $prop->getName(), $rawEdges);
+        collectEdges($propRefAttrs, $fqcn, 'property:' . $prop->getName(), $rawEdges, $config);
         if ($propAttrs !== []) {
             $properties[$prop->getName()] = ['attributes' => $propAttrs];
         }
@@ -359,7 +481,7 @@ foreach ($classes as $fqcn => $relPath) {
         }
         $methodRefAttrs = $method->getAttributes();
         $methodAttrs = collectAttributes($methodRefAttrs);
-        collectEdges($methodRefAttrs, $fqcn, 'method:' . $method->getName(), $rawEdges);
+        collectEdges($methodRefAttrs, $fqcn, 'method:' . $method->getName(), $rawEdges, $config);
         if ($methodAttrs !== []) {
             $methods[$method->getName()] = ['attributes' => $methodAttrs];
         }
@@ -378,7 +500,7 @@ foreach ($classes as $fqcn => $relPath) {
         $constRefAttrs = $const->getAttributes();
         $constAttrs = collectAttributes($constRefAttrs);
         $prefix = $ref->isEnum() ? 'case' : 'constant';
-        collectEdges($constRefAttrs, $fqcn, "$prefix:" . $const->getName(), $rawEdges);
+        collectEdges($constRefAttrs, $fqcn, "$prefix:" . $const->getName(), $rawEdges, $config);
         if ($constAttrs !== [] || ($isBackedEnum && $const->isEnumCase())) {
             $caseEntry = [];
             if ($isBackedEnum && $const->isEnumCase()) {
@@ -528,6 +650,7 @@ foreach ($rawEdges as $raw) {
         'from' => $fromShort,
         'to' => $toShort,
         'rel' => strtolower($raw['attr']),
+        'kind' => $raw['kind'],
         'source' => $raw['source'],
         'args' => $raw['args'] ?? [],
         'from_file' => $graph[$raw['from_fqcn']]['file'] ?? null,
@@ -545,12 +668,26 @@ if ($filterRels !== []) {
     $edges = array_values(array_filter($edges, static fn(array $e): bool => in_array($e['rel'], $filterRels, true)));
 }
 
+// Build reverse-edge index: target node → list of dependents that reference it.
+$dependents = [];
+foreach ($edges as $edge) {
+    $entry = ['from' => $edge['from'], 'rel' => $edge['rel']];
+    if ($edge['source'] !== 'class') {
+        $entry['source'] = $edge['source'];
+    }
+    $dependents[$edge['to']][] = $entry;
+}
+ksort($dependents);
+
 // --- Step 4: Output ---
 
 if ($format === 'yaml') {
     // Emit edges as a top-level section alongside the nodes.
     $yamlEdges = array_map(static function (array $e): array {
         $entry = ['from' => $e['from'], 'to' => $e['to'], 'rel' => $e['rel']];
+        if ($e['kind'] !== null) {
+            $entry['kind'] = $e['kind'];
+        }
         if ($e['source'] !== 'class') {
             $entry['source'] = $e['source'];
         }
@@ -594,11 +731,14 @@ if ($format === 'yaml') {
     }
     ksort($instructions);
 
-    $output_data = ['_index' => $index, '_instructions' => $instructions, 'edges' => $yamlEdges, 'nodes' => $graph];
+    $output_data = ['_index' => $index, '_instructions' => $instructions, '_dependents' => $dependents, 'edges' => $yamlEdges, 'nodes' => $graph];
     $result = Yaml::dump($output_data, 6, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE | Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
 } elseif ($format === 'json') {
     $jsonEdges = array_map(static function (array $e): array {
         $entry = ['from' => $e['from'], 'to' => $e['to'], 'rel' => $e['rel']];
+        if ($e['kind'] !== null) {
+            $entry['kind'] = $e['kind'];
+        }
         if ($e['source'] !== 'class') {
             $entry['source'] = $e['source'];
         }
@@ -641,8 +781,226 @@ if ($format === 'yaml') {
     }
     ksort($instructions);
 
-    $output_data = ['_index' => $index, '_instructions' => $instructions, 'edges' => $jsonEdges, 'nodes' => $graph];
+    $output_data = ['_index' => $index, '_instructions' => $instructions, '_dependents' => $dependents, 'edges' => $jsonEdges, 'nodes' => $graph];
     $result = json_encode($output_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
+} elseif ($format === 'markdown') {
+    // Markdown readable document.
+    $lines = ['# Attribute Graph', ''];
+
+    // Layer index.
+    $index = [];
+    foreach ($graph as $fqcn => $entry) {
+        $index[$entry['layer']][] = $shortNames[$fqcn];
+    }
+    ksort($index);
+    foreach ($index as &$names) {
+        sort($names);
+    }
+    unset($names);
+
+    $lines[] = '## Index';
+    $lines[] = '';
+    $lines[] = '| Layer | Nodes |';
+    $lines[] = '|-------|-------|';
+    foreach ($index as $layer => $names) {
+        $lines[] = '| ' . $layer . ' | ' . implode(', ', array_map(static fn(string $n): string => '`' . $n . '`', $names)) . ' |';
+    }
+    $lines[] = '';
+
+    // Instructions.
+    $instructions = [];
+    foreach ($graph as $fqcn => $entry) {
+        $short = $shortNames[$fqcn];
+        foreach ($entry['attributes'] ?? [] as $attrName => $attrArgs) {
+            if (! is_array($attrArgs)) {
+                continue;
+            }
+            if (isset($attrArgs['addCase']) && $attrArgs['addCase'] !== '') {
+                $instructions[$short] = ['type' => 'addCase', 'attribute' => $attrName, 'steps' => $attrArgs['addCase']];
+            }
+            if (isset($attrArgs['addKey']) && $attrArgs['addKey'] !== '') {
+                $instructions[$short] = ['type' => 'addKey', 'attribute' => $attrName, 'steps' => $attrArgs['addKey']];
+            }
+        }
+    }
+    ksort($instructions);
+
+    if ($instructions !== []) {
+        $lines[] = '## Mutation Instructions';
+        $lines[] = '';
+        foreach ($instructions as $node => $instr) {
+            $lines[] = '### `' . $node . '` (' . $instr['type'] . ' via ' . $instr['attribute'] . ')';
+            $lines[] = '';
+            foreach (preg_split('/\r?\n/', $instr['steps']) as $step) {
+                $lines[] = rtrim($step);
+            }
+            $lines[] = '';
+        }
+    }
+
+    // Nodes grouped by layer.
+    $lines[] = '## Nodes';
+    $lines[] = '';
+
+    $byLayer = [];
+    foreach ($graph as $fqcn => $entry) {
+        $byLayer[$entry['layer']][$fqcn] = $entry;
+    }
+    ksort($byLayer);
+
+    foreach ($byLayer as $layer => $layerNodes) {
+        $lines[] = '### ' . ucfirst($layer);
+        $lines[] = '';
+        foreach ($layerNodes as $fqcn => $entry) {
+            $short = $shortNames[$fqcn];
+            $lines[] = '#### `' . $short . '` (' . $entry['kind'] . ')';
+            $lines[] = '';
+            $lines[] = '- **File:** `' . $entry['file'] . '`';
+
+            // Class-level attributes.
+            if (isset($entry['attributes'])) {
+                foreach ($entry['attributes'] as $attrName => $attrArgs) {
+                    if ($attrArgs === true) {
+                        $lines[] = '- **' . $attrName . '**';
+                    } else {
+                        $lines[] = '- **' . $attrName . ':** ' . mdFormatArgs($attrArgs);
+                    }
+                }
+            }
+            $lines[] = '';
+
+            // Properties.
+            if (isset($entry['properties'])) {
+                $lines[] = '**Properties:**';
+                $lines[] = '';
+                $lines[] = '| Property | Attributes |';
+                $lines[] = '|----------|------------|';
+                foreach ($entry['properties'] as $propName => $propData) {
+                    $attrParts = [];
+                    foreach ($propData['attributes'] ?? [] as $attrName => $attrArgs) {
+                        if ($attrArgs === true) {
+                            $attrParts[] = $attrName;
+                        } else {
+                            $attrParts[] = $attrName . ': ' . mdFormatArgs($attrArgs);
+                        }
+                    }
+                    $lines[] = '| `' . $propName . '` | ' . implode('; ', $attrParts) . ' |';
+                }
+                $lines[] = '';
+            }
+
+            // Methods.
+            if (isset($entry['methods'])) {
+                $lines[] = '**Methods:**';
+                $lines[] = '';
+                $lines[] = '| Method | Attributes |';
+                $lines[] = '|--------|------------|';
+                foreach ($entry['methods'] as $methodName => $methodData) {
+                    $attrParts = [];
+                    foreach ($methodData['attributes'] ?? [] as $attrName => $attrArgs) {
+                        if ($attrArgs === true) {
+                            $attrParts[] = $attrName;
+                        } else {
+                            $attrParts[] = $attrName . ': ' . mdFormatArgs($attrArgs);
+                        }
+                    }
+                    $lines[] = '| `' . $methodName . '()` | ' . implode('; ', $attrParts) . ' |';
+                }
+                $lines[] = '';
+            }
+
+            // Enum cases.
+            if (isset($entry['cases'])) {
+                $lines[] = '**Cases:**';
+                $lines[] = '';
+                $hasCaseAttrs = false;
+                foreach ($entry['cases'] as $caseData) {
+                    if (isset($caseData['attributes'])) {
+                        $hasCaseAttrs = true;
+                        break;
+                    }
+                }
+                if ($hasCaseAttrs) {
+                    $lines[] = '| Case | Value | Attributes |';
+                    $lines[] = '|------|-------|------------|';
+                    foreach ($entry['cases'] as $caseName => $caseData) {
+                        $val = isset($caseData['value']) ? '`' . $caseData['value'] . '`' : '';
+                        $attrParts = [];
+                        foreach ($caseData['attributes'] ?? [] as $attrName => $attrArgs) {
+                            if ($attrArgs === true) {
+                                $attrParts[] = $attrName;
+                            } else {
+                                $attrParts[] = $attrName . ': ' . mdFormatArgs($attrArgs);
+                            }
+                        }
+                        $lines[] = '| `' . $caseName . '` | ' . $val . ' | ' . implode('; ', $attrParts) . ' |';
+                    }
+                } else {
+                    $caseNames = array_keys($entry['cases']);
+                    $caseValues = array_map(static fn(array $c): string => isset($c['value']) ? '`' . $c['value'] . '`' : '', $entry['cases']);
+                    $lines[] = '| Case | Value |';
+                    $lines[] = '|------|-------|';
+                    foreach ($entry['cases'] as $caseName => $caseData) {
+                        $val = isset($caseData['value']) ? '`' . $caseData['value'] . '`' : '';
+                        $lines[] = '| `' . $caseName . '` | ' . $val . ' |';
+                    }
+                }
+                $lines[] = '';
+            }
+
+            // Constants.
+            if (isset($entry['constants'])) {
+                $lines[] = '**Constants:**';
+                $lines[] = '';
+                $lines[] = '| Constant | Attributes |';
+                $lines[] = '|----------|------------|';
+                foreach ($entry['constants'] as $constName => $constData) {
+                    $attrParts = [];
+                    foreach ($constData['attributes'] ?? [] as $attrName => $attrArgs) {
+                        if ($attrArgs === true) {
+                            $attrParts[] = $attrName;
+                        } else {
+                            $attrParts[] = $attrName . ': ' . mdFormatArgs($attrArgs);
+                        }
+                    }
+                    $lines[] = '| `' . $constName . '` | ' . implode('; ', $attrParts) . ' |';
+                }
+                $lines[] = '';
+            }
+        }
+    }
+
+    // Edges table.
+    $lines[] = '## Edges';
+    $lines[] = '';
+    $lines[] = '| From | To | Relationship | Kind | Source |';
+    $lines[] = '|------|----|-------------|------|--------|';
+    foreach ($edges as $edge) {
+        $source = $edge['source'] === 'class' ? '' : $edge['source'];
+        $kind = $edge['kind'] ?? '';
+        $lines[] = '| `' . $edge['from'] . '` | `' . $edge['to'] . '` | ' . $edge['rel'] . ' | ' . $kind . ' | ' . $source . ' |';
+    }
+    $lines[] = '';
+
+    // Dependents (reverse-edge index).
+    if ($dependents !== []) {
+        $lines[] = '## Dependents';
+        $lines[] = '';
+        foreach ($dependents as $target => $deps) {
+            $lines[] = '### `' . $target . '`';
+            $lines[] = '';
+            foreach ($deps as $dep) {
+                $label = '`' . $dep['from'] . '` via ' . $dep['rel'];
+                if (isset($dep['source'])) {
+                    $label .= ' (' . $dep['source'] . ')';
+                }
+                $lines[] = '- ' . $label;
+            }
+            $lines[] = '';
+        }
+    }
+
+    $result = implode("\n", $lines) . "\n";
 } else {
     // Mermaid class diagram.
     $lines = ['classDiagram'];
@@ -688,11 +1046,14 @@ if ($format === 'yaml') {
     $edgeGroups = [];
     foreach ($edges as $edge) {
         $key = $edge['from'] . '|' . $edge['to'] . '|' . $edge['rel'];
-        $edgeGroups[$key] ??= ['from' => $edge['from'], 'to' => $edge['to'], 'rel' => $edge['rel'], 'sources' => [], 'from_file' => $edge['from_file'], 'to_file' => $edge['to_file']];
+        $edgeGroups[$key] ??= ['from' => $edge['from'], 'to' => $edge['to'], 'rel' => $edge['rel'], 'kind' => $edge['kind'], 'sources' => [], 'from_file' => $edge['from_file'], 'to_file' => $edge['to_file']];
         $edgeGroups[$key]['sources'][] = $edge['source'];
     }
     foreach ($edgeGroups as $group) {
         $label = $group['rel'];
+        if ($group['kind'] !== null) {
+            $label = '(' . $group['kind'] . ') ' . $label;
+        }
         // Annotate with source locations when not all class-level.
         $nonClass = array_filter($group['sources'], static fn(string $s): bool => $s !== 'class');
         if ($nonClass !== []) {
@@ -718,7 +1079,39 @@ if ($format === 'yaml') {
         $lines[] = "    {$group['from']} ..> {$group['to']} : {$label}{$fileComment}";
     }
 
+    // Dependents as reverse-edge notes on each target node.
+    foreach ($dependents as $target => $deps) {
+        $depLabels = array_map(static function (array $d): string {
+            $label = $d['from'] . ' via ' . $d['rel'];
+            if (isset($d['source'])) {
+                $label .= ' (' . $d['source'] . ')';
+            }
+            return sanitizeMermaid($label);
+        }, $deps);
+        $lines[] = '    note for ' . $target . ' "Dependents: ' . implode(', ', $depLabels) . '"';
+    }
+
     $result = implode("\n", $lines) . "\n";
+}
+
+/** Format attribute arguments as an inline markdown string. */
+function mdFormatArgs(mixed $args): string
+{
+    if ($args === true) {
+        return 'true';
+    }
+    if (is_scalar($args)) {
+        return '`' . $args . '`';
+    }
+    if (is_array($args)) {
+        $parts = [];
+        foreach ($args as $k => $v) {
+            $formatted = is_array($v) ? summarizeArgs($v) : (string) ($v === true ? 'true' : ($v === false ? 'false' : ($v === null ? 'null' : $v)));
+            $parts[] = is_string($k) ? $k . ': ' . $formatted : $formatted;
+        }
+        return implode(', ', $parts);
+    }
+    return '';
 }
 
 /** Strip characters that Mermaid interprets as syntax inside class members. */

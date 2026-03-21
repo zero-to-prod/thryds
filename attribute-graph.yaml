@@ -1,0 +1,25 @@
+# Configuration for scripts/attribute-graph.php
+#
+# Externalizes all codebase-specific class references so the script
+# is reusable across any PHP project that follows AOP conventions.
+
+# Attribute marking an enum as a closed set of allowed values.
+closedset:
+  class: ZeroToProd\Thryds\Attributes\ClosedSet
+  domain_property: Domain
+
+# Attribute grouping enum cases under a companion enum.
+group:
+  class: ZeroToProd\Thryds\Attributes\Group
+  value_property: BackedEnum
+
+# Edge kind enum for semantic classification of graph edges.
+edge_kind:
+  class: ZeroToProd\Thryds\Attributes\EdgeKind
+  default: data-flow
+
+# Layer enum mapping namespace segments to graph layers.
+layer:
+  class: ZeroToProd\Thryds\Attributes\Layer
+  segment_attribute: ZeroToProd\Thryds\Attributes\Segment
+  segment_property: namespace
