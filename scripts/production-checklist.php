@@ -23,6 +23,7 @@ use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Blade\Component;
 use ZeroToProd\Thryds\Blade\View;
+use ZeroToProd\Thryds\Blade\Vite;
 use ZeroToProd\Thryds\Config;
 
 $base_dir = dirname(__DIR__);
@@ -204,7 +205,10 @@ function verifyTemplateCache(string $base_dir): int
         Config::blade_cache_dir => $cache_dir,
         Config::template_dir => $base_dir . '/templates',
     ]);
-    $Blade = App::bootBlade($Config, $base_dir);
+    $Vite = new Vite($Config, baseDir: $base_dir, entry_css: [
+        Vite::app_entry => [Vite::app_css],
+    ]);
+    $Blade = App::bootBlade($Config, $Vite);
 
     foreach (View::cases() as $view) {
         $Blade->make($view->value, $view->stubData())->render();

@@ -8,7 +8,7 @@ use Random\RandomException;
 use ZeroToProd\Thryds\Tables\User;
 
 /**
- * @method static bool create(string $name, string $handle, string $email, string $password)
+ * @method static void create(?string $name, ?string $handle, ?string $email, ?string $password)
  */
 readonly class CreateUserQuery
 {

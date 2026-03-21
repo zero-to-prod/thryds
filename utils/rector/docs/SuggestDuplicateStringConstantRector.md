@@ -8,7 +8,7 @@ Flags string literals that appear two or more times in a file by adding a TODO c
 
 ## Rationale
 
-Constants name things. When the same string literal appears in multiple places, every future change requires finding and updating every copy. A duplicated string is both a maintenance hazard and a signal that a concept has not yet been named. The project philosophy — "Consts name things, enums limit choices, attributes define properties" — means a repeated string should become a public constant on the appropriate class.
+Constants name things. When the same string literal appears in multiple places, every future change requires finding and updating every copy. A duplicated string is both a maintenance hazard and a signal that a concept has not yet been named. The project philosophy — "Consts name things, enums define sets, attributes define properties" — means a repeated string should become a public constant on the appropriate class.
 
 Strings that are the values of existing `const` declarations, `define()` calls, or `ClassConst` nodes are excluded, since they are already the source of truth.
 
@@ -38,7 +38,7 @@ Project config (`rector.php`):
 ```php
 $rectorConfig->ruleWithConfiguration(SuggestDuplicateStringConstantRector::class, [
     'mode' => 'warn',
-    'message' => "TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string '%s' (used %dx) to a single source of truth. Consts name things, enums limit choices, attributes define properties.",
+    'message' => "TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string '%s' (used %dx) to a single source of truth. Consts name things, enums define sets, attributes define properties.",
 ]);
 ```
 

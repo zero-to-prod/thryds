@@ -10,7 +10,7 @@ enum Permission: string
 -----
 <?php
 
-// TODO: [RequireClosedSetOnBackedEnumRector] Backed enum Permission must declare #[ClosedSet] — enums limit choices (ADR-007).
+// TODO: [RequireClosedSetOnBackedEnumRector] Backed enum Permission must declare #[ClosedSet] — enums define sets (ADR-007).
 enum Permission: string
 {
     case read = 'read';

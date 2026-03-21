@@ -2,7 +2,7 @@
 
 namespace Fixture;
 
-// TODO: [SuggestEnumForInternalOnlyConstantsRector] AlreadyCommented has 2 string constants only referenced internally — consider migrating to a backed enum.
+// TODO: [SuggestEnumForInternalOnlyConstantsRector] Enumerations define sets — AlreadyCommented has 2 string constants only referenced internally. Migrate to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForInternalOnlyConstantsRector.md
 readonly class AlreadyCommented
 {
     public const string foo = 'foo';

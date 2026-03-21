@@ -2,7 +2,7 @@
 
 namespace Fixture;
 
-// TODO: [SuggestEnumForNameEqualsValueConstRector] BladeDirectives has 3 string constants where name equals value — consider migrating to a backed enum.
+// TODO: [SuggestEnumForNameEqualsValueConstRector] Enumerations define sets — BladeDirectives has 3 string constants where name equals value. Migrate to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForNameEqualsValueConstRector.md
 readonly class BladeDirectives
 {
     public const string production = 'production';

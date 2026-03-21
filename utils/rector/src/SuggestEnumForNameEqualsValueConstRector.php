@@ -21,7 +21,7 @@ final class SuggestEnumForNameEqualsValueConstRector extends AbstractRector impl
 {
     private string $mode = 'warn';
 
-    private string $message = 'TODO: [SuggestEnumForNameEqualsValueConstRector] %s has %d string constants where name equals value — consider migrating to a backed enum.';
+    private string $message = 'TODO: [SuggestEnumForNameEqualsValueConstRector] Enumerations define sets — %s has %d string constants where name equals value. Migrate to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForNameEqualsValueConstRector.md';
 
     private int $minConstants = 2;
 
@@ -31,7 +31,7 @@ final class SuggestEnumForNameEqualsValueConstRector extends AbstractRector impl
     public function configure(array $configuration): void
     {
         $this->mode = $configuration['mode'] ?? 'warn';
-        $this->message = $configuration['message'] ?? 'TODO: [SuggestEnumForNameEqualsValueConstRector] %s has %d string constants where name equals value — consider migrating to a backed enum.';
+        $this->message = $configuration['message'] ?? 'TODO: [SuggestEnumForNameEqualsValueConstRector] Enumerations define sets — %s has %d string constants where name equals value. Migrate to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForNameEqualsValueConstRector.md';
         $this->minConstants = $configuration['minConstants'] ?? 2;
         $this->excludedAttributes = $configuration['excludedAttributes'] ?? [];
     }
@@ -51,7 +51,7 @@ readonly class BladeDirectives
 }
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: [SuggestEnumForNameEqualsValueConstRector] BladeDirectives has 3 string constants where name equals value — consider migrating to a backed enum.
+// TODO: [SuggestEnumForNameEqualsValueConstRector] Enumerations define sets — BladeDirectives has 3 string constants where name equals value. Migrate to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForNameEqualsValueConstRector.md
 readonly class BladeDirectives
 {
     public const string production = 'production';
@@ -61,7 +61,7 @@ readonly class BladeDirectives
 CODE_SAMPLE,
                     [
                         'mode' => 'warn',
-                        'message' => 'TODO: [SuggestEnumForNameEqualsValueConstRector] %s has %d string constants where name equals value — consider migrating to a backed enum.',
+                        'message' => 'TODO: [SuggestEnumForNameEqualsValueConstRector] Enumerations define sets — %s has %d string constants where name equals value. Migrate to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForNameEqualsValueConstRector.md',
                         'minConstants' => 2,
                         'excludedAttributes' => [],
                     ]

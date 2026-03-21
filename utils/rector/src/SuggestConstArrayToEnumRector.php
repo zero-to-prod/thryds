@@ -20,12 +20,12 @@ final class SuggestConstArrayToEnumRector extends AbstractRector implements Conf
 {
     private string $mode = 'warn';
 
-    private string $message = 'TODO: Consider migrating const arrays to a backed enum with #[Group] attributes';
+    private string $message = 'TODO: [SuggestConstArrayToEnumRector] Enumerations define sets — migrate const arrays to a backed enum with #[ClosedSet] and #[Group] attributes. See: utils/rector/docs/SuggestConstArrayToEnumRector.md';
 
     public function configure(array $configuration): void
     {
         $this->mode = $configuration['mode'] ?? 'warn';
-        $this->message = $configuration['message'] ?? 'TODO: Consider migrating const arrays to a backed enum with #[Group] attributes';
+        $this->message = $configuration['message'] ?? 'TODO: [SuggestConstArrayToEnumRector] Enumerations define sets — migrate const arrays to a backed enum with #[ClosedSet] and #[Group] attributes. See: utils/rector/docs/SuggestConstArrayToEnumRector.md';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -49,7 +49,7 @@ readonly class DevFilter
 }
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: Consider migrating const arrays to a backed enum with #[Group] attributes
+// TODO: [SuggestConstArrayToEnumRector] Enumerations define sets — migrate const arrays to a backed enum with #[ClosedSet] and #[Group] attributes. See: utils/rector/docs/SuggestConstArrayToEnumRector.md
 readonly class DevFilter
 {
     public const array dev_vendors = [
@@ -65,7 +65,7 @@ readonly class DevFilter
 CODE_SAMPLE,
                     [
                         'mode' => 'warn',
-                        'message' => 'TODO: Consider migrating const arrays to a backed enum with #[Group] attributes',
+                        'message' => 'TODO: [SuggestConstArrayToEnumRector] Enumerations define sets — migrate const arrays to a backed enum with #[ClosedSet] and #[Group] attributes. See: utils/rector/docs/SuggestConstArrayToEnumRector.md',
                     ]
                 ),
             ]

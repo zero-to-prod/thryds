@@ -21,7 +21,7 @@ namespace Fixture;
 
 function handle(string $status): string
 {
-    // TODO: [RequireEnumForBranchingConstantRector] $status is compared against 3 literals ('active', 'inactive', 'pending') — this is an implicit closed set. Consider extracting to a backed enum and using match(). See: utils/rector/docs/RequireEnumForBranchingConstantRector.md
+    // TODO: [RequireEnumForBranchingConstantRector] Enumerations define sets — $status is compared against 3 literals ('active', 'inactive', 'pending'), forming an implicit closed set. Extract to a backed enum with #[ClosedSet] and use match(). See: utils/rector/docs/RequireEnumForBranchingConstantRector.md
     if ($status === 'active') {
         return 'Active';
     } elseif ($status === 'inactive') {

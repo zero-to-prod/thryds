@@ -14,7 +14,7 @@ use ZeroToProd\Thryds\Validation\Rule;
 /**
  * Parsed registration form submission.
  *
- * @method static self from(array{name: ?string, handle: ?string, email: ?string, password: ?string, password_confirmation: string} $data)
+ * @method static self from(array{name?: ?string, handle?: ?string, email?: ?string, password?: ?string, password_confirmation: string} $data)
  */
 readonly class RegisterRequest
 {

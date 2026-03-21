@@ -10,7 +10,7 @@ enum Priority: int
 -----
 <?php
 
-// TODO: [RequireClosedSetOnBackedEnumRector] Backed enum Priority must declare #[ClosedSet] — enums limit choices (ADR-007).
+// TODO: [RequireClosedSetOnBackedEnumRector] Backed enum Priority must declare #[ClosedSet] — enums define sets (ADR-007).
 enum Priority: int
 {
     case Low = 1;

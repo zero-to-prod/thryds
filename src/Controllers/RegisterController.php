@@ -28,16 +28,15 @@ readonly class RegisterController
     {
 
         if ($ServerRequestInterface->getMethod() === HttpMethod::POST->value) {
+            /** @phpstan-ignore argument.type (PSR-7 parsed body is always array for form POST) */
             $RegisterRequest = RegisterRequest::from($ServerRequestInterface->getParsedBody());
 
             $errors = Validator::validate(model: $RegisterRequest);
             if ($errors !== []) {
                 return new HtmlResponse(
                     html: blade()->make(view: View::register->value, data: [
-                        RegisterViewModel::view_key => RegisterViewModel::from([
-                            ...$RegisterRequest->toArray(),
-                            ...$errors,
-                        ]),
+                        /** @phpstan-ignore argument.type (spread merges request fields with error keys into the expected shape) */
+                        RegisterViewModel::view_key => RegisterViewModel::from([...$RegisterRequest->toArray(), ...$errors]),
                         InputField::fields => InputField::reflect(RegisterRequest::class),
                     ])->render()
                 );
@@ -57,7 +56,7 @@ readonly class RegisterController
             html: blade()->make(
                 view: View::register->value,
                 data: [
-                    RegisterViewModel::view_key => RegisterViewModel::from(''),
+                    RegisterViewModel::view_key => RegisterViewModel::from([]),
                     InputField::fields => InputField::reflect(RegisterRequest::class),
                 ]
             )->render()

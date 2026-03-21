@@ -18,7 +18,7 @@ final class RequireClosedSetOnBackedEnumRector extends AbstractRector implements
 
     private string $mode = 'warn';
 
-    private string $message = 'TODO: [RequireClosedSetOnBackedEnumRector] Backed enum %s must declare #[ClosedSet] — enums limit choices (ADR-007).';
+    private string $message = 'TODO: [RequireClosedSetOnBackedEnumRector] Backed enum %s must declare #[ClosedSet] — enums define sets (ADR-007).';
 
     public function configure(array $configuration): void
     {
@@ -41,7 +41,7 @@ enum Permission: string
 }
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: [RequireClosedSetOnBackedEnumRector] Backed enum Permission must declare #[ClosedSet] — enums limit choices (ADR-007).
+// TODO: [RequireClosedSetOnBackedEnumRector] Backed enum Permission must declare #[ClosedSet] — enums define sets (ADR-007).
 enum Permission: string
 {
     case read = 'read';

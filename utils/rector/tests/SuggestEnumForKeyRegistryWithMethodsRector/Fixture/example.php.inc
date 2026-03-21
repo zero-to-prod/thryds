@@ -17,7 +17,7 @@ readonly class BladeDirectives
 
 use Utils\Rector\Tests\SuggestEnumForKeyRegistryWithMethodsRector\TestKeyRegistry;
 
-// TODO: [SuggestEnumForKeyRegistryWithMethodsRector] BladeDirectives has #[KeyRegistry] but also contains methods — extract constants to a backed enum with #[ClosedSet].
+// TODO: [SuggestEnumForKeyRegistryWithMethodsRector] Enumerations define sets, attributes define properties — BladeDirectives has #[KeyRegistry] but also contains methods. Extract constants to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForKeyRegistryWithMethodsRector.md
 #[TestKeyRegistry(source: 'blade directives')]
 readonly class BladeDirectives
 {

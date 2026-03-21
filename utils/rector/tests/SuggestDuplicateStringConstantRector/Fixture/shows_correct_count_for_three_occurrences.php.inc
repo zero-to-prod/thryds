@@ -12,7 +12,7 @@ $c = setHeader('text/html');
 
 namespace Fixture;
 
-// TODO: Refactor duplicate string 'text/html' (used 3x) to a constant
+// TODO: [SuggestDuplicateStringConstantRector] Duplicate string 'text/html' (used 3x) — constants name things. Extract to a single source of truth. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
 $a = doSomething('text/html');
 $b = getHeader('text/html');
 $c = setHeader('text/html');

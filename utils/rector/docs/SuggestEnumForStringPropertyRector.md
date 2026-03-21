@@ -28,12 +28,12 @@ If any values are found, a TODO comment is added above the property.
 
 On the property:
 ```
-// TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. $<prop> has values: '<v1>', '<v2>'. Extract to a backed enum.
+// TODO: [SuggestEnumForStringPropertyRector] Enums define sets. $<prop> has values: '<v1>', '<v2>'. Extract to a backed enum.
 ```
 
 On the call site item:
 ```
-// TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. '<value>' is a value of <Class>::$<prop>. Replace with enum case.
+// TODO: [SuggestEnumForStringPropertyRector] Enums define sets. '<value>' is a value of <Class>::$<prop>. Replace with enum case.
 ```
 
 The exact messages are configured in `rector.php`.
@@ -54,8 +54,8 @@ $rectorConfig->ruleWithConfiguration(SuggestEnumForStringPropertyRector::class, 
     'dataModelTraits' => [DataModel::class, \ZeroToProd\Thryds\Attributes\DataModel::class],
     'describeAttrs' => [Describe::class, \ZeroToProd\Thryds\Attributes\Describe::class],
     'mode' => 'warn',
-    'message' => 'TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. $%s has values: %s. Extract to a backed enum.',
-    'callSiteMessage' => 'TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. %s is a value of %s::$%s. Replace with enum case.',
+    'message' => 'TODO: [SuggestEnumForStringPropertyRector] Enums define sets. $%s has values: %s. Extract to a backed enum.',
+    'callSiteMessage' => 'TODO: [SuggestEnumForStringPropertyRector] Enums define sets. %s is a value of %s::$%s. Replace with enum case.',
 ]);
 ```
 

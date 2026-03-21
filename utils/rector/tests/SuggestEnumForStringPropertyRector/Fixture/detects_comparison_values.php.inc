@@ -26,7 +26,7 @@ class ServerConfig
 {
     use DataModel;
 
-    // TODO: $mode has known values: 'development', 'production' — consider extracting to an enum
+    // TODO: [SuggestEnumForStringPropertyRector] Enumerations define sets. $mode has values: 'development', 'production' — extract to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md
     #[Describe(['default' => 'production'])]
     public string $mode;
 

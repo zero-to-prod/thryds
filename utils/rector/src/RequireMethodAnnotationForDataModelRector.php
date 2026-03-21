@@ -204,8 +204,8 @@ CODE_SAMPLE,
                     continue;
                 }
 
-                $hasDefault = $this->hasDescribeDefault($stmt);
-                $key = $hasDefault ? "{$propName}?" : $propName;
+                $isOptional = $this->hasDescribeDefault($stmt) || $this->isNullableProperty($stmt);
+                $key = $isOptional ? "{$propName}?" : $propName;
 
                 $entries[] = "{$key}: {$typeString}";
             }
@@ -274,6 +274,23 @@ CODE_SAMPLE,
         }
 
         return 'mixed';
+    }
+
+    private function isNullableProperty(Property $property): bool
+    {
+        if ($property->type instanceof Node\NullableType) {
+            return true;
+        }
+
+        if ($property->type instanceof Node\UnionType) {
+            foreach ($property->type->types as $type) {
+                if ($type instanceof Node\Identifier && $type->toString() === 'null') {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private function hasDescribeDefault(Property $property): bool

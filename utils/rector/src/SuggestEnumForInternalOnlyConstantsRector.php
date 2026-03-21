@@ -26,7 +26,7 @@ final class SuggestEnumForInternalOnlyConstantsRector extends AbstractRector imp
     /** @var string[] */
     private array $excludedAttributes = [];
 
-    private string $message = 'TODO: [SuggestEnumForInternalOnlyConstantsRector] %s has %d string constants only referenced internally — consider migrating to a backed enum.';
+    private string $message = 'TODO: [SuggestEnumForInternalOnlyConstantsRector] Enumerations define sets — %s has %d string constants only referenced internally. Migrate to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForInternalOnlyConstantsRector.md';
 
     public function configure(array $configuration): void
     {
@@ -198,7 +198,7 @@ readonly class BladeDirectives
 }
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: [SuggestEnumForInternalOnlyConstantsRector] BladeDirectives has 2 string constants only referenced internally — consider migrating to a backed enum.
+// TODO: [SuggestEnumForInternalOnlyConstantsRector] Enumerations define sets — BladeDirectives has 2 string constants only referenced internally. Migrate to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForInternalOnlyConstantsRector.md
 readonly class BladeDirectives
 {
     public const string production = 'production';

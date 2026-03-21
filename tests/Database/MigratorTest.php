@@ -24,11 +24,17 @@ final class MigratorTest extends DatabaseTestCase
 {
     private const string fixtures_dir = __DIR__ . '/Fixtures/Migrations';
 
+    private const string nonexistent_dir = '/nonexistent/migrations';
+
+    private const string migrations_namespace = 'ZeroToProd\\Thryds\\Migrations\\';
+
+    private const string where_first = ' WHERE ' . Migration::id . " = '0001'";
+
     private const string count_migrations = 'SELECT COUNT(*) FROM migrations';
 
     private const string count_fixture = 'SELECT COUNT(*) FROM _migration_fixture';
 
-    private const string tamper_checksum = "UPDATE migrations SET checksum = 'tampered' WHERE id = '0001'";
+    private const string tamper_checksum = 'UPDATE migrations SET checksum = \'tampered\'' . self::where_first;
 
     private Migrator $Migrator;
 
@@ -58,7 +64,7 @@ final class MigratorTest extends DatabaseTestCase
         $this->Migrator = new Migrator(
             Database: $this->Database,
             migrations_dir: self::fixtures_dir,
-            migrations_namespace: 'ZeroToProd\\Thryds\\Migrations\\',
+            migrations_namespace: self::migrations_namespace,
         );
         $this->Migrator->ensureTable();
     }
@@ -80,7 +86,7 @@ final class MigratorTest extends DatabaseTestCase
         $this->Migrator->migrate();
 
         $this->assertSame(1, (int) $this->Database->scalar(self::count_migrations));
-        $this->assertSame(1, (int) $this->Database->scalar('SELECT COUNT(*) FROM ' . Migration::tableName() . ' WHERE ' . Migration::id . ' = \'0001\''));
+        $this->assertSame(1, (int) $this->Database->scalar('SELECT COUNT(*) FROM ' . Migration::tableName() . self::where_first));
         $this->assertSame(1, (int) $this->Database->scalar(self::count_fixture));
     }
 
@@ -89,7 +95,7 @@ final class MigratorTest extends DatabaseTestCase
     {
         $this->Migrator->migrate();
 
-        $row = $this->Database->one('SELECT ' . Migration::checksum . ' FROM ' . Migration::tableName() . ' WHERE ' . Migration::id . ' = \'0001\'');
+        $row = $this->Database->one('SELECT ' . Migration::checksum . ' FROM ' . Migration::tableName() . self::where_first);
         $this->assertNotNull(actual: $row);
         $this->assertSame(hash('sha256', (string) file_get_contents(self::fixtures_dir . '/0001_TestInsertRow.php')), $row[Migration::checksum]);
     }
@@ -178,8 +184,8 @@ final class MigratorTest extends DatabaseTestCase
 
         $Migrator = new Migrator(
             Database: $this->Database,
-            migrations_dir: '/nonexistent/migrations',
-            migrations_namespace: 'ZeroToProd\\Thryds\\Migrations\\',
+            migrations_dir: self::nonexistent_dir,
+            migrations_namespace: self::migrations_namespace,
         );
 
         $this->expectException(RuntimeException::class);
@@ -193,8 +199,8 @@ final class MigratorTest extends DatabaseTestCase
     {
         $this->assertSame([], new Migrator(
             Database: $this->Database,
-            migrations_dir: '/nonexistent/migrations',
-            migrations_namespace: 'ZeroToProd\\Thryds\\Migrations\\',
+            migrations_dir: self::nonexistent_dir,
+            migrations_namespace: self::migrations_namespace,
         )->status());
     }
 
@@ -204,7 +210,7 @@ final class MigratorTest extends DatabaseTestCase
         $this->assertSame([], new Migrator(
             Database: $this->Database,
             migrations_dir: __DIR__ . '/Fixtures/MigrationsSkip',
-            migrations_namespace: 'ZeroToProd\\Thryds\\Migrations\\',
+            migrations_namespace: self::migrations_namespace,
         )->status());
     }
 
@@ -214,7 +220,7 @@ final class MigratorTest extends DatabaseTestCase
         $Migrator = new Migrator(
             Database: $this->Database,
             migrations_dir: __DIR__ . '/Fixtures/MigrationsWrongId',
-            migrations_namespace: 'ZeroToProd\\Thryds\\Migrations\\',
+            migrations_namespace: self::migrations_namespace,
         );
 
         $this->expectException(RuntimeException::class);
@@ -229,7 +235,7 @@ final class MigratorTest extends DatabaseTestCase
         $Migrator = new Migrator(
             Database: $this->Database,
             migrations_dir: __DIR__ . '/Fixtures/MigrationsNotInterface',
-            migrations_namespace: 'ZeroToProd\\Thryds\\Migrations\\',
+            migrations_namespace: self::migrations_namespace,
         );
 
         $this->expectException(RuntimeException::class);

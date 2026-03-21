@@ -23,7 +23,7 @@ namespace Fixture;
 
 function describe(string $color): string
 {
-    // TODO: [RequireEnumForBranchingConstantRector] $color is compared against 3 literals ('red', 'green', 'blue') — this is an implicit closed set. Consider extracting to a backed enum and using match(). See: utils/rector/docs/RequireEnumForBranchingConstantRector.md
+    // TODO: [RequireEnumForBranchingConstantRector] Enumerations define sets — $color is compared against 3 literals ('red', 'green', 'blue'), forming an implicit closed set. Extract to a backed enum with #[ClosedSet] and use match(). See: utils/rector/docs/RequireEnumForBranchingConstantRector.md
     switch ($color) {
         case 'red':
             return 'Red';

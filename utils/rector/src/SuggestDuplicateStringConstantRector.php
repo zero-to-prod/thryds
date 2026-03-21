@@ -24,16 +24,20 @@ final class SuggestDuplicateStringConstantRector extends AbstractRector implemen
 
     private string $mode = 'warn';
 
-    private string $message = "TODO: Refactor duplicate string '%s' (used %dx) to a constant";
+    private string $message = "TODO: [SuggestDuplicateStringConstantRector] Duplicate string '%s' (used %dx) — constants name things. Extract to a single source of truth. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md";
 
     /** @var string[] */
     private array $ignoredAttributeClasses = [];
 
+    /** @var string[] */
+    private array $ignoredValues = [];
+
     public function configure(array $configuration): void
     {
         $this->mode = $configuration['mode'] ?? 'warn';
-        $this->message = $configuration['message'] ?? "TODO: Refactor duplicate string '%s' (used %dx) to a constant";
+        $this->message = $configuration['message'] ?? "TODO: [SuggestDuplicateStringConstantRector] Duplicate string '%s' (used %dx) — constants name things. Extract to a single source of truth. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md";
         $this->ignoredAttributeClasses = $configuration['ignoredAttributeClasses'] ?? [];
+        $this->ignoredValues = $configuration['ignoredValues'] ?? [];
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -47,12 +51,12 @@ $a = doSomething('application/json');
 $b = getHeader('application/json');
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: Refactor duplicate string 'application/json' (used 2x) to a constant
+// TODO: [SuggestDuplicateStringConstantRector] Duplicate string 'application/json' (used 2x) — constants name things. Extract to a single source of truth. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
 $a = doSomething('application/json');
 $b = getHeader('application/json');
 CODE_SAMPLE,
                     [
-                        'message' => "TODO: Refactor duplicate string '%s' (used %dx) to a constant",
+                        'message' => "TODO: [SuggestDuplicateStringConstantRector] Duplicate string '%s' (used %dx) — constants name things. Extract to a single source of truth. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md",
                     ]
                 ),
             ]
@@ -107,6 +111,10 @@ CODE_SAMPLE,
                 $value = $inner->value;
 
                 if (strlen($value) < self::MIN_LENGTH) {
+                    return null;
+                }
+
+                if (in_array($value, $this->ignoredValues, true)) {
                     return null;
                 }
 

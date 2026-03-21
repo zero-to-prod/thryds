@@ -20,7 +20,7 @@ final class SuggestEnumForKeyRegistryWithMethodsRector extends AbstractRector im
 
     private string $mode = 'warn';
 
-    private string $message = 'TODO: [SuggestEnumForKeyRegistryWithMethodsRector] %s has #[KeyRegistry] but also contains methods — extract constants to a backed enum with #[ClosedSet].';
+    private string $message = 'TODO: [SuggestEnumForKeyRegistryWithMethodsRector] Enumerations define sets, attributes define properties — %s has #[KeyRegistry] but also contains methods. Extract constants to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForKeyRegistryWithMethodsRector.md';
 
     public function configure(array $configuration): void
     {
@@ -45,7 +45,7 @@ readonly class Directives
 }
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: [SuggestEnumForKeyRegistryWithMethodsRector] Directives has #[KeyRegistry] but also contains methods — extract constants to a backed enum with #[ClosedSet].
+// TODO: [SuggestEnumForKeyRegistryWithMethodsRector] Enumerations define sets, attributes define properties — Directives has #[KeyRegistry] but also contains methods. Extract constants to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForKeyRegistryWithMethodsRector.md
 #[KeyRegistry(Source::example)]
 readonly class Directives
 {

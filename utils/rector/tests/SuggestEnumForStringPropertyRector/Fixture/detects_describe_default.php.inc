@@ -21,7 +21,7 @@ class AppConfig
 {
     use DataModel;
 
-    // TODO: $env has known values: 'production' — consider extracting to an enum
+    // TODO: [SuggestEnumForStringPropertyRector] Enumerations define sets. $env has values: 'production' — extract to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md
     #[Describe(['default' => 'production'])]
     public string $env;
 }

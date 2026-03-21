@@ -28,7 +28,7 @@ Any `enum` declaration that:
 A TODO comment is prepended to the enum declaration:
 
 ```
-// TODO: [RequireClosedSetOnBackedEnumRector] Backed enum Permission must declare #[ClosedSet] — enums limit choices (ADR-007).
+// TODO: [RequireClosedSetOnBackedEnumRector] Backed enum Permission must declare #[ClosedSet] — enums define sets (ADR-007).
 ```
 
 There is no `auto` mode that adds the attribute automatically, because `#[ClosedSet]` may carry constructor arguments (e.g., `addCase`) that require human input.
@@ -65,7 +65,7 @@ enum Permission: string
 ### After
 
 ```php
-// TODO: [RequireClosedSetOnBackedEnumRector] Backed enum Permission must declare #[ClosedSet] — enums limit choices (ADR-007).
+// TODO: [RequireClosedSetOnBackedEnumRector] Backed enum Permission must declare #[ClosedSet] — enums define sets (ADR-007).
 enum Permission: string
 {
     case read = 'read';

@@ -30,13 +30,13 @@ class WebConfig
 
     public const string env = 'env';
 
-    // TODO: $env has known values: 'production' — consider extracting to an enum
+    // TODO: [SuggestEnumForStringPropertyRector] Enumerations define sets. $env has values: 'production' — extract to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md
     #[Describe(['default' => 'production'])]
     public string $env;
 }
 
 $WebConfig = WebConfig::from([
-    // TODO: 'production' is a value of WebConfig::$env — consider replacing with an enum case
+    // TODO: [SuggestEnumForStringPropertyRector] Enumerations define sets. 'production' is a value of WebConfig::$env — replace with an enum case. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md
     WebConfig::env => $_ENV['APP_ENV'] ?? 'production',
 ]);
 

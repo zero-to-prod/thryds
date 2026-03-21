@@ -172,7 +172,7 @@ return static function (RectorConfig $rectorConfig): void {
             'Func',
         ],
         'mode' => 'warn',
-        'message' => 'TODO: [ForbidCallableTypeVariableNameRector] rename $%s to describe its behaviour. See: utils/rector/docs/ForbidCallableTypeVariableNameRector.md',
+        'message' => 'TODO: [ForbidCallableTypeVariableNameRector] Constants name things — rename $%s to describe its behaviour.',
     ]);
 
     // --- Type Safety ---
@@ -188,7 +188,7 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
     $rectorConfig->ruleWithConfiguration(RequireTypedPropertyRector::class, [
         'mode' => 'warn',
-        'message' => 'TODO: [opcache] add a type declaration to improve OPcache optimization. See: utils/rector/docs/RequireTypedPropertyRector.md',
+        'message' => 'TODO: [RequireTypedPropertyRector] Attributes define properties — add a type declaration for OPcache optimization.',
     ]);
     $rectorConfig->ruleWithConfiguration(RequireNamedArgForBoolParamRector::class, [
         'skipBuiltinFunctions' => false,
@@ -249,18 +249,21 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
     $rectorConfig->ruleWithConfiguration(SuggestExtractSharedCatchLogicRector::class, [
         'mode' => 'warn',
-        'message' => 'TODO: [SuggestExtractSharedCatchLogicRector] Multiple catch blocks instantiate the same classes (%s). Consider extracting the shared logic. See: utils/rector/docs/SuggestExtractSharedCatchLogicRector.md',
+        'message' => 'TODO: [SuggestExtractSharedCatchLogicRector] Multiple catch blocks instantiate the same classes (%s) — extract shared logic to a named, reusable declaration.',
     ]);
     $rectorConfig->ruleWithConfiguration(SuggestDuplicateStringConstantRector::class, [
         'mode' => 'warn',
-        'message' => "TODO: [SuggestDuplicateStringConstantRector] Refactor duplicate string '%s' (used %dx) to a single source of truth. Consts name things, enums limit choices, attributes define properties. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md",
+        'message' => "TODO: [SuggestDuplicateStringConstantRector] Constants name things — duplicate string '%s' (used %dx). Extract to a single source of truth.",
         'ignoredAttributeClasses' => [
             Requirement::class,
+        ],
+        'ignoredValues' => [
+            ', :',
         ],
     ]);
     $rectorConfig->ruleWithConfiguration(SuggestConstArrayToEnumRector::class, [
         'mode' => 'warn',
-        'message' => 'TODO: Consider migrating const arrays to a backed enum with #[Group] attributes. See: utils/rector/docs/SuggestConstArrayToEnumRector.md',
+        'message' => 'TODO: [SuggestConstArrayToEnumRector] Enumerations define sets — migrate const arrays to a backed enum with #[ClosedSet] and #[Group] attributes.',
     ]);
     $rectorConfig->ruleWithConfiguration(SuggestEnumForStringPropertyRector::class, [
         'dataModelTraits' => [
@@ -273,8 +276,8 @@ return static function (RectorConfig $rectorConfig): void {
         ],
         'excludedFiles' => ['View.php'],
         'mode' => 'warn',
-        'message' => 'TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. $%s has values: %s. Extract to a backed enum. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md',
-        'callSiteMessage' => 'TODO: [SuggestEnumForStringPropertyRector] Enums limit choices. %s is a value of %s::$%s. Replace with enum case. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md',
+        'message' => 'TODO: [SuggestEnumForStringPropertyRector] Enumerations define sets — $%s has values: %s. Extract to a backed enum with #[ClosedSet].',
+        'callSiteMessage' => 'TODO: [SuggestEnumForStringPropertyRector] Enumerations define sets — %s is a value of %s::$%s. Replace with an enum case.',
     ]);
 
     // --- Magic String Elimination ---
@@ -282,11 +285,11 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(ForbidMagicStringArrayKeyRector::class, [
         'excludedClasses' => [Log::class],
         'mode' => 'warn',
-        'message' => "TODO: [ForbidMagicStringArrayKeyRector] Constants name things. Define a public const with value '%s' on the appropriate class. See: utils/rector/docs/ForbidMagicStringArrayKeyRector.md",
+        'message' => "TODO: [ForbidMagicStringArrayKeyRector] Constants name things — define a public const with value '%s' on the appropriate class.",
     ]);
     $rectorConfig->ruleWithConfiguration(RequireEnumOrConstInStringComparisonRector::class, [
         'mode' => 'warn',
-        'message' => "TODO: [RequireEnumOrConstInStringComparisonRector] Raw string '%s' in comparison must be backed by an enum or constant. Constants name things, enumerations define sets. See: utils/rector/docs/RequireEnumOrConstInStringComparisonRector.md",
+        'message' => "TODO: [RequireEnumOrConstInStringComparisonRector] Constants name things, enumerations define sets — raw string '%s' in comparison must be backed by an enum or constant.",
     ]);
 
     // --- Forbidden Constructs ---
@@ -307,25 +310,25 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
     $rectorConfig->ruleWithConfiguration(ForbidMagicHttpStatusCodeRector::class, [
         'mode' => 'warn',
-        'message' => 'TODO: [ForbidMagicHttpStatusCodeRector] Replace %d with a named HTTP status constant or enum case. See: utils/rector/docs/ForbidMagicHttpStatusCodeRector.md',
+        'message' => 'TODO: [ForbidMagicHttpStatusCodeRector] Constants name things — replace %d with a named HTTP status constant or enum case.',
     ]);
 
     // --- OPcache Optimization ---
     $rectorConfig->ruleWithConfiguration(ForbidDynamicIncludeRector::class, [
         'mode' => 'warn',
-        'message' => 'TODO: [opcache] dynamic include prevents OPcache optimization. See: utils/rector/docs/ForbidDynamicIncludeRector.md',
+        'message' => 'TODO: [ForbidDynamicIncludeRector] Declarative imports only — dynamic include prevents compile-time optimization.',
     ]);
     $rectorConfig->ruleWithConfiguration(ForbidVariableVariablesRector::class, [
         'mode' => 'warn',
-        'message' => 'TODO: [opcache] variable variables prevent compile-time variable resolution. See: utils/rector/docs/ForbidVariableVariablesRector.md',
+        'message' => 'TODO: [ForbidVariableVariablesRector] Declarations must be static — variable variables prevent compile-time resolution.',
     ]);
     $rectorConfig->ruleWithConfiguration(ForbidErrorSuppressionRector::class, [
         'mode' => 'warn',
-        'message' => 'TODO: [opcache] @ error suppression adds per-call overhead — handle errors explicitly. See: utils/rector/docs/ForbidErrorSuppressionRector.md',
+        'message' => 'TODO: [ForbidErrorSuppressionRector] Handle errors explicitly — @ error suppression adds per-call overhead.',
     ]);
     $rectorConfig->ruleWithConfiguration(ForbidGlobalKeywordRector::class, [
         'mode' => 'warn',
-        'message' => 'TODO: [opcache] global keyword prevents scope-level optimization. See: utils/rector/docs/ForbidGlobalKeywordRector.md',
+        'message' => 'TODO: [ForbidGlobalKeywordRector] Declarations must be scoped — global keyword prevents scope-level optimization.',
     ]);
 
     // --- Logging ---
@@ -339,7 +342,7 @@ return static function (RectorConfig $rectorConfig): void {
         'logContextClass' => LogContext::class,
         'eventKey' => 'event',
         'mode' => 'warn',
-        'message' => 'TODO: [RequireLogEventRector] Log calls need a durable event id. Add `%s::%s => %s::<event_label>` to the context array. See: utils/rector/docs/RequireLogEventRector.md',
+        'message' => 'TODO: [RequireLogEventRector] Constants name things — add a durable event identifier `%s::%s => %s::<event_label>` to the context array.',
     ]);
     $rectorConfig->ruleWithConfiguration(UseLogContextConstRector::class, [
         'logClass' => Log::class,
@@ -379,7 +382,7 @@ return static function (RectorConfig $rectorConfig): void {
             ],
         ],
         'mode' => 'auto',
-        'message' => 'TODO: [SuggestAttributeForRepeatedPropertyPatternRector] %s uses %s + %s — add #[%s] attribute. See: utils/rector/docs/SuggestAttributeForRepeatedPropertyPatternRector.md',
+        'message' => 'TODO: [SuggestAttributeForRepeatedPropertyPatternRector] Attributes define properties — %s uses %s + %s. Add #[%s] attribute.',
     ]);
     $rectorConfig->ruleWithConfiguration(UseClassConstArrayKeyForDataModelRector::class, [
         'mode' => 'auto',
@@ -387,7 +390,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RequireViewKeyConstantOnViewModelRector::class, [
         'viewModelAttribute' => ViewModel::class,
         'mode' => 'warn',
-        'message' => 'TODO: [RequireViewKeyConstantOnViewModelRector] %s is missing `public const string view_key`. Required for graph inventory. See: utils/rector/docs/RequireViewKeyConstantOnViewModelRector.md',
+        'message' => 'TODO: [RequireViewKeyConstantOnViewModelRector] Attributes define properties — %s is missing `public const string view_key`. Required for graph inventory.',
     ]);
     $rectorConfig->ruleWithConfiguration(AddViewKeyConstantRector::class, [
         'dataModelTraits' => [
@@ -419,46 +422,46 @@ return static function (RectorConfig $rectorConfig): void {
         'viewEnumClass'       => View::class,
         'viewModelsNamespace' => 'ZeroToProd\\Thryds\\ViewModels',
         'mode'                => 'warn',
-        'message'             => "TODO: [RequireViewModelDataInMakeCallRector] make() renders '%s' which has a %s — pass data: [%s::view_key => %s::from([...])] so the view receives typed context. See: utils/rector/docs/RequireViewModelDataInMakeCallRector.md",
+        'message'             => "TODO: [RequireViewModelDataInMakeCallRector] Attributes define properties — make() renders '%s' which has a %s. Pass data: [%s::view_key => %s::from([...])] so the view receives typed context.",
     ]);
 
     // --- Route Safety ---
     $rectorConfig->ruleWithConfiguration(ForbidDirectRouterInstantiationRector::class, [
         'forbiddenClasses' => [Router::class],
         'mode' => 'warn',
-        'message' => 'TODO: [ForbidDirectRouterInstantiationRector] Use League\\Route\\Cache\\Router instead of instantiating %s directly. Direct instantiation bypasses route caching. See: utils/rector/docs/ForbidDirectRouterInstantiationRector.md',
+        'message' => 'TODO: [ForbidDirectRouterInstantiationRector] Use League\\Route\\Cache\\Router instead of instantiating %s directly — direct instantiation bypasses route caching.',
     ]);
     $rectorConfig->ruleWithConfiguration(ForbidStringRoutePatternRector::class, [
         'methods' => ['map'],
         'argPosition' => 1,
         'mode' => 'warn',
-        'message' => "TODO: [ForbidStringRoutePatternRector] Replace inline string '%s' with a Route enum case reference (e.g. Route::case->value). See: utils/rector/docs/ForbidStringRoutePatternRector.md",
+        'message' => "TODO: [ForbidStringRoutePatternRector] Enumerations define sets — replace inline string '%s' with a Route enum case reference (e.g. Route::case->value).",
     ]);
     $rectorConfig->ruleWithConfiguration(RequireRouteEnumInMapCallRector::class, [
         'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
         'methods' => ['map'],
         'argPosition' => 1,
         'mode' => 'warn',
-        'message' => "TODO: [RequireRouteEnumInMapCallRector] Route pattern must use Route::case->value. Found '%s' instead. See: utils/rector/docs/RequireRouteEnumInMapCallRector.md",
+        'message' => "TODO: [RequireRouteEnumInMapCallRector] Enumerations define sets — route pattern must use Route::case->value. Found '%s' instead.",
     ]);
     $rectorConfig->ruleWithConfiguration(RequireViewEnumInMakeCallRector::class, [
         'enumClass' => View::class,
         'methodName' => 'make',
         'paramName' => 'view',
         'mode' => 'auto',
-        'message' => "TODO: [RequireViewEnumInMakeCallRector] Use View::%s->value instead of string '%s'. See: utils/rector/docs/RequireViewEnumInMakeCallRector.md",
+        'message' => "TODO: [RequireViewEnumInMakeCallRector] Enumerations define sets — use View::%s->value instead of string '%s'.",
     ]);
     $rectorConfig->ruleWithConfiguration(ForbidHardcodedRouteStringRector::class, [
         'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
         'mode' => 'warn',
-        'message' => "TODO: [ForbidHardcodedRouteStringRector] Use Route::%s->value instead of hardcoded '%s'. See: utils/rector/docs/ForbidHardcodedRouteStringRector.md",
+        'message' => "TODO: [ForbidHardcodedRouteStringRector] Enumerations define sets — use Route::%s->value instead of hardcoded '%s'.",
     ]);
     $rectorConfig->ruleWithConfiguration(ForbidDuplicateRouteRegistrationRector::class, [
         'methods' => ['map'],
         'methodArgPosition' => 0,
         'routeArgPosition' => 1,
         'mode' => 'warn',
-        'message' => "TODO: [ForbidDuplicateRouteRegistrationRector] Duplicate route registration: '%s %s' was already registered above. See: utils/rector/docs/ForbidDuplicateRouteRegistrationRector.md",
+        'message' => "TODO: [ForbidDuplicateRouteRegistrationRector] Each route declares once — duplicate registration: '%s %s' was already registered above.",
     ]);
     $rectorConfig->ruleWithConfiguration(RequireAllRouteCasesRegisteredRector::class, [
         'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
@@ -466,19 +469,19 @@ return static function (RectorConfig $rectorConfig): void {
         'argPosition' => 1,
         'scanDir' => __DIR__ . '/src',
         'mode' => 'warn',
-        'message' => "TODO: [RequireAllRouteCasesRegisteredRector] Route case '%s' is defined but never registered in any router map() call. See: utils/rector/docs/RequireAllRouteCasesRegisteredRector.md",
+        'message' => "TODO: [RequireAllRouteCasesRegisteredRector] Enumerations define sets — route case '%s' is defined but never registered in any router map() call.",
     ]);
     $rectorConfig->ruleWithConfiguration(RequireRouteTestRector::class, [
         'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
         'testDir' => __DIR__ . '/tests',
         'mode' => 'warn',
-        'message' => "TODO: [RequireRouteTestRector] Route case '%s' has no corresponding test. Add a test that exercises this route. See: utils/rector/docs/RequireRouteTestRector.md",
+        'message' => "TODO: [RequireRouteTestRector] Route case '%s' has no corresponding test — add a test that exercises this route.",
     ]);
     $rectorConfig->ruleWithConfiguration(RequireRoutePatternConstRector::class, [
         'classSuffix' => 'Route',
         'constName' => 'pattern',
         'mode' => 'warn',
-        'message' => "TODO: [RequireRoutePatternConstRector] Route class '%s' is missing a '%s' constant — define: public const string %s = '/...'. See: utils/rector/docs/RequireRoutePatternConstRector.md",
+        'message' => "TODO: [RequireRoutePatternConstRector] Constants name things — route class '%s' is missing a '%s' constant. Define: public const string %s = '/...'.",
     ]);
     $rectorConfig->ruleWithConfiguration(RouteParamNameMustBeConstRector::class, [
         'classSuffix' => 'Route',
@@ -490,7 +493,7 @@ return static function (RectorConfig $rectorConfig): void {
         'constNames' => ['pattern'],
         'scanDir' => __DIR__ . '/src',
         'mode' => 'warn',
-        'message' => "TODO: [ForbidDuplicateRoutePatternRector] Duplicate route pattern '%s' — already defined in %s::%s. See: utils/rector/docs/ForbidDuplicateRoutePatternRector.md",
+        'message' => "TODO: [ForbidDuplicateRoutePatternRector] Each route declares once — duplicate pattern '%s' already defined in %s::%s.",
     ]);
     $rectorConfig->ruleWithConfiguration(ExtractRoutePatternToRouteClassRector::class, [
         'methods' => ['map'],
@@ -498,25 +501,25 @@ return static function (RectorConfig $rectorConfig): void {
         'namespace' => 'ZeroToProd\\Thryds\\Routes',
         'outputDir' => __DIR__ . '/src/Routes',
         'mode' => 'warn',
-        'message' => 'TODO: [ExtractRoutePatternToRouteClassRector] Extract inline route string to a Route class constant. See: utils/rector/docs/ExtractRoutePatternToRouteClassRector.md',
+        'message' => 'TODO: [ExtractRoutePatternToRouteClassRector] Constants name things — extract inline route string to a Route class constant.',
     ]);
 
     // --- Environment Key Safety ---
     $rectorConfig->ruleWithConfiguration(ForbidEnvCheckOutsideConfigRector::class, [
         'mode' => 'warn',
-        'message' => 'TODO: [ForbidEnvCheckOutsideConfigRector] Direct env read outside Config boundary. Move to AppEnv or Config class. See: utils/rector/docs/ForbidEnvCheckOutsideConfigRector.md',
+        'message' => 'TODO: [ForbidEnvCheckOutsideConfigRector] Attributes define properties — direct env read outside Config boundary. Move to AppEnv or Config class.',
     ]);
     $rectorConfig->ruleWithConfiguration(ForbidBareServerEnvKeyRector::class, [
         'envClass' => Env::class,
         'superglobals' => ['_SERVER', '_ENV'],
         'mode' => 'auto',
-        'message' => "TODO: [ForbidBareServerEnvKeyRector] Use %s::%s instead of bare string '%s'. See: utils/rector/docs/ForbidBareServerEnvKeyRector.md",
+        'message' => "TODO: [ForbidBareServerEnvKeyRector] Constants name things — use %s::%s instead of bare string '%s'.",
     ]);
     $rectorConfig->ruleWithConfiguration(ForbidBareGetenvCallRector::class, [
         'envClass' => Env::class,
         'functions' => ['getenv'],
         'mode' => 'auto',
-        'message' => "TODO: [ForbidBareGetenvCallRector] Use %s::%s instead of bare string '%s' in getenv(). See: utils/rector/docs/ForbidBareGetenvCallRector.md",
+        'message' => "TODO: [ForbidBareGetenvCallRector] Constants name things — use %s::%s instead of bare string '%s' in getenv().",
     ]);
 
     // --- Enum Value Safety ---
@@ -529,7 +532,7 @@ return static function (RectorConfig $rectorConfig): void {
             LogLevel::class,
         ],
         'mode' => 'auto',
-        'message' => 'TODO: [RequireEnumValueAccessRector] %s::%s is a backed enum case — use ->value to get the string. See: utils/rector/docs/RequireEnumValueAccessRector.md',
+        'message' => 'TODO: [RequireEnumValueAccessRector] Enumerations define sets — %s::%s is a backed enum case. Use ->value to get the string.',
     ]);
 
     $rectorConfig->ruleWithConfiguration(ForbidStringComparisonOnEnumPropertyRector::class, [
@@ -541,7 +544,7 @@ return static function (RectorConfig $rectorConfig): void {
             View::class,
         ],
         'mode' => 'warn',
-        'message' => "TODO: [ForbidStringComparisonOnEnumPropertyRector] Compare against %s::%s instead of string '%s'. See: utils/rector/docs/ForbidStringComparisonOnEnumPropertyRector.md",
+        'message' => "TODO: [ForbidStringComparisonOnEnumPropertyRector] Enumerations define sets — compare against %s::%s instead of string '%s'.",
     ]);
 
     // --- Constants Class Design ---
@@ -552,7 +555,7 @@ return static function (RectorConfig $rectorConfig): void {
             ViewModel::class,
         ],
         'mode' => 'warn',
-        'message' => 'TODO: [RequireNamesKeysOnConstantsClassRector] %s contains only string constants — add #[NamesKeys] to declare what they name (ADR-007). See: utils/rector/docs/RequireNamesKeysOnConstantsClassRector.md',
+        'message' => 'TODO: [RequireNamesKeysOnConstantsClassRector] Constants name things — %s contains only string constants. Add #[KeyRegistry] to declare what they name.',
     ]);
     $rectorConfig->ruleWithConfiguration(RequireNamesKeysOnMixedConstantsClassRector::class, [
         'attributeClass' => KeyRegistry::class,
@@ -565,18 +568,18 @@ return static function (RectorConfig $rectorConfig): void {
             ViewModel::class,
         ],
         'mode' => 'warn',
-        'message' => 'TODO: [RequireNamesKeysOnMixedConstantsClassRector] %s has %d string constants — add #[NamesKeys] to declare what they name (ADR-007). See: utils/rector/docs/RequireNamesKeysOnMixedConstantsClassRector.md',
+        'message' => 'TODO: [RequireNamesKeysOnMixedConstantsClassRector] Constants name things — %s has %d string constants. Add #[KeyRegistry] to declare what they name.',
     ]);
 
     // --- Enum Design ---
     $rectorConfig->ruleWithConfiguration(RequireClosedSetOnBackedEnumRector::class, [
         'attributeClass' => ClosedSet::class,
         'mode' => 'warn',
-        'message' => 'TODO: [RequireClosedSetOnBackedEnumRector] Backed enum %s must declare #[ClosedSet] — enums limit choices (ADR-007). See: utils/rector/docs/RequireClosedSetOnBackedEnumRector.md',
+        'message' => 'TODO: [RequireClosedSetOnBackedEnumRector] Enumerations define sets — backed enum %s must declare #[ClosedSet].',
     ]);
     $rectorConfig->ruleWithConfiguration(SuggestEnumForNameEqualsValueConstRector::class, [
         'mode' => 'warn',
-        'message' => 'TODO: [SuggestEnumForNameEqualsValueConstRector] %s has %d string constants where name equals value — consider migrating to a backed enum. See: utils/rector/docs/SuggestEnumForNameEqualsValueConstRector.md',
+        'message' => 'TODO: [SuggestEnumForNameEqualsValueConstRector] Enumerations define sets — %s has %d string constants where name equals value. Migrate to a backed enum with #[ClosedSet].',
         'minConstants' => 2,
         'excludedAttributes' => [
             ClosedSet::class,
@@ -585,12 +588,12 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
     $rectorConfig->ruleWithConfiguration(RequireExhaustiveMatchOnEnumRector::class, [
         'mode' => 'warn',
-        'message' => 'TODO: [RequireExhaustiveMatchOnEnumRector] match() on %s must cover all cases explicitly. See: utils/rector/docs/RequireExhaustiveMatchOnEnumRector.md',
+        'message' => 'TODO: [RequireExhaustiveMatchOnEnumRector] Enumerations define sets — match() on %s must cover all cases explicitly.',
     ]);
     $rectorConfig->ruleWithConfiguration(RequireEnumForBranchingConstantRector::class, [
         'mode' => 'warn',
         'minCases' => 3,
-        'message' => 'TODO: [RequireEnumForBranchingConstantRector] $%s is compared against %d literals (%s) — this is an implicit closed set. Consider extracting to a backed enum and using match(). See: utils/rector/docs/RequireEnumForBranchingConstantRector.md',
+        'message' => 'TODO: [RequireEnumForBranchingConstantRector] Enumerations define sets — $%s is compared against %d literals (%s), forming an implicit closed set. Extract to a backed enum with #[ClosedSet] and use match().',
     ]);
     // --- Enum Value Arg Safety ---
     $rectorConfig->ruleWithConfiguration(ForbidStringArgForEnumParamRector::class, [
@@ -606,7 +609,7 @@ return static function (RectorConfig $rectorConfig): void {
             InputType::class,
         ],
         'mode' => 'warn',
-        'message' => "TODO: [ForbidStringArgForEnumParamRector] '%s' matches %s::%s — use %s::%s->value. See: utils/rector/docs/ForbidStringArgForEnumParamRector.md",
+        'message' => "TODO: [ForbidStringArgForEnumParamRector] Enumerations define sets — '%s' matches %s::%s. Use %s::%s->value.",
     ]);
 
     $rectorConfig->ruleWithConfiguration(RequireConstForRepeatedArrayKeyRector::class, [
@@ -615,14 +618,14 @@ return static function (RectorConfig $rectorConfig): void {
         'excludedKeys' => ['class', 'mode', 'message'],
         'excludedClasses' => [LogContext::class, OpcacheStatus::class],
         'mode' => 'warn',
-        'message' => "TODO: [RequireConstForRepeatedArrayKeyRector] '%s' used %dx as array key — extract to a class constant. See: utils/rector/docs/RequireConstForRepeatedArrayKeyRector.md",
+        'message' => "TODO: [RequireConstForRepeatedArrayKeyRector] Constants name things — '%s' used %dx as array key. Extract to a class constant.",
     ]);
 
 
     // --- Blade / htmx ---
     $rectorConfig->ruleWithConfiguration(RequireFragmentIfForBladeRenderRector::class, [
         'mode' => 'warn',
-        'message' => "TODO: [RequireFragmentIfForBladeRenderRector] ->render() returns the full page. For htmx partial requests, use ->fragmentIf(\$request->hasHeader(Header::hx_request), 'body') instead. See: utils/rector/docs/RequireFragmentIfForBladeRenderRector.md",
+        'message' => "TODO: [RequireFragmentIfForBladeRenderRector] ->render() returns the full page — for htmx partial requests, use ->fragmentIf(\$request->hasHeader(Header::hx_request), 'body') instead.",
     ]);
 
     // --- Checklist Validation ---
@@ -641,12 +644,12 @@ return static function (RectorConfig $rectorConfig): void {
         ],
         'projectDir' => __DIR__,
         'mode' => 'warn',
-        'message' => "TODO: [ValidateChecklistPathsRector] %s references '%s' in %s, but this file does not exist. Update the checklist. See: utils/rector/docs/ValidateChecklistPathsRector.md",
+        'message' => "TODO: [ValidateChecklistPathsRector] Checklists must be accurate — %s references '%s' in %s, but this file does not exist. Update the checklist.",
     ]);
 
     $rectorConfig->ruleWithConfiguration(SuggestEnumForKeyRegistryWithMethodsRector::class, [
         'mode' => 'warn',
-        'message' => 'TODO: [SuggestEnumForKeyRegistryWithMethodsRector] %s has #[KeyRegistry] but also contains methods — extract constants to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForKeyRegistryWithMethodsRector.md',
+        'message' => 'TODO: [SuggestEnumForKeyRegistryWithMethodsRector] Enumerations define sets, attributes define properties — %s has #[KeyRegistry] but also contains methods. Extract constants to a backed enum with #[ClosedSet].',
     ]);
 
     $rectorConfig->ruleWithConfiguration(SuggestEnumForInternalOnlyConstantsRector::class, [
@@ -654,55 +657,55 @@ return static function (RectorConfig $rectorConfig): void {
         'excludedAttributes' => [
             KeyRegistry::class,
         ],
-        'message' => 'TODO: [SuggestEnumForInternalOnlyConstantsRector] %s has %d string constants only referenced internally — consider migrating to a backed enum. See: utils/rector/docs/SuggestEnumForInternalOnlyConstantsRector.md',
+        'message' => 'TODO: [SuggestEnumForInternalOnlyConstantsRector] Enumerations define sets — %s has %d string constants only referenced internally. Migrate to a backed enum with #[ClosedSet].',
     ]);
 
     $rectorConfig->ruleWithConfiguration(ForbidCrossFileStringDuplicationRector::class, [
         'mode' => 'warn',
         'minFiles' => 3,
-        'message' => "TODO: [ForbidCrossFileStringDuplicationRector] string '%s' appears in %d files. Extract to a shared constant. See: utils/rector/docs/ForbidCrossFileStringDuplicationRector.md",
+        'message' => "TODO: [ForbidCrossFileStringDuplicationRector] Constants name things — string '%s' appears in %d files. Extract to a shared constant.",
     ]);
 
     $rectorConfig->ruleWithConfiguration(DetectParallelBladePhpBehaviorRector::class, [
         'mode' => 'warn',
-        'message' => "TODO: [DetectParallelBladePhpBehaviorRector] Use %s::%s instead of hardcoded '%s'. See: utils/rector/docs/DetectParallelBladePhpBehaviorRector.md",
+        'message' => "TODO: [DetectParallelBladePhpBehaviorRector] Enumerations define sets — use %s::%s instead of hardcoded '%s'.",
     ]);
 
     // --- Migrations ---
     $rectorConfig->ruleWithConfiguration(RequireDownMigrationRector::class, [
         'mode' => 'warn',
-        'message' => 'TODO: [RequireDownMigrationRector] Migration class is missing a down() method — add it to support rollback. See: utils/rector/docs/RequireDownMigrationRector.md',
+        'message' => 'TODO: [RequireDownMigrationRector] Migration class is missing a down() method — add it to support rollback.',
     ]);
 
     // --- Requirement Tracing ---
     $rectorConfig->ruleWithConfiguration(ValidateRequirementIdsRector::class, [
         'requirements_file' => __DIR__ . '/requirements.yaml',
-        'message' => "TODO: [ValidateRequirementIdsRector] Requirement ID '%s' not found in requirements.yaml. See: docs/requirement-tracing.md",
+        'message' => "TODO: [ValidateRequirementIdsRector] Attributes define properties — requirement ID '%s' not found in requirements.yaml.",
     ]);
 
     $rectorConfig->ruleWithConfiguration(DetectStaleCodeReferencesRector::class, [
         'mode' => 'warn',
-        'message' => "TODO: [DetectStaleCodeReferencesRector] Comment references '%s' which does not exist. Verify or remove. See: utils/rector/docs/DetectStaleCodeReferencesRector.md",
+        'message' => "TODO: [DetectStaleCodeReferencesRector] Comments must be evergreen — references '%s' which does not exist. Verify or remove.",
     ]);
 
 
     $rectorConfig->ruleWithConfiguration(ForbidHardcodedNamespacePrefixRector::class, [
         'mode' => 'warn',
-        'message' => 'TODO: [ForbidHardcodedNamespacePrefixRector] Hardcoded namespace prefix should be passed in as configuration',
+        'message' => 'TODO: [ForbidHardcodedNamespacePrefixRector] Declarations over hardcoding — namespace prefix should be passed in as configuration.',
     ]);
 
     $rectorConfig->ruleWithConfiguration(RouteInfoRequiredRector::class, [
         'enumClass' => 'ZeroToProd\\Thryds\\Routes\\Route',
         'attributeClass' => 'ZeroToProd\\Thryds\\Attributes\\RouteInfo',
         'mode' => 'warn',
-        'message' => "TODO: [RouteInfoRequiredRector] Route case '%s' must declare #[RouteInfo] so the inventory graph can emit a description for this route. See: utils/rector/docs/RouteInfoRequiredRector.md",
+        'message' => "TODO: [RouteInfoRequiredRector] Attributes define properties — route case '%s' must declare #[RouteInfo] so the inventory graph can emit a description for this route.",
     ]);
 
     $rectorConfig->ruleWithConfiguration(RouteOperationRequiredRector::class, [
         'enumClass'      => 'ZeroToProd\\Thryds\\Routes\\Route',
         'attributeClass' => 'ZeroToProd\\Thryds\\Attributes\\RouteOperation',
         'mode'           => 'warn',
-        'message'        => "TODO: [RouteOperationRequiredRector] Route case '%s' must declare at least one #[RouteOperation] so the inventory graph can emit HTTP methods for this route. See: utils/rector/docs/RouteOperationRequiredRector.md",
+        'message'        => "TODO: [RouteOperationRequiredRector] Attributes define properties — route case '%s' must declare at least one #[RouteOperation] so the inventory graph can emit HTTP methods for this route.",
     ]);
 
     $rectorConfig->ruleWithConfiguration(RouteOperationRequiresRouteInfoRector::class, [
@@ -710,7 +713,7 @@ return static function (RectorConfig $rectorConfig): void {
         'triggerAttributeClass'  => 'ZeroToProd\\Thryds\\Attributes\\RouteOperation',
         'requiredAttributeClass' => 'ZeroToProd\\Thryds\\Attributes\\RouteInfo',
         'mode'                   => 'warn',
-        'message'                => "TODO: [RouteOperationRequiresRouteInfoRector] Route case '%s' declares #[RouteOperation] but is missing #[RouteInfo]. Both attributes are required together: #[RouteOperation] declares HTTP methods, #[RouteInfo] declares the route description. See: utils/rector/docs/RouteOperationRequiresRouteInfoRector.md",
+        'message'                => "TODO: [RouteOperationRequiresRouteInfoRector] Attributes define properties — route case '%s' declares #[RouteOperation] but is missing #[RouteInfo]. Both are required together: #[RouteOperation] declares HTTP methods, #[RouteInfo] declares the description.",
     ]);
 
     $rectorConfig->ruleWithConfiguration(RequirePersistsOnTableReferenceRector::class, [
@@ -718,7 +721,7 @@ return static function (RectorConfig $rectorConfig): void {
         'attributeClass'       => 'ZeroToProd\\Thryds\\Attributes\\Persists',
         'controllersNamespace' => 'ZeroToProd\\Thryds\\Controllers',
         'mode'                 => 'warn',
-        'message'              => "TODO: [RequirePersistsOnTableReferenceRector] '%s' imports '%s' from the tables namespace but is missing #[Persists(%s::class)]. Add it so the inventory graph shows the persistence edge. See: utils/rector/docs/RequirePersistsOnTableReferenceRector.md",
+        'message'              => "TODO: [RequirePersistsOnTableReferenceRector] Attributes define properties — '%s' imports '%s' from the tables namespace but is missing #[Persists(%s::class)]. Add it so the inventory graph shows the persistence edge.",
     ]);
 
 

@@ -23,7 +23,7 @@ namespace Fixture;
 
 function label(int $code): string
 {
-    // TODO: [RequireEnumForBranchingConstantRector] $code is compared against 3 literals (1, 2, 3) — this is an implicit closed set. Consider extracting to a backed enum and using match(). See: utils/rector/docs/RequireEnumForBranchingConstantRector.md
+    // TODO: [RequireEnumForBranchingConstantRector] Enumerations define sets — $code is compared against 3 literals (1, 2, 3), forming an implicit closed set. Extract to a backed enum with #[ClosedSet] and use match(). See: utils/rector/docs/RequireEnumForBranchingConstantRector.md
     switch ($code) {
         case 1:
             return 'One';

@@ -30,6 +30,7 @@ trait DataModel
     use \Zerotoprod\DataModel\DataModel;
     private const string toArray = 'toArray';
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         $result = [];

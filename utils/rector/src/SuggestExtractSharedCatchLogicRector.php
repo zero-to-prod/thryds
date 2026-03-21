@@ -18,12 +18,12 @@ final class SuggestExtractSharedCatchLogicRector extends AbstractRector implemen
 {
     private string $mode = 'warn';
 
-    private string $message = 'TODO: Multiple catch blocks instantiate the same classes (%s) — consider extracting shared logic';
+    private string $message = 'TODO: [SuggestExtractSharedCatchLogicRector] Multiple catch blocks instantiate the same classes (%s) — extract shared logic to a single declarative source. See: utils/rector/docs/SuggestExtractSharedCatchLogicRector.md';
 
     public function configure(array $configuration): void
     {
         $this->mode = $configuration['mode'] ?? 'warn';
-        $this->message = $configuration['message'] ?? 'TODO: Multiple catch blocks instantiate the same classes (%s) — consider extracting shared logic';
+        $this->message = $configuration['message'] ?? 'TODO: [SuggestExtractSharedCatchLogicRector] Multiple catch blocks instantiate the same classes (%s) — extract shared logic to a single declarative source. See: utils/rector/docs/SuggestExtractSharedCatchLogicRector.md';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -42,7 +42,7 @@ try {
 }
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: Multiple catch blocks instantiate the same classes (Emitter, Response) — consider extracting shared logic
+// TODO: [SuggestExtractSharedCatchLogicRector] Multiple catch blocks instantiate the same classes (Emitter, Response) — extract shared logic to a single declarative source. See: utils/rector/docs/SuggestExtractSharedCatchLogicRector.md
 try {
     run();
 } catch (FooException $e) {
@@ -52,7 +52,7 @@ try {
 }
 CODE_SAMPLE,
                     [
-                        'message' => 'TODO: Multiple catch blocks instantiate the same classes (%s) — consider extracting shared logic',
+                        'message' => 'TODO: [SuggestExtractSharedCatchLogicRector] Multiple catch blocks instantiate the same classes (%s) — extract shared logic to a single declarative source. See: utils/rector/docs/SuggestExtractSharedCatchLogicRector.md',
                     ]
                 ),
             ]

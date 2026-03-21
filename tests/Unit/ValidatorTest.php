@@ -8,18 +8,29 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ZeroToProd\Thryds\Requests\RegisterRequest;
 use ZeroToProd\Thryds\Validation\Validator;
+use ZeroToProd\Thryds\ViewModels\RegisterViewModel;
 
 final class ValidatorTest extends TestCase
 {
+    private const string valid_name = 'Jane';
+
+    private const string valid_handle = 'janehandle';
+
+    private const string valid_email = 'jane@example.com';
+
+    private const string valid_password = 'securepass';
+
+    private const string short_password = 'short';
+
     #[Test]
     public function validInputProducesNoErrors(): void
     {
         $this->assertSame([], Validator::validate(RegisterRequest::from([
-            RegisterRequest::name => 'Jane',
-            RegisterRequest::handle => 'janehandle',
-            RegisterRequest::email => 'jane@example.com',
-            RegisterRequest::password => 'securepass',
-            RegisterRequest::password_confirmation => 'securepass',
+            RegisterRequest::name => self::valid_name,
+            RegisterRequest::handle => self::valid_handle,
+            RegisterRequest::email => self::valid_email,
+            RegisterRequest::password => self::valid_password,
+            RegisterRequest::password_confirmation => self::valid_password,
         ])));
     }
 
@@ -34,58 +45,59 @@ final class ValidatorTest extends TestCase
             RegisterRequest::password_confirmation => '',
         ]));
 
-        $this->assertSame('Name is required.', $errors['name_error']);
-        $this->assertSame('Email is required.', $errors['email_error']);
-        $this->assertSame('Password is required.', $errors['password_error']);
-        $this->assertSame('Password_confirmation is required.', $errors['password_confirmation_error']);
+        $this->assertSame('Name is required.', $errors[RegisterViewModel::name_error]);
+        $this->assertSame('Email is required.', $errors[RegisterViewModel::email_error]);
+        $this->assertSame('Password is required.', $errors[RegisterViewModel::password_error]);
+        $this->assertSame('Password_confirmation is required.', $errors[RegisterViewModel::password_confirmation_error]);
     }
 
     #[Test]
     public function invalidEmailProducesError(): void
     {
         $errors = Validator::validate(RegisterRequest::from([
-            RegisterRequest::name => 'Jane',
-            RegisterRequest::handle => 'janehandle',
+            RegisterRequest::name => self::valid_name,
+            RegisterRequest::handle => self::valid_handle,
             RegisterRequest::email => 'not-valid',
-            RegisterRequest::password => 'securepass',
-            RegisterRequest::password_confirmation => 'securepass',
+            RegisterRequest::password => self::valid_password,
+            RegisterRequest::password_confirmation => self::valid_password,
         ]));
 
-        $this->assertArrayNotHasKey('name_error', array: $errors);
-        $this->assertSame('Enter a valid email address.', $errors['email_error']);
-        $this->assertArrayNotHasKey('password_error', array: $errors);
+        $this->assertArrayNotHasKey(RegisterViewModel::name_error, array: $errors);
+        $this->assertSame('Enter a valid email address.', $errors[RegisterViewModel::email_error]);
+        $this->assertArrayNotHasKey(RegisterViewModel::password_error, array: $errors);
     }
 
     #[Test]
     public function shortPasswordProducesError(): void
     {
         $errors = Validator::validate(RegisterRequest::from([
-            RegisterRequest::name => 'Jane',
-            RegisterRequest::handle => 'janehandle',
-            RegisterRequest::email => 'jane@example.com',
-            RegisterRequest::password => 'short',
-            RegisterRequest::password_confirmation => 'short',
+            RegisterRequest::name => self::valid_name,
+            RegisterRequest::handle => self::valid_handle,
+            RegisterRequest::email => self::valid_email,
+            RegisterRequest::password => self::short_password,
+            RegisterRequest::password_confirmation => self::short_password,
         ]));
 
-        $this->assertArrayNotHasKey('name_error', array: $errors);
-        $this->assertArrayNotHasKey('email_error', array: $errors);
-        $this->assertSame('Password must be at least 8 characters.', $errors['password_error']);
+        $this->assertArrayNotHasKey(RegisterViewModel::name_error, array: $errors);
+        $this->assertArrayNotHasKey(RegisterViewModel::email_error, array: $errors);
+        $this->assertSame('Password must be at least 8 characters.', $errors[RegisterViewModel::password_error]);
     }
 
     #[Test]
     public function mismatchedPasswordsProduceError(): void
     {
         $errors = Validator::validate(RegisterRequest::from([
-            RegisterRequest::name => 'Jane',
-            RegisterRequest::handle => 'janehandle',
-            RegisterRequest::email => 'jane@example.com',
-            RegisterRequest::password => 'securepass',
+            RegisterRequest::name => self::valid_name,
+            RegisterRequest::handle => self::valid_handle,
+            RegisterRequest::email => self::valid_email,
+            RegisterRequest::password => self::valid_password,
+            // TODO: [SuggestEnumForStringPropertyRector] Enumerations define sets — 'different' is a value of RegisterRequest::$password_confirmation. Replace with an enum case.
             RegisterRequest::password_confirmation => 'different',
         ]));
 
-        $this->assertArrayNotHasKey('name_error', array: $errors);
-        $this->assertArrayNotHasKey('email_error', array: $errors);
-        $this->assertArrayNotHasKey('password_error', array: $errors);
-        $this->assertSame('Password does not match.', $errors['password_confirmation_error']);
+        $this->assertArrayNotHasKey(RegisterViewModel::name_error, array: $errors);
+        $this->assertArrayNotHasKey(RegisterViewModel::email_error, array: $errors);
+        $this->assertArrayNotHasKey(RegisterViewModel::password_error, array: $errors);
+        $this->assertSame('Password does not match.', $errors[RegisterViewModel::password_confirmation_error]);
     }
 }

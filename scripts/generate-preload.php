@@ -20,6 +20,7 @@ require $base_dir . '/vendor/autoload.php';
 use League\Route\Router;
 use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
+use ZeroToProd\Thryds\Blade\Vite;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Routes\RouteRegistrar;
 
@@ -38,12 +39,15 @@ if (!is_dir($Config->blade_cache_dir) && !mkdir($Config->blade_cache_dir, 0o755,
     throw new RuntimeException(sprintf('Directory "%s" was not created', $Config->blade_cache_dir));
 }
 
-$Blade = App::bootBlade($Config, $base_dir);
+$Vite = new Vite($Config, baseDir: $base_dir, entry_css: [
+    Vite::app_entry => [Vite::app_css],
+]);
+$Blade = App::bootBlade($Config, $Vite);
 
 // Direct instantiation is intentional: this script runs at build time, not in the request path.
 // ForbidDirectRouterInstantiationRector only applies to src/, public/, tests/.
 $Router = new Router();
-RouteRegistrar::register($Router, $Blade, $Config);
+RouteRegistrar::register($Router, $Config);
 
 // Compile all templates to blade cache and load view-layer dependencies
 echo "Compiling templates...\n";

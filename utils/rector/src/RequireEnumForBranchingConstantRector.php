@@ -24,13 +24,13 @@ final class RequireEnumForBranchingConstantRector extends AbstractRector impleme
 
     private string $mode = 'warn';
 
-    private string $message = 'TODO: [RequireEnumForBranchingConstantRector] $%s is compared against %d literals (%s) — this is an implicit closed set. Consider extracting to a backed enum and using match(). See: utils/rector/docs/RequireEnumForBranchingConstantRector.md';
+    private string $message = 'TODO: [RequireEnumForBranchingConstantRector] Enumerations define sets — $%s is compared against %d literals (%s), forming an implicit closed set. Extract to a backed enum with #[ClosedSet] and use match(). See: utils/rector/docs/RequireEnumForBranchingConstantRector.md';
 
     public function configure(array $configuration): void
     {
         $this->minCases = $configuration['minCases'] ?? 3;
         $this->mode = $configuration['mode'] ?? 'warn';
-        $this->message = $configuration['message'] ?? 'TODO: [RequireEnumForBranchingConstantRector] $%s is compared against %d literals (%s) — this is an implicit closed set. Consider extracting to a backed enum and using match(). See: utils/rector/docs/RequireEnumForBranchingConstantRector.md';
+        $this->message = $configuration['message'] ?? 'TODO: [RequireEnumForBranchingConstantRector] Enumerations define sets — $%s is compared against %d literals (%s), forming an implicit closed set. Extract to a backed enum with #[ClosedSet] and use match(). See: utils/rector/docs/RequireEnumForBranchingConstantRector.md';
     }
 
     public function getNodeTypes(): array
@@ -245,7 +245,7 @@ CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
 function handle(string $status): string
 {
-    // TODO: [RequireEnumForBranchingConstantRector] $status is compared against 3 literals ('active', 'inactive', 'pending') — this is an implicit closed set. Consider extracting to a backed enum and using match(). See: utils/rector/docs/RequireEnumForBranchingConstantRector.md
+    // TODO: [RequireEnumForBranchingConstantRector] Enumerations define sets — $status is compared against 3 literals ('active', 'inactive', 'pending'), forming an implicit closed set. Extract to a backed enum with #[ClosedSet] and use match(). See: utils/rector/docs/RequireEnumForBranchingConstantRector.md
     if ($status === 'active') {
         return 'Active';
     } elseif ($status === 'inactive') {

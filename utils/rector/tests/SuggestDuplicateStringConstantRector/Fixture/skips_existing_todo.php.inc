@@ -2,7 +2,7 @@
 
 namespace Fixture;
 
-// TODO: Refactor duplicate string 'application/json' (used 2x) to a constant
+// TODO: [SuggestDuplicateStringConstantRector] Duplicate string 'application/json' (used 2x) — constants name things. Extract to a single source of truth. See: utils/rector/docs/SuggestDuplicateStringConstantRector.md
 $a = doSomething('application/json');
 $b = getHeader('application/json');
 

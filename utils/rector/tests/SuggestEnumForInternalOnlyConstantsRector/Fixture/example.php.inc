@@ -22,7 +22,7 @@ readonly class BladeDirectives
 
 namespace Fixture;
 
-// TODO: [SuggestEnumForInternalOnlyConstantsRector] BladeDirectives has 3 string constants only referenced internally — consider migrating to a backed enum.
+// TODO: [SuggestEnumForInternalOnlyConstantsRector] Enumerations define sets — BladeDirectives has 3 string constants only referenced internally. Migrate to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForInternalOnlyConstantsRector.md
 readonly class BladeDirectives
 {
     public const string production = 'production';

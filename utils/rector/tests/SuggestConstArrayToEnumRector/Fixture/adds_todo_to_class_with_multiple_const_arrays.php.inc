@@ -21,7 +21,7 @@ readonly class DevFilter
 
 namespace Fixture;
 
-// TODO: Consider migrating const arrays to a backed enum with #[Group] attributes
+// TODO: [SuggestConstArrayToEnumRector] Enumerations define sets — migrate const arrays to a backed enum with #[ClosedSet] and #[Group] attributes. See: utils/rector/docs/SuggestConstArrayToEnumRector.md
 readonly class DevFilter
 {
     public const array dev_vendors = [

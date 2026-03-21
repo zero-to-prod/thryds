@@ -6,7 +6,7 @@ Accepted
 ## Context
 PHP offers several mechanisms for attaching meaning to values: class constants, backed enums, and attributes. Without a clear rule for when to reach for each, developers (and AI agents) default to bare strings — leading to duplication, typos, and values that are impossible to trace statically.
 
-The project already encodes this philosophy in a Rector rule message (`SuggestDuplicateStringConstantRector`): *"Consts name things, enums limit choices, attributes define properties."* This ADR formalizes that guidance.
+The project already encodes this philosophy in a Rector rule message (`SuggestDuplicateStringConstantRector`): *"Consts name things, enums define sets, attributes define properties."* This ADR formalizes that guidance.
 
 ## Decision
 
@@ -24,7 +24,7 @@ Use `public const string` when a value is an **identifier** — a key, label, he
 
 **Rule of thumb:** if a string appears as an array key, method argument, or identifier more than once — or could be misspelled — it should be a constant.
 
-### Enums limit choices
+### Enums define sets
 Use a backed enum when a value must be **one of a fixed set**. The enum makes invalid values unrepresentable at the type level.
 
 | Example | File | What it constrains |

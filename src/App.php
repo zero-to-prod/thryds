@@ -35,6 +35,8 @@ readonly class App
 
         $Blade = new Blade(viewPaths: $Config->template_dir, cachePath: $Config->blade_cache_dir, container: $Container);
 
+        $Container->instance(Vite::class, instance: $Vite);
+
         BladeDirectives::register($Blade, $Config, $Vite);
         Component::register($Blade);
 
@@ -49,11 +51,9 @@ readonly class App
             Config::blade_cache_dir => $base_dir . '/var/cache/blade',
             Config::template_dir => $base_dir . '/templates',
         ]);
-
-        $Vite = new Vite($Config, baseDir: $base_dir, entry_css: [
+        $Blade = self::bootBlade($Config, new Vite($Config, baseDir: $base_dir, entry_css: [
             Vite::app_entry => [Vite::app_css],
-        ]);
-        $Blade = self::bootBlade($Config, $Vite);
+        ]));
 
         // cacheEnabled is always false: FrankenPHP worker mode boots once and reuses the router
         // in-memory across all requests, so disk caching provides no benefit and breaks with
@@ -63,7 +63,6 @@ readonly class App
         // ── Container bindings ──────────────────────────────────────
         $Container = Container::getInstance();
         $Container->instance(Blade::class, instance: $Blade);
-        $Container->instance(Vite::class, instance: $Vite);
         $Container->instance(Database::class, instance: $Database);
 
         $Router = new CachedRouter(

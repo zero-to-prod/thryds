@@ -39,9 +39,9 @@ final class SuggestEnumForStringPropertyRector extends AbstractRector implements
 
     private string $mode = 'warn';
 
-    private string $message = 'TODO: $%s has known values: %s — consider extracting to an enum';
+    private string $message = 'TODO: [SuggestEnumForStringPropertyRector] Enumerations define sets. $%s has values: %s — extract to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md';
 
-    private string $callSiteMessage = 'TODO: %s is a value of %s::$%s — consider replacing with an enum case';
+    private string $callSiteMessage = 'TODO: [SuggestEnumForStringPropertyRector] Enumerations define sets. %s is a value of %s::$%s — replace with an enum case. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md';
 
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,
@@ -53,8 +53,8 @@ final class SuggestEnumForStringPropertyRector extends AbstractRector implements
         $this->describeAttrs = $configuration['describeAttrs'] ?? [];
         $this->excludedFiles = $configuration['excludedFiles'] ?? [];
         $this->mode = $configuration['mode'] ?? 'warn';
-        $this->message = $configuration['message'] ?? 'TODO: $%s has known values: %s — consider extracting to an enum';
-        $this->callSiteMessage = $configuration['callSiteMessage'] ?? 'TODO: %s is a value of %s::$%s — consider replacing with an enum case';
+        $this->message = $configuration['message'] ?? 'TODO: [SuggestEnumForStringPropertyRector] Enumerations define sets. $%s has values: %s — extract to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md';
+        $this->callSiteMessage = $configuration['callSiteMessage'] ?? 'TODO: [SuggestEnumForStringPropertyRector] Enumerations define sets. %s is a value of %s::$%s — replace with an enum case. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md';
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -83,7 +83,7 @@ class Config
 {
     use DataModel;
 
-    // TODO: $appEnv has known values: 'production' — consider extracting to an enum
+    // TODO: [SuggestEnumForStringPropertyRector] Enumerations define sets. $appEnv has values: 'production' — extract to a backed enum with #[ClosedSet]. See: utils/rector/docs/SuggestEnumForStringPropertyRector.md
     #[Describe(['default' => 'production'])]
     public string $appEnv;
 }
@@ -296,7 +296,7 @@ CODE_SAMPLE,
     {
         $values = [];
 
-        if ($expr instanceof String_) {
+        if ($expr instanceof String_ && $expr->value !== '') {
             $values[] = $expr->value;
         }
 

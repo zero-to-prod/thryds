@@ -36,12 +36,12 @@ final readonly class Validator
                     if ($rule->passes($value, $config, context: $model)) {
                         continue;
                     }
-                    $errors[$name .self::_error] = $rule->message(field: $name, config: $config);
+                    $errors[$name . self::_error] = $rule->message(field: $name, config: $config);
                     break 2;
                 }
             }
 
-            if (isset($errors[$name .self::_error])) {
+            if (isset($errors[$name . self::_error])) {
                 continue;
             }
 
@@ -51,7 +51,7 @@ final readonly class Validator
                 if ($ValidationRule->passes($value, context: $model)) {
                     continue;
                 }
-                $errors[$name .self::_error] = $ValidationRule->message(field: $name);
+                $errors[$name . self::_error] = $ValidationRule->message(field: $name);
                 break;
             }
         }

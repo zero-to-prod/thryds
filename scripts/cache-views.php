@@ -20,6 +20,7 @@ use Jenssegers\Blade\Blade;
 use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Blade\View;
+use ZeroToProd\Thryds\Blade\Vite;
 use ZeroToProd\Thryds\Config;
 
 /**
@@ -47,7 +48,10 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'] ?? '')) {
         mkdir($Config->blade_cache_dir, 0o755, true);
     }
 
-    $Blade = App::bootBlade($Config, $base_dir);
+    $Vite = new Vite($Config, baseDir: $base_dir, entry_css: [
+        Vite::app_entry => [Vite::app_css],
+    ]);
+    $Blade = App::bootBlade($Config, $Vite);
 
     echo "Compiling templates...\n";
     compileAllTemplates($Blade);

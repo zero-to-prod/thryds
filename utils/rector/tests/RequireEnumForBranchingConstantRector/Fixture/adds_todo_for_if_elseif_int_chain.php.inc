@@ -21,7 +21,7 @@ namespace Fixture;
 
 function route(int $code): string
 {
-    // TODO: [RequireEnumForBranchingConstantRector] $code is compared against 3 literals (1, 2, 3) — this is an implicit closed set. Consider extracting to a backed enum and using match(). See: utils/rector/docs/RequireEnumForBranchingConstantRector.md
+    // TODO: [RequireEnumForBranchingConstantRector] Enumerations define sets — $code is compared against 3 literals (1, 2, 3), forming an implicit closed set. Extract to a backed enum with #[ClosedSet] and use match(). See: utils/rector/docs/RequireEnumForBranchingConstantRector.md
     if ($code === 1) {
         return 'home';
     } elseif ($code === 2) {
