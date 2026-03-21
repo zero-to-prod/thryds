@@ -2,6 +2,25 @@
 
 declare(strict_types=1);
 
+use Illuminate\Container\Container;
+use Jenssegers\Blade\Blade;
+use ZeroToProd\Thryds\Database;
+
+function app(): Container
+{
+    return Container::getInstance();
+}
+
+function blade(): Blade
+{
+    return app()->make(Blade::class);
+}
+
+function db(): Database
+{
+    return app()->make(Database::class);
+}
+
 /**
  * Returns the unqualified (short) class name from a fully qualified class string or object.
  *

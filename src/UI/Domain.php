@@ -44,4 +44,5 @@ enum Domain: string
     case database_table_columns = 'database_table_columns';
     case migration_statuses = 'migration_statuses';
     case scalar_defaults = 'scalar_defaults';
+    case validation_rules = 'validation_rules';
 }

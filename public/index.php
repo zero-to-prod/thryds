@@ -29,10 +29,10 @@ $App = App::boot($base_dir);
 // discard template state accumulated during the request. Must follow App::boot().
 $bladeEngine = Container::getInstance()->make('view.engine.resolver')->resolve('blade');
 
-$emit_error_page = static function (string $message, int $status_code) use ($App): void {
+$emit_error_page = static function (string $message, int $status_code): void {
     new SapiEmitter()->emit(
         response: new HtmlResponse(
-            html: $App->Blade->make(view: View::error->value, data: [
+            html: blade()->make(view: View::error->value, data: [
                 ErrorViewModel::view_key => ErrorViewModel::from([
                     ErrorViewModel::message => $message,
                     ErrorViewModel::status_code => $status_code,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Blade;
 
+use Jenssegers\Blade\Blade;
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 use ZeroToProd\Thryds\Attributes\Prop;
 use ZeroToProd\Thryds\UI\AlertVariant;
@@ -73,6 +74,13 @@ enum Component: string
         InputType::text
     )]
     case input = 'input';
+
+    public static function register(Blade $Blade): void
+    {
+        foreach (self::cases() as $Component) {
+            $Blade->compiler()->component($Component->viewName(), $Component->value);
+        }
+    }
 
     /** Blade view name used by compiler()->component(). */
     public function viewName(): string

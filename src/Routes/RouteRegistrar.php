@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Routes;
 
-use Jenssegers\Blade\Blade;
 use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\Response\JsonResponse;
 use League\Route\Router;
@@ -14,24 +13,21 @@ use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Controllers\HomeController;
 use ZeroToProd\Thryds\Controllers\RegisterController;
-use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\OpcacheStatus;
 
 readonly class RouteRegistrar
 {
-    public static function register(Router $Router, Blade $Blade, Config $Config, ?Database $Database = null): void
+    public static function register(Router $Router, Config $Config): void
     {
         $Router->map(
             Route::home->operations()[0]->HttpMethod->value,
             Route::home->value,
-            new HomeController($Blade),
+            new HomeController(),
         );
 
-        if ($Database !== null) {
-            $RegisterController = new RegisterController($Blade, $Database);
-            foreach (Route::register->operations() as $op) {
-                $Router->map($op->HttpMethod->value, Route::register->value, handler: $RegisterController);
-            }
+        $RegisterController = new RegisterController();
+        foreach (Route::register->operations() as $op) {
+            $Router->map($op->HttpMethod->value, Route::register->value, handler: $RegisterController);
         }
 
         // Auto-register simple view routes by convention: Route::foo → View::foo (matched by name).
@@ -43,7 +39,7 @@ readonly class RouteRegistrar
                     $Route->operations()[0]->HttpMethod->value,
                     $Route->value,
                     fn(): ResponseInterface => new HtmlResponse(
-                        html: $Blade->make(view: $View->value)->render(),
+                        html: blade()->make(view: $View->value)->render(),
                     ),
                 );
             }

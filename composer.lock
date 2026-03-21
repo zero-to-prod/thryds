@@ -2192,16 +2192,16 @@
         },
         {
             "name": "zero-to-prod/data-model",
-            "version": "v81.14.0",
+            "version": "v81.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/zero-to-prod/data-model.git",
-                "reference": "b9802cf7211a73164fd44b3afaef3a8c9a90ada5"
+                "reference": "7e822548067dd2b2b48221c2915c6d1a4bef83f0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/zero-to-prod/data-model/zipball/b9802cf7211a73164fd44b3afaef3a8c9a90ada5",
-                "reference": "b9802cf7211a73164fd44b3afaef3a8c9a90ada5",
+                "url": "https://api.github.com/repos/zero-to-prod/data-model/zipball/7e822548067dd2b2b48221c2915c6d1a4bef83f0",
+                "reference": "7e822548067dd2b2b48221c2915c6d1a4bef83f0",
                 "shasum": ""
             },
             "require": {
