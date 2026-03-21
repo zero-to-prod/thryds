@@ -29,6 +29,7 @@ readonly class App
         public CachedRouter $Router,
         #[Bind]
         public Database $Database,
+        public ExceptionHandler $ExceptionHandler,
     ) {}
 
     /** Reflects on own properties and registers those marked with #[Bind] as container instances. */
@@ -89,7 +90,7 @@ readonly class App
             cacheEnabled: false,
         );
 
-        $App = new self($Config, $Blade, $Router, $Database);
+        $App = new self($Config, $Blade, $Router, $Database, new ExceptionHandler($Config));
         $App->registerBindings();
 
         return $App;

@@ -105,6 +105,7 @@
         "check:manifest": "php scripts/check-manifest.php",
         "sync:manifest": "php scripts/sync-manifest.php",
         "list:inventory": "php scripts/inventory.php",
-        "list:manifest": "php scripts/inventory.php --format=yaml"
+        "list:manifest": "php scripts/inventory.php --format=yaml",
+        "list:attributes": "php scripts/attribute-graph.php"
     }
 }

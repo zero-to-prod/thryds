@@ -99,6 +99,8 @@ use Utils\Rector\Rector\AddViewModelAttributeRector;
 use Utils\Rector\Rector\RequireViewKeyConstantOnViewModelRector;
 use Utils\Rector\Rector\UseColumnConstantsInQueriesRector;
 use Utils\Rector\Rector\RequireEnumOrConstInStringComparisonRector;
+use Utils\Rector\Rector\RequireHandlesExceptionParamMatchRector;
+use Utils\Rector\Rector\RequireHandlesExceptionOnPublicHandlerMethodRector;
 use Rector\CodeQuality\Rector\FuncCall\SortCallLikeNamedArgsRector;
 use Rector\CodeQuality\Rector\Attribute\SortAttributeNamedArgsRector;
 use ZeroToProd\Thryds\Attributes\Requirement;
@@ -731,4 +733,19 @@ return static function (RectorConfig $rectorConfig): void {
         'tableClasses' => [User::class, Migration::class],
     ]);
 
+
+    // --- Exception Handler ---
+    $rectorConfig->ruleWithConfiguration(RequireHandlesExceptionParamMatchRector::class, [
+        'attributeClass' => \ZeroToProd\Thryds\Attributes\HandlesException::class,
+        'mode' => 'auto',
+        'message' => "TODO: [RequireHandlesExceptionParamMatchRector] Attributes define properties — #[HandlesException] declares %s but the method parameter type is %s. The attribute must match the parameter type.",
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(RequireHandlesExceptionOnPublicHandlerMethodRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: [RequireHandlesExceptionOnPublicHandlerMethodRector] Public method %s::%s accepts a Throwable subtype but is missing #[HandlesException] — it will never be dispatched. See: utils/rector/docs/RequireHandlesExceptionOnPublicHandlerMethodRector.md',
+        'handlerAttributeClass' => 'ZeroToProd\\Thryds\\Attributes\\HandlesException',
+        'throwableClass' => 'Throwable',
+        'excludeMethods' => ['handle'],
+    ]);
 };

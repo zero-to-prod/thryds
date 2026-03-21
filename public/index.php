@@ -7,18 +7,12 @@ $base_dir = dirname(__DIR__);
 require __DIR__ . '/../vendor/autoload.php';
 
 use Illuminate\Container\Container;
-use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\ServerRequestFactory;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
-use League\Route\Http\Exception as HttpException;
 use ZeroToProd\Thryds\App;
-use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Env;
 use ZeroToProd\Thryds\Header;
-use ZeroToProd\Thryds\Log;
-use ZeroToProd\Thryds\LogContext;
 use ZeroToProd\Thryds\RequestId;
-use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 // Worker boots once; its in-memory object graph persists for the process lifetime.
 // In development, file changes trigger a worker restart that re-initializes this state.
@@ -29,39 +23,25 @@ $App = App::boot($base_dir);
 // discard template state accumulated during the request. Must follow App::boot().
 $bladeEngine = Container::getInstance()->make('view.engine.resolver')->resolve('blade');
 
-$emit_error_page = static function (string $message, int $status_code): void {
-    new SapiEmitter()->emit(
-        response: new HtmlResponse(
-            html: blade()->make(view: View::error->value, data: [
-                ErrorViewModel::view_key => ErrorViewModel::from([
-                    ErrorViewModel::message => $message,
-                    ErrorViewModel::status_code => $status_code,
-                ]),
-            ])->render(),
-            status: $status_code,
-        )
-    );
-};
-
 // Request handler — called for each incoming request
-$handler = static function () use ($App, $bladeEngine, $emit_error_page): void {
-    $ServerRequestInterface = ServerRequestFactory::fromGlobals(server: $_SERVER, query: $_GET, body: $_POST, cookies: $_COOKIE, files: $_FILES);
+$handler = static function () use ($App, $bladeEngine): void {
+    $ServerRequestInterface = ServerRequestFactory::fromGlobals(
+        server: $_SERVER,
+        query: $_GET,
+        body: $_POST,
+        cookies: $_COOKIE,
+        files: $_FILES
+    );
 
     try {
-        new SapiEmitter()->emit(response: $App->Router->dispatch(request: $ServerRequestInterface)->withHeader(Header::request_id, value: RequestId::init($ServerRequestInterface)));
-    } catch (HttpException $HttpException) {
-        $emit_error_page($HttpException->getMessage(), $HttpException->getStatusCode());
-    } catch (Throwable $Throwable) {
-        Log::error($Throwable->getMessage(), [
-            LogContext::event => LogContext::unhandled_exception,
-            LogContext::exception => $Throwable::class,
-            LogContext::file => $Throwable->getFile(),
-            LogContext::line => $Throwable->getLine(),
-        ]);
-        $emit_error_page(
-            $App->Config->isProduction() ? 'Internal Server Error' : $Throwable->getMessage(),
-            500,
+        new SapiEmitter()->emit(
+            response: $App->Router->dispatch(request: $ServerRequestInterface)->withHeader(
+                Header::request_id,
+                value: RequestId::init($ServerRequestInterface)
+            )
         );
+    } catch (Throwable $Throwable) {
+        $App->ExceptionHandler->handle($Throwable);
     } finally {
         // Static state persists across requests in worker mode; both calls below
         // clear per-request state so it does not bleed into the next request.
