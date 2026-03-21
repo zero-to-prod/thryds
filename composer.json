@@ -13,7 +13,8 @@
         "ext-frankenphp": "*",
         "ext-zend-opcache": "*",
         "ext-pdo": "*",
-        "ext-curl": "*"
+        "ext-curl": "*",
+        "symfony/yaml": "^8.0"
     },
     "autoload": {
         "psr-4": {
@@ -50,7 +51,6 @@
         "phpunit/phpunit": "^13.0",
         "friendsofphp/php-cs-fixer": "^3.94",
         "phpstan/phpstan": "^2.1",
-        "symfony/yaml": "^8.0",
         "brianium/paratest": "^7.19"
     },
     "replace": {

@@ -7,20 +7,38 @@ declare(strict_types=1);
 // Autoload
 opcache_compile_file(__DIR__ . '/vendor/autoload.php');
 
+// Routes
+opcache_compile_file(__DIR__ . '/src/Routes/RouteRegistrar.php');
+opcache_compile_file(__DIR__ . '/src/Routes/Route.php');
+opcache_compile_file(__DIR__ . '/src/Routes/HttpMethod.php');
+
+// ViewModels
+opcache_compile_file(__DIR__ . '/src/ViewModels/ErrorViewModel.php');
+opcache_compile_file(__DIR__ . '/src/ViewModels/RegisterViewModel.php');
+
+// Entrypoint
+opcache_compile_file(__DIR__ . '/public/index.php');
+
 // Core
 opcache_compile_file(__DIR__ . '/src/functions.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/DataModel.php');
 opcache_compile_file(__DIR__ . '/src/Config.php');
+opcache_compile_file(__DIR__ . '/src/ConfigKey.php');
 opcache_compile_file(__DIR__ . '/src/AppEnv.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/Describe.php');
+opcache_compile_file(__DIR__ . '/src/DatabaseConfig.php');
 opcache_compile_file(__DIR__ . '/src/Blade/Vite.php');
 opcache_compile_file(__DIR__ . '/src/App.php');
 opcache_compile_file(__DIR__ . '/src/Blade/BladeDirectives.php');
 opcache_compile_file(__DIR__ . '/src/Blade/BladeDirective.php');
 opcache_compile_file(__DIR__ . '/src/Blade/Component.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/RouteOperation.php');
 opcache_compile_file(__DIR__ . '/src/Controllers/HomeController.php');
+opcache_compile_file(__DIR__ . '/src/Attributes/HandlesRoute.php');
+opcache_compile_file(__DIR__ . '/src/Controllers/OpcacheScriptsHandler.php');
+opcache_compile_file(__DIR__ . '/src/Controllers/OpcacheStatusHandler.php');
 opcache_compile_file(__DIR__ . '/src/Controllers/RegisterController.php');
+opcache_compile_file(__DIR__ . '/src/Controllers/RouteManifestHandler.php');
+opcache_compile_file(__DIR__ . '/src/Attributes/RouteOperation.php');
 opcache_compile_file(__DIR__ . '/src/Blade/View.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/ReceivesViewModel.php');
 opcache_compile_file(__DIR__ . '/src/Blade/ScalarDefault.php');
@@ -34,18 +52,6 @@ opcache_compile_file(__DIR__ . '/src/Attributes/PrimaryKey.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/PageTitle.php');
 opcache_compile_file(__DIR__ . '/src/UI/AlertVariant.php');
 opcache_compile_file(__DIR__ . '/src/RequestId.php');
-
-// Routes
-opcache_compile_file(__DIR__ . '/src/Routes/RouteRegistrar.php');
-opcache_compile_file(__DIR__ . '/src/Routes/Route.php');
-opcache_compile_file(__DIR__ . '/src/Routes/HttpMethod.php');
-
-// ViewModels
-opcache_compile_file(__DIR__ . '/src/ViewModels/ErrorViewModel.php');
-opcache_compile_file(__DIR__ . '/src/ViewModels/RegisterViewModel.php');
-
-// Entrypoint
-opcache_compile_file(__DIR__ . '/public/index.php');
 
 // Vendor
 opcache_compile_file(__DIR__ . '/vendor/composer/autoload_real.php');
@@ -80,6 +86,9 @@ opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-diactoros/src/functions/
 opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-diactoros/src/functions/normalize_server.php');
 opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-diactoros/src/functions/normalize_uploaded_files.php');
 opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-diactoros/src/functions/parse_cookie_header.php');
+opcache_compile_file(__DIR__ . '/vendor/symfony/yaml/Yaml.php');
+opcache_compile_file(__DIR__ . '/vendor/symfony/yaml/Parser.php');
+opcache_compile_file(__DIR__ . '/vendor/symfony/yaml/Inline.php');
 opcache_compile_file(__DIR__ . '/vendor/zero-to-prod/data-model/src/DataModel.php');
 opcache_compile_file(__DIR__ . '/vendor/zero-to-prod/data-model/src/Describe.php');
 opcache_compile_file(__DIR__ . '/vendor/illuminate/container/Container.php');
@@ -211,7 +220,6 @@ opcache_compile_file(__DIR__ . '/vendor/illuminate/contracts/Container/Contextua
 opcache_compile_file(__DIR__ . '/vendor/psr/container/src/ContainerExceptionInterface.php');
 opcache_compile_file(__DIR__ . '/vendor/illuminate/contracts/Container/BindingResolutionException.php');
 opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-diactoros/src/Response/JsonResponse.php');
-opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-diactoros/src/HeaderSecurity.php');
 opcache_compile_file(__DIR__ . '/vendor/laminas/laminas-diactoros/src/ServerRequestFilter/IPRange.php');
 opcache_compile_file(__DIR__ . '/vendor/league/route/src/Cache/Router.php');
 opcache_compile_file(__DIR__ . '/vendor/league/route/src/Cache/FileCache.php');
