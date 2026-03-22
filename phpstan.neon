@@ -8,6 +8,7 @@ parameters:
             paths:
                 - src/Config.php
                 - src/DatabaseConfig.php
+                - src/Tables/Migration.php
                 - src/Tables/User.php
                 - src/Requests/RegisterRequest.php
                 - src/ViewModels/ErrorViewModel.php

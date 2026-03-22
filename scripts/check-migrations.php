@@ -12,23 +12,20 @@ declare(strict_types=1);
  * Output: JSON { ok: bool, violations: [{ id, rule, message, fix }] }
  */
 
-require __DIR__ . '/../vendor/autoload.php';
+$base_dir = dirname(__DIR__);
 
-use Symfony\Component\Yaml\Yaml;
+require $base_dir . '/vendor/autoload.php';
+
 use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\DatabaseConfig;
 use ZeroToProd\Thryds\MigrationStatus;
 use ZeroToProd\Thryds\Migrator;
 use ZeroToProd\Thryds\Tables\Migration;
 
-$base_dir = dirname(__DIR__);
-$config   = Yaml::parseFile(__DIR__ . '/migrations-config.yaml');
-
 try {
-    $Migrator = new Migrator(
+    $Migrator = Migrator::create(
         Database: new Database(DatabaseConfig::fromEnv()),
-        migrations_dir: $base_dir . '/' . $config['directory'],
-        migrations_namespace: $config['namespace'] . '\\',
+        base_dir: $base_dir,
     );
     $Migrator->ensureTable();
     $rows = $Migrator->status();

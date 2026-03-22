@@ -9,6 +9,7 @@ use RuntimeException;
 use ZeroToProd\Thryds\Attributes\KeyRegistry;
 use ZeroToProd\Thryds\Attributes\KeySource;
 use ZeroToProd\Thryds\Attributes\MigrationAction;
+use ZeroToProd\Thryds\Attributes\MigrationsSource;
 use ZeroToProd\Thryds\Queries\DeleteMigrationQuery;
 use ZeroToProd\Thryds\Queries\InsertMigrationQuery;
 use ZeroToProd\Thryds\Queries\SelectMigrationsQuery;
@@ -29,6 +30,10 @@ use ZeroToProd\Thryds\Tables\Migration;
  * (CREATE TABLE, ALTER TABLE, etc.) cause MySQL to implicitly commit any open
  * transaction. Call ensureTable() before opening a transaction.
  */
+#[MigrationsSource(
+    directory: 'migrations',
+    namespace: 'ZeroToProd\\Thryds\\Migrations',
+)]
 #[KeyRegistry(
     KeySource::migrations_table,
     superglobals: [],
@@ -51,6 +56,25 @@ readonly class Migrator
     ) {
         $this->MigrationDiscovery = new MigrationDiscovery($migrations_dir, $migrations_namespace);
         $this->MigrationStatusResolver = new MigrationStatusResolver($this->MigrationDiscovery, $this->Database);
+    }
+
+    /**
+     * Builds a Migrator from the #[MigrationsSource] attribute on this class.
+     *
+     * @param string $base_dir Absolute path to the project root.
+     */
+    public static function create(Database $Database, string $base_dir): self
+    {
+        /** @var MigrationsSource $MigrationsSource */
+        $MigrationsSource = new ReflectionClass(self::class)
+            ->getAttributes(MigrationsSource::class)[0]
+            ->newInstance();
+
+        return new self(
+            $Database,
+            migrations_dir: $base_dir . '/' . $MigrationsSource->directory,
+            migrations_namespace: $MigrationsSource->namespace . '\\',
+        );
     }
 
     public function ensureTable(): void
