@@ -56,7 +56,7 @@ The attribute graph is the primary way to understand the codebase. Query it firs
 4. **Mutate** — read `_instructions` for mutation recipes.
 5. **Impact** — read `_dependents` to know what breaks if a node changes.
 
-Configuration: `attribute-graph.yaml` at project root externalizes class references (ClosedSet, Group, EdgeKind, Layer).
+Configuration: `attribute-graph.yaml` at project root externalizes class references for `scripts/list-attributes.php`.
 
 ## Workflow
 
@@ -107,14 +107,13 @@ test:unit              # unit tests only
 test:integration       # integration tests
 test:database          # database tests (isolated transactions)
 test:rector            # custom Rector rule tests
-test:coverage          # alias for check:coverage
 test:load              # k6 load test (production build; uses compose.load-test.yaml)
 ```
 
 ### Inspect (read-only)
 
 ```
-list                   # print all available commands
+list:commands          # print all available commands
 list:routes            # → JSON [{name, path, params, dev_only, description, operations}]
 list:attributes        # attribute graph (see Orientation section)
 list:inventory         # dependency graph: routes→controllers→views→components; JSON or DOT (-- --format=dot)
@@ -126,8 +125,8 @@ db:query -- "<sql>"    # SELECT only → JSON rows
 ### Audit (read-only)
 
 ```
-prod:check             # route cache + OPcache + template cache + @push readiness
-prod:route-cache       # route cache only
+audit:production       # route cache + OPcache + template cache + @push readiness
+audit:route-cache      # route cache only
 audit:opcache          # OPcache configuration audit
 audit:profile          # profile live endpoints (makes HTTP requests)
 audit:hotspots         # access log analysis
@@ -136,24 +135,30 @@ audit:hotspots         # access log analysis
 ### Fix (mutating)
 
 ```
-fix:all                # sync:manifest → fix:style → fix:rector → generate:preload → check:all
+fix:all                # sync:manifest → fix:style → fix:rector → sync:preload → check:all
                        # pass --dry-run (-n) to preview without mutating
-sync:manifest          # scaffold code for entities in thryds.yaml missing from code
 fix:style              # php-cs-fixer fix
 fix:rector             # rector process
 ```
 
-### Migrate & Cache (mutating)
+### Sync (mutating — derived outputs from current state)
+
+```
+sync:manifest          # scaffold code for entities in thryds.yaml missing from code
+sync:schema            # create missing tables; sync #[Column] attrs → JSON {created,synced,flagged_missing_from_model,flagged_missing_from_db,no_changes}
+sync:schema -- --dry-run  # report drift without modifying
+sync:views             # compile Blade templates → var/cache/blade/
+sync:preload           # regenerate preload.php for OPcache
+```
+
+### Migrate (mutating)
 
 ```
 migrate                # apply pending → JSON {applied:[…], total}
 migrate:rollback       # undo last → JSON {rolled_back:{id,description}|null}
-sync:schema            # create missing tables; sync #[Column] attrs → JSON {created,synced,flagged_missing_from_model,flagged_missing_from_db,no_changes}
-sync:schema -- --dry-run  # report drift without modifying
-cache:views            # compile Blade templates → var/cache/blade/
 ```
 
-### Scaffold (mutating)
+### Generate (mutating — scaffold new files)
 
 ```
 generate:migration -- <PascalCaseClassName>
@@ -167,17 +172,14 @@ generate:rector-rule -- <RuleName> [--mode=auto|warn] [--message="..."]
 
 generate:table -- <table_name> [--force]
   # → src/Tables/<PascalCase>Table.php from live schema
-
-generate:preload
-  # → regenerate preload.php for OPcache
 ```
 
 ### Environment (mutating)
 
 ```
-dev                    # APP_ENV=development, restart with dev overlay
-prod                   # APP_ENV=production, restart without dev overlay
-dev:up                 # start dev containers (preserves .env)
+env:dev                # APP_ENV=development, restart with dev overlay
+env:prod               # APP_ENV=production, restart without dev overlay
+env:up                 # start dev containers (preserves .env)
 ```
 
 ## Environment Files

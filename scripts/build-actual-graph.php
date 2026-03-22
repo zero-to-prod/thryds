@@ -16,11 +16,11 @@ use Symfony\Component\Yaml\Yaml;
  */
 function buildActualGraph(string $projectRoot): array
 {
-    $script = $projectRoot . 'scripts/inventory.php';
+    $script = $projectRoot . 'scripts/list-inventory.php';
     $yaml   = shell_exec('php ' . escapeshellarg($script) . ' --format=yaml 2>/dev/null');
 
     if ($yaml === null || $yaml === '') {
-        fwrite(STDERR, "Failed to run inventory.php\n");
+        fwrite(STDERR, "Failed to run list-inventory.php\n");
         exit(1);
     }
 

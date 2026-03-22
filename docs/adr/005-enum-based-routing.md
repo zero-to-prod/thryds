@@ -18,4 +18,4 @@ Define routes as a backed string enum (`enum Route: string`). Route registration
 - **Single source of truth.** `Route.php` is the complete list of routes. Adding a route means adding an enum case.
 - **Refactoring is safe.** Renaming a route case propagates through the IDE and Rector catches any remaining string references.
 - **Compile-time completeness.** Rector verifies that every enum case is registered and tested — an unregistered route is caught before commit, not at runtime.
-- **Blade templates use enum values.** `href="{{ Route::about->value }}"` instead of `href="/about"`. A separate linter (`lint-blade-routes.php`) catches hardcoded paths in templates.
+- **Blade templates use enum values.** `href="{{ Route::about->value }}"` instead of `href="/about"`. A separate linter (`check-blade-routes.php`) catches hardcoded paths in templates.

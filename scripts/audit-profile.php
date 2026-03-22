@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * HTTP endpoint profiler — ranks routes by latency.
  *
- * Usage: docker compose exec web php /app/scripts/profile-endpoints.php [samples]
+ * Usage: docker compose exec web php /app/scripts/audit-profile.php [samples]
  * Via Composer: ./run audit:profile
  *
  * Warms the cache, then hits each public route N times (default: 20), computes

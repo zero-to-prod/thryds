@@ -250,8 +250,8 @@ Internal `href` paths are checked against the project root at `check:requirement
 | File | Purpose |
 |---|---|
 | `requirements.yaml` | Source of truth for all requirements |
-| `scripts/check-requirement-coverage.php` | Validation script — run via `./run check:requirements` |
-| `scripts/make-requirement.php` | Scaffold generator — run via `./run generate:requirement` |
+| `scripts/check-requirements.php` | Validation script — run via `./run check:requirements` |
+| `scripts/generate-requirement.php` | Scaffold generator — run via `./run generate:requirement` |
 | `utils/rector/src/ValidateRequirementIdsRector.php` | Validates `#[Requirement]` IDs against `requirements.yaml` |
 | `src/Attributes/Requirement.php` | The attribute class itself |
 | `docs/acceptance-criteria.md` | Criteria format, test conventions, worked examples |

@@ -6,7 +6,7 @@ declare(strict_types=1);
  * Generate a requirement stub: a YAML block in requirements.yaml and (when
  * applicable) a pre-named test class so no method names need to be invented.
  *
- * Usage: docker compose exec web php scripts/make-requirement.php <ID> --type=... --verification=... [--title="..."]
+ * Usage: docker compose exec web php scripts/generate-requirement.php <ID> --type=... --verification=... [--title="..."]
  * Via Composer: ./run generate:requirement -- <ID> --type=... --verification=... [--title="..."]
  *
  * Verification values: integration-test, unit-test, rector-rule, architecture, manual
@@ -24,7 +24,7 @@ $base_dir = (string) realpath(__DIR__ . '/..');
 $args = array_slice($argv, offset: 1);
 
 if ($args === []) {
-    echo "Usage: php scripts/make-requirement.php <ID> --type=functional|non-functional --verification=<value> [--title=\"...\"]\n";
+    echo "Usage: php scripts/generate-requirement.php <ID> --type=functional|non-functional --verification=<value> [--title=\"...\"]\n";
     echo "Verification: integration-test, unit-test, rector-rule, architecture, manual\n";
     exit(1);
 }

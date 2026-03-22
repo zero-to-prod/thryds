@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * OPcache optimization audit.
  *
- * Usage: docker compose exec web php /app/scripts/opcache-audit.php
+ * Usage: docker compose exec web php /app/scripts/audit-opcache.php
  * Via Composer: ./run opcache
  *
  * Generates HTTP traffic to warm the worker's OPcache, then fetches
@@ -174,7 +174,7 @@ function opcacheAudit(bool $isDev, string $base_url, array|false $worker_status,
             $nonPreloaded = $cachedScripts - $preloadScripts - $expected_non_preloaded;
             if ($nonPreloaded > 0 && !empty($preload)) {
                 $warnings[] = sprintf(
-                    '%d scripts cached, %d via preload, %d expected runtime — %d unexpected scripts not preloaded (run ./run generate:preload)',
+                    '%d scripts cached, %d via preload, %d expected runtime — %d unexpected scripts not preloaded (run ./run sync:preload)',
                     $cachedScripts,
                     $preloadScripts,
                     $expected_non_preloaded,

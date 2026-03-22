@@ -163,7 +163,7 @@ Follow the `#[ClosedSet] addCase` checklist on `Route`, `View`, and `Component` 
 2. Add `case register = 'register'` to `src/Helpers/View.php`
 3. If simple read-only view: add matching `View` case with the same name — `RouteRegistrar::register()` auto-registers it. If stateful or complex: add an explicit `$Router->map()` call in `src/Routes/RouteRegistrar.php` instead.
 4. Create `templates/register.blade.php` — compose with existing components
-5. Add render call in `scripts/generate-preload.php`
+5. Add render call in `scripts/sync-preload.php`
 6. Add integration test in `tests/Integration/RegisterRouteTest.php`
 
 **Page template structure:**

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Container\Container;
-use Jenssegers\Blade\Blade;
+use Tempest\Blade\Blade;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Database;
 

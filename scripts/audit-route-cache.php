@@ -5,8 +5,8 @@ declare(strict_types=1);
 /**
  * Verifies that League\Route\Cache\Router caches routes in production mode.
  *
- * Usage: docker compose exec web php /app/scripts/verify-route-cache.php
- * Via Composer: ./run check:route-cache
+ * Usage: docker compose exec web php /app/scripts/audit-route-cache.php
+ * Via Composer: ./run audit:route-cache
  *
  * Proves caching by tracking whether the builder callable is invoked.
  * In production mode:

@@ -6,6 +6,7 @@ namespace ZeroToProd\Thryds\Validation;
 
 use ReflectionClass;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
+use ZeroToProd\Thryds\Attributes\Matches;
 use ZeroToProd\Thryds\Attributes\Validates;
 use ZeroToProd\Thryds\Attributes\ValidateWith;
 
@@ -37,8 +38,9 @@ final readonly class Validator
             $name = $property->getName();
             $class_validates = $class_validation_map[$name] ?? [];
             $validate_with_attributes = $property->getAttributes(ValidateWith::class);
+            $matches_attributes = $property->getAttributes(Matches::class);
 
-            if ($class_validates === [] && $validate_with_attributes === []) {
+            if ($class_validates === [] && $validate_with_attributes === [] && $matches_attributes === []) {
                 continue;
             }
 
@@ -46,7 +48,7 @@ final readonly class Validator
 
             foreach ($class_validates as $Validates) {
                 foreach ($Validates->rules as [$rule, $config]) {
-                    if ($rule->passes($value, $config, context: $model)) {
+                    if ($rule->passes($value, $config)) {
                         continue;
                     }
                     $errors[self::errorKey(property: $name)] = $rule->message(field: $name, config: $config);
@@ -65,6 +67,19 @@ final readonly class Validator
                     continue;
                 }
                 $errors[self::errorKey(property: $name)] = $ValidationRule->message(field: $name);
+                break;
+            }
+
+            if (isset($errors[self::errorKey(property: $name)])) {
+                continue;
+            }
+
+            foreach ($matches_attributes as $attribute) {
+                $target = $attribute->newInstance()->property;
+                if ($value === $property->getDeclaringClass()->getProperty(name: $target)->getValue(object: $model)) {
+                    continue;
+                }
+                $errors[self::errorKey(property: $name)] = ucfirst(string: $target) . ' does not match.';
                 break;
             }
         }

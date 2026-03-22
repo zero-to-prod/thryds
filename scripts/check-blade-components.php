@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Lint Blade templates for raw HTML tags that should use Blade components.
  *
- * Usage: docker compose exec web php /app/scripts/lint-blade-components.php
+ * Usage: docker compose exec web php /app/scripts/check-blade-components.php
  * Via Composer: ./run check:blade-components
  *
  * Allows:

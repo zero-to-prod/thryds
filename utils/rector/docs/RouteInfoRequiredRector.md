@@ -4,7 +4,7 @@
 
 ## Why
 
-`scripts/inventory.php` calls `$Route->description()` on every `Route` enum case to populate the inventory graph's `description` field. That method reads the `#[RouteInfo]` attribute. A case without it causes the graph to emit an empty description, making the route invisible to intent-based queries (e.g. "where is auth handled?").
+`scripts/list-inventory.php` calls `$Route->description()` on every `Route` enum case to populate the inventory graph's `description` field. That method reads the `#[RouteInfo]` attribute. A case without it causes the graph to emit an empty description, making the route invisible to intent-based queries (e.g. "where is auth handled?").
 
 ## What it does
 

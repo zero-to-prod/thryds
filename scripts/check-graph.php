@@ -31,15 +31,15 @@ $rules = Yaml::parseFile($rulesFile);
 
 // ── Load attribute graph ────────────────────────────────────────
 
-$graphJson = shell_exec('php ' . escapeshellarg($projectRoot . 'scripts/attribute-graph.php') . ' --format=json 2>/dev/null');
+$graphJson = shell_exec('php ' . escapeshellarg($projectRoot . 'scripts/list-attributes.php') . ' --format=json 2>/dev/null');
 if ($graphJson === null || $graphJson === '') {
-    echo json_encode(['ok' => false, 'violations' => [['rule' => 'graph-load', 'message' => 'attribute-graph.php returned no output', 'fix' => 'Run ./run list:attributes to diagnose']]], JSON_PRETTY_PRINT) . "\n";
+    echo json_encode(['ok' => false, 'violations' => [['rule' => 'graph-load', 'message' => 'list-attributes.php returned no output', 'fix' => 'Run ./run list:attributes to diagnose']]], JSON_PRETTY_PRINT) . "\n";
     exit(1);
 }
 
 $graph = json_decode($graphJson, associative: true);
 if (! is_array($graph) || ! isset($graph['nodes'])) {
-    echo json_encode(['ok' => false, 'violations' => [['rule' => 'graph-parse', 'message' => 'attribute-graph.php returned invalid JSON', 'fix' => 'Run ./run list:attributes -- --format=json to diagnose']]], JSON_PRETTY_PRINT) . "\n";
+    echo json_encode(['ok' => false, 'violations' => [['rule' => 'graph-parse', 'message' => 'list-attributes.php returned invalid JSON', 'fix' => 'Run ./run list:attributes -- --format=json to diagnose']]], JSON_PRETTY_PRINT) . "\n";
     exit(1);
 }
 

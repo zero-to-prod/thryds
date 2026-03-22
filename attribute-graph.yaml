@@ -1,4 +1,4 @@
-# Configuration for scripts/attribute-graph.php
+# Configuration for scripts/list-attributes.php
 #
 # Externalizes all codebase-specific class references so the script
 # is reusable across any PHP project that follows AOP conventions.

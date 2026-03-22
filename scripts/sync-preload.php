@@ -5,8 +5,8 @@ declare(strict_types=1);
 /**
  * Generates preload.php by booting the app and discovering loaded scripts.
  *
- * Usage: ./run generate:preload
- * Build: RUN php scripts/generate-preload.php (in Dockerfile)
+ * Usage: ./run sync:preload
+ * Build: RUN php scripts/sync-preload.php (in Dockerfile)
  *
  * Boots the app the same way public/index.php does, renders all templates,
  * then uses get_included_files() to discover every script the app needs.
@@ -28,7 +28,7 @@ use ZeroToProd\Thryds\Routes\RouteRegistrar;
 
 $preload_config = Yaml::parseFile(__DIR__ . '/preload-config.yaml');
 
-require __DIR__ . '/cache-views.php';
+require __DIR__ . '/sync-views.php';
 
 // Boot the app (mirrors public/index.php boot phase)
 echo "Booting app...\n";

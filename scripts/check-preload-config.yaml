@@ -2,4 +2,4 @@
 preload_file: preload.php
 
 # Command used to regenerate the preload file for diffing
-generator_script: scripts/generate-preload.php
+generator_script: scripts/sync-preload.php

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Fails if preload.php is stale (out of sync with what generate:preload would produce).
+ * Fails if preload.php is stale (out of sync with what sync:preload would produce).
  *
  * Usage: docker compose exec web php scripts/check-preload.php
  * Via Composer: ./run check:preload
@@ -34,8 +34,8 @@ exec($command, result_code: $return_code);
 if ($return_code !== 0 || !file_exists($tmp_path)) {
     $violations[] = [
         'rule'    => 'preload-generation-failed',
-        'message' => 'generate-preload.php failed to produce output — cannot check staleness',
-        'fix'     => './run generate:preload',
+        'message' => 'sync-preload.php failed to produce output — cannot check staleness',
+        'fix'     => './run sync:preload',
     ];
 
     echo json_encode(
@@ -50,13 +50,13 @@ if (!file_exists($preload_path)) {
     $violations[] = [
         'rule'    => 'preload-missing',
         'message' => $config['preload_file'] . ' does not exist',
-        'fix'     => './run generate:preload',
+        'fix'     => './run sync:preload',
     ];
 } elseif (file_get_contents($preload_path) !== file_get_contents($tmp_path)) {
     $violations[] = [
         'rule'    => 'preload-stale',
         'message' => $config['preload_file'] . ' is out of sync with the current codebase',
-        'fix'     => './run generate:preload',
+        'fix'     => './run sync:preload',
     ];
 }
 

@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Access log hotspot analyzer — ranks routes by p95 latency from real traffic.
  *
- * Usage: docker compose exec web php /app/scripts/analyze-access-log.php [log-path]
+ * Usage: docker compose exec web php /app/scripts/audit-hotspots.php [log-path]
  * Via Composer: ./run audit:hotspots
  *
  * Parses logs/frankenphp/access.log (newline-delimited JSON) and ranks known

@@ -40,7 +40,7 @@ The `__DIR__` pattern is mandatory — configs are co-located with their scripts
 | **Check** | 0 = pass, 1 = fail | JSON `{ ok, violations }` | Human-readable progress | `check-migrations.php` |
 | **Generator** | 0 = success, 1 = error | JSON `{ created, updated, next_steps }` | Human-readable progress | `generate-migration.php` |
 | **Mutator** | 0 = success, 1 = error | JSON summary | Human-readable progress | `migrate.php`, `sync-schema.php` |
-| **Audit** | 0 = pass, 1 = issues | Human-readable report | — | `opcache-audit.php` |
+| **Audit** | 0 = pass, 1 = issues | Human-readable report | — | `audit-opcache.php` |
 | **Query** | 0 = success | Structured data (JSON/YAML) | Errors | `list-routes.php`, `db-query.php` |
 
 ### 2. Create the config file
@@ -241,11 +241,11 @@ Multiple scripts can share a config file. The config is named after the domain, 
 | Config | Scripts that share it |
 |---|---|
 | `migrations-config.yaml` | `generate-migration.php`, `check-migrations.php`, `migrate.php`, `migrate-status.php`, `migrate-rollback.php` |
-| `blade-config.yaml` | `lint-blade-routes.php`, `lint-blade-components.php`, `lint-blade-templates.php`, `check-blade-push.php`, `cache-views.php` |
+| `blade-config.yaml` | `check-blade-routes.php`, `check-blade-components.php`, `check-blade-templates.php`, `check-blade-push.php`, `sync-views.php` |
 | `tables-config.yaml` | `sync-schema.php`, `generate-table.php` |
 | `manifest-config.yaml` | `parse-manifest.php`, `manifest-diff.php`, `build-actual-graph.php`, `check-manifest.php` |
-| `requirements-config.yaml` | `check-requirement-coverage.php`, `make-requirement.php` |
-| `audit-config.yaml` | `profile-endpoints.php`, `analyze-access-log.php` |
+| `requirements-config.yaml` | `check-requirements.php`, `generate-requirement.php` |
+| `audit-config.yaml` | `audit-profile.php`, `audit-hotspots.php` |
 
 Before creating a new config, check if an existing one covers the domain.
 
@@ -308,6 +308,6 @@ Static `use` imports are fine for framework/library classes that are not project
 ## Commands
 
 - `./run check:all` — run all checks + tests (must pass before completing any task)
-- `./run fix:all` — sync:manifest → fix:style → fix:rector → generate:preload → check:all
+- `./run fix:all` — sync:manifest → fix:style → fix:rector → sync:preload → check:all
 - `./run fix:style` — apply code style fixes
 - `./run check:style` — check code style (dry-run)

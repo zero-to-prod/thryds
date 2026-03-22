@@ -8,7 +8,7 @@ Validates that file paths referenced inside `addCase` / `addKey` checklist strin
 
 ## Rationale
 
-Backed enums and key registries carry `#[ClosedSet(addCase: '...')]` or `#[KeyRegistry(addKey: '...')]` attributes that describe the steps a developer must follow when adding a new case or key. These checklists reference specific files that need updating (e.g., `scripts/generate-preload.php`, `templates/index.blade.php`). Over time, files are moved or renamed, leaving the checklist pointing at paths that no longer exist. This rule catches stale path references at Rector time — before they mislead the next developer.
+Backed enums and key registries carry `#[ClosedSet(addCase: '...')]` or `#[KeyRegistry(addKey: '...')]` attributes that describe the steps a developer must follow when adding a new case or key. These checklists reference specific files that need updating (e.g., `scripts/sync-preload.php`, `templates/index.blade.php`). Over time, files are moved or renamed, leaving the checklist pointing at paths that no longer exist. This rule catches stale path references at Rector time — before they mislead the next developer.
 
 ## What It Detects
 

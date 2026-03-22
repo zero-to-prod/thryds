@@ -11,8 +11,7 @@ declare(strict_types=1);
  * Optional first argument: minimum line-coverage threshold (0–100, default 0).
  * Exit code: 0 if tests pass and coverage meets threshold, 1 otherwise.
  *
- * Usage: ./run test:coverage
- *        ./run check:coverage
+ * Usage: ./run check:coverage
  *        ./run check:coverage -- 80
  */
 

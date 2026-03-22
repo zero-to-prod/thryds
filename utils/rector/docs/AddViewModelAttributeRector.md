@@ -8,7 +8,7 @@ Adds `#[ViewModel]` to every class in the configured ViewModel namespace that is
 
 ## Rationale
 
-Tooling that discovers ViewModels (e.g. `scripts/inventory.php`) reflects on the `#[ViewModel]` attribute. A ViewModel class without it is invisible to the inventory graph and any other attribute-driven tooling.
+Tooling that discovers ViewModels (e.g. `scripts/list-inventory.php`) reflects on the `#[ViewModel]` attribute. A ViewModel class without it is invisible to the inventory graph and any other attribute-driven tooling.
 
 ## What It Detects
 

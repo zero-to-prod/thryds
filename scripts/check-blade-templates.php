@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Lint Blade template files for coverage by View and Component enums.
  *
- * Usage: docker compose exec web php /app/scripts/lint-blade-templates.php
+ * Usage: docker compose exec web php /app/scripts/check-blade-templates.php
  * Via Composer: ./run check:blade-templates
  *
  * Checks:

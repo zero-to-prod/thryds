@@ -7,8 +7,8 @@ declare(strict_types=1);
  *
  * Runs all verification scripts and reports a combined pass/fail result.
  *
- * Usage: docker compose exec web php /app/scripts/production-checklist.php
- * Via Composer: ./run prod:check
+ * Usage: docker compose exec web php /app/scripts/audit-production.php
+ * Via Composer: ./run audit:production
  *
  * Checks are defined in production-config.yaml. Command-based checks run as
  * sub-processes; inline checks (template-cache, component-push) use reflection
@@ -169,10 +169,10 @@ function verifyTemplateCache(
 
     echo "\n=== Template Cache Verification ===\n\n";
 
-    // 1. Populate the real cache via cache-views.php
-    passthru('php ' . escapeshellarg($base_dir . '/scripts/cache-views.php'), $populate_exit);
+    // 1. Populate the real cache via sync-views.php
+    passthru('php ' . escapeshellarg($base_dir . '/scripts/sync-views.php'), $populate_exit);
     if ($populate_exit !== 0) {
-        echo "  [FAIL] cache-views.php failed\n\n";
+        echo "  [FAIL] sync-views.php failed\n\n";
 
         return 1;
     }

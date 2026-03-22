@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Blade;
 
-use Jenssegers\Blade\Blade;
+use Tempest\Blade\Blade;
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 use ZeroToProd\Thryds\Attributes\Prop;
 use ZeroToProd\Thryds\UI\AlertVariant;

@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Any class carrying `#[ViewModel]` must declare `public const string view_key`. The inventory graph (`scripts/inventory.php`) calls `$ref->getConstant('view_key')` on every discovered ViewModel — a missing constant produces a null entry in the graph output.
+Any class carrying `#[ViewModel]` must declare `public const string view_key`. The inventory graph (`scripts/list-inventory.php`) calls `$ref->getConstant('view_key')` on every discovered ViewModel — a missing constant produces a null entry in the graph output.
 
 This rule is a safety net that fires on **any** `#[ViewModel]` class regardless of whether it uses the `DataModel` trait. `AddViewKeyConstantRector` handles the `DataModel` + `#[ViewModel]` pattern; this rule covers everything else.
 

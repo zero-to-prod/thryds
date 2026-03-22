@@ -9,15 +9,15 @@ declare(strict_types=1);
  * including components referenced transitively — are compiled and written
  * to var/cache/blade before the first real request.
  *
- * Usage: docker compose exec web php scripts/cache-views.php
- * Via Composer: ./run cache:views
- * Build: called by generate-preload.php during `docker build`
+ * Usage: docker compose exec web php scripts/sync-views.php
+ * Via Composer: ./run sync:views
+ * Build: called by sync-preload.php during `docker build`
  */
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Jenssegers\Blade\Blade;
 use Symfony\Component\Yaml\Yaml;
+use Tempest\Blade\Blade;
 use ZeroToProd\Thryds\App;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Blade\View;
@@ -36,7 +36,7 @@ function compileAllTemplates(Blade $Blade): void
     }
 }
 
-// Only execute when run directly (not when required by generate-preload.php)
+// Only execute when run directly (not when required by sync-preload.php)
 if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'] ?? '')) {
     $base_dir = dirname(__DIR__);
 

@@ -7,7 +7,7 @@ declare(strict_types=1);
  *
  * Outputs DOT (Graphviz), JSON, or YAML based on --format= argument.
  *
- * Usage: docker compose exec web php scripts/inventory.php [--format=dot|json|yaml]
+ * Usage: docker compose exec web php scripts/list-inventory.php [--format=dot|json|yaml]
  * Via Composer: ./run list:inventory [-- --format=dot]
  *
  * Exit 0 on success.

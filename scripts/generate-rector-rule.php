@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Generate a custom Rector rule skeleton with test, config, and fixture.
  *
- * Usage: docker compose exec web php scripts/make-rector-rule.php <RuleName> [--mode=auto|warn] [--message="..."]
+ * Usage: docker compose exec web php scripts/generate-rector-rule.php <RuleName> [--mode=auto|warn] [--message="..."]
  * Via Composer: ./run generate:rector-rule -- <RuleName> [--mode=auto|warn] [--message="..."]
  *
  * Generates:
@@ -30,7 +30,7 @@ $scaffold = Yaml::parseFile(__DIR__ . '/rector-scaffold-config.yaml');
 $args = array_slice($argv, offset: 1);
 
 if ($args === []) {
-    echo "Usage: php scripts/make-rector-rule.php <RuleName> [--mode=auto|warn] [--message=\"...\"]\n";
+    echo "Usage: php scripts/generate-rector-rule.php <RuleName> [--mode=auto|warn] [--message=\"...\"]\n";
     exit(1);
 }
 

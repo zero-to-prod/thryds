@@ -1,8 +1,8 @@
 checks:
   - name: Route Cache
-    command: "php scripts/verify-route-cache.php"
+    command: "php scripts/audit-route-cache.php"
   - name: OPcache
-    command: "php scripts/opcache-audit.php"
+    command: "php scripts/audit-opcache.php"
   - name: Template Cache
     type: template-cache
   - name: Component @push Directives

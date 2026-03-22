@@ -10,8 +10,8 @@ steps:
   fix:rector:
     fix: "composer fix:rector"
     check: "composer check:rector"
-  generate:preload:
-    fix: "composer generate:preload"
+  sync:preload:
+    fix: "composer sync:preload"
     check: "composer check:preload"
 
 # Final verification step (always runs, both modes)

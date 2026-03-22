@@ -15,18 +15,18 @@ checks:
   check:migrations:
     command: "php scripts/check-migrations.php"
   check:requirements:
-    command: "php scripts/check-requirement-coverage.php"
+    command: "php scripts/check-requirements.php"
   check:blade-routes:
-    command: "php scripts/lint-blade-routes.php"
+    command: "php scripts/check-blade-routes.php"
   check:blade-components:
-    command: "php scripts/lint-blade-components.php"
+    command: "php scripts/check-blade-components.php"
   check:blade-templates:
-    command: "php scripts/lint-blade-templates.php"
+    command: "php scripts/check-blade-templates.php"
   check:blade-push:
     command: "php scripts/check-blade-push.php"
   check:preload:
     command: "php scripts/check-preload.php"
-    fix: "./run generate:preload"
+    fix: "./run sync:preload"
   check:graph:
     command: "php scripts/check-graph.php"
   test:

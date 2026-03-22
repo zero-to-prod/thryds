@@ -7,7 +7,7 @@ declare(strict_types=1);
  *
  * Outputs YAML, JSON (structured data), Markdown (readable document), or Mermaid (class diagram) based on --format= argument.
  *
- * Usage: docker compose exec web php scripts/attribute-graph.php [--config=FILE] [--format=yaml|json|markdown|mermaid] [--output=FILE] [--dir=src] [filters...]
+ * Usage: docker compose exec web php scripts/list-attributes.php [--config=FILE] [--format=yaml|json|markdown|mermaid] [--output=FILE] [--dir=src] [filters...]
  * Via Composer: ./run list:attributes [-- --format=markdown --node=RegisterController --layer=controllers]
  *
  * Filters (all repeatable, combined with AND across types, OR within same type):

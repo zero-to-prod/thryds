@@ -6,6 +6,7 @@ namespace ZeroToProd\Thryds\Requests;
 
 use ZeroToProd\Thryds\Attributes\DataModel;
 use ZeroToProd\Thryds\Attributes\Input;
+use ZeroToProd\Thryds\Attributes\Matches;
 use ZeroToProd\Thryds\Attributes\Validates;
 use ZeroToProd\Thryds\Tables\User;
 use ZeroToProd\Thryds\Tables\UserColumns;
@@ -36,9 +37,8 @@ use ZeroToProd\Thryds\Validation\Rule;
     [Rule::min, 8]
 )]
 #[Validates(
-    'password_confirmation',
-    Rule::required,
-    [Rule::matches, User::password]
+    self::password_confirmation,
+    Rule::required
 )]
 readonly class RegisterRequest
 {
@@ -51,5 +51,6 @@ readonly class RegisterRequest
         InputType::password,
         'Confirm Password'
     )]
+    #[Matches(User::password)]
     public string $password_confirmation;
 }

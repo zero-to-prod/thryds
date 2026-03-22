@@ -9,14 +9,14 @@ else
 fi
 
 _dispatch() {
-if [ "$1" = "list" ]; then
+if [ "$1" = "list:commands" ]; then
     cat << 'EOF'
 Thryds — ./run command reference
 
 ENVIRONMENT
-  dev              Switch to development mode and restart containers
-  prod             Switch to production mode and restart containers
-  dev:up           Start development containers (preserves .env)
+  env:dev          Switch to development mode and restart containers
+  env:prod         Switch to production mode and restart containers
+  env:up           Start development containers (preserves .env)
   composer <cmd>   Run any Composer command inside the container (e.g. composer update, composer require …)
 
 CHECK (read-only, safe to run anytime)
@@ -40,7 +40,6 @@ TEST
   test:integration Run integration tests — exercises real app boundaries
   test:database    Run database tests — isolated transactions, real schema
   test:rector      Run tests for custom Rector rules
-  test:coverage    Alias for check:coverage — run with PCOV, report metrics, no threshold
   test:load        k6 load test against the production build
 
 FIX (modifies files)
@@ -53,18 +52,19 @@ MIGRATE
   migrate          Apply all pending migrations; emits JSON {"applied":[…],"total":N}
   migrate:status   Display → stderr; JSON {"passed":bool,"pending":[…],"modified":[…],"applied":[…]} → stdout
   migrate:rollback Undo the last migration; emits JSON {"rolled_back":{id,description}|null}
+
+SYNC (derived outputs from current state)
+  sync:manifest    Scaffold code for entities in thryds.yaml missing from code
   sync:schema      Create missing tables and sync #[Column] attributes to the live schema
                    Pass -- --dry-run to report drift without modifying anything
-
-CACHE
-  cache:views      Compile Blade templates to bytecode for production
+  sync:views       Compile Blade templates to bytecode for production
+  sync:preload     Regenerate OPcache preload manifest (run before audit:production)
 
 GENERATE (scaffold new files)
   generate:migration    Scaffold a new timestamped migration file
   generate:table        Generate a Table model class from a live database table's schema
   generate:requirement  Scaffold a requirement entry + matching test stub
   generate:rector-rule  Scaffold a new custom Rector rule with tests and docs
-  generate:preload      Regenerate OPcache preload manifest (run before prod:check)
 
 DATABASE (read-only)
   db:query         Execute a SELECT statement and print results as JSON
@@ -72,20 +72,20 @@ DATABASE (read-only)
   list:routes      Print all registered routes as JSON (name, path, dev_only, description, operations)
   list:inventory   Dependency graph: routes→controllers→views→components; JSON (default) or DOT (pass -- --format=dot)
 
-AUDIT & PRODUCTION
-  prod:check       Full production readiness checklist (routes, OPcache, templates)
-  prod:route-cache Verify the route cache is valid and up to date
-  audit:opcache    Analyse OPcache configuration for production tuning
-  audit:profile    Profile live endpoints and report timing (makes HTTP requests)
-  audit:hotspots   Parse access logs to surface slow or high-traffic endpoints
+AUDIT (read-only)
+  audit:production   Full production readiness checklist (routes, OPcache, templates)
+  audit:route-cache  Verify the route cache is valid and up to date
+  audit:opcache      Analyse OPcache configuration for production tuning
+  audit:profile      Profile live endpoints and report timing (makes HTTP requests)
+  audit:hotspots     Parse access logs to surface slow or high-traffic endpoints
 EOF
 
-elif [ "$1" = "dev:up" ]; then
+elif [ "$1" = "env:up" ]; then
     docker compose -f compose.yaml -f compose.development.yaml up -d
-elif [ "$1" = "dev" ]; then
+elif [ "$1" = "env:dev" ]; then
     sed -i '' 's/^APP_ENV=.*/APP_ENV=development/' .env
     docker compose -f compose.yaml -f compose.development.yaml up -d
-elif [ "$1" = "prod" ]; then
+elif [ "$1" = "env:prod" ]; then
     sed -i '' 's/^APP_ENV=.*/APP_ENV=production/' .env
     docker compose -f compose.yaml up -d
 elif [ "$1" = "fix:all" ]; then

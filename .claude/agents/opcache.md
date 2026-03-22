@@ -24,9 +24,9 @@ Three-layer caching strategy:
 
 ### Scripts
 - `preload.php` — auto-generated preload manifest (do NOT edit manually)
-- `scripts/generate-preload.php` — preload generator (boots app, discovers files, topological sorts)
-- `scripts/opcache-audit.php` — comprehensive audit (config checks + runtime metrics)
-- `scripts/production-checklist.php` — orchestrates all production optimization checks
+- `scripts/sync-preload.php` — preload generator (boots app, discovers files, topological sorts)
+- `scripts/audit-opcache.php` — comprehensive audit (config checks + runtime metrics)
+- `scripts/audit-production.php` — orchestrates all production optimization checks
 
 ### Application Code
 - `src/Routes/RouteRegistrar.php` — registers `/_opcache/status` and `/_opcache/scripts` endpoints
@@ -36,7 +36,7 @@ Three-layer caching strategy:
 ### Docker
 - `Dockerfile` line 5: installs `opcache` extension
 - `Dockerfile` line 35: copies `opcache.ini` to production
-- `Dockerfile` line 41: generates `preload.php` at build time (`RUN rm -rf /app/var/cache/blade && php scripts/generate-preload.php`)
+- `Dockerfile` line 41: generates `preload.php` at build time (`RUN rm -rf /app/var/cache/blade && php scripts/sync-preload.php`)
 - `Dockerfile` line 54: copies `opcache-dev.ini` as `zzz-opcache-dev.ini` in dev target
 
 ## Production Configuration
@@ -69,7 +69,7 @@ opcache.jit_buffer_size=64M
 
 ## Preload Generation System
 
-`scripts/generate-preload.php` runs at build time (and via `./run generate:preload`):
+`scripts/sync-preload.php` runs at build time (and via `./run sync:preload`):
 
 1. Boots the app (mirrors `public/index.php` boot phase)
 2. Renders all templates (home, about, error) to discover view-layer dependencies
@@ -82,7 +82,7 @@ opcache.jit_buffer_size=64M
 
 ## Audit System
 
-`scripts/opcache-audit.php` (invoked via `./run audit:opcache`) performs 11 checks:
+`scripts/audit-opcache.php` (invoked via `./run audit:opcache`) performs 11 checks:
 
 ### Config Checks (ini_get)
 1. `opcache.enable` is ON
@@ -124,12 +124,12 @@ The following Rector rules in `rector.php` enforce OPcache-friendly code (all in
 ## Commands
 
 - `./run audit:opcache` — run the full OPcache audit
-- `./run generate:preload` — regenerate `preload.php`
-- `./run prod:check` — run all production readiness checks (includes OPcache audit)
+- `./run sync:preload` — regenerate `preload.php`
+- `./run audit:production` — run all production readiness checks (includes OPcache audit)
 
 ## Rules
 
-- **Never manually edit `preload.php`** — it is auto-generated. Run `./run generate:preload` instead.
+- **Never manually edit `preload.php`** — it is auto-generated. Run `./run sync:preload` instead.
 - All OPcache commands must run inside Docker.
 - When adding new application classes, `preload.php` should be regenerated to include them.
 - The preload generator's topological sort handles class dependency ordering — do not manually reorder entries.

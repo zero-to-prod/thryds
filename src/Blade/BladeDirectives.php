@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Blade;
 
-use Jenssegers\Blade\Blade;
+use Tempest\Blade\Blade;
 use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Config;

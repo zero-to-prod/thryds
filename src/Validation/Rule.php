@@ -17,9 +17,8 @@ enum Rule: string
     case email    = 'email';
     case min      = 'min';
     case max      = 'max';
-    case matches  = 'matches';
 
-    public function passes(mixed $value, int|string|null $config, object $context): bool
+    public function passes(mixed $value, int|string|null $config): bool
     {
         $string_value = is_string($value) ? $value : '';
 
@@ -28,7 +27,6 @@ enum Rule: string
             self::email    => filter_var($value, FILTER_VALIDATE_EMAIL) !== false,
             self::min      => strlen(string: $string_value) >= (int) $config,
             self::max      => strlen(string: $string_value) <= (int) $config,
-            self::matches  => $value === $context->{(string) $config},
         };
     }
 
@@ -39,7 +37,6 @@ enum Rule: string
             self::email    => 'Enter a valid email address.',
             self::min      => ucfirst(string: $field) . " must be at least $config characters.",
             self::max      => ucfirst(string: $field) . " must be at most $config characters.",
-            self::matches  => ucfirst((string) $config) . ' does not match.',
         };
     }
 }
