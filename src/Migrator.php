@@ -12,7 +12,7 @@ use ZeroToProd\Thryds\Attributes\MigrationAction;
 use ZeroToProd\Thryds\Attributes\MigrationsSource;
 use ZeroToProd\Thryds\Queries\DeleteMigrationQuery;
 use ZeroToProd\Thryds\Queries\InsertMigrationQuery;
-use ZeroToProd\Thryds\Queries\SelectMigrationsQuery;
+use ZeroToProd\Thryds\Queries\SelectLastMigrationQuery;
 use ZeroToProd\Thryds\Schema\DdlBuilder;
 use ZeroToProd\Thryds\Tables\Migration;
 
@@ -41,6 +41,8 @@ use ZeroToProd\Thryds\Tables\Migration;
 )]
 readonly class Migrator
 {
+    use RowAccess;
+
     // --- Public status key ---
 
     public const string col_status = 'status';
@@ -137,7 +139,7 @@ readonly class Migrator
      */
     public function rollback(): ?array
     {
-        $last = SelectMigrationsQuery::lastRow($this->Database);
+        $last = SelectLastMigrationQuery::oneRow($this->Database);
         if ($last === null) {
             return null;
         }
@@ -193,23 +195,5 @@ readonly class Migrator
         throw new RuntimeException(
             "$class must declare a MigrationAction attribute (#[CreateTable], #[AddColumn], #[DropColumn], or #[RawSql])."
         );
-    }
-
-    /**
-     * Reads a string value from a database row, asserting the type.
-     *
-     * Database rows are typed as array<string, mixed>. This helper narrows
-     * the value to string for PHPStan and throws on unexpected types at runtime.
-     *
-     * @param array<string, mixed> $row
-     */
-    private function rowStr(array $row, string $key): string
-    {
-        $value = $row[$key];
-        if (!is_string($value)) {
-            throw new RuntimeException("Expected string for key '$key', got " . gettype($value) . '.'); // @codeCoverageIgnore
-        }
-
-        return $value;
     }
 }

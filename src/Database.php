@@ -40,6 +40,16 @@ class Database
     private ?PDO $PDO = null;
     private readonly DatabaseConfig $DatabaseConfig;
 
+    /** @var array<int, mixed>|null */
+    private static ?array $connection_options = null;
+
+    private static ?string $timezone = null;
+
+    private static bool $timezone_resolved = false;
+
+    /** @var list<string>|null */
+    private static ?array $reconnect_messages = null;
+
     public function __construct(DatabaseConfig $DatabaseConfig)
     {
         $this->DatabaseConfig = $DatabaseConfig;
@@ -164,24 +174,16 @@ class Database
 
     private static function connect(DatabaseConfig $DatabaseConfig): PDO
     {
-        $ReflectionClass = new ReflectionClass(self::class);
-
-        $options = [];
-        foreach ($ReflectionClass->getAttributes(ConnectionOption::class) as $attr) {
-            $ConnectionOption = $attr->newInstance();
-            $options[$ConnectionOption->attribute] = $ConnectionOption->value;
-        }
-
         $PDO = new PDO(
             dsn: $DatabaseConfig->dsn,
             username: $DatabaseConfig->username,
             password: $DatabaseConfig->password,
-            options: $options,
+            options: self::resolveConnectionOptions(),
         );
 
-        $timezone_attrs = $ReflectionClass->getAttributes(Timezone::class);
-        if ($timezone_attrs !== []) {
-            $PDO->exec("SET time_zone = '" . $timezone_attrs[0]->newInstance()->timezone . "'");
+        $timezone = self::resolveTimezone();
+        if ($timezone !== null) {
+            $PDO->exec("SET time_zone = '" . $timezone . "'");
         }
 
         return $PDO;
@@ -190,12 +192,56 @@ class Database
     private static function isGoneAway(PDOException $PDOException): bool
     {
         $message = $PDOException->getMessage();
-        foreach (new ReflectionClass(self::class)->getAttributes(ReconnectOn::class) as $attr) {
-            if (str_contains(haystack: $message, needle: $attr->newInstance()->message)) {
+        foreach (self::resolveReconnectMessages() as $needle) {
+            if (str_contains(haystack: $message, needle: $needle)) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /** @return array<int, mixed> */
+    private static function resolveConnectionOptions(): array
+    {
+        if (self::$connection_options !== null) {
+            return self::$connection_options;
+        }
+
+        self::$connection_options = [];
+        foreach (new ReflectionClass(self::class)->getAttributes(ConnectionOption::class) as $attr) {
+            $ConnectionOption = $attr->newInstance();
+            self::$connection_options[$ConnectionOption->attribute] = $ConnectionOption->value;
+        }
+
+        return self::$connection_options;
+    }
+
+    private static function resolveTimezone(): ?string
+    {
+        if (self::$timezone_resolved) {
+            return self::$timezone;
+        }
+
+        $attrs = new ReflectionClass(self::class)->getAttributes(Timezone::class);
+        self::$timezone = $attrs !== [] ? $attrs[0]->newInstance()->timezone : null;
+        self::$timezone_resolved = true;
+
+        return self::$timezone;
+    }
+
+    /** @return list<string> */
+    private static function resolveReconnectMessages(): array
+    {
+        if (self::$reconnect_messages !== null) {
+            return self::$reconnect_messages;
+        }
+
+        self::$reconnect_messages = [];
+        foreach (new ReflectionClass(self::class)->getAttributes(ReconnectOn::class) as $attr) {
+            self::$reconnect_messages[] = $attr->newInstance()->message;
+        }
+
+        return self::$reconnect_messages;
     }
 }

@@ -11,7 +11,7 @@ use ZeroToProd\Thryds\Schema\SortDirection;
 use ZeroToProd\Thryds\Tables\Migration;
 
 /**
- * @method static array<int, array<string, mixed>> allRows(?Database $Database = null)
+ * @method static array<string, mixed>|null oneRow(?Database $Database = null)
  */
 #[Infrastructure]
 #[SelectsFrom(
@@ -19,11 +19,11 @@ use ZeroToProd\Thryds\Tables\Migration;
     columns: [],
     where: [],
     order_by: Migration::id,
-    SortDirection: SortDirection::ASC,
-    limit: null,
+    SortDirection: SortDirection::DESC,
+    limit: 1,
     offset: null,
 )]
-readonly class SelectMigrationsQuery
+readonly class SelectLastMigrationQuery
 {
     use DbRead;
 }

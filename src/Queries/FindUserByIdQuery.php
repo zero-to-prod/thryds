@@ -20,6 +20,8 @@ use ZeroToProd\Thryds\Tables\User;
     where: [User::id],
     order_by: '',
     SortDirection: SortDirection::ASC,
+    limit: null,
+    offset: null,
 )]
 readonly class FindUserByIdQuery
 {

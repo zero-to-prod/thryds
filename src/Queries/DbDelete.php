@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Queries;
 
 use ReflectionClass;
+use ZeroToProd\Thryds\Attributes\Connection;
 use ZeroToProd\Thryds\Attributes\DeletesFrom;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
-use ZeroToProd\Thryds\Database;
 
 /**
  * Attribute-driven DELETE execution.
@@ -24,13 +24,8 @@ trait DbDelete
      * Positional arguments map to the WHERE columns declared in {@see DeletesFrom::$where}.
      * An optional trailing Database instance overrides the default connection.
      */
-    public static function delete(mixed ...$where): int
+    public static function delete(mixed ...$args): int
     {
-        $database = null;
-        if ($where !== [] && end(array: $where) instanceof Database) {
-            $database = array_pop(array: $where);
-        }
-
         $DeletesFrom = new ReflectionClass(static::class)
             ->getAttributes(DeletesFrom::class)[0]
             ->newInstance();
@@ -40,11 +35,11 @@ trait DbDelete
 
         foreach ($DeletesFrom->where as $index => $column) {
             $clauses[] = $column . ' = :' . $column;
-            $params[':' . $column] = $where[$index] ?? null;
+            $params[':' . $column] = $args[$index] ?? null;
         }
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        return ($database ?? db())->execute(Sql::DELETE_FROM . $DeletesFrom->table::tableName()
+        return ($args[count($DeletesFrom->where)] ?? Connection::resolve($DeletesFrom->table))->execute(Sql::DELETE_FROM . $DeletesFrom->table::tableName()
             . Sql::WHERE . implode(Sql::CONJUNCTION, array: $clauses), $params);
     }
 }

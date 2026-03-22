@@ -6,6 +6,7 @@ namespace ZeroToProd\Thryds\Queries;
 
 use Random\RandomException;
 use ReflectionClass;
+use ZeroToProd\Thryds\Attributes\Connection;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\InsertsInto;
 use ZeroToProd\Thryds\Attributes\PersistColumn;
@@ -24,10 +25,10 @@ trait DbCreate
     /** @throws RandomException */
     public static function create(object $request, ?Database $Database = null): void
     {
-        [$all_columns, $hooks, $table_name] = self::resolveInsertMeta();
+        [$all_columns, $hooks, $table_name, $table] = self::resolveInsertMeta();
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        ($Database ?? db())->execute(Sql::INSERT_INTO . $table_name
+        ($Database ?? Connection::resolve(class: $table))->execute(Sql::INSERT_INTO . $table_name
             . ' (' . implode(', ', array: $all_columns) . ')'
             . ' VALUES (' . implode(', ', array_map(
                 static fn(string $column): string => ':' . $column,
@@ -42,7 +43,7 @@ trait DbCreate
             return;
         }
 
-        [$all_columns, $hooks, $table_name] = self::resolveInsertMeta();
+        [$all_columns, $hooks, $table_name, $table] = self::resolveInsertMeta();
 
         $params = [];
         $value_groups = [];
@@ -58,7 +59,7 @@ trait DbCreate
         }
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        db()->execute(Sql::INSERT_INTO . $table_name
+        Connection::resolve(class: $table)->execute(Sql::INSERT_INTO . $table_name
             . ' (' . implode(', ', array: $all_columns) . ')'
             . ' VALUES ' . implode(', ', array: $value_groups), $params);
     }
@@ -66,7 +67,7 @@ trait DbCreate
     /**
      * Reflect attribute metadata for the using query class.
      *
-     * @return array{list<string>, array<string, Persist>, string}
+     * @return array{list<string>, array<string, Persist>, string, class-string}
      */
     private static function resolveInsertMeta(): array
     {
@@ -93,7 +94,7 @@ trait DbCreate
         }
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        return [$all_columns, $hooks, $InsertsInto->table::tableName()];
+        return [$all_columns, $hooks, $InsertsInto->table::tableName(), $InsertsInto->table];
     }
 
     /**

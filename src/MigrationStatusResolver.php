@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
-use RuntimeException;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Queries\SelectMigrationsQuery;
 use ZeroToProd\Thryds\Tables\Migration;
@@ -18,6 +17,8 @@ use ZeroToProd\Thryds\Tables\Migration;
 #[Infrastructure]
 readonly class MigrationStatusResolver
 {
+    use RowAccess;
+
     public function __construct(
         private MigrationDiscovery $MigrationDiscovery,
         private Database $Database,
@@ -60,20 +61,5 @@ readonly class MigrationStatusResolver
         }
 
         return $result;
-    }
-
-    /**
-     * Reads a string value from a database row, asserting the type.
-     *
-     * @param array<string, mixed> $row
-     */
-    private function rowStr(array $row, string $key): string
-    {
-        $value = $row[$key];
-        if (!is_string($value)) {
-            throw new RuntimeException("Expected string for key '$key', got " . gettype($value) . '.'); // @codeCoverageIgnore
-        }
-
-        return $value;
     }
 }

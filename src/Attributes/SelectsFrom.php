@@ -23,6 +23,8 @@ readonly class SelectsFrom
      * @param list<string>    $where          Column names for the WHERE clause (positional).
      * @param string          $order_by       Column name for ORDER BY clause. Empty for unordered.
      * @param SortDirection   $SortDirection  Sort direction for ORDER BY clause.
+     * @param int|null        $limit          Maximum rows to return. Null for unlimited.
+     * @param int|null        $offset         Number of rows to skip. Null for no offset.
      */
     public function __construct(
         public string $table,
@@ -30,5 +32,7 @@ readonly class SelectsFrom
         public array $where,
         public string $order_by,
         public SortDirection $SortDirection,
+        public ?int $limit,
+        public ?int $offset,
     ) {}
 }
