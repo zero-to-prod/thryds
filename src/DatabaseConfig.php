@@ -84,7 +84,7 @@ readonly class DatabaseConfig
             }
         }
 
-        /** @phpstan-ignore argument.type (DataModel coerces scalar types from env strings) */
+        /** @var array{Driver?: string, host?: string, port?: int, database?: string, username?: string, password?: string} $data */
         return self::from($data);
     }
 
@@ -93,8 +93,7 @@ readonly class DatabaseConfig
      */
     public static function castDriver(mixed $value, array $context): Driver
     {
-        /** @var string|Driver $value */
-        return $value instanceof Driver ? $value : (Driver::tryFrom((string) $value) ?? Driver::mysql);
+        return self::resolveDriver($value);
     }
 
     /**
@@ -108,10 +107,7 @@ readonly class DatabaseConfig
             return $port;
         }
 
-        /** @var string|Driver $driver */
-        $driver = $context[self::Driver] ?? Driver::mysql;
-
-        return ($driver instanceof Driver ? $driver : (Driver::tryFrom((string) $driver) ?? Driver::mysql))->defaultPort();
+        return self::resolveDriver($context[self::Driver] ?? Driver::mysql)->defaultPort();
     }
 
     /**
@@ -119,10 +115,23 @@ readonly class DatabaseConfig
      */
     public static function computeDsn(mixed $value, array $context): string
     {
-        /** @var string|Driver $driver */
-        $driver = $context[self::Driver] ?? Driver::mysql;
-        $Driver = $driver instanceof Driver ? $driver : (Driver::tryFrom((string) $driver) ?? Driver::mysql);
+        $Driver = self::resolveDriver($context[self::Driver] ?? Driver::mysql);
 
-        return $Driver->dsn($context[self::host] ?? '', isset($context[self::port]) ? (int) $context[self::port] : $Driver->defaultPort(), $context[self::database] ?? ''); // @phpstan-ignore cast.int, argument.type, argument.type
+        /** @var string $host */
+        $host = $context[self::host] ?? '';
+        $port = $context[self::port] ?? null;
+
+        $database = $context[self::database] ?? '';
+
+        return $Driver->dsn($host, is_numeric(value: $port) ? (int) $port : $Driver->defaultPort(), is_string(value: $database) ? $database : '');
+    }
+
+    private static function resolveDriver(mixed $value): Driver
+    {
+        if ($value instanceof Driver) {
+            return $value;
+        }
+
+        return Driver::tryFrom(is_string($value) ? $value : '') ?? Driver::mysql;
     }
 }

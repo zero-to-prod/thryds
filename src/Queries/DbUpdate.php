@@ -9,6 +9,7 @@ use ReflectionClass;
 use ZeroToProd\Thryds\Attributes\Connection;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\PersistColumn;
+use ZeroToProd\Thryds\Attributes\Table;
 use ZeroToProd\Thryds\Attributes\UpdatesIn;
 
 /**
@@ -83,7 +84,9 @@ trait DbUpdate
             $hooks[$PersistColumn->column] = $PersistColumn->Persist;
         }
 
-        /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        return [$UpdatesIn->columns, $hooks, $UpdatesIn->where, $UpdatesIn->table::tableName(), $UpdatesIn->table];
+        return [$UpdatesIn->columns, $hooks, $UpdatesIn->where, new ReflectionClass($UpdatesIn->table)
+            ->getAttributes(Table::class)[0]
+            ->newInstance()
+            ->TableName->value, $UpdatesIn->table];
     }
 }

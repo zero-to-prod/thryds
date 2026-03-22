@@ -8,6 +8,7 @@ use ReflectionClass;
 use ZeroToProd\Thryds\Attributes\Connection;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\SelectsFrom;
+use ZeroToProd\Thryds\Attributes\Table;
 use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\Schema\Driver;
 
@@ -32,7 +33,6 @@ trait DbRead
     {
         [$sql, $params, $database, $table] = self::resolveSelectSqlWithConnection($args);
 
-        /** @phpstan-ignore method.nonObject (Database|null from trailing arg) */
         return ($database ?? Connection::resolve(class: $table))->one($sql, $params);
     }
 
@@ -48,7 +48,6 @@ trait DbRead
     {
         [$sql, $params, $database, $table] = self::resolveSelectSqlWithConnection($args);
 
-        /** @phpstan-ignore method.nonObject (Database|null from trailing arg) */
         return ($database ?? Connection::resolve(class: $table))->all($sql, $params);
     }
 
@@ -63,9 +62,8 @@ trait DbRead
         $db = $Database ?? Connection::resolve($SelectsFrom->table);
         $Driver = $db->driver();
 
-        /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
         $sql = Sql::SELECT . self::columnList($SelectsFrom, $Driver)
-            . Sql::FROM . $Driver->quote($SelectsFrom->table::tableName());
+            . Sql::FROM . $Driver->quote(self::resolveTableName($SelectsFrom));
         $sql .= self::orderByClause($SelectsFrom, $Driver);
         $sql .= self::limitOffsetClause($SelectsFrom);
 
@@ -83,9 +81,8 @@ trait DbRead
         $db = $Database ?? Connection::resolve($SelectsFrom->table);
         $Driver = $db->driver();
 
-        /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
         $sql = Sql::SELECT . self::columnList($SelectsFrom, $Driver)
-            . Sql::FROM . $Driver->quote($SelectsFrom->table::tableName());
+            . Sql::FROM . $Driver->quote(self::resolveTableName($SelectsFrom));
         $sql .= self::orderByClause($SelectsFrom, $Driver);
         $sql .= self::limitOffsetClause($SelectsFrom);
 
@@ -99,18 +96,18 @@ trait DbRead
      * An optional trailing Database instance at index N overrides the default connection.
      *
      * @param array<int|string, mixed> $args
-     * @return array{string, array<string, mixed>, mixed, class-string}
+     * @return array{string, array<string, mixed>, ?Database, class-string}
      */
     private static function resolveSelectSqlWithConnection(array $args): array
     {
         $SelectsFrom = self::resolveSelectsFrom();
 
-        $db = $args[count($SelectsFrom->where)] ?? null;
-        $Driver = ($db instanceof Database ? $db : Connection::resolve($SelectsFrom->table))->driver();
+        $raw = $args[count($SelectsFrom->where)] ?? null;
+        $database = $raw instanceof Database ? $raw : null;
+        $Driver = ($database ?? Connection::resolve($SelectsFrom->table))->driver();
 
-        /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
         $sql = Sql::SELECT . self::columnList($SelectsFrom, $Driver)
-            . Sql::FROM . $Driver->quote($SelectsFrom->table::tableName());
+            . Sql::FROM . $Driver->quote(self::resolveTableName($SelectsFrom));
 
         $params = [];
 
@@ -123,7 +120,7 @@ trait DbRead
             $sql .= Sql::WHERE . implode(Sql::CONJUNCTION, array: $clauses);
         }
 
-        return [$sql, $params, $db, $SelectsFrom->table];
+        return [$sql, $params, $database, $SelectsFrom->table];
     }
 
     private static function columnList(SelectsFrom $SelectsFrom, Driver $Driver): string
@@ -162,5 +159,13 @@ trait DbRead
         return new ReflectionClass(static::class)
             ->getAttributes(SelectsFrom::class)[0]
             ->newInstance();
+    }
+
+    private static function resolveTableName(SelectsFrom $SelectsFrom): string
+    {
+        return new ReflectionClass($SelectsFrom->table)
+            ->getAttributes(Table::class)[0]
+            ->newInstance()
+            ->TableName->value;
     }
 }

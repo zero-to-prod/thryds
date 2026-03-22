@@ -8,6 +8,7 @@ use ReflectionClass;
 use ZeroToProd\Thryds\Attributes\Connection;
 use ZeroToProd\Thryds\Attributes\DeletesFrom;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
+use ZeroToProd\Thryds\Attributes\Table;
 use ZeroToProd\Thryds\Database;
 
 /**
@@ -43,8 +44,10 @@ trait DbDelete
             $params[':' . $column] = $args[$index] ?? null;
         }
 
-        /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        return $resolvedDb->execute(Sql::DELETE_FROM . $Driver->quote($DeletesFrom->table::tableName())
+        return $resolvedDb->execute(Sql::DELETE_FROM . $Driver->quote(new ReflectionClass($DeletesFrom->table)
+            ->getAttributes(Table::class)[0]
+            ->newInstance()
+            ->TableName->value)
             . Sql::WHERE . implode(Sql::CONJUNCTION, array: $clauses), $params);
     }
 }

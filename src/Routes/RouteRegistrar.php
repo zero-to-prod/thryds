@@ -78,7 +78,6 @@ readonly class RouteRegistrar
             return $controller;
         }
 
-        /** @phpstan-ignore return.type (array{object, string} from resolveMethod satisfies callable at runtime) */
         return self::resolveMethod($controller, HttpMethod: $RouteOperation->HttpMethod);
     }
 
@@ -96,17 +95,13 @@ readonly class RouteRegistrar
             : throw new LogicException($controller::class . ' must declare #[ValidatesRequest] for the form/validated handler strategy.');
     }
 
-    /**
-     * Resolve a controller method by its declared #[HandlesMethod] attribute.
-     *
-     * @return array{object, string}
-     */
-    private static function resolveMethod(object $controller, HttpMethod $HttpMethod): array
+    /** Resolve a controller method by its declared #[HandlesMethod] attribute. */
+    private static function resolveMethod(object $controller, HttpMethod $HttpMethod): Closure
     {
         foreach (new ReflectionClass(objectOrClass: $controller)->getMethods() as $method) {
             $attrs = $method->getAttributes(HandlesMethod::class);
             if ($attrs !== [] && $attrs[0]->newInstance()->HttpMethod === $HttpMethod) {
-                return [$controller, $method->getName()];
+                return $controller->{$method->getName()}(...);
             }
         }
 

@@ -156,7 +156,9 @@ readonly class Migrator
     private function runUp(string $class): void
     {
         /** @var class-string $class Validated by discover() via class_exists(). */
-        $sql = self::resolveMigrationAction($class)->upSql(); // @phpstan-ignore method.notFound (MigrationAction marker guarantees upSql())
+        $action = self::resolveMigrationAction($class);
+        assert(method_exists(object_or_class: $action, method: 'upSql'));
+        $sql = $action->upSql();
 
         if ($this->Database->driver()->transactionalDdl()) {
             $this->Database->transaction(static fn(Database $Database): int => $Database->execute($sql));
@@ -173,7 +175,9 @@ readonly class Migrator
     private function runDown(string $class): void
     {
         /** @var class-string $class Validated by discover() via class_exists(). */
-        $sql = self::resolveMigrationAction($class)->downSql(); // @phpstan-ignore method.notFound (MigrationAction marker guarantees downSql())
+        $action = self::resolveMigrationAction($class);
+        assert(method_exists(object_or_class: $action, method: 'downSql'));
+        $sql = $action->downSql();
 
         if ($this->Database->driver()->transactionalDdl()) {
             $this->Database->transaction(static fn(Database $Database): int => $Database->execute($sql));

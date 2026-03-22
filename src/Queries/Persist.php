@@ -31,7 +31,10 @@ enum Persist: string
     /** @throws RandomException */
     public function resolve(mixed $value): string
     {
-        return $this->resolver()->resolve($value); // @phpstan-ignore method.notFound (PersistResolver marker guarantees resolve())
+        $resolver = $this->resolver();
+        assert(method_exists(object_or_class: $resolver, method: 'resolve'));
+
+        return $resolver->resolve($value);
     }
 
     private function resolver(): object

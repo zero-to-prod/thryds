@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Schema;
 
+use BackedEnum;
 use ReflectionClass;
 use ReflectionClassConstant;
 use ReflectionProperty;
@@ -232,7 +233,8 @@ final readonly class DdlBuilder
 
             /** @var ForeignKey $ForeignKey */
             $ForeignKey = $fk_attrs[0]->newInstance();
-            $column = (string) $const->getValue(); // @phpstan-ignore cast.string
+            $raw = $const->getValue();
+            $column = $raw instanceof BackedEnum ? (string) $raw->value : (is_string(value: $raw) ? $raw : '');
             $target_table = new ReflectionClass($ForeignKey->BackedEnum)
                 ->getAttributes(Table::class)[0]
                 ->newInstance()

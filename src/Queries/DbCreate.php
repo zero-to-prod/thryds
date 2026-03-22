@@ -10,6 +10,7 @@ use ZeroToProd\Thryds\Attributes\Connection;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\InsertsInto;
 use ZeroToProd\Thryds\Attributes\PersistColumn;
+use ZeroToProd\Thryds\Attributes\Table;
 use ZeroToProd\Thryds\Database;
 
 /**
@@ -96,8 +97,10 @@ trait DbCreate
             }
         }
 
-        /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        return [$all_columns, $hooks, $InsertsInto->table::tableName(), $InsertsInto->table];
+        return [$all_columns, $hooks, new ReflectionClass($InsertsInto->table)
+            ->getAttributes(Table::class)[0]
+            ->newInstance()
+            ->TableName->value, $InsertsInto->table];
     }
 
     /**
