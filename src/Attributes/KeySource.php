@@ -25,4 +25,5 @@ enum KeySource: string
     case vite_entry_points = 'Vite entry points';
     case route_manifest = 'Route manifest JSON';
     case sql_fragments = 'SQL query fragments';
+    case vite_config = 'vite.config.js build/server settings';
 }

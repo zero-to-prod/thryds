@@ -6,6 +6,7 @@ namespace Utils\Rector\Rector;
 
 use PhpParser\Comment;
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Const_;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar\String_;
@@ -17,12 +18,14 @@ use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 /**
- * Adds `public const string view_key = 'ShortClassName';` to classes that carry
- * the #[ViewModel] attribute and use the DataModel trait.
+ * Adds `public const string view_key = 'ShortClassName';` and sets the `key` named
+ * argument on #[ViewModel] for classes that carry the attribute and use DataModel.
  */
 final class AddViewKeyConstantRector extends AbstractRector implements ConfigurableRectorInterface
 {
     private const VIEW_KEY_CONST = 'view_key';
+
+    private const KEY_ARG = 'key';
 
     /** @var string[] */
     private array $dataModelTraits = [];
@@ -44,7 +47,7 @@ final class AddViewKeyConstantRector extends AbstractRector implements Configura
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
-            'Add view_key constant to ViewModel classes that use DataModel trait',
+            'Add view_key constant and key attribute arg to ViewModel classes that use DataModel trait',
             [
                 new ConfiguredCodeSample(
                     <<<'CODE_SAMPLE'
@@ -63,7 +66,7 @@ CODE_SAMPLE,
 use ZeroToProd\Thryds\Attributes\ViewModel;
 use ZeroToProd\Thryds\Attributes\DataModel;
 
-#[ViewModel]
+#[ViewModel(key: 'ErrorViewModel')]
 readonly class ErrorViewModel
 {
     use DataModel;
@@ -104,12 +107,15 @@ CODE_SAMPLE,
             return null;
         }
 
-        if ($this->hasViewKeyConst($node)) {
+        $shortName = $this->resolveShortName($node);
+        if ($shortName === null) {
             return null;
         }
 
-        $shortName = $this->resolveShortName($node);
-        if ($shortName === null) {
+        $hasConst = $this->hasViewKeyConst($node);
+        $hasKeyArg = $this->hasKeyArg($node);
+
+        if ($hasConst && $hasKeyArg) {
             return null;
         }
 
@@ -117,11 +123,15 @@ CODE_SAMPLE,
             return $this->addMessageComment($node);
         }
 
-        $constNode = $this->buildViewKeyConst($shortName);
+        if (!$hasConst) {
+            $constNode = $this->buildViewKeyConst($shortName);
+            $insertIndex = $this->findInsertIndex($node);
+            array_splice($node->stmts, $insertIndex, 0, [$constNode]);
+        }
 
-        // Insert after the last use statement (trait use), or at the top of the class body
-        $insertIndex = $this->findInsertIndex($node);
-        array_splice($node->stmts, $insertIndex, 0, [$constNode]);
+        if (!$hasKeyArg) {
+            $this->addKeyArgToAttribute($node, $shortName);
+        }
 
         return $node;
     }
@@ -234,6 +244,45 @@ CODE_SAMPLE,
         }
 
         return $lastTraitIndex + 1;
+    }
+
+    private function hasKeyArg(Class_ $node): bool
+    {
+        foreach ($node->attrGroups as $attrGroup) {
+            foreach ($attrGroup->attrs as $attr) {
+                $attrName = $this->getName($attr->name);
+                if ($attrName === null || !$this->matchesAttributeName($attrName)) {
+                    continue;
+                }
+
+                foreach ($attr->args as $arg) {
+                    if ($arg->name !== null && $this->getName($arg->name) === self::KEY_ARG) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function addKeyArgToAttribute(Class_ $node, string $shortName): void
+    {
+        foreach ($node->attrGroups as $attrGroup) {
+            foreach ($attrGroup->attrs as $attr) {
+                $attrName = $this->getName($attr->name);
+                if ($attrName === null || !$this->matchesAttributeName($attrName)) {
+                    continue;
+                }
+
+                $attr->args[] = new Arg(
+                    value: new String_($shortName),
+                    name: new Identifier(self::KEY_ARG),
+                );
+
+                return;
+            }
+        }
     }
 
     private function addMessageComment(Node $node): ?Node

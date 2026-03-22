@@ -33,7 +33,7 @@ use Attribute;
  *     public const string APP_ENV = 'APP_ENV';
  * }
  */
-#[Attribute(Attribute::TARGET_CLASS)]
+#[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 readonly class KeyRegistry
 {
     /**

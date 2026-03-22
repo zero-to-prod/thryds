@@ -17,7 +17,7 @@ use ZeroToProd\Thryds\Tables\UserColumns;
  *
  * @method static self from(array{errors?: ?array<string, string>} $data)
  */
-#[ViewModel]
+#[ViewModel(key: 'RegisterViewModel')]
 #[HasValidationErrors(RegisterRequest::class)]
 readonly class RegisterViewModel
 {

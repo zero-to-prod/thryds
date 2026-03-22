@@ -13,15 +13,18 @@ use ZeroToProd\Thryds\Config;
     superglobals: [],
     addKey: '1. Add constant. 2. Add enum case and match arm in BladeDirective. 3. Add entry to vite.config.js input array.'
 )]
+#[KeyRegistry(
+    KeySource::vite_config,
+    superglobals: [],
+    addKey: '1. Update constant. 2. Update the matching key in vite.config.js (server.origin for DEV_SERVER_URL, build.outDir for MANIFEST_PATH and BUILD_PREFIX).'
+)]
 readonly class Vite
 {
     public const string app_entry = 'resources/js/app.js';
     public const string htmx_entry = 'resources/js/htmx.js';
     public const string app_css = 'resources/css/app.css';
-    /** Must match vite.config.js server.origin */
     private const string DEV_SERVER_URL = 'http://localhost:5173';
     private const string MANIFEST_PATH = '/public/build/.vite/manifest.json';
-    /** Must match vite.config.js build.outDir */
     private const string BUILD_PREFIX = '/build/';
     private const string css = 'css';
     private const string file = 'file';

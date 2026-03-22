@@ -13,7 +13,7 @@ use ZeroToProd\Thryds\Attributes\ViewModel;
  *
  * @method static self from(array{message: string, status_code: int} $data)
  */
-#[ViewModel]
+#[ViewModel(key: 'ErrorViewModel')]
 readonly class ErrorViewModel
 {
     use DataModel;
