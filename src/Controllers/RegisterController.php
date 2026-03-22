@@ -46,12 +46,7 @@ readonly class RegisterController
      */
     public function post(RegisterRequest $RegisterRequest): ResponseInterface
     {
-        CreateUserQuery::create(
-            $RegisterRequest->name,
-            $RegisterRequest->handle,
-            $RegisterRequest->email,
-            $RegisterRequest->password
-        );
+        CreateUserQuery::create($RegisterRequest);
 
         return new RedirectResponse(Route::login->value);
     }

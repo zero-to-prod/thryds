@@ -9,6 +9,8 @@ Thryds — social media platform integrating AI with humanity. PHP 8.5, FrankenP
 - ALWAYS run `./run check:all` before completing any task.
 - ALL code MUST be least invasive and straightforward, optimized for AOP/DP and an agentic experience.
 - ALL code comments MUST be evergreen and not bound to a specific implementation.
+- ALL entity names must be a lossless, non-misleading abstraction of its actual behavior and usage.
+    - Flag if the name is broader, narrower, or orthogonal to observed responsibilities
 
 ## Organizing Principles
 
@@ -40,13 +42,13 @@ The attribute graph is the primary way to understand the codebase. Query it firs
 
 ### Output keys (YAML/JSON)
 
-| Key | Content |
-|---|---|
-| `_index` | Layer → sorted short class names |
-| `_instructions` | Mutation recipes (addCase/addKey) from attributes |
-| `_dependents` | Reverse-edge index: target → dependents |
-| `edges` | Directed: from, to, rel, kind, source, args, file paths |
-| `nodes` | Keyed by FQCN: file, kind, layer, attributes, properties, methods, cases |
+| Key             | Content                                                                  |
+|-----------------|--------------------------------------------------------------------------|
+| `_index`        | Layer → sorted short class names                                         |
+| `_instructions` | Mutation recipes (addCase/addKey) from attributes                        |
+| `_dependents`   | Reverse-edge index: target → dependents                                  |
+| `edges`         | Directed: from, to, rel, kind, source, args, file paths                  |
+| `nodes`         | Keyed by FQCN: file, kind, layer, attributes, properties, methods, cases |
 
 ### Agent workflow with the graph
 
@@ -76,8 +78,7 @@ Configuration: `attribute-graph.yaml` at project root externalizes class referen
 ## Commands
 
 `./run <script>` executes `docker compose exec web composer <script>`.
-`./run composer <cmd>` passes through to Composer (update, require, etc.).
-Raw PHP: `docker compose exec web php scripts/<name>.php`.
+`./run composer <cmd>` passes through to Composer (update, require, etc.). Raw PHP: `docker compose exec web php scripts/<name>.php`.
 
 ### Check (read-only)
 
@@ -184,11 +185,11 @@ env:up                 # start dev containers (preserves .env)
 
 ## Environment Files
 
-| File | Purpose |
-|---|---|
-| `compose.yaml` | Base (dev + prod). Always loaded. |
+| File                       | Purpose                                                             |
+|----------------------------|---------------------------------------------------------------------|
+| `compose.yaml`             | Base (dev + prod). Always loaded.                                   |
 | `compose.development.yaml` | Dev overrides — hot reload, file-watching worker. Never production. |
-| `compose.load-test.yaml` | Production load test target. |
+| `compose.load-test.yaml`   | Production load test target.                                        |
 
 ## Logs
 
@@ -200,25 +201,25 @@ logs/php/error.log           # PHP errors, warnings, deprecations
 
 ## JetBrains MCP Tools
 
-| Tool | Purpose |
-|---|---|
-| `execute_terminal_command` | Run shell command in IDE terminal |
-| `get_file_text_by_path` | Read file contents by project-relative path |
-| `replace_text_in_file` | Find-and-replace text in a file |
-| `create_new_file` | Create a new file (auto-creates parent dirs) |
-| `open_file_in_editor` | Open file in IDE editor |
-| `reformat_file` | Apply IDE code formatting |
-| `rename_refactoring` | Rename symbol across project (structure-aware) |
-| `get_file_problems` | Inspect file for errors/warnings |
-| `get_symbol_info` | Quick documentation for symbol at position |
-| `search_in_files_by_text` | Substring search across project |
-| `search_in_files_by_regex` | Regex search across project |
-| `find_files_by_name_keyword` | Find files by name substring (fast, indexed) |
-| `find_files_by_glob` | Find files by glob pattern (recursive) |
-| `list_directory_tree` | Tree view of a directory |
-| `get_all_open_file_paths` | List open editor tabs |
-| `get_run_configurations` | List IDE run configurations |
-| `execute_run_configuration` | Run a named run configuration |
-| `get_project_dependencies` | List project library dependencies |
-| `get_project_modules` | List project modules and types |
-| `get_repositories` | List VCS roots in project |
+| Tool                         | Purpose                                        |
+|------------------------------|------------------------------------------------|
+| `execute_terminal_command`   | Run shell command in IDE terminal              |
+| `get_file_text_by_path`      | Read file contents by project-relative path    |
+| `replace_text_in_file`       | Find-and-replace text in a file                |
+| `create_new_file`            | Create a new file (auto-creates parent dirs)   |
+| `open_file_in_editor`        | Open file in IDE editor                        |
+| `reformat_file`              | Apply IDE code formatting                      |
+| `rename_refactoring`         | Rename symbol across project (structure-aware) |
+| `get_file_problems`          | Inspect file for errors/warnings               |
+| `get_symbol_info`            | Quick documentation for symbol at position     |
+| `search_in_files_by_text`    | Substring search across project                |
+| `search_in_files_by_regex`   | Regex search across project                    |
+| `find_files_by_name_keyword` | Find files by name substring (fast, indexed)   |
+| `find_files_by_glob`         | Find files by glob pattern (recursive)         |
+| `list_directory_tree`        | Tree view of a directory                       |
+| `get_all_open_file_paths`    | List open editor tabs                          |
+| `get_run_configurations`     | List IDE run configurations                    |
+| `execute_run_configuration`  | Run a named run configuration                  |
+| `get_project_dependencies`   | List project library dependencies              |
+| `get_project_modules`        | List project modules and types                 |
+| `get_repositories`           | List VCS roots in project                      |

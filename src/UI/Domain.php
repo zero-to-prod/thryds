@@ -102,6 +102,9 @@ enum Domain: string
     case scalar_defaults = 'scalar_defaults';
 
     #[Group(EdgeKind::data_flow)]
+    case persistence_hooks = 'persistence_hooks';
+
+    #[Group(EdgeKind::data_flow)]
     case validation_rules = 'validation_rules';
 
     #[Group(EdgeKind::schema)]
