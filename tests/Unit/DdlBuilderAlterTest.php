@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionException;
 use ZeroToProd\Thryds\Schema\DdlBuilder;
+use ZeroToProd\Thryds\Schema\Driver;
 use ZeroToProd\Thryds\Tables\User;
 
 final class DdlBuilderAlterTest extends TestCase
@@ -23,7 +24,7 @@ final class DdlBuilderAlterTest extends TestCase
     #[Test]
     public function addColumnSql_generates_alter_table_add_column(): void
     {
-        $sql = DdlBuilder::addColumnSql(User::class, User::email);
+        $sql = DdlBuilder::addColumnSql(User::class, User::email, Driver::mysql);
 
         $this->assertStringStartsWith('ALTER TABLE `users` ADD COLUMN', string: $sql);
         $this->assertStringContainsString('`email`', haystack: $sql);
@@ -34,13 +35,13 @@ final class DdlBuilderAlterTest extends TestCase
     #[Test]
     public function dropColumnSql_generates_alter_table_drop_column(): void
     {
-        $this->assertSame('ALTER TABLE `users` DROP COLUMN `email`', DdlBuilder::dropColumnSql(User::class, User::email));
+        $this->assertSame('ALTER TABLE `users` DROP COLUMN `email`', DdlBuilder::dropColumnSql(User::class, User::email, Driver::mysql));
     }
 
     #[Test]
     public function addColumnSql_includes_default_and_comment(): void
     {
-        $sql = DdlBuilder::addColumnSql(User::class, User::created_at);
+        $sql = DdlBuilder::addColumnSql(User::class, User::created_at, Driver::mysql);
 
         $this->assertStringContainsString('TIMESTAMP', haystack: $sql);
         $this->assertStringContainsString('DEFAULT CURRENT_TIMESTAMP', haystack: $sql);

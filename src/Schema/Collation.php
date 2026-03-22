@@ -15,7 +15,7 @@ use ZeroToProd\Thryds\UI\Domain;
     TEXT
 )]
 /**
- * Closed set of supported MySQL/MariaDB collations.
+ * Closed set of supported MySQL/MariaDB collations. Ignored by PostgreSQL and SQLite.
  *
  * The backed string value is used directly in the COLLATE= clause of CREATE TABLE.
  */

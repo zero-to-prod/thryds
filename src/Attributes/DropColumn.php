@@ -38,11 +38,11 @@ readonly class DropColumn
 
     public function upSql(): string
     {
-        return DdlBuilder::dropColumnSql($this->table, $this->column);
+        return DdlBuilder::dropColumnSql($this->table, $this->column, Connection::resolve($this->table)->driver());
     }
 
     public function downSql(): string
     {
-        return DdlBuilder::addColumnSql($this->table, $this->column);
+        return DdlBuilder::addColumnSql($this->table, $this->column, Connection::resolve($this->table)->driver());
     }
 }

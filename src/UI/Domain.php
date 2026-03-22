@@ -124,4 +124,7 @@ enum Domain: string
 
     #[Group(EdgeKind::schema)]
     case sort_directions = 'sort_directions';
+
+    #[Group(EdgeKind::schema)]
+    case database_drivers = 'database_drivers';
 }

@@ -9,10 +9,10 @@ use ZeroToProd\Thryds\UI\Domain;
 
 #[ClosedSet(
     Domain::sort_directions,
-    addCase: 'Add enum case. Verify MySQL support for the sort direction.'
+    addCase: 'Add enum case. Verify support across all drivers.'
 )]
 /**
- * Closed set of SQL sort directions.
+ * Closed set of standard SQL sort directions.
  *
  * The backed string value is used directly in the ORDER BY clause.
  */

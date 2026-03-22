@@ -21,6 +21,7 @@ services:
             time_format wall
           }
         }
+      DB_DRIVER: ${DB_DRIVER:-mysql}
       DB_HOST: ${DB_HOST:-db}
       DB_PORT: ${DB_PORT:-3306}
       DB_DATABASE: ${DB_DATABASE:-thryds}

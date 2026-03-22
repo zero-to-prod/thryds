@@ -15,7 +15,7 @@ use ZeroToProd\Thryds\UI\Domain;
     TEXT
 )]
 /**
- * Closed set of supported MySQL/MariaDB storage engines.
+ * Closed set of supported MySQL/MariaDB storage engines. Ignored by PostgreSQL and SQLite.
  *
  * The backed string value is used directly in the ENGINE= clause of CREATE TABLE.
  */

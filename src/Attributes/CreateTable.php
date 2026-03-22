@@ -30,11 +30,11 @@ readonly class CreateTable
 
     public function upSql(): string
     {
-        return DdlBuilder::createTableSql($this->table);
+        return DdlBuilder::createTableSql($this->table, Connection::resolve($this->table)->driver());
     }
 
     public function downSql(): string
     {
-        return DdlBuilder::dropTableSql($this->table);
+        return DdlBuilder::dropTableSql($this->table, Connection::resolve($this->table)->driver());
     }
 }

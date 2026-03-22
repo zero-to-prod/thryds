@@ -27,6 +27,7 @@ readonly class Env
     public const string APP_ENV = 'APP_ENV';
     public const string MAX_REQUESTS = 'MAX_REQUESTS';
     public const string FRANKENPHP_HOT_RELOAD = 'FRANKENPHP_HOT_RELOAD';
+    public const string DB_DRIVER = 'DB_DRIVER';
     public const string DB_HOST = 'DB_HOST';
     public const string DB_PORT = 'DB_PORT';
     public const string DB_DATABASE = 'DB_DATABASE';

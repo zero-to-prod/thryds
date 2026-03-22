@@ -29,6 +29,7 @@ opcache_compile_file(__DIR__ . '/src/AppEnv.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/Describe.php');
 opcache_compile_file(__DIR__ . '/src/DatabaseConfig.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/EnvVar.php');
+opcache_compile_file(__DIR__ . '/src/Schema/Driver.php');
 opcache_compile_file(__DIR__ . '/src/Blade/Vite.php');
 opcache_compile_file(__DIR__ . '/src/App.php');
 opcache_compile_file(__DIR__ . '/src/Blade/BladeDirectives.php');

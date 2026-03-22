@@ -8,6 +8,7 @@ use ReflectionClass;
 use ZeroToProd\Thryds\Attributes\Connection;
 use ZeroToProd\Thryds\Attributes\DeletesFrom;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
+use ZeroToProd\Thryds\Database;
 
 /**
  * Attribute-driven DELETE execution.
@@ -30,16 +31,20 @@ trait DbDelete
             ->getAttributes(DeletesFrom::class)[0]
             ->newInstance();
 
+        $db = $args[count($DeletesFrom->where)] ?? null;
+        $resolvedDb = $db instanceof Database ? $db : Connection::resolve($DeletesFrom->table);
+        $Driver = $resolvedDb->driver();
+
         $clauses = [];
         $params = [];
 
         foreach ($DeletesFrom->where as $index => $column) {
-            $clauses[] = $column . ' = :' . $column;
+            $clauses[] = $Driver->quote(identifier: $column) . ' = :' . $column;
             $params[':' . $column] = $args[$index] ?? null;
         }
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        return ($args[count($DeletesFrom->where)] ?? Connection::resolve($DeletesFrom->table))->execute(Sql::DELETE_FROM . $DeletesFrom->table::tableName()
+        return $resolvedDb->execute(Sql::DELETE_FROM . $Driver->quote($DeletesFrom->table::tableName())
             . Sql::WHERE . implode(Sql::CONJUNCTION, array: $clauses), $params);
     }
 }

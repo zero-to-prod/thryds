@@ -26,9 +26,9 @@ use ZeroToProd\Thryds\Tables\Migration;
  * All migrations are attribute-driven via classes carrying #[MigrationAction]
  * (#[CreateTable], #[AddColumn], #[DropColumn], #[RawSql]).
  *
- * DDL note: ensureTable() and migration actions that run DDL
- * (CREATE TABLE, ALTER TABLE, etc.) cause MySQL to implicitly commit any open
- * transaction. Call ensureTable() before opening a transaction.
+ * Transaction behavior depends on the active driver:
+ * - MySQL: DDL causes implicit commit; migrations run without wrapping.
+ * - PostgreSQL/SQLite: DDL is transactional; Migrator wraps up/down in a transaction.
  */
 #[MigrationsSource(
     directory: 'migrations',
@@ -77,7 +77,7 @@ readonly class Migrator
 
     public function ensureTable(): void
     {
-        $this->Database->execute(DdlBuilder::createTableSql(Migration::class));
+        $this->Database->execute(DdlBuilder::createTableSql(Migration::class, $this->Database->driver()));
     }
 
     /**
@@ -156,7 +156,13 @@ readonly class Migrator
     private function runUp(string $class): void
     {
         /** @var class-string $class Validated by discover() via class_exists(). */
-        $this->Database->execute(self::resolveMigrationAction($class)->upSql()); // @phpstan-ignore method.notFound (MigrationAction marker guarantees upSql())
+        $sql = self::resolveMigrationAction($class)->upSql(); // @phpstan-ignore method.notFound (MigrationAction marker guarantees upSql())
+
+        if ($this->Database->driver()->transactionalDdl()) {
+            $this->Database->transaction(static fn(Database $Database): int => $Database->execute($sql));
+        } else {
+            $this->Database->execute($sql);
+        }
     }
 
     /**
@@ -167,7 +173,13 @@ readonly class Migrator
     private function runDown(string $class): void
     {
         /** @var class-string $class Validated by discover() via class_exists(). */
-        $this->Database->execute(self::resolveMigrationAction($class)->downSql()); // @phpstan-ignore method.notFound (MigrationAction marker guarantees downSql())
+        $sql = self::resolveMigrationAction($class)->downSql(); // @phpstan-ignore method.notFound (MigrationAction marker guarantees downSql())
+
+        if ($this->Database->driver()->transactionalDdl()) {
+            $this->Database->transaction(static fn(Database $Database): int => $Database->execute($sql));
+        } else {
+            $this->Database->execute($sql);
+        }
     }
 
     /**

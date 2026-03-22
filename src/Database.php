@@ -12,8 +12,8 @@ use ReflectionClass;
 use Throwable;
 use ZeroToProd\Thryds\Attributes\ConnectionOption;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
-use ZeroToProd\Thryds\Attributes\ReconnectOn;
 use ZeroToProd\Thryds\Attributes\Timezone;
+use ZeroToProd\Thryds\Schema\Driver;
 
 #[Infrastructure]
 #[ConnectionOption(
@@ -33,8 +33,6 @@ use ZeroToProd\Thryds\Attributes\Timezone;
     false
 )]
 #[Timezone('+00:00')]
-#[ReconnectOn('server has gone away')]
-#[ReconnectOn('Lost connection')]
 class Database
 {
     private ?PDO $PDO = null;
@@ -47,12 +45,14 @@ class Database
 
     private static bool $timezone_resolved = false;
 
-    /** @var list<string>|null */
-    private static ?array $reconnect_messages = null;
-
     public function __construct(DatabaseConfig $DatabaseConfig)
     {
         $this->DatabaseConfig = $DatabaseConfig;
+    }
+
+    public function driver(): Driver
+    {
+        return $this->DatabaseConfig->Driver;
     }
 
     /**
@@ -149,7 +149,7 @@ class Database
 
     private function pdo(): PDO
     {
-        return $this->PDO ??= self::connect($this->DatabaseConfig);
+        return $this->PDO ??= $this->connect();
     }
 
     /** @param array<string, mixed> $params */
@@ -161,8 +161,8 @@ class Database
 
             return $stmt;
         } catch (PDOException $e) {
-            if (self::isGoneAway(PDOException: $e)) {
-                $this->PDO = self::connect($this->DatabaseConfig);
+            if ($this->isGoneAway(PDOException: $e)) {
+                $this->PDO = $this->connect();
                 $stmt = $this->PDO->prepare(query: $sql);
                 $stmt->execute($params);
 
@@ -172,28 +172,31 @@ class Database
         }
     }
 
-    private static function connect(DatabaseConfig $DatabaseConfig): PDO
+    private function connect(): PDO
     {
         $PDO = new PDO(
-            dsn: $DatabaseConfig->dsn,
-            username: $DatabaseConfig->username,
-            password: $DatabaseConfig->password,
+            dsn: $this->DatabaseConfig->dsn,
+            username: $this->DatabaseConfig->username,
+            password: $this->DatabaseConfig->password,
             options: self::resolveConnectionOptions(),
         );
 
         $timezone = self::resolveTimezone();
         if ($timezone !== null) {
-            $PDO->exec("SET time_zone = '" . $timezone . "'");
+            $command = $this->DatabaseConfig->Driver->timezoneCommand($timezone);
+            if ($command !== null) {
+                $PDO->exec(statement: $command);
+            }
         }
 
         return $PDO;
     }
 
-    private static function isGoneAway(PDOException $PDOException): bool
+    private function isGoneAway(PDOException $PDOException): bool
     {
         $message = $PDOException->getMessage();
-        foreach (self::resolveReconnectMessages() as $needle) {
-            if (str_contains(haystack: $message, needle: $needle)) {
+        foreach ($this->DatabaseConfig->Driver->reconnectPatterns() as $pattern) {
+            if (str_contains(haystack: $message, needle: $pattern)) {
                 return true;
             }
         }
@@ -228,20 +231,5 @@ class Database
         self::$timezone_resolved = true;
 
         return self::$timezone;
-    }
-
-    /** @return list<string> */
-    private static function resolveReconnectMessages(): array
-    {
-        if (self::$reconnect_messages !== null) {
-            return self::$reconnect_messages;
-        }
-
-        self::$reconnect_messages = [];
-        foreach (new ReflectionClass(self::class)->getAttributes(ReconnectOn::class) as $attr) {
-            self::$reconnect_messages[] = $attr->newInstance()->message;
-        }
-
-        return self::$reconnect_messages;
     }
 }

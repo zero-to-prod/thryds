@@ -47,8 +47,8 @@ readonly class Table
 
     public function __construct(
         public TableName $TableName,
-        public Engine $Engine,
-        public Charset $Charset,
-        public Collation $Collation,
+        public ?Engine $Engine,
+        public ?Charset $Charset,
+        public ?Collation $Collation,
     ) {}
 }

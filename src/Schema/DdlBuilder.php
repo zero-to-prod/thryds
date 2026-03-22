@@ -27,11 +27,9 @@ use ZeroToProd\Thryds\Attributes\Table;
 #[Infrastructure]
 final readonly class DdlBuilder
 {
-    private const string ALTER_TABLE = 'ALTER TABLE `';
+    private const string ALTER_TABLE = 'ALTER TABLE ';
 
     private const string INDENT = '    ';
-
-    private const string UNSIGNED = ' UNSIGNED';
 
     private const string DEFAULT = 'DEFAULT ';
     /**
@@ -39,7 +37,7 @@ final readonly class DdlBuilder
      *
      * @param class-string $class A class carrying #[Table], #[Column], #[PrimaryKey], and optionally #[Index] attributes.
      */
-    public static function createTableSql(string $class): string
+    public static function createTableSql(string $class, Driver $Driver): string
     {
         $ReflectionClass = new ReflectionClass(objectOrClass: $class);
         $Table = $ReflectionClass->getAttributes(Table::class)[0]->newInstance();
@@ -50,29 +48,36 @@ final readonly class DdlBuilder
         $col_lines = [];
 
         foreach ($php_cols as $prop_name => $col) {
-            $col_lines[] = self::INDENT . self::columnDdl(name: $prop_name, Column: $col);
+            $col_lines[] = self::INDENT . self::columnDdl(name: $prop_name, Column: $col, Driver: $Driver);
         }
 
         $pk_columns = self::reflectPrimaryKey($ReflectionClass);
 
         if ($pk_columns !== []) {
-            $col_lines[] = self::INDENT . 'PRIMARY KEY (' . implode(', ', array_map(static fn(string $c): string => '`' . $c . '`', $pk_columns)) . ')';
+            $col_lines[] = self::INDENT . 'PRIMARY KEY (' . implode(', ', array_map(static fn(string $c): string => $Driver->quote(identifier: $c), $pk_columns)) . ')';
         }
 
         foreach ($ReflectionClass->getAttributes(Index::class) as $idx_attr) {
             $Index = $idx_attr->newInstance();
-            $col_lines[] = self::INDENT . ($Index->unique ? 'UNIQUE ' : '') . 'KEY `' . ($Index->name !== '' ? $Index->name : 'idx_' . $table_name . '_' . implode('_', $Index->columns)) . '` (' . implode(', ', array_map(static fn(string $c): string => '`' . $c . '`', $Index->columns)) . ')';
+            $col_lines[] = self::INDENT . ($Index->unique ? 'UNIQUE ' : '') . 'KEY ' . $Driver->quote($Index->name !== '' ? $Index->name : 'idx_' . $table_name . '_' . implode('_', $Index->columns)) . ' (' . implode(', ', array_map(static fn(string $c): string => $Driver->quote(identifier: $c), $Index->columns)) . ')';
         }
 
-        foreach (self::reflectForeignKeys($ReflectionClass, $table_name) as $fk_clause) {
+        foreach (self::reflectForeignKeys($ReflectionClass, $table_name, $Driver) as $fk_clause) {
             $col_lines[] = self::INDENT . $fk_clause;
         }
 
-        return 'CREATE TABLE IF NOT EXISTS `' . $table_name . "` (\n"
+        foreach ($php_cols as $prop_name => $col) {
+            if ($col->values !== null && $col->values !== []) {
+                $check = $Driver->enumConstraint(column: $prop_name, values: array_values($col->values));
+                if ($check !== null) {
+                    $col_lines[] = self::INDENT . $check;
+                }
+            }
+        }
+
+        return 'CREATE TABLE IF NOT EXISTS ' . $Driver->quote(identifier: $table_name) . " (\n"
             . implode(",\n", array: $col_lines) . "\n"
-            . ') ENGINE=' . $Table->Engine->value
-            . ' DEFAULT CHARSET=' . $Table->Charset->value
-            . ' COLLATE=' . $Table->Collation->value;
+            . ')' . $Driver->tableOptions($Table->Engine, $Table->Charset, $Table->Collation);
     }
 
     /**
@@ -80,18 +85,18 @@ final readonly class DdlBuilder
      *
      * @param class-string $class A class carrying a #[Table] attribute.
      */
-    public static function dropTableSql(string $class): string
+    public static function dropTableSql(string $class, Driver $Driver): string
     {
-        return 'DROP TABLE IF EXISTS `' . new ReflectionClass(objectOrClass: $class)->getAttributes(Table::class)[0]->newInstance()->TableName->value . '`';
+        return 'DROP TABLE IF EXISTS ' . $Driver->quote(new ReflectionClass(objectOrClass: $class)->getAttributes(Table::class)[0]->newInstance()->TableName->value);
     }
 
-    public static function columnDdl(string $name, Column $Column): string
+    public static function columnDdl(string $name, Column $Column, Driver $Driver): string
     {
-        $parts = ['`' . $name . '`', self::columnTypeSql($Column)];
+        $parts = [$Driver->quote(identifier: $name), $Driver->typeSql($Column)];
         $parts[] = $Column->nullable ? 'NULL' : 'NOT NULL';
 
-        if ($Column->auto_increment) {
-            $parts[] = 'AUTO_INCREMENT';
+        if ($Column->auto_increment && $Driver === Driver::mysql) {
+            $parts[] = $Driver->autoIncrementSql();
         }
 
         if ($Column->default !== null) {
@@ -106,43 +111,11 @@ final readonly class DdlBuilder
             }
         }
 
-        if ($Column->comment !== '') {
+        if ($Column->comment !== '' && $Driver === Driver::mysql) {
             $parts[] = "COMMENT '" . addslashes($Column->comment) . "'";
         }
 
         return implode(' ', array: $parts);
-    }
-
-    public static function columnTypeSql(Column $Column): string
-    {
-        return match ($Column->DataType) {
-            DataType::VARCHAR    => 'VARCHAR(' . $Column->length . ')',
-            DataType::CHAR       => 'CHAR(' . $Column->length . ')',
-            DataType::BIGINT     => 'BIGINT' . ($Column->unsigned ? self::UNSIGNED : ''),
-            DataType::INT        => 'INT' . ($Column->unsigned ? self::UNSIGNED : ''),
-            DataType::SMALLINT   => 'SMALLINT' . ($Column->unsigned ? self::UNSIGNED : ''),
-            DataType::TINYINT    => 'TINYINT' . ($Column->unsigned ? self::UNSIGNED : ''),
-            DataType::TEXT       => 'TEXT',
-            DataType::MEDIUMTEXT => 'MEDIUMTEXT',
-            DataType::LONGTEXT   => 'LONGTEXT',
-            DataType::DATETIME   => 'DATETIME',
-            DataType::DATE       => 'DATE',
-            DataType::TIME       => 'TIME',
-            DataType::TIMESTAMP  => 'TIMESTAMP',
-            DataType::YEAR       => 'YEAR',
-            DataType::DECIMAL    => 'DECIMAL(' . $Column->precision . ',' . $Column->scale . ')',
-            DataType::FLOAT      => 'FLOAT' . ($Column->unsigned ? self::UNSIGNED : ''),
-            DataType::DOUBLE     => 'DOUBLE' . ($Column->unsigned ? self::UNSIGNED : ''),
-            DataType::BOOLEAN    => 'BOOLEAN',
-            DataType::JSON       => 'JSON',
-            DataType::ENUM       => 'ENUM(' . implode(', ', array_map(static fn(string $v): string => "'" . addslashes(string: $v) . "'", $Column->values ?? [])) . ')',
-            DataType::SET        => 'SET(' . implode(', ', array_map(static fn(string $v): string => "'" . addslashes(string: $v) . "'", $Column->values ?? [])) . ')',
-            DataType::BINARY     => 'BINARY(' . $Column->length . ')',
-            DataType::VARBINARY  => 'VARBINARY(' . $Column->length . ')',
-            DataType::BLOB       => 'BLOB',
-            DataType::MEDIUMBLOB => 'MEDIUMBLOB',
-            DataType::LONGBLOB   => 'LONGBLOB',
-        };
     }
 
     /**
@@ -172,14 +145,14 @@ final readonly class DdlBuilder
      * Reflects the primary key columns from a Table class.
      *
      * @param ReflectionClass<object> $ReflectionClass
-     * @return string[]
+     * @return list<string>
      */
     public static function reflectPrimaryKey(ReflectionClass $ReflectionClass): array
     {
         $class_pks = $ReflectionClass->getAttributes(PrimaryKey::class);
 
         if ($class_pks !== [] && $class_pks[0]->newInstance()->columns !== []) {
-            return $class_pks[0]->newInstance()->columns;
+            return array_values($class_pks[0]->newInstance()->columns);
         }
 
         $columns = [];
@@ -199,11 +172,11 @@ final readonly class DdlBuilder
      * @param class-string $class  A class carrying #[Table] and #[Column] attributes.
      * @param string       $column Property name on the class that carries the #[Column] attribute.
      */
-    public static function addColumnSql(string $class, string $column): string
+    public static function addColumnSql(string $class, string $column, Driver $Driver): string
     {
         $ReflectionClass = new ReflectionClass(objectOrClass: $class);
 
-        return self::ALTER_TABLE . $ReflectionClass->getAttributes(Table::class)[0]->newInstance()->TableName->value . '` ADD COLUMN ' . self::columnDdl(name: $column, Column: self::reflectColumn($ReflectionClass, $column));
+        return self::ALTER_TABLE . $Driver->quote($ReflectionClass->getAttributes(Table::class)[0]->newInstance()->TableName->value) . ' ADD COLUMN ' . self::columnDdl(name: $column, Column: self::reflectColumn($ReflectionClass, $column), Driver: $Driver);
     }
 
     /**
@@ -212,9 +185,13 @@ final readonly class DdlBuilder
      * @param class-string $class  A class carrying a #[Table] attribute.
      * @param string       $column Column name to drop.
      */
-    public static function dropColumnSql(string $class, string $column): string
+    public static function dropColumnSql(string $class, string $column, Driver $Driver): string
     {
-        return self::ALTER_TABLE . new ReflectionClass(objectOrClass: $class)->getAttributes(Table::class)[0]->newInstance()->TableName->value . '` DROP COLUMN `' . $column . '`';
+        if ($Driver === Driver::sqlite) {
+            throw new RuntimeException('SQLite does not support DROP COLUMN. Recreate the table instead.');
+        }
+
+        return self::ALTER_TABLE . $Driver->quote(new ReflectionClass(objectOrClass: $class)->getAttributes(Table::class)[0]->newInstance()->TableName->value) . ' DROP COLUMN ' . $Driver->quote(identifier: $column);
     }
 
     /**
@@ -242,7 +219,7 @@ final readonly class DdlBuilder
      * @param ReflectionClass<object> $ReflectionClass
      * @return list<string>
      */
-    public static function reflectForeignKeys(ReflectionClass $ReflectionClass, string $table_name): array
+    public static function reflectForeignKeys(ReflectionClass $ReflectionClass, string $table_name, Driver $Driver): array
     {
         $clauses = [];
 
@@ -265,9 +242,9 @@ final readonly class DdlBuilder
             $on_delete_attrs = $const->getAttributes(OnDelete::class);
             $on_update_attrs = $const->getAttributes(OnUpdate::class);
 
-            $clauses[] = 'CONSTRAINT `' . ($ForeignKey->name !== '' ? $ForeignKey->name : 'fk_' . $table_name . '_' . $column . '_' . $target_table) . '`'
-                . ' FOREIGN KEY (`' . $column . '`)'
-                . ' REFERENCES `' . $target_table . '` (`' . $target_column . '`)'
+            $clauses[] = 'CONSTRAINT ' . $Driver->quote($ForeignKey->name !== '' ? $ForeignKey->name : 'fk_' . $table_name . '_' . $column . '_' . $target_table)
+                . ' FOREIGN KEY (' . $Driver->quote(identifier: $column) . ')'
+                . ' REFERENCES ' . $Driver->quote(identifier: $target_table) . ' (' . $Driver->quote(identifier: $target_column) . ')'
                 . ' ON DELETE ' . ($on_delete_attrs !== [] ? $on_delete_attrs[0]->newInstance()->ReferentialAction : ReferentialAction::RESTRICT)->value
                 . ' ON UPDATE ' . ($on_update_attrs !== [] ? $on_update_attrs[0]->newInstance()->ReferentialAction : ReferentialAction::RESTRICT)->value;
         }

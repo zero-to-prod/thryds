@@ -32,6 +32,8 @@ trait DbUpdate
     public static function update(object $request, mixed ...$where): int
     {
         [$columns, $hooks, $where_columns, $table_name, $table] = self::resolveUpdateMeta();
+        $Database = Connection::resolve(class: $table);
+        $Driver = $Database->driver();
 
         $set_clauses = [];
         $params = [];
@@ -45,17 +47,16 @@ trait DbUpdate
                 ? $hooks[$column]->resolve($value)
                 : $value;
 
-            $set_clauses[] = $column . ' = :set_' . $column;
+            $set_clauses[] = $Driver->quote(identifier: $column) . ' = :set_' . $column;
         }
 
         $where_clauses = [];
         foreach ($where_columns as $index => $column) {
-            $where_clauses[] = $column . ' = :where_' . $column;
+            $where_clauses[] = $Driver->quote(identifier: $column) . ' = :where_' . $column;
             $params[':where_' . $column] = $where[$index] ?? null;
         }
 
-        /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        return Connection::resolve(class: $table)->execute(Sql::UPDATE . $table_name
+        return $Database->execute(Sql::UPDATE . $Driver->quote(identifier: $table_name)
             . Sql::SET . implode(', ', array: $set_clauses)
             . Sql::WHERE . implode(Sql::CONJUNCTION, array: $where_clauses), $params);
     }

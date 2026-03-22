@@ -9,14 +9,17 @@ use ReflectionProperty;
 use ZeroToProd\Thryds\Attributes\DataModel;
 use ZeroToProd\Thryds\Attributes\Describe;
 use ZeroToProd\Thryds\Attributes\EnvVar;
+use ZeroToProd\Thryds\Schema\Driver;
 
 /**
- * @method static self from(array{host?: string, port?: int, database?: string, username?: string, password?: string, dsn?: string} $data)
+ * @method static self from(array{Driver?: Driver|string, host?: string, port?: int, database?: string, username?: string, password?: string, dsn?: string} $data)
  */
 readonly class DatabaseConfig
 {
     use DataModel;
 
+    /** @see $Driver */
+    public const string Driver = 'Driver';
     /** @see $host */
     public const string host = 'host';
     /** @see $port */
@@ -30,12 +33,16 @@ readonly class DatabaseConfig
     /** @see $dsn */
     public const string dsn = 'dsn';
 
+    #[EnvVar(Env::DB_DRIVER)]
+    #[Describe([Describe::cast => [self::class, 'castDriver'], Describe::default => Driver::mysql])]
+    public Driver $Driver;
+
     #[EnvVar(Env::DB_HOST)]
     #[Describe([Describe::default => ''])]
     public string $host;
 
     #[EnvVar(Env::DB_PORT)]
-    #[Describe([Describe::default => 3306])]
+    #[Describe([Describe::cast => [self::class, 'computePort'], Describe::default => 0])]
     public int $port;
 
     #[EnvVar(Env::DB_DATABASE)]
@@ -82,15 +89,40 @@ readonly class DatabaseConfig
     }
 
     /**
-     * @param array<string, string|int> $context
+     * @param array<string, mixed> $context
+     */
+    public static function castDriver(mixed $value, array $context): Driver
+    {
+        /** @var string|Driver $value */
+        return $value instanceof Driver ? $value : (Driver::tryFrom((string) $value) ?? Driver::mysql);
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    public static function computePort(mixed $value, array $context): int
+    {
+        /** @var int|string $value */
+        $port = (int) $value;
+        if ($port > 0) {
+            return $port;
+        }
+
+        /** @var string|Driver $driver */
+        $driver = $context[self::Driver] ?? Driver::mysql;
+
+        return ($driver instanceof Driver ? $driver : (Driver::tryFrom((string) $driver) ?? Driver::mysql))->defaultPort();
+    }
+
+    /**
+     * @param array<string, mixed> $context
      */
     public static function computeDsn(mixed $value, array $context): string
     {
-        return sprintf(
-            'mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4',
-            (string) ($context[self::host] ?? ''),
-            (int) ($context[self::port] ?? 3306),
-            (string) ($context[self::database] ?? ''),
-        );
+        /** @var string|Driver $driver */
+        $driver = $context[self::Driver] ?? Driver::mysql;
+        $Driver = $driver instanceof Driver ? $driver : (Driver::tryFrom((string) $driver) ?? Driver::mysql);
+
+        return $Driver->dsn($context[self::host] ?? '', isset($context[self::port]) ? (int) $context[self::port] : $Driver->defaultPort(), $context[self::database] ?? ''); // @phpstan-ignore cast.int, argument.type, argument.type
     }
 }

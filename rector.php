@@ -147,8 +147,11 @@ return static function (RectorConfig $rectorConfig): void {
         __DIR__ . '/tests/Database/Fixtures/MigrationsSkip',
         __DIR__ . '/tests/Database/Fixtures/MigrationsWrongId',
         __DIR__ . '/tests/Database/Fixtures/MigrationsNotInterface',
-        // Migration files repeat table names across up()/down() by design
-        SuggestDuplicateStringConstantRector::class => [__DIR__ . '/migrations'],
+        // Migration files repeat table names across up()/down() by design;
+        // SQL generation layer uses hardcoded SQL type strings as output, not references to enum cases
+        SuggestDuplicateStringConstantRector::class => [__DIR__ . '/migrations', __DIR__ . '/src/Schema/Driver.php'],
+        DetectParallelBladePhpBehaviorRector::class => [__DIR__ . '/src/Schema/Driver.php', __DIR__ . '/src/Schema/DdlBuilder.php'],
+        ForbidCrossFileStringDuplicationRector::class => [__DIR__ . '/src/Schema/Driver.php', __DIR__ . '/src/Schema/DdlBuilder.php'],
     ]);
     $rectorConfig->importNames();
 

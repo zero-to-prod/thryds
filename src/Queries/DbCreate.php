@@ -26,10 +26,11 @@ trait DbCreate
     public static function create(object $request, ?Database $Database = null): void
     {
         [$all_columns, $hooks, $table_name, $table] = self::resolveInsertMeta();
+        $db = $Database ?? Connection::resolve(class: $table);
+        $Driver = $db->driver();
 
-        /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        ($Database ?? Connection::resolve(class: $table))->execute(Sql::INSERT_INTO . $table_name
-            . ' (' . implode(', ', array: $all_columns) . ')'
+        $db->execute(Sql::INSERT_INTO . $Driver->quote(identifier: $table_name)
+            . ' (' . implode(', ', array_map(static fn(string $c): string => $Driver->quote(identifier: $c), $all_columns)) . ')'
             . ' VALUES (' . implode(', ', array_map(
                 static fn(string $column): string => ':' . $column,
                 $all_columns,
@@ -58,9 +59,11 @@ trait DbCreate
             $value_groups[] = '(' . implode(', ', array: $placeholders) . ')';
         }
 
-        /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        Connection::resolve(class: $table)->execute(Sql::INSERT_INTO . $table_name
-            . ' (' . implode(', ', array: $all_columns) . ')'
+        $Database = Connection::resolve(class: $table);
+        $Driver = $Database->driver();
+
+        $Database->execute(Sql::INSERT_INTO . $Driver->quote(identifier: $table_name)
+            . ' (' . implode(', ', array_map(static fn(string $c): string => $Driver->quote(identifier: $c), $all_columns)) . ')'
             . ' VALUES ' . implode(', ', array: $value_groups), $params);
     }
 

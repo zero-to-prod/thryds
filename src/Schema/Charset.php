@@ -15,7 +15,7 @@ use ZeroToProd\Thryds\UI\Domain;
     TEXT
 )]
 /**
- * Closed set of supported MySQL/MariaDB character sets.
+ * Closed set of supported MySQL/MariaDB character sets. Ignored by PostgreSQL and SQLite.
  *
  * The backed string value is used directly in the DEFAULT CHARSET= clause of CREATE TABLE.
  */

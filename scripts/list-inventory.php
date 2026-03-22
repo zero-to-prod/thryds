@@ -740,7 +740,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges, array $inventory
             $ref = new \ReflectionClass($fqcn);
             $tableAttr = $ref->getAttributes($inventoryConfig['attributes']['table'])[0] ?? null;
             if ($tableAttr !== null) {
-                $entry['engine'] = $tableAttr->newInstance()->Engine->value;
+                $entry['engine'] = $tableAttr->newInstance()->Engine?->value;
             }
 
             // Schema sync source

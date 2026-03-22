@@ -17,7 +17,9 @@ use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\VarLikeIdentifier;
 use PHPStan\Reflection\ReflectionProvider;
+use PHPStan\Type\NullType;
 use PHPStan\Type\TypeWithClassName;
+use PHPStan\Type\UnionType;
 use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -268,7 +270,7 @@ CODE_SAMPLE
         $propertyReflection = $classReflection->getNativeProperty($propName);
         $nativeType = $propertyReflection->getNativeType();
 
-        if ($nativeType instanceof TypeWithClassName) {
+        if ($this->hasClassType($nativeType)) {
             return null;
         }
 
@@ -310,7 +312,7 @@ CODE_SAMPLE
         $propertyReflection = $classReflection->getNativeProperty($constName);
         $nativeType = $propertyReflection->getNativeType();
 
-        if ($nativeType instanceof TypeWithClassName) {
+        if ($this->hasClassType($nativeType)) {
             return null;
         }
 
@@ -333,6 +335,27 @@ CODE_SAMPLE
         array_unshift($comments, new Comment('// ' . $this->message));
         $node->setAttribute('comments', $comments);
         return $node;
+    }
+
+    private function hasClassType(\PHPStan\Type\Type $type): bool
+    {
+        if ($type instanceof TypeWithClassName) {
+            return true;
+        }
+
+        if ($type instanceof UnionType) {
+            foreach ($type->getTypes() as $inner) {
+                if ($inner instanceof NullType) {
+                    continue;
+                }
+
+                if ($inner instanceof TypeWithClassName) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private function hasPrimitiveType(Property $property): bool

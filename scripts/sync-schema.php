@@ -105,7 +105,7 @@ foreach (glob(__DIR__ . '/../' . $tables_dir . '/*.php') as $path) {
     }
 
     if ($db_rows === []) {
-        $sql = DdlBuilder::createTableSql($fqcn);
+        $sql = DdlBuilder::createTableSql($fqcn, $database->driver());
 
         if ($dry_run) {
             fwrite(STDERR, "  [dry-run] Would create table {$table_name}.\n");

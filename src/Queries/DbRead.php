@@ -9,6 +9,7 @@ use ZeroToProd\Thryds\Attributes\Connection;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\SelectsFrom;
 use ZeroToProd\Thryds\Database;
+use ZeroToProd\Thryds\Schema\Driver;
 
 /**
  * Attribute-driven SELECT execution.
@@ -59,14 +60,16 @@ trait DbRead
     public static function allRows(?Database $Database = null): array
     {
         $SelectsFrom = self::resolveSelectsFrom();
+        $db = $Database ?? Connection::resolve($SelectsFrom->table);
+        $Driver = $db->driver();
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        $sql = Sql::SELECT . self::columnList($SelectsFrom)
-            . Sql::FROM . $SelectsFrom->table::tableName();
-        $sql .= self::orderByClause($SelectsFrom);
+        $sql = Sql::SELECT . self::columnList($SelectsFrom, $Driver)
+            . Sql::FROM . $Driver->quote($SelectsFrom->table::tableName());
+        $sql .= self::orderByClause($SelectsFrom, $Driver);
         $sql .= self::limitOffsetClause($SelectsFrom);
 
-        return ($Database ?? Connection::resolve($SelectsFrom->table))->all($sql);
+        return $db->all($sql);
     }
 
     /**
@@ -77,14 +80,16 @@ trait DbRead
     public static function oneRow(?Database $Database = null): ?array
     {
         $SelectsFrom = self::resolveSelectsFrom();
+        $db = $Database ?? Connection::resolve($SelectsFrom->table);
+        $Driver = $db->driver();
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        $sql = Sql::SELECT . self::columnList($SelectsFrom)
-            . Sql::FROM . $SelectsFrom->table::tableName();
-        $sql .= self::orderByClause($SelectsFrom);
+        $sql = Sql::SELECT . self::columnList($SelectsFrom, $Driver)
+            . Sql::FROM . $Driver->quote($SelectsFrom->table::tableName());
+        $sql .= self::orderByClause($SelectsFrom, $Driver);
         $sql .= self::limitOffsetClause($SelectsFrom);
 
-        return ($Database ?? Connection::resolve($SelectsFrom->table))->one($sql);
+        return $db->one($sql);
     }
 
     /**
@@ -100,36 +105,41 @@ trait DbRead
     {
         $SelectsFrom = self::resolveSelectsFrom();
 
+        $db = $args[count($SelectsFrom->where)] ?? null;
+        $Driver = ($db instanceof Database ? $db : Connection::resolve($SelectsFrom->table))->driver();
+
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        $sql = Sql::SELECT . self::columnList($SelectsFrom)
-            . Sql::FROM . $SelectsFrom->table::tableName();
+        $sql = Sql::SELECT . self::columnList($SelectsFrom, $Driver)
+            . Sql::FROM . $Driver->quote($SelectsFrom->table::tableName());
 
         $params = [];
 
         if ($SelectsFrom->where !== []) {
             $clauses = [];
             foreach ($SelectsFrom->where as $index => $column) {
-                $clauses[] = $column . ' = :' . $column;
+                $clauses[] = $Driver->quote(identifier: $column) . ' = :' . $column;
                 $params[':' . $column] = $args[$index] ?? null;
             }
             $sql .= Sql::WHERE . implode(Sql::CONJUNCTION, array: $clauses);
         }
 
-        return [$sql, $params, $args[count($SelectsFrom->where)] ?? null, $SelectsFrom->table];
+        return [$sql, $params, $db, $SelectsFrom->table];
     }
 
-    private static function columnList(SelectsFrom $SelectsFrom): string
+    private static function columnList(SelectsFrom $SelectsFrom, Driver $Driver): string
     {
-        return $SelectsFrom->columns !== [] ? implode(', ', $SelectsFrom->columns) : '*';
+        return $SelectsFrom->columns !== []
+            ? implode(', ', array_map(static fn(string $c): string => $Driver->quote(identifier: $c), $SelectsFrom->columns))
+            : '*';
     }
 
-    private static function orderByClause(SelectsFrom $SelectsFrom): string
+    private static function orderByClause(SelectsFrom $SelectsFrom, Driver $Driver): string
     {
         if ($SelectsFrom->order_by === '') {
             return '';
         }
 
-        return Sql::ORDER_BY . '`' . $SelectsFrom->order_by . '` ' . $SelectsFrom->SortDirection->value;
+        return Sql::ORDER_BY . $Driver->quote($SelectsFrom->order_by) . ' ' . $SelectsFrom->SortDirection->value;
     }
 
     private static function limitOffsetClause(SelectsFrom $SelectsFrom): string
