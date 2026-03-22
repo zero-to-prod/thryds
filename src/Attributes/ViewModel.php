@@ -24,6 +24,6 @@ readonly class ViewModel
     public const string addCase
         = "1. Add entry to thryds.yaml viewmodels section.\n"
         . "2. Run ./run sync:manifest.\n"
-        . "3. Add stub data to View::stubData() if used by a view.\n"
+        . "3. Apply #[StubValue(...)] to each property for preload rendering.\n"
         . '4. Run ./run fix:all.';
 }

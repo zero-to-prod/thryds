@@ -7,12 +7,12 @@ namespace ZeroToProd\Thryds\Blade;
 use ReflectionClass;
 use ReflectionEnumUnitCase;
 use ReflectionException;
-use ReflectionNamedType;
 use ReflectionProperty;
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 use ZeroToProd\Thryds\Attributes\ExtendsLayout;
 use ZeroToProd\Thryds\Attributes\PageTitle;
 use ZeroToProd\Thryds\Attributes\ReceivesViewModel;
+use ZeroToProd\Thryds\Attributes\StubValue;
 use ZeroToProd\Thryds\Attributes\UsesComponent;
 use ZeroToProd\Thryds\UI\Domain;
 use ZeroToProd\Thryds\UI\Layout;
@@ -30,7 +30,7 @@ use ZeroToProd\Thryds\ViewModels\RegisterViewModel;
     addCase: <<<TEXT
         1. Add entry to thryds.yaml views section.
         2. Run ./run sync:manifest.
-        3. Implement template content and stubData() if ViewModel is used.
+        3. Implement template content. Apply #[StubValue] to ViewModel properties if used.
         4. Run ./run fix:all.
     TEXT,
 )]
@@ -149,10 +149,10 @@ enum View: string
         foreach ($view_models as $vmClass) {
             $defaults = [];
             foreach (self::viewModelProperties(class: $vmClass) as $prop) {
-                $type = $prop->getType();
-                $defaults[$prop->getName()] = ($type instanceof ReflectionNamedType
-                    ? ScalarDefault::tryFrom($type->getName())
-                    : null)?->zeroValue();
+                $attrs = $prop->getAttributes(StubValue::class);
+                if ($attrs !== []) {
+                    $defaults[$prop->getName()] = $attrs[0]->newInstance()->value;
+                }
             }
             $data[$vmClass::view_key] = $vmClass::from($defaults);
         }

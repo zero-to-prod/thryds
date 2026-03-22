@@ -8,6 +8,7 @@ use ZeroToProd\Thryds\Attributes\Column;
 use ZeroToProd\Thryds\Attributes\Describe;
 use ZeroToProd\Thryds\Attributes\Input;
 use ZeroToProd\Thryds\Attributes\PrimaryKey;
+use ZeroToProd\Thryds\Attributes\StubValue;
 use ZeroToProd\Thryds\Schema\DataType;
 use ZeroToProd\Thryds\UI\InputType;
 
@@ -29,6 +30,7 @@ trait UserColumns
     )]
     #[PrimaryKey(columns: [])]
     #[Describe(['nullable' => true])]
+    #[StubValue('')]
     public readonly ?string $id;
 
     /** @see $name */
@@ -47,6 +49,7 @@ trait UserColumns
     )]
     #[Input(InputType::text, 'Name')]
     #[Describe(['nullable' => true])]
+    #[StubValue('')]
     public readonly ?string $name;
 
     /** @see $handle */
@@ -65,6 +68,7 @@ trait UserColumns
     )]
     #[Input(InputType::text, 'Handle')]
     #[Describe(['nullable' => true])]
+    #[StubValue('')]
     public readonly ?string $handle;
 
     /** @see $email */
@@ -83,6 +87,7 @@ trait UserColumns
     )]
     #[Input(InputType::email, 'Email')]
     #[Describe(['nullable' => true])]
+    #[StubValue('')]
     public readonly ?string $email;
 
     /** @see $email_verified_at */
@@ -100,6 +105,7 @@ trait UserColumns
         comment: 'Timestamp of email verification',
     )]
     #[Describe(['nullable' => true])]
+    #[StubValue('')]
     public readonly ?string $email_verified_at;
 
     /** @see $password */
@@ -118,6 +124,7 @@ trait UserColumns
     )]
     #[Input(InputType::password, 'Password')]
     #[Describe(['nullable' => true])]
+    #[StubValue('')]
     public readonly ?string $password;
 
     /** @see $created_at */
@@ -135,6 +142,7 @@ trait UserColumns
         comment: 'Record creation time',
     )]
     #[Describe(['nullable' => true])]
+    #[StubValue('')]
     public readonly ?string $created_at;
 
     /** @see $updated_at */
@@ -152,5 +160,6 @@ trait UserColumns
         comment: 'Record last update time',
     )]
     #[Describe(['nullable' => true])]
+    #[StubValue('')]
     public readonly ?string $updated_at;
 }

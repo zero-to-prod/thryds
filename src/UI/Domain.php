@@ -98,9 +98,6 @@ enum Domain: string
     #[Group(EdgeKind::type_system)]
     case migration_statuses = 'migration_statuses';
 
-    #[Group(EdgeKind::type_system)]
-    case scalar_defaults = 'scalar_defaults';
-
     #[Group(EdgeKind::data_flow)]
     case persistence_hooks = 'persistence_hooks';
 

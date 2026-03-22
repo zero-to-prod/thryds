@@ -39,7 +39,7 @@ opcache_compile_file(__DIR__ . '/src/Attributes/ValidatesRequest.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/HandlesMethod.php');
 opcache_compile_file(__DIR__ . '/src/Blade/View.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/ReceivesViewModel.php');
-opcache_compile_file(__DIR__ . '/src/Blade/ScalarDefault.php');
+opcache_compile_file(__DIR__ . '/src/Attributes/StubValue.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/ViewModel.php');
 opcache_compile_file(__DIR__ . '/src/UI/InputType.php');
 opcache_compile_file(__DIR__ . '/src/UI/ButtonVariant.php');
