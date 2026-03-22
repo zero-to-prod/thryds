@@ -111,6 +111,21 @@ enum View: string
         return $cache[$class] ??= new ReflectionClass(objectOrClass: $class)->getProperties();
     }
 
+    /** @return class-string[] ViewModel classes declared via #[ReceivesViewModel]. */
+    public function viewModels(): array
+    {
+        /** @var array<string, class-string[]> */
+        static $cache = [];
+
+        if (!array_key_exists($this->name, array: $cache)) {
+            $attrs = new ReflectionEnumUnitCase(self::class, $this->name)
+                ->getAttributes(ReceivesViewModel::class);
+            $cache[$this->name] = $attrs !== [] ? $attrs[0]->newInstance()->view_models : [];
+        }
+
+        return $cache[$this->name];
+    }
+
     /**
      * @return array<string, mixed> Returns stub data for preload rendering. Most views need none; views with ViewModels return their minimum required data.
      * @throws ReflectionException
@@ -124,15 +139,14 @@ enum View: string
             return $cache[$this->name];
         }
 
-        $attrs = new ReflectionEnumUnitCase(self::class, $this->name)
-            ->getAttributes(ReceivesViewModel::class);
+        $view_models = $this->viewModels();
 
-        if ($attrs === []) {
+        if ($view_models === []) {
             return $cache[$this->name] = [];
         }
 
         $data = [];
-        foreach ($attrs[0]->newInstance()->view_models as $vmClass) {
+        foreach ($view_models as $vmClass) {
             $defaults = [];
             foreach (self::viewModelProperties(class: $vmClass) as $prop) {
                 $type = $prop->getType();

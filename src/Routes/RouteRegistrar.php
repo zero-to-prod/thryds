@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Routes;
 
+use Closure;
 use Laminas\Diactoros\Response\HtmlResponse;
 use League\Route\Router;
 use LogicException;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use ReflectionClass;
 use ZeroToProd\Thryds\Attributes\HandlesRoute;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\RouteOperation;
+use ZeroToProd\Thryds\Attributes\ValidatesRequest;
 use ZeroToProd\Thryds\Config;
+use ZeroToProd\Thryds\Requests\InputField;
+use ZeroToProd\Thryds\Validation\Validator;
 
 #[Infrastructure]
 readonly class RouteRegistrar
@@ -70,14 +75,49 @@ readonly class RouteRegistrar
     private static function handler(Route $Route, RouteOperation $RouteOperation, ?object $controller): callable
     {
         if ($controller !== null) {
+            $callable = is_callable(value: $controller) ? $controller : [$controller, strtolower($RouteOperation->HttpMethod->value)];
+
+            if ($RouteOperation->HttpMethod === HttpMethod::POST) {
+                $attrs = new ReflectionClass(objectOrClass: $controller)->getAttributes(ValidatesRequest::class);
+                if ($attrs !== []) {
+                    /** @phpstan-ignore argument.type (invokable object satisfies callable at runtime) */
+                    return self::withValidation($Route, $attrs[0]->newInstance(), handler: $callable);
+                }
+            }
+
             /** @phpstan-ignore return.type (invokable object satisfies callable at runtime) */
-            return is_callable(value: $controller) ? $controller : [$controller, strtolower($RouteOperation->HttpMethod->value)];
+            return $callable;
         }
 
         return fn(): ResponseInterface => new HtmlResponse(
             html: blade()->make(view: ($Route->rendersView()
                 ?? throw new LogicException("Route::{$Route->name} has no #[HandlesRoute] controller and no #[RendersView]."))->value)->render(),
         );
+    }
+
+    /** Wrap a POST handler with attribute-driven validation and error re-rendering. */
+    private static function withValidation(Route $Route, ValidatesRequest $ValidatesRequest, callable $handler): Closure
+    {
+        return static function (ServerRequestInterface $ServerRequestInterface) use ($Route, $ValidatesRequest, $handler): ResponseInterface {
+            $request_class = $ValidatesRequest->request;
+            $requestObject = $request_class::from($ServerRequestInterface->getParsedBody());
+
+            $errors = Validator::validate(model: $requestObject);
+            if ($errors === []) {
+                return $handler($requestObject);
+            }
+
+            $View = $Route->rendersView()
+                ?? throw new LogicException("Route::{$Route->name} has #[ValidatesRequest] but no #[RendersView].");
+            $view_model_class = $View->viewModels()[0];
+
+            return new HtmlResponse(
+                html: blade()->make(view: $View->value, data: [
+                    $view_model_class::view_key => $view_model_class::from([...$requestObject->toArray(), $view_model_class::errors => $errors]),
+                    InputField::fields => InputField::reflect(class: $request_class),
+                ])->render()
+            );
+        };
     }
 
 }

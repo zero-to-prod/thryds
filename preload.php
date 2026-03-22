@@ -39,6 +39,7 @@ opcache_compile_file(__DIR__ . '/src/Controllers/OpcacheStatusHandler.php');
 opcache_compile_file(__DIR__ . '/src/Controllers/RegisterController.php');
 opcache_compile_file(__DIR__ . '/src/Controllers/RouteManifestHandler.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/RouteOperation.php');
+opcache_compile_file(__DIR__ . '/src/Attributes/ValidatesRequest.php');
 opcache_compile_file(__DIR__ . '/src/Blade/View.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/ReceivesViewModel.php');
 opcache_compile_file(__DIR__ . '/src/Blade/ScalarDefault.php');

@@ -1,138 +1,192 @@
 # CLAUDE.md
 
-## Project
-
-Thryds (a play on words from _threads_) — social media platform integrating AI with humanity. PHP 8.5, FrankenPHP, Docker.
+Thryds — social media platform integrating AI with humanity. PHP 8.5, FrankenPHP, Docker.
 
 ## Rules
 
-This project conforms and enforces the following rules **Attribute Oriented Programming (AOP)** style and **Declarative Programming (DP)** style.
-
-- ALL implementations MUST conform to the **AOP** and **DP** principles.
-- ALWAYS `./run` or Docker commands. Never run PHP, Composer, or app tooling on the host.
+- ALL implementations MUST conform to **Attribute Oriented Programming (AOP)** and **Declarative Programming (DP)**.
+- ALWAYS use `./run` or Docker commands. Never run PHP, Composer, or app tooling on the host.
 - ALWAYS run `./run check:all` before completing any task.
-- ALL code implementations MUST be least invasive and straightforward, optimized for AOP/DP and an agentic experience.
+- ALL code MUST be least invasive and straightforward, optimized for AOP/DP and an agentic experience.
 - ALL code comments MUST be evergreen and not bound to a specific implementation.
 
-## Invocation
+## Organizing Principles
+
+- Constants name things. Enumerations define sets. PHP Attributes define properties.
+- `thryds.yaml` declares desired state. The attribute graph reflects actual state. Drift = failure.
+
+## Orientation
+
+The attribute graph is the primary way to understand the codebase. Query it first when orienting.
 
 ```
-./run <script>          # docker compose exec web composer <script>
-./run composer <cmd>    # pass-through: update, require, etc.
-./run test:load         # docker compose -f compose.load-test.yaml run --rm k6
-./run dev               # APP_ENV=development, restart with dev overlay
-./run prod              # APP_ENV=production, restart without dev overlay
-./run dev:up            # start dev containers (preserves .env)
+./run list:attributes                          # full graph, YAML (default)
+./run list:attributes -- --format=json         # full graph, JSON
+./run list:attributes -- --format=markdown     # readable document
+./run list:attributes -- --format=mermaid      # class diagram
+./run list:attributes -- --output=var/graph.yaml
 ```
 
-Raw PHP: `docker compose exec web php scripts/<name>.php`
-
-## Environment
-
-| File                       | Purpose                                                             |
-|----------------------------|---------------------------------------------------------------------|
-| `compose.yaml`             | Base (dev + prod). Always loaded.                                   |
-| `compose.development.yaml` | Dev overrides — hot reload, file-watching worker. Never production. |
-| `compose.load-test.yaml`   | Production load test target.                                        |
-
-## Read-only Commands
-
-No side effects — safe to run anytime.
-
-### Check
+### Filters (combinable — AND across types, OR within same type)
 
 ```
-./run check:all           # PRIMARY — all checks + tests; JSON summary, non-aborting
-./run check:manifest      # diff thryds.yaml against attribute graph
-./run check:composer      # validate composer.json integrity
-./run check:style         # php-cs-fixer --dry-run --diff
-./run check:rector        # rector --dry-run
-./run check:types         # phpstan analyse
-./run check:migrations    # migration file integrity
-./run check:requirements  # requirement → code coverage trace
-./run check:blade-routes
-./run check:blade-components
-./run check:blade-templates
-./run check:blade-push
-./run check:coverage      # PCOV; metrics + clover XML → var/coverage/; pass -- <N> for line threshold
+--node=<ShortName>   # node + one-hop neighbors
+--layer=<layer>      # semantic layer (core, views, controllers, etc.)
+--kind=<kind>        # class, enum, interface, trait
+--attr=<Attribute>   # nodes carrying a specific attribute
+--rel=<rel>          # edges of a specific relationship type
+--file=<substring>   # nodes whose file path contains substring
 ```
 
-### Test
+### Output keys (YAML/JSON)
+
+| Key | Content |
+|---|---|
+| `_index` | Layer → sorted short class names |
+| `_instructions` | Mutation recipes (addCase/addKey) from attributes |
+| `_dependents` | Reverse-edge index: target → dependents |
+| `edges` | Directed: from, to, rel, kind, source, args, file paths |
+| `nodes` | Keyed by FQCN: file, kind, layer, attributes, properties, methods, cases |
+
+### Agent workflow with the graph
+
+1. **Orient** — parse `_index` to see layers and nodes.
+2. **Focus** — `--node=X` for a node and its neighbors.
+3. **Query** — combine `--layer`, `--attr`, `--kind`, `--rel` for targeted questions.
+4. **Mutate** — read `_instructions` for mutation recipes.
+5. **Impact** — read `_dependents` to know what breaks if a node changes.
+
+Configuration: `attribute-graph.yaml` at project root externalizes class references (ClosedSet, Group, EdgeKind, Layer).
+
+## Workflow
+
+1. Read `thryds.yaml` to understand the project.
+2. Edit `thryds.yaml` to declare new entities.
+3. `./run sync:manifest` to scaffold code with correct attributes.
+4. Implement business logic in generated stubs.
+5. `./run fix:all` (includes `check:manifest` — fails if drift remains).
+
+### Manifest enforcement
+
+- `check:manifest` runs inside `check:all` — every task completion.
+- `sync:manifest` runs inside `fix:all` — every fix cycle.
+- Drift categories: `missing_from_code`, `missing_from_manifest`, `property_drift`.
+- Output is structured JSON.
+
+## Commands
+
+`./run <script>` executes `docker compose exec web composer <script>`.
+`./run composer <cmd>` passes through to Composer (update, require, etc.).
+Raw PHP: `docker compose exec web php scripts/<name>.php`.
+
+### Check (read-only)
 
 ```
-./run test              # full suite (unit + integration + database)
-./run test:unit
-./run test:integration
-./run test:database
-./run test:rector       # custom Rector rule tests
-./run test:coverage     # alias for check:coverage
-./run test:load         # k6 load test (production build)
+check:all              # PRIMARY — all checks + tests; JSON summary, non-aborting
+check:manifest         # diff thryds.yaml against attribute graph
+check:composer         # validate composer.json integrity
+check:style            # php-cs-fixer --dry-run --diff
+check:rector           # rector --dry-run
+check:types            # phpstan analyse
+check:migrations       # migration file integrity
+check:requirements     # requirement → code coverage trace
+check:blade-routes     # lint route references in Blade
+check:blade-components # lint component usage in Blade
+check:blade-templates  # lint Blade template structure
+check:blade-push       # verify @push stacks consumed by @stack
+check:coverage         # PCOV; metrics + clover XML → var/coverage/; pass -- <N> for threshold
+check:preload          # verify preload manifest is current
+check:graph            # validate attribute graph integrity
 ```
 
-### Inspect
+### Test (read-only)
 
 ```
-./run list:routes         # → JSON [{name, path, params, dev_only, description, operations}]
-./run list:attributes     # attribute graph — YAML (default), JSON, Markdown, or Mermaid
-./run migrate:status      # → stderr (display); → stdout JSON {passed, pending, modified, applied}
-./run db:query -- "<sql>" # SELECT only → JSON rows
+test                   # full suite (unit + integration + database)
+test:unit              # unit tests only
+test:integration       # integration tests
+test:database          # database tests (isolated transactions)
+test:rector            # custom Rector rule tests
+test:coverage          # alias for check:coverage
+test:load              # k6 load test (production build; uses compose.load-test.yaml)
 ```
 
-### Audit
+### Inspect (read-only)
 
 ```
-./run prod:check        # route cache + OPcache + template cache + @push readiness
-./run prod:route-cache  # route cache only
-./run audit:opcache     # OPcache configuration audit
-./run audit:profile     # profile live endpoints (makes HTTP requests)
-./run audit:hotspots    # access log analysis
+list                   # print all available commands
+list:routes            # → JSON [{name, path, params, dev_only, description, operations}]
+list:attributes        # attribute graph (see Orientation section)
+list:inventory         # dependency graph: routes→controllers→views→components; JSON or DOT (-- --format=dot)
+list:manifest          # inventory in YAML format
+migrate:status         # → stderr display; → stdout JSON {passed, pending, modified, applied}
+db:query -- "<sql>"    # SELECT only → JSON rows
 ```
 
-## Mutating Commands
-
-### Fix
+### Audit (read-only)
 
 ```
-./run fix:all           # sync:manifest → fix:style → fix:rector → generate:preload → check:all
-./run sync:manifest     # scaffold code for entities in thryds.yaml missing from code
-./run fix:style         # php-cs-fixer fix
-./run fix:rector        # rector process
+prod:check             # route cache + OPcache + template cache + @push readiness
+prod:route-cache       # route cache only
+audit:opcache          # OPcache configuration audit
+audit:profile          # profile live endpoints (makes HTTP requests)
+audit:hotspots         # access log analysis
 ```
 
-### Migrate & Cache
+### Fix (mutating)
 
 ```
-./run migrate           # apply pending → JSON {applied:[{id,description}…], total}
-./run migrate:rollback  # undo last → JSON {rolled_back:{id,description}|null}
-./run sync:schema       # create missing tables; sync #[Column] attrs to live schema → JSON {created,synced,flagged_missing_from_model,flagged_missing_from_db,no_changes}
-./run sync:schema -- --dry-run  # report drift without modifying anything
-./run cache:views       # compile Blade templates → var/cache/blade/
+fix:all                # sync:manifest → fix:style → fix:rector → generate:preload → check:all
+                       # pass --dry-run (-n) to preview without mutating
+sync:manifest          # scaffold code for entities in thryds.yaml missing from code
+fix:style              # php-cs-fixer fix
+fix:rector             # rector process
 ```
 
-### Scaffold
+### Migrate & Cache (mutating)
 
 ```
-./run generate:migration -- <PascalCaseClassName>
+migrate                # apply pending → JSON {applied:[…], total}
+migrate:rollback       # undo last → JSON {rolled_back:{id,description}|null}
+sync:schema            # create missing tables; sync #[Column] attrs → JSON {created,synced,flagged_missing_from_model,flagged_missing_from_db,no_changes}
+sync:schema -- --dry-run  # report drift without modifying
+cache:views            # compile Blade templates → var/cache/blade/
+```
+
+### Scaffold (mutating)
+
+```
+generate:migration -- <PascalCaseClassName>
   # → migrations/NNNN_<ClassName>.php
 
-./run generate:requirement -- <ID> --type=functional|non-functional --verification=integration-test|unit-test|rector-rule|architecture|manual [--title="..."]
-  # → appends to requirements.yaml
-  # → tests/Integration/<IDnodash>Test.php  (if integration-test)
-  # → tests/Unit/<IDnodash>Test.php         (if unit-test)
+generate:requirement -- <ID> --type=functional|non-functional --verification=integration-test|unit-test|rector-rule|architecture|manual [--title="..."]
+  # → appends to requirements.yaml + test stub
 
-./run generate:rector-rule -- <RuleName> [--mode=auto|warn] [--message="..."]
-  # → utils/rector/src/<RuleName>.php
-  # → utils/rector/tests/<RuleName>/<RuleName>Test.php
-  # → utils/rector/tests/<RuleName>/config/configured_rule.php
-  # → utils/rector/tests/<RuleName>/Fixture/example.php.inc
-  # → utils/rector/docs/<RuleName>.md
-  # → appended to rector.php
+generate:rector-rule -- <RuleName> [--mode=auto|warn] [--message="..."]
+  # → rule, test, config, fixture, docs → appended to rector.php
 
-./run generate:table -- <table_name> [--force]
-  # → src/Tables/<PascalCase>Table.php (generated from live schema)
+generate:table -- <table_name> [--force]
+  # → src/Tables/<PascalCase>Table.php from live schema
 
-./run generate:preload  # regenerate preload.php for OPcache (run before prod:check)
+generate:preload
+  # → regenerate preload.php for OPcache
 ```
+
+### Environment (mutating)
+
+```
+dev                    # APP_ENV=development, restart with dev overlay
+prod                   # APP_ENV=production, restart without dev overlay
+dev:up                 # start dev containers (preserves .env)
+```
+
+## Environment Files
+
+| File | Purpose |
+|---|---|
+| `compose.yaml` | Base (dev + prod). Always loaded. |
+| `compose.development.yaml` | Dev overrides — hot reload, file-watching worker. Never production. |
+| `compose.load-test.yaml` | Production load test target. |
 
 ## Logs
 
@@ -142,103 +196,10 @@ logs/frankenphp/caddy.log    # worker restarts, file watches
 logs/php/error.log           # PHP errors, warnings, deprecations
 ```
 
-## Organizing Principles
-
-- Constants name things
-- Enumerations define sets
-- PHP Attributes define properties
-
-## Manifest
-
-`thryds.yaml` at the project root declares the desired project structure. Every value maps to a PHP attribute. The attribute graph (read via reflection by `scripts/attribute-graph.php`) is the actual state.
-
-### Workflow
-
-1. Read `thryds.yaml` to understand the project
-2. Edit `thryds.yaml` to declare new entities
-3. Run `./run sync:manifest` to scaffold code with correct attributes
-4. Implement business logic in generated stubs
-5. Run `./run fix:all` (includes `check:manifest` — fails if drift remains)
-
-### Enforcement
-
-- `check:manifest` is part of `check:all` — runs on every task completion
-- `sync:manifest` is part of `fix:all` — runs on every fix cycle
-- Drift categories: `missing_from_code`, `missing_from_manifest`, `property_drift`
-- Output is structured JSON — agents parse it directly
-
-## Attribute Graph (`scripts/attribute-graph.php`)
-
-The attribute graph is the primary way to understand the codebase. It reflects every PHP attribute across all classes, enums, interfaces, and traits into a structured graph of nodes and edges. AI agents should query it first when orienting on unfamiliar code.
-
-### Invocation
-
-```
-./run list:attributes                                          # full graph, YAML
-./run list:attributes -- --format=json                         # full graph, JSON
-./run list:attributes -- --format=markdown                     # full graph, readable document
-./run list:attributes -- --format=mermaid                      # full graph, class diagram
-./run list:attributes -- --format=yaml --output=var/graph.yaml # write to file
-```
-
-Raw: `docker compose exec web php scripts/attribute-graph.php [options]`
-
-### Filters (combinable — AND across types, OR within same type)
-
-```
---node=<ShortName>   # include node + its one-hop neighbors via edges
---layer=<layer>      # filter by semantic layer (core, views, controllers, etc.)
---kind=<kind>        # filter by kind (class, enum, interface, trait)
---attr=<Attribute>   # filter to nodes carrying a specific attribute name
---rel=<rel>          # filter edges to specific relationship types
---file=<substring>   # filter to nodes whose file path contains substring
-```
-
-### Examples
-
-```
-# Explore a single controller and everything it touches
-./run list:attributes -- --node=RegisterController
-
-# All view models
-./run list:attributes -- --layer=viewmodels
-
-# Every class carrying #[Table]
-./run list:attributes -- --attr=Table
-
-# Enums only, as Markdown
-./run list:attributes -- --kind=enum --format=markdown
-
-# Edges of a specific relationship type
-./run list:attributes -- --rel=receivesviewmodel
-```
-
-### Output structure (YAML/JSON)
-
-| Key              | Content                                                        |
-|------------------|----------------------------------------------------------------|
-| `_index`         | Layer → sorted list of short class names                       |
-| `_instructions`  | Mutation instructions (addCase/addKey) extracted from attributes |
-| `_dependents`    | Reverse-edge index: target node → list of dependents           |
-| `edges`          | Directed edges: from, to, rel, kind, source, args, file paths  |
-| `nodes`          | Keyed by FQCN: file, kind, layer, attributes, properties, methods, cases |
-
-### Configuration
-
-`attribute-graph.yaml` at the project root externalizes all codebase-specific class references (ClosedSet, Group, EdgeKind, Layer) so the script is reusable across any AOP project.
-
-### How an AI agent benefits
-
-1. **Orient** — run `--format=yaml` (or `--format=json`) unfiltered to get the full graph; parse `_index` to see what layers and nodes exist.
-2. **Focus** — use `--node=X` to pull a single node and its neighbors; read the edges to understand how it connects.
-3. **Query** — combine `--layer`, `--attr`, `--kind`, and `--rel` to answer targeted questions ("which controllers use #[ReceivesViewModel]?").
-4. **Follow instructions** — read `_instructions` for mutation recipes (e.g., how to add a new enum case or map key).
-5. **Trace dependents** — read `_dependents` to know what breaks if a node changes.
-
 ## JetBrains MCP Tools
 
 | Tool | Purpose |
-|------|---------|
+|---|---|
 | `execute_terminal_command` | Run shell command in IDE terminal |
 | `get_file_text_by_path` | Read file contents by project-relative path |
 | `replace_text_in_file` | Find-and-replace text in a file |
