@@ -14,8 +14,7 @@ use Attribute;
  *
  * @example
  * public function __construct(
- *     #[Bind] public Blade $Blade,
- * ) {}
+ *     #[Bind] public Blade $Blade, *) {}
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 final readonly class Bind {}

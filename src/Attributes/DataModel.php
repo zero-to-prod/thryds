@@ -6,6 +6,7 @@ namespace ZeroToProd\Thryds\Attributes;
 
 use BackedEnum;
 use ReflectionClass;
+use ReflectionException;
 use ReflectionProperty;
 use UnitEnum;
 
@@ -16,7 +17,7 @@ use UnitEnum;
  * public properties from array keys matching property names.
  *
  * Use the {@see Describe} attribute on properties to control population:
- * - `default`  — value when the key is missing (may be callable)
+ * - `default`  — value when the key is missing (maybe callable)
  * - `cast`     — custom casting function
  * - `from`     — map a different key name to this property
  * - `required` — throw if key is missing
@@ -32,12 +33,14 @@ trait DataModel
     private const string toArray = 'toArray';
 
     /**
-     * @param class-string $class
+     * @param  class-string  $class
+     *
      * @return list<ReflectionProperty>
+     * @throws ReflectionException
      */
     private static function publicInstanceProperties(string $class): array
     {
-        /** @var array<class-string, list<ReflectionProperty>> */
+        /** @var array<class-string, list<ReflectionProperty>> $cache */
         static $cache = [];
 
         return $cache[$class] ??= array_values(array_filter(
@@ -46,7 +49,10 @@ trait DataModel
         ));
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     * @throws ReflectionException
+     */
     public function toArray(): array
     {
         $result = [];

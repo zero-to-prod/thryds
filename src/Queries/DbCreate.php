@@ -9,6 +9,7 @@ use ReflectionClass;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\InsertsInto;
 use ZeroToProd\Thryds\Attributes\PersistColumn;
+use ZeroToProd\Thryds\Database;
 
 /**
  * Attribute-driven INSERT execution.
@@ -23,12 +24,12 @@ trait DbCreate
     private const string INSERT_INTO = 'INSERT INTO ';
 
     /** @throws RandomException */
-    public static function create(object $request): void
+    public static function create(object $request, ?Database $Database = null): void
     {
         [$all_columns, $hooks, $table_name] = self::resolveInsertMeta();
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        db()->execute(self::INSERT_INTO . $table_name
+        ($Database ?? db())->execute(self::INSERT_INTO . $table_name
             . ' (' . implode(', ', array: $all_columns) . ')'
             . ' VALUES (' . implode(', ', array_map(
                 static fn(string $column): string => ':' . $column,

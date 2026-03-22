@@ -16,7 +16,8 @@ use ZeroToProd\Thryds\Tables\User;
 #[SelectsFrom(
     User::class,
     columns: [User::id, User::name, User::handle, User::email, User::email_verified_at, User::created_at, User::updated_at],
-    where: [User::id]
+    where: [User::id],
+    order_by: '',
 )]
 readonly class FindUserByIdQuery
 {

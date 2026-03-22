@@ -16,4 +16,9 @@ use Attribute;
 readonly class Matches
 {
     public function __construct(public string $property) {}
+
+    public function message(): string
+    {
+        return ucfirst(string: $this->property) . ' does not match.';
+    }
 }

@@ -12,6 +12,9 @@ use ZeroToProd\Thryds\Attributes\DropColumn;
 use ZeroToProd\Thryds\Attributes\KeyRegistry;
 use ZeroToProd\Thryds\Attributes\KeySource;
 use ZeroToProd\Thryds\Attributes\Migration as MigrationAttribute;
+use ZeroToProd\Thryds\Queries\DeleteMigrationQuery;
+use ZeroToProd\Thryds\Queries\InsertMigrationQuery;
+use ZeroToProd\Thryds\Queries\SelectMigrationsQuery;
 use ZeroToProd\Thryds\Schema\DdlBuilder;
 use ZeroToProd\Thryds\Tables\Migration;
 
@@ -47,12 +50,6 @@ readonly class Migrator
     private const string key_path = 'path';
 
     private const string key_class = 'class';
-
-    private const string param_id = ':id';
-
-    private const string param_description = ':description';
-
-    private const string param_checksum = ':checksum';
 
     /** @var array<string, array<string, string>> */
     private array $discovered;
@@ -129,10 +126,11 @@ readonly class Migrator
                 continue;
             }
             $this->runUp(class: $this->discovered[$id][self::key_class]);
-            $this->Database->execute(
-                'INSERT INTO `' . Migration::tableName() . '` (id, description, checksum, applied_at) VALUES (' . self::param_id . ', ' . self::param_description . ', ' . self::param_checksum . ', NOW())',
-                [self::param_id => $id, self::param_description => $row[Migration::description], self::param_checksum => $row[Migration::checksum]]
-            );
+            InsertMigrationQuery::create((object) [
+                Migration::id          => $id,
+                Migration::description => $row[Migration::description],
+                Migration::checksum    => $row[Migration::checksum],
+            ], $this->Database);
             $applied[] = [
                 Migration::id          => $id,
                 Migration::description => $this->rowStr($row, key: Migration::description),
@@ -160,10 +158,7 @@ readonly class Migrator
             throw new RuntimeException("Migration $id is applied but its file was not found in {$this->migrations_dir}.");
         }
         $this->runDown(class: $this->discovered[$id][self::key_class]);
-        $this->Database->execute(
-            'DELETE FROM `' . Migration::tableName() . '` WHERE id = ' . self::param_id,
-            [self::param_id => $id]
-        );
+        DeleteMigrationQuery::byColumn(Migration::id, value: $id, Database: $this->Database);
 
         return [
             Migration::id          => $id,
@@ -217,23 +212,13 @@ readonly class Migrator
     /** @return array<int, array<string, mixed>> */
     private function fetchApplied(): array
     {
-        return $this->Database->all($this->selectFromTable('ASC'));
+        return SelectMigrationsQuery::allRows($this->Database);
     }
 
     /** @return array<string, mixed>|null */
     private function fetchLastApplied(): ?array
     {
-        return $this->Database->one($this->selectFromTable('DESC', 1));
-    }
-
-    private function selectFromTable(string $order, ?int $limit = null): string
-    {
-        $sql = 'SELECT * FROM `' . Migration::tableName() . '` ORDER BY ' . Migration::id . ' ' . $order;
-        if ($limit !== null) {
-            $sql .= ' LIMIT ' . $limit;
-        }
-
-        return $sql;
+        return SelectMigrationsQuery::lastRow($this->Database);
     }
 
     private function checksum(string $path): string

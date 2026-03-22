@@ -11,7 +11,7 @@ use Attribute;
  *
  * The Migrator reads this attribute to auto-generate ALTER TABLE ADD COLUMN DDL (up)
  * and ALTER TABLE DROP COLUMN DDL (down) from the target class's #[Column] attribute
- * on the named property. No imperative up()/down() methods needed.
+ * on the named property. No imperative up()/down() methods are needed.
  *
  * The column definition is read from the $column property on the $table class,
  * which must carry a #[Column] attribute.

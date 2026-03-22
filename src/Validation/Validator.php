@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Validation;
 
 use ReflectionClass;
+use ReflectionException;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\Matches;
 use ZeroToProd\Thryds\Attributes\Validates;
@@ -20,13 +21,16 @@ final readonly class Validator
         return $property . self::_error;
     }
 
-    /** @return array<string, string> */
+    /**
+     * @return array<string, string>
+     * @throws ReflectionException
+     */
     public static function validate(object $model): array
     {
         $errors = [];
         $ReflectionClass = new ReflectionClass(objectOrClass: $model);
 
-        /** @var array<string, list<Validates>> */
+        /** @var array<string, list<Validates>> $class_validation_map */
         $class_validation_map = [];
         foreach ($ReflectionClass->getAttributes(Validates::class) as $attribute) {
             /** @var Validates $Validates */
@@ -75,11 +79,12 @@ final readonly class Validator
             }
 
             foreach ($matches_attributes as $attribute) {
-                $target = $attribute->newInstance()->property;
-                if ($value === $property->getDeclaringClass()->getProperty(name: $target)->getValue(object: $model)) {
+                /** @var Matches $Matches */
+                $Matches = $attribute->newInstance();
+                if ($value === $property->getDeclaringClass()->getProperty(name: $Matches->property)->getValue(object: $model)) {
                     continue;
                 }
-                $errors[self::errorKey(property: $name)] = ucfirst(string: $target) . ' does not match.';
+                $errors[self::errorKey(property: $name)] = $Matches->message();
                 break;
             }
         }

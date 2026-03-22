@@ -20,10 +20,12 @@ readonly class SelectsFrom
      * @param class-string  $table   Table model class with HasTableName.
      * @param list<string>  $columns Column names to SELECT.
      * @param list<string>  $where   Column names for the WHERE clause (positional).
+     * @param string        $order_by Column name for ORDER BY clause. Empty for unordered.
      */
     public function __construct(
         public string $table,
         public array $columns,
         public array $where,
+        public string $order_by,
     ) {}
 }

@@ -14,10 +14,10 @@ use Attribute;
  * via its own attribute; this class attribute is for composite (multi-column) indexes.
  *
  * The $columns array must contain the backed string values of the table enum cases
- * (i.e. the SQL column names), in index order.
+ * (i.e., the SQL column names), in index order.
  *
  * If $name is empty, DDL generators should derive a name from the table and columns
- * (e.g. idx_{table}_{col1}_{col2}).
+ * (e.g., idx_{table}_{col1}_{col2}).
  *
  * @example
  * #[Table(name: 'posts')]

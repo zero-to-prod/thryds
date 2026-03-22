@@ -8,7 +8,7 @@ use Attribute;
 use Throwable;
 
 /**
- * Declares that a method handles exceptions of the specified type.
+ * Declares that a method handles exceptions to the specified type.
  *
  * Applied to methods on an exception handler class. At dispatch time, the method
  * whose declared exception type is the most specific match for the thrown exception

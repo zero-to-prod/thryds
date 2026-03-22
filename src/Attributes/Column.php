@@ -13,12 +13,12 @@ use ZeroToProd\Thryds\Schema\DataType;
  * The enum case name is the PHP identifier; the backed string value is the SQL column name.
  * All column-level constraints and metadata are expressed here via constructor parameters.
  *
- * $default behaviour:
- *   - null (omitted)           → no DEFAULT clause in DDL
+ * $default behavior:
+ *   - null (omitted) → no DEFAULT clause in DDL
  *   - Column::CURRENT_TIMESTAMP → DEFAULT CURRENT_TIMESTAMP
- *   - any other scalar         → DEFAULT '<value>' (quoted string or raw numeric)
+ *   - Any other scalar → DEFAULT '<value>' (quoted string or raw numeric)
  *
- * $values is required when $DataType is DataType::ENUM or DataType::SET.
+ * $values are required when $DataType is DataType::ENUM or DataType::SET.
  * $length is required for DataType::VARCHAR and DataType::CHAR.
  * $precision and $scale are required for DataType::DECIMAL.
  *
@@ -46,10 +46,10 @@ readonly class Column
      * @param DataType                    $DataType       SQL data type.
      * @param int|null                    $length         For VARCHAR, CHAR, BINARY, VARBINARY.
      * @param int|null                    $precision      For DECIMAL: total digits.
-     * @param int|null                    $scale          For DECIMAL: digits after decimal point.
+     * @param int|null                    $scale          For DECIMAL: digits after a decimal point.
      * @param bool                        $unsigned       Applies to integer and numeric types.
      * @param bool                        $nullable       If true, column allows NULL.
-     * @param bool                        $auto_increment If true, column is AUTO_INCREMENT.
+     * @param bool                        $auto_increment If true, the column is AUTO_INCREMENT.
      * @param string|int|float|bool|null  $default        Default value, Column::CURRENT_TIMESTAMP, or null (no default).
      * @param string[]|null               $values         Required for ENUM and SET types: the allowed values.
      * @param string                      $comment        Stored as the MySQL column COMMENT and serves as the canonical human-readable description of the column. Replaces the need for a separate docblock on the enum case.

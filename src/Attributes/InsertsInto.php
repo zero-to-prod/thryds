@@ -9,7 +9,7 @@ use Attribute;
 /**
  * Declares the target table and columns for an insert query.
  *
- * Columns listed are extracted from the request object by property name.
+ * Property name extracts columns listed from the request object.
  * Combine with {@see PersistColumn} for generated or transformed columns.
  */
 #[Attribute(Attribute::TARGET_CLASS)]
