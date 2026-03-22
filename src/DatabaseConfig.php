@@ -50,7 +50,7 @@ readonly class DatabaseConfig
     #[Describe([Describe::default => ''])]
     public string $password;
 
-    #[Describe([Describe::cast => [self::class, 'computeDsn'], Describe::default => ''])]
+    #[Describe([Describe::default => [self::class, 'computeDsn']])]
     public string $dsn;
 
     public static function fromEnv(): self
