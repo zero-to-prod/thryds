@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Tables;
 
 use ZeroToProd\Thryds\Attributes\Column;
+use ZeroToProd\Thryds\Attributes\Describe;
 use ZeroToProd\Thryds\Attributes\PrimaryKey;
 use ZeroToProd\Thryds\Schema\DataType;
 
@@ -25,7 +26,8 @@ trait MigrationColumns
         comment: 'Migration id, matching the four-digit prefix of the migration filename (e.g. 0001).',
     )]
     #[PrimaryKey(columns: [])]
-    public string $id;
+    #[Describe(['nullable' => true])]
+    public readonly ?string $id;
 
     /** @see $description */
     public const string description = 'description';
@@ -41,7 +43,8 @@ trait MigrationColumns
         values: null,
         comment: 'Human-readable description from the #[Migration] attribute on the migration class.',
     )]
-    public string $description;
+    #[Describe(['nullable' => true])]
+    public readonly ?string $description;
 
     /** @see $checksum */
     public const string checksum = 'checksum';
@@ -57,7 +60,8 @@ trait MigrationColumns
         values: null,
         comment: 'SHA-256 hash of the migration file contents at the time it was applied.',
     )]
-    public string $checksum;
+    #[Describe(['nullable' => true])]
+    public readonly ?string $checksum;
 
     /** @see $applied_at */
     public const string applied_at = 'applied_at';
@@ -73,5 +77,6 @@ trait MigrationColumns
         values: null,
         comment: 'Timestamp when the migration was applied.',
     )]
-    public string $applied_at;
+    #[Describe(['nullable' => true])]
+    public readonly ?string $applied_at;
 }

@@ -38,7 +38,7 @@ use ZeroToProd\Thryds\UI\Domain;
  * Use the enum case values as column name references in queries:
  * e.g. Migration::id === 'id'
  */
-class Migration
+readonly class Migration
 {
     use DataModel;
     use HasTableName;

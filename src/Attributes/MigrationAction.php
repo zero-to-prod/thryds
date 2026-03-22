@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Attributes;
 
+// TODO: [ForbidInterfaceRector] Interfaces define implicit contracts — use PHP attributes to declare properties explicitly. Attributes are discoverable, enforceable, and composable without coupling. See: utils/rector/docs/ForbidInterfaceRector.md
 /**
  * Contract for migration attributes that declare DDL operations.
  *

@@ -6,6 +6,7 @@ namespace ZeroToProd\Thryds\Attributes;
 
 use ZeroToProd\Thryds\UI\Domain;
 
+// TODO: [EnforceLayerCoverageRector] Namespace segment "Config" has no corresponding Layer enum case — add one to ensure attribute graph visibility. See: utils/rector/docs/EnforceLayerCoverageRector.md
 /**
  * Closed set of namespace-to-layer mappings for the attribute graph.
  *

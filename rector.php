@@ -106,6 +106,8 @@ use Utils\Rector\Rector\ForbidReflectionInClosureRector;
 use Utils\Rector\Rector\ForbidHttpMethodBranchingInControllerRector;
 use Utils\Rector\Rector\RequireHandlesRouteAttributeRector;
 use Utils\Rector\Rector\EnforceLayerCoverageRector;
+use Utils\Rector\Rector\ForbidInterfaceRector;
+use Utils\Rector\Rector\ForbidClassInheritanceRector;
 use Rector\CodeQuality\Rector\FuncCall\SortCallLikeNamedArgsRector;
 use Rector\CodeQuality\Rector\Attribute\SortAttributeNamedArgsRector;
 use ZeroToProd\Thryds\Attributes\Requirement;
@@ -782,5 +784,19 @@ return static function (RectorConfig $rectorConfig): void {
         'srcDir' => 'src',
         'mode' => 'warn',
         'message' => 'TODO: [EnforceLayerCoverageRector] Namespace segment "%s" has no corresponding Layer enum case — add one to ensure attribute graph visibility. See: utils/rector/docs/EnforceLayerCoverageRector.md',
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(ForbidInterfaceRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: [ForbidInterfaceRector] Interfaces define implicit contracts — use PHP attributes to declare properties explicitly. Attributes are discoverable, enforceable, and composable without coupling. See: utils/rector/docs/ForbidInterfaceRector.md',
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(ForbidClassInheritanceRector::class, [
+        'mode' => 'warn',
+        'message' => 'TODO: [ForbidClassInheritanceRector] Inheritance couples classes to parent implementation — use PHP attributes and composition instead. See: utils/rector/docs/ForbidClassInheritanceRector.md',
+        'allowList' => [
+            'ZeroToProd\Thryds\Tests\Integration\IntegrationTestCase',
+            'ZeroToProd\Thryds\Tests\Database\DatabaseTestCase',
+        ],
     ]);
 };

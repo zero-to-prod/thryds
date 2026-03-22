@@ -40,6 +40,9 @@ The attribute graph is the primary way to understand the codebase. Query it firs
 --attr=<Attribute>   # nodes carrying a specific attribute
 --rel=<rel>          # edges of a specific relationship type
 --file=<substring>   # nodes whose file path contains substring
+--sections=<list>    # comma-separated top-level keys (yaml/json/markdown only)
+                     # valid: _index, _instructions, _dependents, edges, nodes
+--compact            # strip edge args/file paths; aggregate dependents by count
 ```
 
 ### Output keys (YAML/JSON)
@@ -54,7 +57,7 @@ The attribute graph is the primary way to understand the codebase. Query it firs
 
 ### Agent workflow with the graph
 
-1. **Orient** — parse `_index` to see layers and nodes.
+1. **Orient** — `--compact --sections=_index,_instructions,_dependents` for the full map without node detail.
 2. **Focus** — `--node=X` for a node and its neighbors.
 3. **Query** — combine `--layer`, `--attr`, `--kind`, `--rel` for targeted questions.
 4. **Mutate** — read `_instructions` for mutation recipes.

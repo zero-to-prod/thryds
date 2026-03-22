@@ -17,6 +17,11 @@ declare(strict_types=1);
  *   --attr=<Attribute>   Filter to nodes carrying a specific attribute name
  *   --rel=<rel>          Filter edges to specific relationship types
  *   --file=<substring>   Filter to nodes whose file path contains substring
+ *   --sections=<list>    Comma-separated top-level keys to include (yaml/json/markdown only).
+ *                        Valid: _index, _instructions, _dependents, edges, nodes.
+ *                        Default: all sections. Omitting nodes keeps the map without detail.
+ *   --compact            Strip edge args/file paths; aggregate dependents by from+rel with counts.
+ *                        Reduces output ~75% while preserving structure. Combinable with all filters.
  *
  * Exit 0 on success.
  */
@@ -35,6 +40,8 @@ $filterKinds = [];
 $filterAttrs = [];
 $filterRels = [];
 $filterFiles = [];
+$filterSections = [];
+$compact = false;
 
 foreach ($argv as $arg) {
     if (str_starts_with($arg, '--format=')) {
@@ -57,6 +64,10 @@ foreach ($argv as $arg) {
         $filterRels[] = substr($arg, strlen('--rel='));
     } elseif (str_starts_with($arg, '--file=')) {
         $filterFiles[] = substr($arg, strlen('--file='));
+    } elseif (str_starts_with($arg, '--sections=')) {
+        $filterSections = array_merge($filterSections, explode(',', substr($arg, strlen('--sections='))));
+    } elseif ($arg === '--compact') {
+        $compact = true;
     }
 }
 
@@ -70,6 +81,19 @@ if (! in_array($format, ['yaml', 'json', 'markdown', 'mermaid', 'dot', 'png'], t
 if ($format === 'png' && $output === null) {
     fwrite(STDERR, "PNG format requires --output=FILE.\n");
     exit(1);
+}
+
+$validSections = ['_index', '_instructions', '_dependents', 'edges', 'nodes'];
+if ($filterSections !== []) {
+    $invalid = array_diff($filterSections, $validSections);
+    if ($invalid !== []) {
+        fwrite(STDERR, 'Unknown sections: ' . implode(', ', $invalid) . '. Valid: ' . implode(', ', $validSections) . ".\n");
+        exit(1);
+    }
+    if (! in_array($format, ['yaml', 'json', 'markdown'], true)) {
+        fwrite(STDERR, "--sections is only supported for yaml, json, and markdown formats.\n");
+        exit(1);
+    }
 }
 
 $projectRoot = realpath(__DIR__ . '/../') . '/';
@@ -689,15 +713,66 @@ foreach ($edges as $edge) {
 }
 ksort($dependents);
 
+// Compact mode: aggregate dependents by from+rel, replacing per-source entries with counts.
+if ($compact) {
+    foreach ($dependents as $target => &$deps) {
+        $grouped = [];
+        foreach ($deps as $dep) {
+            $key = $dep['from'] . '|' . $dep['rel'];
+            $grouped[$key] ??= ['from' => $dep['from'], 'rel' => $dep['rel'], 'count' => 0];
+            $grouped[$key]['count']++;
+        }
+        $deps = array_values(array_map(static fn(array $g): array => $g['count'] === 1 ? ['from' => $g['from'], 'rel' => $g['rel']] : $g, $grouped));
+    }
+    unset($deps);
+}
+
+// Compact mode: reduce node detail to skeleton (kind, layer, file, attribute names only).
+if ($compact) {
+    foreach ($graph as $fqcn => &$nodeEntry) {
+        $skeleton = ['file' => $nodeEntry['file'], 'kind' => $nodeEntry['kind'], 'layer' => $nodeEntry['layer']];
+        if (isset($nodeEntry['attributes'])) {
+            $skeleton['attributes'] = array_map(static fn(mixed $v): bool => true, $nodeEntry['attributes']);
+        }
+        if (isset($nodeEntry['is_attribute'])) {
+            $skeleton['is_attribute'] = true;
+        }
+        $nodeEntry = $skeleton;
+    }
+    unset($nodeEntry);
+}
+
 // --- Step 4: Output ---
 
-if ($format === 'yaml') {
-    // Emit edges as a top-level section alongside the nodes.
-    $yamlEdges = array_map(static function (array $e): array {
-        $entry = ['from' => $e['from'], 'to' => $e['to'], 'rel' => $e['rel']];
-        if ($e['kind'] !== null) {
-            $entry['kind'] = $e['kind'];
+/** Filter output data to only include requested sections. */
+function filterSections(array $data, array $sections): array
+{
+    if ($sections === []) {
+        return $data;
+    }
+    $filtered = [];
+    foreach ($sections as $key) {
+        if (array_key_exists($key, $data)) {
+            $filtered[$key] = $data[$key];
         }
+    }
+    return $filtered;
+}
+
+/** Check if a section should be included in the output. */
+function includeSection(string $section, array $filterSections): bool
+{
+    return $filterSections === [] || in_array($section, $filterSections, true);
+}
+
+/** Serialize an edge for structured output, respecting compact mode. */
+function serializeEdge(array $e, bool $compact): array
+{
+    $entry = ['from' => $e['from'], 'to' => $e['to'], 'rel' => $e['rel']];
+    if ($e['kind'] !== null) {
+        $entry['kind'] = $e['kind'];
+    }
+    if (! $compact) {
         if ($e['source'] !== 'class') {
             $entry['source'] = $e['source'];
         }
@@ -710,8 +785,15 @@ if ($format === 'yaml') {
         if ($e['to_file'] !== null) {
             $entry['to_file'] = $e['to_file'];
         }
-        return $entry;
-    }, $edges);
+    }
+    return $entry;
+}
+
+if ($format === 'yaml') {
+    // Emit edges as a top-level section alongside the nodes.
+    $serializedEdges = array_map(static fn(array $e): array => serializeEdge($e, $compact), $edges);
+    // Deduplicate edges (compact mode strips source, creating duplicates).
+    $yamlEdges = array_values(array_unique($serializedEdges, SORT_REGULAR));
     // Build layer index: layer → sorted list of short class names.
     $index = [];
     foreach ($graph as $fqcn => $entry) {
@@ -741,28 +823,11 @@ if ($format === 'yaml') {
     }
     ksort($instructions);
 
-    $output_data = ['_index' => $index, '_instructions' => $instructions, '_dependents' => $dependents, 'edges' => $yamlEdges, 'nodes' => $graph];
+    $output_data = filterSections(['_index' => $index, '_instructions' => $instructions, '_dependents' => $dependents, 'edges' => $yamlEdges, 'nodes' => $graph], $filterSections);
     $result = Yaml::dump($output_data, 6, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE | Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
 } elseif ($format === 'json') {
-    $jsonEdges = array_map(static function (array $e): array {
-        $entry = ['from' => $e['from'], 'to' => $e['to'], 'rel' => $e['rel']];
-        if ($e['kind'] !== null) {
-            $entry['kind'] = $e['kind'];
-        }
-        if ($e['source'] !== 'class') {
-            $entry['source'] = $e['source'];
-        }
-        if ($e['args'] !== []) {
-            $entry['args'] = $e['args'];
-        }
-        if ($e['from_file'] !== null) {
-            $entry['from_file'] = $e['from_file'];
-        }
-        if ($e['to_file'] !== null) {
-            $entry['to_file'] = $e['to_file'];
-        }
-        return $entry;
-    }, $edges);
+    $serializedEdges = array_map(static fn(array $e): array => serializeEdge($e, $compact), $edges);
+    $jsonEdges = array_values(array_unique($serializedEdges, SORT_REGULAR));
 
     $index = [];
     foreach ($graph as $fqcn => $entry) {
@@ -791,209 +856,232 @@ if ($format === 'yaml') {
     }
     ksort($instructions);
 
-    $output_data = ['_index' => $index, '_instructions' => $instructions, '_dependents' => $dependents, 'edges' => $jsonEdges, 'nodes' => $graph];
+    $output_data = filterSections(['_index' => $index, '_instructions' => $instructions, '_dependents' => $dependents, 'edges' => $jsonEdges, 'nodes' => $graph], $filterSections);
     $result = json_encode($output_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
 } elseif ($format === 'markdown') {
     // Markdown readable document.
     $lines = ['# Attribute Graph', ''];
 
     // Layer index.
-    $index = [];
-    foreach ($graph as $fqcn => $entry) {
-        $index[$entry['layer']][] = $shortNames[$fqcn];
-    }
-    ksort($index);
-    foreach ($index as &$names) {
-        sort($names);
-    }
-    unset($names);
+    if (includeSection('_index', $filterSections)) {
+        $index = [];
+        foreach ($graph as $fqcn => $entry) {
+            $index[$entry['layer']][] = $shortNames[$fqcn];
+        }
+        ksort($index);
+        foreach ($index as &$names) {
+            sort($names);
+        }
+        unset($names);
 
-    $lines[] = '## Index';
-    $lines[] = '';
-    $lines[] = '| Layer | Nodes |';
-    $lines[] = '|-------|-------|';
-    foreach ($index as $layer => $names) {
-        $lines[] = '| ' . $layer . ' | ' . implode(', ', array_map(static fn(string $n): string => '`' . $n . '`', $names)) . ' |';
+        $lines[] = '## Index';
+        $lines[] = '';
+        $lines[] = '| Layer | Nodes |';
+        $lines[] = '|-------|-------|';
+        foreach ($index as $layer => $names) {
+            $lines[] = '| ' . $layer . ' | ' . implode(', ', array_map(static fn(string $n): string => '`' . $n . '`', $names)) . ' |';
+        }
+        $lines[] = '';
     }
-    $lines[] = '';
 
     // Instructions.
-    $instructions = [];
-    foreach ($graph as $fqcn => $entry) {
-        $short = $shortNames[$fqcn];
-        foreach ($entry['attributes'] ?? [] as $attrName => $attrArgs) {
-            if (! is_array($attrArgs)) {
-                continue;
-            }
-            if (isset($attrArgs['addCase']) && $attrArgs['addCase'] !== '') {
-                $instructions[$short] = ['type' => 'addCase', 'attribute' => $attrName, 'steps' => $attrArgs['addCase']];
-            }
-            if (isset($attrArgs['addKey']) && $attrArgs['addKey'] !== '') {
-                $instructions[$short] = ['type' => 'addKey', 'attribute' => $attrName, 'steps' => $attrArgs['addKey']];
+    if (includeSection('_instructions', $filterSections)) {
+        $instructions = [];
+        foreach ($graph as $fqcn => $entry) {
+            $short = $shortNames[$fqcn];
+            foreach ($entry['attributes'] ?? [] as $attrName => $attrArgs) {
+                if (! is_array($attrArgs)) {
+                    continue;
+                }
+                if (isset($attrArgs['addCase']) && $attrArgs['addCase'] !== '') {
+                    $instructions[$short] = ['type' => 'addCase', 'attribute' => $attrName, 'steps' => $attrArgs['addCase']];
+                }
+                if (isset($attrArgs['addKey']) && $attrArgs['addKey'] !== '') {
+                    $instructions[$short] = ['type' => 'addKey', 'attribute' => $attrName, 'steps' => $attrArgs['addKey']];
+                }
             }
         }
-    }
-    ksort($instructions);
+        ksort($instructions);
 
-    if ($instructions !== []) {
-        $lines[] = '## Mutation Instructions';
-        $lines[] = '';
-        foreach ($instructions as $node => $instr) {
-            $lines[] = '### `' . $node . '` (' . $instr['type'] . ' via ' . $instr['attribute'] . ')';
+        if ($instructions !== []) {
+            $lines[] = '## Mutation Instructions';
             $lines[] = '';
-            foreach (preg_split('/\r?\n/', $instr['steps']) as $step) {
-                $lines[] = rtrim($step);
+            foreach ($instructions as $node => $instr) {
+                $lines[] = '### `' . $node . '` (' . $instr['type'] . ' via ' . $instr['attribute'] . ')';
+                $lines[] = '';
+                foreach (preg_split('/\r?\n/', $instr['steps']) as $step) {
+                    $lines[] = rtrim($step);
+                }
+                $lines[] = '';
             }
-            $lines[] = '';
         }
     }
 
     // Nodes grouped by layer.
-    $lines[] = '## Nodes';
-    $lines[] = '';
-
-    $byLayer = [];
-    foreach ($graph as $fqcn => $entry) {
-        $byLayer[$entry['layer']][$fqcn] = $entry;
-    }
-    ksort($byLayer);
-
-    foreach ($byLayer as $layer => $layerNodes) {
-        $lines[] = '### ' . ucfirst($layer);
+    if (includeSection('nodes', $filterSections)) {
+        $lines[] = '## Nodes';
         $lines[] = '';
-        foreach ($layerNodes as $fqcn => $entry) {
-            $short = $shortNames[$fqcn];
-            $lines[] = '#### `' . $short . '` (' . $entry['kind'] . ')';
-            $lines[] = '';
-            $lines[] = '- **File:** `' . $entry['file'] . '`';
 
-            // Class-level attributes.
-            if (isset($entry['attributes'])) {
-                foreach ($entry['attributes'] as $attrName => $attrArgs) {
-                    if ($attrArgs === true) {
-                        $lines[] = '- **' . $attrName . '**';
-                    } else {
-                        $lines[] = '- **' . $attrName . ':** ' . mdFormatArgs($attrArgs);
-                    }
-                }
-            }
-            $lines[] = '';
+        $byLayer = [];
+        foreach ($graph as $fqcn => $entry) {
+            $byLayer[$entry['layer']][$fqcn] = $entry;
+        }
+        ksort($byLayer);
 
-            // Properties.
-            if (isset($entry['properties'])) {
-                $lines[] = '**Properties:**';
+        foreach ($byLayer as $layer => $layerNodes) {
+            $lines[] = '### ' . ucfirst($layer);
+            $lines[] = '';
+            foreach ($layerNodes as $fqcn => $entry) {
+                $short = $shortNames[$fqcn];
+                $lines[] = '#### `' . $short . '` (' . $entry['kind'] . ')';
                 $lines[] = '';
-                $lines[] = '| Property | Attributes |';
-                $lines[] = '|----------|------------|';
-                foreach ($entry['properties'] as $propName => $propData) {
-                    $attrParts = [];
-                    foreach ($propData['attributes'] ?? [] as $attrName => $attrArgs) {
+                $lines[] = '- **File:** `' . $entry['file'] . '`';
+
+                // Class-level attributes.
+                if (isset($entry['attributes'])) {
+                    foreach ($entry['attributes'] as $attrName => $attrArgs) {
                         if ($attrArgs === true) {
-                            $attrParts[] = $attrName;
+                            $lines[] = '- **' . $attrName . '**';
                         } else {
-                            $attrParts[] = $attrName . ': ' . mdFormatArgs($attrArgs);
+                            $lines[] = '- **' . $attrName . ':** ' . mdFormatArgs($attrArgs);
                         }
                     }
-                    $lines[] = '| `' . $propName . '` | ' . implode('; ', $attrParts) . ' |';
                 }
                 $lines[] = '';
-            }
 
-            // Methods.
-            if (isset($entry['methods'])) {
-                $lines[] = '**Methods:**';
-                $lines[] = '';
-                $lines[] = '| Method | Attributes |';
-                $lines[] = '|--------|------------|';
-                foreach ($entry['methods'] as $methodName => $methodData) {
-                    $attrParts = [];
-                    foreach ($methodData['attributes'] ?? [] as $attrName => $attrArgs) {
-                        if ($attrArgs === true) {
-                            $attrParts[] = $attrName;
-                        } else {
-                            $attrParts[] = $attrName . ': ' . mdFormatArgs($attrArgs);
-                        }
-                    }
-                    $lines[] = '| `' . $methodName . '()` | ' . implode('; ', $attrParts) . ' |';
-                }
-                $lines[] = '';
-            }
-
-            // Enum cases.
-            if (isset($entry['cases'])) {
-                $lines[] = '**Cases:**';
-                $lines[] = '';
-                $hasCaseAttrs = false;
-                foreach ($entry['cases'] as $caseData) {
-                    if (isset($caseData['attributes'])) {
-                        $hasCaseAttrs = true;
-                        break;
-                    }
-                }
-                if ($hasCaseAttrs) {
-                    $lines[] = '| Case | Value | Attributes |';
-                    $lines[] = '|------|-------|------------|';
-                    foreach ($entry['cases'] as $caseName => $caseData) {
-                        $val = isset($caseData['value']) ? '`' . $caseData['value'] . '`' : '';
+                // Properties.
+                if (isset($entry['properties'])) {
+                    $lines[] = '**Properties:**';
+                    $lines[] = '';
+                    $lines[] = '| Property | Attributes |';
+                    $lines[] = '|----------|------------|';
+                    foreach ($entry['properties'] as $propName => $propData) {
                         $attrParts = [];
-                        foreach ($caseData['attributes'] ?? [] as $attrName => $attrArgs) {
+                        foreach ($propData['attributes'] ?? [] as $attrName => $attrArgs) {
                             if ($attrArgs === true) {
                                 $attrParts[] = $attrName;
                             } else {
                                 $attrParts[] = $attrName . ': ' . mdFormatArgs($attrArgs);
                             }
                         }
-                        $lines[] = '| `' . $caseName . '` | ' . $val . ' | ' . implode('; ', $attrParts) . ' |';
+                        $lines[] = '| `' . $propName . '` | ' . implode('; ', $attrParts) . ' |';
                     }
-                } else {
-                    $caseNames = array_keys($entry['cases']);
-                    $caseValues = array_map(static fn(array $c): string => isset($c['value']) ? '`' . $c['value'] . '`' : '', $entry['cases']);
-                    $lines[] = '| Case | Value |';
-                    $lines[] = '|------|-------|';
-                    foreach ($entry['cases'] as $caseName => $caseData) {
-                        $val = isset($caseData['value']) ? '`' . $caseData['value'] . '`' : '';
-                        $lines[] = '| `' . $caseName . '` | ' . $val . ' |';
-                    }
+                    $lines[] = '';
                 }
-                $lines[] = '';
-            }
 
-            // Constants.
-            if (isset($entry['constants'])) {
-                $lines[] = '**Constants:**';
-                $lines[] = '';
-                $lines[] = '| Constant | Attributes |';
-                $lines[] = '|----------|------------|';
-                foreach ($entry['constants'] as $constName => $constData) {
-                    $attrParts = [];
-                    foreach ($constData['attributes'] ?? [] as $attrName => $attrArgs) {
-                        if ($attrArgs === true) {
-                            $attrParts[] = $attrName;
-                        } else {
-                            $attrParts[] = $attrName . ': ' . mdFormatArgs($attrArgs);
+                // Methods.
+                if (isset($entry['methods'])) {
+                    $lines[] = '**Methods:**';
+                    $lines[] = '';
+                    $lines[] = '| Method | Attributes |';
+                    $lines[] = '|--------|------------|';
+                    foreach ($entry['methods'] as $methodName => $methodData) {
+                        $attrParts = [];
+                        foreach ($methodData['attributes'] ?? [] as $attrName => $attrArgs) {
+                            if ($attrArgs === true) {
+                                $attrParts[] = $attrName;
+                            } else {
+                                $attrParts[] = $attrName . ': ' . mdFormatArgs($attrArgs);
+                            }
+                        }
+                        $lines[] = '| `' . $methodName . '()` | ' . implode('; ', $attrParts) . ' |';
+                    }
+                    $lines[] = '';
+                }
+
+                // Enum cases.
+                if (isset($entry['cases'])) {
+                    $lines[] = '**Cases:**';
+                    $lines[] = '';
+                    $hasCaseAttrs = false;
+                    foreach ($entry['cases'] as $caseData) {
+                        if (isset($caseData['attributes'])) {
+                            $hasCaseAttrs = true;
+                            break;
                         }
                     }
-                    $lines[] = '| `' . $constName . '` | ' . implode('; ', $attrParts) . ' |';
+                    if ($hasCaseAttrs) {
+                        $lines[] = '| Case | Value | Attributes |';
+                        $lines[] = '|------|-------|------------|';
+                        foreach ($entry['cases'] as $caseName => $caseData) {
+                            $val = isset($caseData['value']) ? '`' . $caseData['value'] . '`' : '';
+                            $attrParts = [];
+                            foreach ($caseData['attributes'] ?? [] as $attrName => $attrArgs) {
+                                if ($attrArgs === true) {
+                                    $attrParts[] = $attrName;
+                                } else {
+                                    $attrParts[] = $attrName . ': ' . mdFormatArgs($attrArgs);
+                                }
+                            }
+                            $lines[] = '| `' . $caseName . '` | ' . $val . ' | ' . implode('; ', $attrParts) . ' |';
+                        }
+                    } else {
+                        $caseNames = array_keys($entry['cases']);
+                        $caseValues = array_map(static fn(array $c): string => isset($c['value']) ? '`' . $c['value'] . '`' : '', $entry['cases']);
+                        $lines[] = '| Case | Value |';
+                        $lines[] = '|------|-------|';
+                        foreach ($entry['cases'] as $caseName => $caseData) {
+                            $val = isset($caseData['value']) ? '`' . $caseData['value'] . '`' : '';
+                            $lines[] = '| `' . $caseName . '` | ' . $val . ' |';
+                        }
+                    }
+                    $lines[] = '';
                 }
-                $lines[] = '';
+
+                // Constants.
+                if (isset($entry['constants'])) {
+                    $lines[] = '**Constants:**';
+                    $lines[] = '';
+                    $lines[] = '| Constant | Attributes |';
+                    $lines[] = '|----------|------------|';
+                    foreach ($entry['constants'] as $constName => $constData) {
+                        $attrParts = [];
+                        foreach ($constData['attributes'] ?? [] as $attrName => $attrArgs) {
+                            if ($attrArgs === true) {
+                                $attrParts[] = $attrName;
+                            } else {
+                                $attrParts[] = $attrName . ': ' . mdFormatArgs($attrArgs);
+                            }
+                        }
+                        $lines[] = '| `' . $constName . '` | ' . implode('; ', $attrParts) . ' |';
+                    }
+                    $lines[] = '';
+                }
             }
         }
-    }
+    } // end includeSection('nodes')
 
     // Edges table.
-    $lines[] = '## Edges';
-    $lines[] = '';
-    $lines[] = '| From | To | Relationship | Kind | Source |';
-    $lines[] = '|------|----|-------------|------|--------|';
-    foreach ($edges as $edge) {
-        $source = $edge['source'] === 'class' ? '' : $edge['source'];
-        $kind = $edge['kind'] ?? '';
-        $lines[] = '| `' . $edge['from'] . '` | `' . $edge['to'] . '` | ' . $edge['rel'] . ' | ' . $kind . ' | ' . $source . ' |';
+    if (includeSection('edges', $filterSections)) {
+        $lines[] = '## Edges';
+        $lines[] = '';
+        if ($compact) {
+            $lines[] = '| From | To | Relationship | Kind |';
+            $lines[] = '|------|----|-------------|------|';
+            $seen = [];
+            foreach ($edges as $edge) {
+                $key = $edge['from'] . '|' . $edge['to'] . '|' . $edge['rel'] . '|' . ($edge['kind'] ?? '');
+                if (isset($seen[$key])) {
+                    continue;
+                }
+                $seen[$key] = true;
+                $kind = $edge['kind'] ?? '';
+                $lines[] = '| `' . $edge['from'] . '` | `' . $edge['to'] . '` | ' . $edge['rel'] . ' | ' . $kind . ' |';
+            }
+        } else {
+            $lines[] = '| From | To | Relationship | Kind | Source |';
+            $lines[] = '|------|----|-------------|------|--------|';
+            foreach ($edges as $edge) {
+                $source = $edge['source'] === 'class' ? '' : $edge['source'];
+                $kind = $edge['kind'] ?? '';
+                $lines[] = '| `' . $edge['from'] . '` | `' . $edge['to'] . '` | ' . $edge['rel'] . ' | ' . $kind . ' | ' . $source . ' |';
+            }
+        }
+        $lines[] = '';
     }
-    $lines[] = '';
 
     // Dependents (reverse-edge index).
-    if ($dependents !== []) {
+    if (includeSection('_dependents', $filterSections) && $dependents !== []) {
         $lines[] = '## Dependents';
         $lines[] = '';
         foreach ($dependents as $target => $deps) {
@@ -1001,7 +1089,9 @@ if ($format === 'yaml') {
             $lines[] = '';
             foreach ($deps as $dep) {
                 $label = '`' . $dep['from'] . '` via ' . $dep['rel'];
-                if (isset($dep['source'])) {
+                if (isset($dep['count']) && $dep['count'] > 1) {
+                    $label .= ' (' . $dep['count'] . ')';
+                } elseif (isset($dep['source'])) {
                     $label .= ' (' . $dep['source'] . ')';
                 }
                 $lines[] = '- ' . $label;
@@ -1062,25 +1152,27 @@ if ($format === 'yaml') {
                 $attrLines[] = sanitizeDot(formatDotAttr($attrName, $attrArgs));
             }
 
-            // Properties with attributes.
-            foreach ($entry['properties'] ?? [] as $propName => $propData) {
-                foreach ($propData['attributes'] ?? [] as $attrName => $attrArgs) {
-                    $attrLines[] = sanitizeDot($propName . ' : ' . formatDotAttr($attrName, $attrArgs));
+            if (! $compact) {
+                // Properties with attributes.
+                foreach ($entry['properties'] ?? [] as $propName => $propData) {
+                    foreach ($propData['attributes'] ?? [] as $attrName => $attrArgs) {
+                        $attrLines[] = sanitizeDot($propName . ' : ' . formatDotAttr($attrName, $attrArgs));
+                    }
                 }
-            }
 
-            // Methods with attributes.
-            foreach ($entry['methods'] ?? [] as $methodName => $methodData) {
-                foreach ($methodData['attributes'] ?? [] as $attrName => $attrArgs) {
-                    $attrLines[] = sanitizeDot($methodName . '() : ' . formatDotAttr($attrName, $attrArgs));
+                // Methods with attributes.
+                foreach ($entry['methods'] ?? [] as $methodName => $methodData) {
+                    foreach ($methodData['attributes'] ?? [] as $attrName => $attrArgs) {
+                        $attrLines[] = sanitizeDot($methodName . '() : ' . formatDotAttr($attrName, $attrArgs));
+                    }
                 }
-            }
 
-            // Enum cases / constants with attributes.
-            foreach (['cases', 'constants'] as $section) {
-                foreach ($entry[$section] ?? [] as $caseName => $caseData) {
-                    foreach ($caseData['attributes'] ?? [] as $attrName => $attrArgs) {
-                        $attrLines[] = sanitizeDot($caseName . ' : ' . formatDotAttr($attrName, $attrArgs));
+                // Enum cases / constants with attributes.
+                foreach (['cases', 'constants'] as $section) {
+                    foreach ($entry[$section] ?? [] as $caseName => $caseData) {
+                        foreach ($caseData['attributes'] ?? [] as $attrName => $attrArgs) {
+                            $attrLines[] = sanitizeDot($caseName . ' : ' . formatDotAttr($attrName, $attrArgs));
+                        }
                     }
                 }
             }
@@ -1111,20 +1203,22 @@ if ($format === 'yaml') {
         if ($group['kind'] !== null) {
             $label = '(' . $group['kind'] . ') ' . $label;
         }
-        $nonClass = array_filter($group['sources'], static fn(string $s): bool => $s !== 'class');
-        if ($nonClass !== []) {
-            $shortSources = array_map(static function (string $s): string {
-                $parts = explode(':', $s, 2);
-                return match ($parts[0]) {
-                    'method' => $parts[1] . '()',
-                    default => $parts[1] ?? $s,
-                };
-            }, array_unique($nonClass));
-            $sourceList = implode(', ', $shortSources);
-            if (strlen($sourceList) > 40) {
-                $sourceList = substr($sourceList, 0, 37) . '...';
+        if (! $compact) {
+            $nonClass = array_filter($group['sources'], static fn(string $s): bool => $s !== 'class');
+            if ($nonClass !== []) {
+                $shortSources = array_map(static function (string $s): string {
+                    $parts = explode(':', $s, 2);
+                    return match ($parts[0]) {
+                        'method' => $parts[1] . '()',
+                        default => $parts[1] ?? $s,
+                    };
+                }, array_unique($nonClass));
+                $sourceList = implode(', ', $shortSources);
+                if (strlen($sourceList) > 40) {
+                    $sourceList = substr($sourceList, 0, 37) . '...';
+                }
+                $label .= '\\nvia ' . $sourceList;
             }
-            $label .= '\\nvia ' . $sourceList;
         }
         $lines[] = "    {$fromId} -> {$toId} [label=\"" . sanitizeDot($label) . '" style=dashed];';
     }
@@ -1146,25 +1240,27 @@ if ($format === 'yaml') {
             $lines[] = '        +' . formatMermaidAttr($attrName, $attrArgs);
         }
 
-        // Properties with their attributes.
-        foreach ($entry['properties'] ?? [] as $propName => $propData) {
-            foreach ($propData['attributes'] ?? [] as $attrName => $attrArgs) {
-                $lines[] = '        ' . sanitizeMermaid($propName) . ' : ' . formatMermaidAttr($attrName, $attrArgs);
+        if (! $compact) {
+            // Properties with their attributes.
+            foreach ($entry['properties'] ?? [] as $propName => $propData) {
+                foreach ($propData['attributes'] ?? [] as $attrName => $attrArgs) {
+                    $lines[] = '        ' . sanitizeMermaid($propName) . ' : ' . formatMermaidAttr($attrName, $attrArgs);
+                }
             }
-        }
 
-        // Methods with their attributes.
-        foreach ($entry['methods'] ?? [] as $methodName => $methodData) {
-            foreach ($methodData['attributes'] ?? [] as $attrName => $attrArgs) {
-                $lines[] = '        ' . sanitizeMermaid($methodName) . '() : ' . formatMermaidAttr($attrName, $attrArgs);
+            // Methods with their attributes.
+            foreach ($entry['methods'] ?? [] as $methodName => $methodData) {
+                foreach ($methodData['attributes'] ?? [] as $attrName => $attrArgs) {
+                    $lines[] = '        ' . sanitizeMermaid($methodName) . '() : ' . formatMermaidAttr($attrName, $attrArgs);
+                }
             }
-        }
 
-        // Enum cases / constants with their attributes.
-        foreach (['cases', 'constants'] as $section) {
-            foreach ($entry[$section] ?? [] as $caseName => $caseData) {
-                foreach ($caseData['attributes'] ?? [] as $attrName => $attrArgs) {
-                    $lines[] = '        ' . sanitizeMermaid($caseName) . ' : ' . formatMermaidAttr($attrName, $attrArgs);
+            // Enum cases / constants with their attributes.
+            foreach (['cases', 'constants'] as $section) {
+                foreach ($entry[$section] ?? [] as $caseName => $caseData) {
+                    foreach ($caseData['attributes'] ?? [] as $attrName => $attrArgs) {
+                        $lines[] = '        ' . sanitizeMermaid($caseName) . ' : ' . formatMermaidAttr($attrName, $attrArgs);
+                    }
                 }
             }
         }
@@ -1184,28 +1280,32 @@ if ($format === 'yaml') {
         if ($group['kind'] !== null) {
             $label = '(' . $group['kind'] . ') ' . $label;
         }
-        // Annotate with source locations when not all class-level.
-        $nonClass = array_filter($group['sources'], static fn(string $s): bool => $s !== 'class');
-        if ($nonClass !== []) {
-            $shortSources = array_map(static function (string $s): string {
-                // "case:home" → "home", "property:id" → "id", "method:boot" → "boot()"
-                $parts = explode(':', $s, 2);
-                return match ($parts[0]) {
-                    'method' => $parts[1] . '()',
-                    default => $parts[1] ?? $s,
-                };
-            }, array_unique($nonClass));
-            $sourceList = implode(', ', $shortSources);
-            if (strlen($sourceList) > 40) {
-                $sourceList = substr($sourceList, 0, 37) . '...';
+        if (! $compact) {
+            // Annotate with source locations when not all class-level.
+            $nonClass = array_filter($group['sources'], static fn(string $s): bool => $s !== 'class');
+            if ($nonClass !== []) {
+                $shortSources = array_map(static function (string $s): string {
+                    // "case:home" → "home", "property:id" → "id", "method:boot" → "boot()"
+                    $parts = explode(':', $s, 2);
+                    return match ($parts[0]) {
+                        'method' => $parts[1] . '()',
+                        default => $parts[1] ?? $s,
+                    };
+                }, array_unique($nonClass));
+                $sourceList = implode(', ', $shortSources);
+                if (strlen($sourceList) > 40) {
+                    $sourceList = substr($sourceList, 0, 37) . '...';
+                }
+                $label .= ' via ' . sanitizeMermaid($sourceList);
             }
-            $label .= ' via ' . sanitizeMermaid($sourceList);
+            $fileParts = array_filter([
+                $group['from_file'] !== null ? $group['from_file'] : null,
+                $group['to_file'] !== null ? $group['to_file'] : null,
+            ]);
+            $fileComment = $fileParts !== [] ? ' %% ' . implode(' → ', $fileParts) : '';
+        } else {
+            $fileComment = '';
         }
-        $fileParts = array_filter([
-            $group['from_file'] !== null ? $group['from_file'] : null,
-            $group['to_file'] !== null ? $group['to_file'] : null,
-        ]);
-        $fileComment = $fileParts !== [] ? ' %% ' . implode(' → ', $fileParts) : '';
         $lines[] = "    {$group['from']} ..> {$group['to']} : {$label}{$fileComment}";
     }
 
@@ -1213,7 +1313,9 @@ if ($format === 'yaml') {
     foreach ($dependents as $target => $deps) {
         $depLabels = array_map(static function (array $d): string {
             $label = $d['from'] . ' via ' . $d['rel'];
-            if (isset($d['source'])) {
+            if (isset($d['count']) && $d['count'] > 1) {
+                $label .= ' (' . $d['count'] . ')';
+            } elseif (isset($d['source'])) {
                 $label .= ' (' . $d['source'] . ')';
             }
             return sanitizeMermaid($label);
