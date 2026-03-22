@@ -23,7 +23,7 @@ readonly class Config
     #[Describe([Describe::default => '/app/templates'])]
     public string $template_dir;
 
-    #[Describe([Describe::cast => [DatabaseConfig::class, 'from'], Describe::default => [self::class, 'defaultDatabaseConfig']])]
+    #[Describe([Describe::default => [self::class, 'defaultDatabaseConfig']])]
     public DatabaseConfig $DatabaseConfig;
 
     public static function defaultDatabaseConfig(): DatabaseConfig

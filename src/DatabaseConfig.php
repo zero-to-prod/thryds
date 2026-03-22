@@ -53,6 +53,7 @@ readonly class DatabaseConfig
             self::database => (string) getenv(Env::DB_DATABASE),
             self::username => (string) getenv(Env::DB_USERNAME),
             self::password => (string) getenv(Env::DB_PASSWORD),
+            self::dsn => '',
         ]);
     }
 

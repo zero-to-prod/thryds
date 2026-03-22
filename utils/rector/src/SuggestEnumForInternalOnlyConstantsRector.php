@@ -70,6 +70,10 @@ final class SuggestEnumForInternalOnlyConstantsRector extends AbstractRector imp
             return null;
         }
 
+        if ($this->constantsMirrorProperties($node, $constNames)) {
+            return null;
+        }
+
         $referencedNames = $this->collectSelfConstReferences($node);
 
         // Every string constant must be referenced via self:: within the class
@@ -104,6 +108,24 @@ final class SuggestEnumForInternalOnlyConstantsRector extends AbstractRector imp
         }
 
         return $names;
+    }
+
+    /**
+     * @param string[] $constNames
+     */
+    private function constantsMirrorProperties(Class_ $node, array $constNames): bool
+    {
+        $propertyNames = [];
+
+        foreach ($node->stmts as $stmt) {
+            if ($stmt instanceof Node\Stmt\Property && $stmt->isPublic() && !$stmt->isStatic()) {
+                foreach ($stmt->props as $prop) {
+                    $propertyNames[] = $prop->name->toString();
+                }
+            }
+        }
+
+        return $constNames !== [] && array_diff($constNames, $propertyNames) === [];
     }
 
     private function hasMethods(Class_ $node): bool
