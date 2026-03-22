@@ -227,7 +227,33 @@ CODE_SAMPLE,
             return "{$type}|{$backingType}";
         }
 
+        $varType = $this->extractVarType($property);
+        if ($varType !== null) {
+            return $varType;
+        }
+
         return $type;
+    }
+
+    /** Reads a @var PHPDoc tag to preserve generic types (e.g. array<string, string>). */
+    private function extractVarType(Property $property): ?string
+    {
+        $doc = $property->getDocComment();
+        if ($doc === null) {
+            return null;
+        }
+
+        if (preg_match('/@var\s+(.+?)(?:\s*\*\/|\s+\$)/', $doc->getText(), $matches) !== 1) {
+            return null;
+        }
+
+        $varType = trim($matches[1]);
+
+        if (!str_contains($varType, '<') && !str_contains($varType, '{')) {
+            return null;
+        }
+
+        return $varType;
     }
 
     private function getBackedEnumType(string $type): ?string

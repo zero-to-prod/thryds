@@ -14,6 +14,11 @@ final readonly class Validator
 {
     private const string _error = '_error';
 
+    public static function errorKey(string $property): string
+    {
+        return $property . self::_error;
+    }
+
     /** @return array<string, string> */
     public static function validate(object $model): array
     {
@@ -44,12 +49,12 @@ final readonly class Validator
                     if ($rule->passes($value, $config, context: $model)) {
                         continue;
                     }
-                    $errors[$name . self::_error] = $rule->message(field: $name, config: $config);
+                    $errors[self::errorKey(property: $name)] = $rule->message(field: $name, config: $config);
                     break 2;
                 }
             }
 
-            if (isset($errors[$name . self::_error])) {
+            if (isset($errors[self::errorKey(property: $name)])) {
                 continue;
             }
 
@@ -59,7 +64,7 @@ final readonly class Validator
                 if ($ValidationRule->passes($value, context: $model)) {
                     continue;
                 }
-                $errors[$name . self::_error] = $ValidationRule->message(field: $name);
+                $errors[self::errorKey(property: $name)] = $ValidationRule->message(field: $name);
                 break;
             }
         }

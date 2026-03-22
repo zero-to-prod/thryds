@@ -53,8 +53,8 @@ readonly class RegisterController
         if ($errors !== []) {
             return new HtmlResponse(
                 html: blade()->make(view: View::register->value, data: [
-                    /** @phpstan-ignore argument.type (spread merges request fields with error keys into the expected shape) */
-                    RegisterViewModel::view_key => RegisterViewModel::from([...$RegisterRequest->toArray(), ...$errors]),
+                    /** @phpstan-ignore argument.type (spread merges request fields with errors key into the expected shape) */
+                    RegisterViewModel::view_key => RegisterViewModel::from([...$RegisterRequest->toArray(), RegisterViewModel::errors => $errors]),
                     InputField::fields => InputField::reflect(RegisterRequest::class),
                 ])->render()
             );

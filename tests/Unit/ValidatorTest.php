@@ -8,7 +8,6 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ZeroToProd\Thryds\Requests\RegisterRequest;
 use ZeroToProd\Thryds\Validation\Validator;
-use ZeroToProd\Thryds\ViewModels\RegisterViewModel;
 
 final class ValidatorTest extends TestCase
 {
@@ -47,10 +46,10 @@ final class ValidatorTest extends TestCase
             RegisterRequest::password_confirmation => '',
         ]));
 
-        $this->assertSame('Name is required.', $errors[RegisterViewModel::name_error]);
-        $this->assertSame('Email is required.', $errors[RegisterViewModel::email_error]);
-        $this->assertSame('Password is required.', $errors[RegisterViewModel::password_error]);
-        $this->assertSame('Password_confirmation is required.', $errors[RegisterViewModel::password_confirmation_error]);
+        $this->assertSame('Name is required.', $errors[Validator::errorKey(RegisterRequest::name)]);
+        $this->assertSame('Email is required.', $errors[Validator::errorKey(RegisterRequest::email)]);
+        $this->assertSame('Password is required.', $errors[Validator::errorKey(RegisterRequest::password)]);
+        $this->assertSame('Password_confirmation is required.', $errors[Validator::errorKey(RegisterRequest::password_confirmation)]);
     }
 
     #[Test]
@@ -64,9 +63,9 @@ final class ValidatorTest extends TestCase
             RegisterRequest::password_confirmation => self::valid_password,
         ]));
 
-        $this->assertArrayNotHasKey(RegisterViewModel::name_error, array: $errors);
-        $this->assertSame('Enter a valid email address.', $errors[RegisterViewModel::email_error]);
-        $this->assertArrayNotHasKey(RegisterViewModel::password_error, array: $errors);
+        $this->assertArrayNotHasKey(Validator::errorKey(RegisterRequest::name), array: $errors);
+        $this->assertSame('Enter a valid email address.', $errors[Validator::errorKey(RegisterRequest::email)]);
+        $this->assertArrayNotHasKey(Validator::errorKey(RegisterRequest::password), array: $errors);
     }
 
     #[Test]
@@ -80,9 +79,9 @@ final class ValidatorTest extends TestCase
             RegisterRequest::password_confirmation => self::short_password,
         ]));
 
-        $this->assertArrayNotHasKey(RegisterViewModel::name_error, array: $errors);
-        $this->assertArrayNotHasKey(RegisterViewModel::email_error, array: $errors);
-        $this->assertSame('Password must be at least 8 characters.', $errors[RegisterViewModel::password_error]);
+        $this->assertArrayNotHasKey(Validator::errorKey(RegisterRequest::name), array: $errors);
+        $this->assertArrayNotHasKey(Validator::errorKey(RegisterRequest::email), array: $errors);
+        $this->assertSame('Password must be at least 8 characters.', $errors[Validator::errorKey(RegisterRequest::password)]);
     }
 
     #[Test]
@@ -96,9 +95,9 @@ final class ValidatorTest extends TestCase
             RegisterRequest::password_confirmation => self::mismatched_password,
         ]));
 
-        $this->assertArrayNotHasKey(RegisterViewModel::name_error, array: $errors);
-        $this->assertArrayNotHasKey(RegisterViewModel::email_error, array: $errors);
-        $this->assertArrayNotHasKey(RegisterViewModel::password_error, array: $errors);
-        $this->assertSame('Password does not match.', $errors[RegisterViewModel::password_confirmation_error]);
+        $this->assertArrayNotHasKey(Validator::errorKey(RegisterRequest::name), array: $errors);
+        $this->assertArrayNotHasKey(Validator::errorKey(RegisterRequest::email), array: $errors);
+        $this->assertArrayNotHasKey(Validator::errorKey(RegisterRequest::password), array: $errors);
+        $this->assertSame('Password does not match.', $errors[Validator::errorKey(RegisterRequest::password_confirmation)]);
     }
 }

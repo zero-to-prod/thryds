@@ -166,11 +166,7 @@ viewmodels:
   RegisterViewModel:
     view_key: RegisterViewModel
     fields:
-      name_error: string
-      email_error: string
-      handle_error: string
-      password_error: string
-      password_confirmation_error: string
+      errors: array
       id: string
       name: string
       handle: string

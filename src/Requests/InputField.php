@@ -10,6 +10,7 @@ use ZeroToProd\Thryds\Attributes\Input;
 use ZeroToProd\Thryds\Attributes\Validates;
 use ZeroToProd\Thryds\UI\InputType;
 use ZeroToProd\Thryds\Validation\Rule;
+use ZeroToProd\Thryds\Validation\Validator;
 
 /**
  * Reflected input field metadata from a request class property.
@@ -31,13 +32,13 @@ readonly class InputField
     /** Property name for the corresponding error on a view model. */
     public function errorKey(): string
     {
-        return $this->name . '_error';
+        return Validator::errorKey($this->name);
     }
 
     /** Reads the error message from a view model using the derived error key. */
     public function error(object $ViewModel): ?string
     {
-        return $ViewModel->{$this->errorKey()};
+        return $ViewModel->errors[$this->errorKey()] ?? null;
     }
 
     /** Reads the repopulated value from a view model. Password fields return null. */

@@ -6,15 +6,18 @@ namespace ZeroToProd\Thryds\ViewModels;
 
 use ZeroToProd\Thryds\Attributes\DataModel;
 use ZeroToProd\Thryds\Attributes\Describe;
+use ZeroToProd\Thryds\Attributes\HasValidationErrors;
 use ZeroToProd\Thryds\Attributes\ViewModel;
+use ZeroToProd\Thryds\Requests\RegisterRequest;
 use ZeroToProd\Thryds\Tables\UserColumns;
 
 /**
  * Form state for the registration view — repopulated fields and per-field validation errors.
  *
- * @method static self from(array{name_error?: ?string, email_error?: ?string, handle_error?: ?string, password_error?: ?string, password_confirmation_error?: ?string} $data)
+ * @method static self from(array{errors?: ?array<string, string>} $data)
  */
 #[ViewModel]
+#[HasValidationErrors(RegisterRequest::class)]
 readonly class RegisterViewModel
 {
     use DataModel;
@@ -22,38 +25,11 @@ readonly class RegisterViewModel
 
     public const string view_key = 'RegisterViewModel';
 
-    /** @see $name_error */
-    public const string name_error = 'name_error';
+    /** @see $errors */
+    public const string errors = 'errors';
+    /** @var ?array<string, string> */
     #[Describe([
         Describe::nullable => true,
     ])]
-    public ?string $name_error;
-
-    /** @see $email_error */
-    public const string email_error = 'email_error';
-    #[Describe([
-        Describe::nullable => true,
-    ])]
-    public ?string $email_error;
-
-    /** @see $handle_error */
-    public const string handle_error = 'handle_error';
-    #[Describe([
-        Describe::nullable => true,
-    ])]
-    public ?string $handle_error;
-
-    /** @see $password_error */
-    public const string password_error = 'password_error';
-    #[Describe([
-        Describe::nullable => true,
-    ])]
-    public ?string $password_error;
-
-    /** @see $password_confirmation_error */
-    public const string password_confirmation_error = 'password_confirmation_error';
-    #[Describe([
-        Describe::nullable => true,
-    ])]
-    public ?string $password_confirmation_error;
+    public ?array $errors;
 }
