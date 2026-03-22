@@ -25,6 +25,7 @@ readonly class RouteManifestHandler
                         static fn(RouteOperation $RouteOperation): array => [
                             RouteManifest::method      => $RouteOperation->HttpMethod->value,
                             RouteManifest::description => $RouteOperation->description,
+                            RouteManifest::strategy    => $RouteOperation->HandlerStrategy->value,
                         ],
                         $Route->operations(),
                     ),

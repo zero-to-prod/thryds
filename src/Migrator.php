@@ -6,12 +6,9 @@ namespace ZeroToProd\Thryds;
 
 use ReflectionClass;
 use RuntimeException;
-use ZeroToProd\Thryds\Attributes\AddColumn;
-use ZeroToProd\Thryds\Attributes\CreateTable;
-use ZeroToProd\Thryds\Attributes\DropColumn;
 use ZeroToProd\Thryds\Attributes\KeyRegistry;
 use ZeroToProd\Thryds\Attributes\KeySource;
-use ZeroToProd\Thryds\Attributes\Migration as MigrationAttribute;
+use ZeroToProd\Thryds\Attributes\MigrationAction;
 use ZeroToProd\Thryds\Queries\DeleteMigrationQuery;
 use ZeroToProd\Thryds\Queries\InsertMigrationQuery;
 use ZeroToProd\Thryds\Queries\SelectMigrationsQuery;
@@ -21,14 +18,9 @@ use ZeroToProd\Thryds\Tables\Migration;
 /**
  * Applies and rolls back database migrations.
  *
- * Migrations live in the directory passed to the constructor, named
- * NNNN_ClassName.php (e.g. 0001_CreateUsersTable.php). Each file must:
- *   - Declare a class in the ZeroToProd\Thryds\Migrations namespace
- *   - Implement MigrationInterface
- *   - Carry a #[Migration(id: 'NNNN', description: '...')] attribute
- *
- * State is tracked in a `migrations` table. Checksums detect files that were
- * edited after being applied — migrate() throws on any mismatch.
+ * Orchestrates MigrationDiscovery (filesystem scanning) and
+ * MigrationStatusResolver (status computation) to keep each concern
+ * in a single-responsibility class.
  *
  * DDL note: ensureTable() and migration up()/down() methods that run DDL
  * (CREATE TABLE, ALTER TABLE, etc.) cause MySQL to implicitly commit any open
@@ -45,21 +37,17 @@ readonly class Migrator
 
     public const string col_status = 'status';
 
-    // --- Private implementation constants ---
+    private MigrationDiscovery $MigrationDiscovery;
 
-    private const string key_path = 'path';
-
-    private const string key_class = 'class';
-
-    /** @var array<string, array<string, string>> */
-    private array $discovered;
+    private MigrationStatusResolver $MigrationStatusResolver;
 
     public function __construct(
         private Database $Database,
-        private string $migrations_dir,
-        private string $migrations_namespace,
+        string $migrations_dir,
+        string $migrations_namespace,
     ) {
-        $this->discovered = self::discover($this->migrations_dir, $this->migrations_namespace);
+        $this->MigrationDiscovery = new MigrationDiscovery($migrations_dir, $migrations_namespace);
+        $this->MigrationStatusResolver = new MigrationStatusResolver($this->MigrationDiscovery, $this->Database);
     }
 
     public function ensureTable(): void
@@ -77,34 +65,7 @@ readonly class Migrator
      */
     public function status(): array
     {
-        $applied = [];
-        foreach ($this->fetchApplied() as $row) {
-            $applied[$this->rowStr($row, key: Migration::id)] = $row;
-        }
-
-        $result = [];
-        foreach ($this->discovered as $id => $info) {
-            $checksum = $this->checksum(path: $info[self::key_path]);
-            if (isset($applied[$id])) {
-                $result[] = [
-                    Migration::id          => $id,
-                    Migration::description => $info[Migration::description],
-                    self::col_status             => $checksum === $applied[$id][Migration::checksum] ? MigrationStatus::applied : MigrationStatus::modified,
-                    Migration::applied_at  => $applied[$id][Migration::applied_at],
-                    Migration::checksum    => $checksum,
-                ];
-            } else {
-                $result[] = [
-                    Migration::id          => $id,
-                    Migration::description => $info[Migration::description],
-                    self::col_status             => MigrationStatus::pending,
-                    Migration::applied_at  => null,
-                    Migration::checksum    => $checksum,
-                ];
-            }
-        }
-
-        return $result;
+        return $this->MigrationStatusResolver->status();
     }
 
     /**
@@ -125,7 +86,7 @@ readonly class Migrator
             if ($row[self::col_status] !== MigrationStatus::pending) {
                 continue;
             }
-            $this->runUp(class: $this->discovered[$id][self::key_class]);
+            $this->runUp(class: $this->MigrationDiscovery->fqcn($id));
             InsertMigrationQuery::create((object) [
                 Migration::id          => $id,
                 Migration::description => $row[Migration::description],
@@ -149,16 +110,16 @@ readonly class Migrator
      */
     public function rollback(): ?array
     {
-        $last = $this->fetchLastApplied();
+        $last = SelectMigrationsQuery::lastRow($this->Database);
         if ($last === null) {
             return null;
         }
         $id = $this->rowStr(row: $last, key: Migration::id);
-        if (!isset($this->discovered[$id])) {
-            throw new RuntimeException("Migration $id is applied but its file was not found in {$this->migrations_dir}.");
+        if (!$this->MigrationDiscovery->has($id)) {
+            throw new RuntimeException("Migration $id is applied but its file was not found.");
         }
-        $this->runDown(class: $this->discovered[$id][self::key_class]);
-        DeleteMigrationQuery::byColumn(Migration::id, value: $id, Database: $this->Database);
+        $this->runDown(class: $this->MigrationDiscovery->fqcn($id));
+        DeleteMigrationQuery::delete($id, $this->Database);
 
         return [
             Migration::id          => $id,
@@ -167,63 +128,73 @@ readonly class Migrator
     }
 
     /**
-     * Discovers migration files, sorted by id.
+     * Executes the up action for a migration class.
      *
-     * @return array<string, array<string, string>>
+     * Dispatches on any attribute implementing {@see MigrationAction}.
+     * Falls back to {@see MigrationInterface::up()} for imperative migrations.
      */
-    private static function discover(string $migrations_dir, string $migrations_namespace): array
+    private function runUp(string $class): void
     {
-        $files = glob($migrations_dir . '/[0-9][0-9][0-9][0-9]_*.php');
-        if ($files === false || $files === []) {
-            return [];
+        /** @var class-string $class Validated by discover() via class_exists(). */
+        $action = self::resolveMigrationAction($class);
+
+        if ($action !== null) {
+            $this->Database->execute($action->upSql());
+
+            return;
         }
-        sort(array: $files);
-        /** @var array<string, array<string, string>> $migrations */
-        $migrations = [];
-        foreach ($files as $path) {
-            if (!preg_match('/^(\d{4})_(.+)$/', basename($path, suffix: '.php'), $matches)) {
-                continue;
-            }
-            $fqcn = $migrations_namespace . $matches[2];
-            if (!class_exists(class: $fqcn)) {
-                continue;
-            }
-            $attrs = new ReflectionClass(objectOrClass: $fqcn)->getAttributes(MigrationAttribute::class);
-            if ($attrs === []) {
-                continue;
-            }
-            $Migration = $attrs[0]->newInstance();
-            if ($Migration->id !== $matches[1]) {
-                throw new RuntimeException(
-                    "Migration attribute id '{$Migration->id}' does not match filename prefix '{$matches[1]}' in " . basename($path) . ' — keep the attribute id and filename prefix in sync.'
-                );
-            }
-            $migrations[$Migration->id] = [
-                self::key_path               => $path,
-                self::key_class              => $fqcn,
-                Migration::description => $Migration->description,
-            ];
+
+        $this->instantiate($class)->up(Database: $this->Database);
+    }
+
+    /**
+     * Executes the down action for a migration class.
+     *
+     * Dispatches on any attribute implementing {@see MigrationAction}.
+     * Falls back to {@see MigrationInterface::down()} for imperative migrations.
+     */
+    private function runDown(string $class): void
+    {
+        /** @var class-string $class Validated by discover() via class_exists(). */
+        $action = self::resolveMigrationAction($class);
+
+        if ($action !== null) {
+            $this->Database->execute($action->downSql());
+
+            return;
         }
-        ksort(array: $migrations);
 
-        return $migrations; // @phpstan-ignore return.type
+        $this->instantiate($class)->down(Database: $this->Database);
     }
 
-    /** @return array<int, array<string, mixed>> */
-    private function fetchApplied(): array
+    /**
+     * Resolves the first {@see MigrationAction} attribute from a migration class, or null.
+     *
+     * @param class-string $class
+     */
+    private static function resolveMigrationAction(string $class): ?MigrationAction
     {
-        return SelectMigrationsQuery::allRows($this->Database);
+        foreach (new ReflectionClass(objectOrClass: $class)->getAttributes() as $attribute) {
+            $instance = $attribute->newInstance();
+            if ($instance instanceof MigrationAction) {
+                return $instance;
+            }
+        }
+
+        return null;
     }
 
-    /** @return array<string, mixed>|null */
-    private function fetchLastApplied(): ?array
+    private function instantiate(string $class): MigrationInterface
     {
-        return SelectMigrationsQuery::lastRow($this->Database);
-    }
+        if (!class_exists($class)) {
+            throw new RuntimeException("Migration class $class does not exist."); // @codeCoverageIgnore
+        }
+        $instance = new $class();
+        if (!$instance instanceof MigrationInterface) {
+            throw new RuntimeException("$class must implement MigrationInterface.");
+        }
 
-    private function checksum(string $path): string
-    {
-        return hash(algo: 'sha256', data: (string) file_get_contents(filename: $path));
+        return $instance;
     }
 
     /**
@@ -242,105 +213,5 @@ readonly class Migrator
         }
 
         return $value;
-    }
-
-    /**
-     * Executes the up action for a migration class.
-     *
-     * Attribute-driven: dispatches DDL based on #[CreateTable], #[AddColumn], or #[DropColumn].
-     * Imperative fallback: delegates to MigrationInterface::up().
-     */
-    private function runUp(string $class): void
-    {
-        // TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md
-        /** @var class-string $class Validated by discover() via class_exists(). */
-        $ReflectionClass = new ReflectionClass(objectOrClass: $class);
-
-        $create_table = self::firstAttribute($ReflectionClass, attribute: CreateTable::class);
-        if ($create_table !== null) {
-            $this->Database->execute(DdlBuilder::createTableSql($create_table->table));
-
-            return;
-        }
-
-        $add_column = self::firstAttribute($ReflectionClass, attribute: AddColumn::class);
-        if ($add_column !== null) {
-            $this->Database->execute(DdlBuilder::addColumnSql($add_column->table, $add_column->column));
-
-            return;
-        }
-
-        $drop_column = self::firstAttribute($ReflectionClass, attribute: DropColumn::class);
-        if ($drop_column !== null) {
-            $this->Database->execute(DdlBuilder::dropColumnSql($drop_column->table, $drop_column->column));
-
-            return;
-        }
-
-        $this->instantiate($class)->up(Database: $this->Database);
-    }
-
-    /**
-     * Executes the down action for a migration class.
-     *
-     * Attribute-driven: dispatches reverse DDL based on #[CreateTable], #[AddColumn], or #[DropColumn].
-     * Imperative fallback: delegates to MigrationInterface::down().
-     */
-    private function runDown(string $class): void
-    {
-        // TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md
-        /** @var class-string $class Validated by discover() via class_exists(). */
-        $ReflectionClass = new ReflectionClass(objectOrClass: $class);
-
-        $create_table = self::firstAttribute($ReflectionClass, attribute: CreateTable::class);
-        if ($create_table !== null) {
-            $this->Database->execute(DdlBuilder::dropTableSql($create_table->table));
-
-            return;
-        }
-
-        $add_column = self::firstAttribute($ReflectionClass, attribute: AddColumn::class);
-        if ($add_column !== null) {
-            $this->Database->execute(DdlBuilder::dropColumnSql($add_column->table, $add_column->column));
-
-            return;
-        }
-
-        $drop_column = self::firstAttribute($ReflectionClass, attribute: DropColumn::class);
-        if ($drop_column !== null) {
-            $this->Database->execute(DdlBuilder::addColumnSql($drop_column->table, $drop_column->column));
-
-            return;
-        }
-
-        $this->instantiate($class)->down(Database: $this->Database);
-    }
-
-    /**
-     * Extracts the first instance of an attribute from a class, or null if absent.
-     *
-     * @template T of object
-     * @param ReflectionClass<object> $ReflectionClass
-     * @param class-string<T>         $attribute
-     * @return T|null
-     */
-    private static function firstAttribute(ReflectionClass $ReflectionClass, string $attribute): ?object
-    {
-        $attrs = $ReflectionClass->getAttributes(name: $attribute);
-
-        return $attrs !== [] ? $attrs[0]->newInstance() : null;
-    }
-
-    private function instantiate(string $class): MigrationInterface
-    {
-        if (!class_exists($class)) {
-            throw new RuntimeException("Migration class $class does not exist."); // @codeCoverageIgnore
-        }
-        $instance = new $class();
-        if (!$instance instanceof MigrationInterface) {
-            throw new RuntimeException("$class must implement MigrationInterface.");
-        }
-
-        return $instance;
     }
 }

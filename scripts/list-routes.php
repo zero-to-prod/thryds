@@ -29,6 +29,7 @@ $routes = array_map(
             fn(RouteOperation $op): array => [
                 'method'      => $op->HttpMethod->value,
                 'description' => $op->description,
+                'strategy'    => $op->HandlerStrategy->value,
             ],
             $Route->operations(),
         ),

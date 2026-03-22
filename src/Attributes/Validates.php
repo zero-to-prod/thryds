@@ -11,7 +11,7 @@ use ZeroToProd\Thryds\Validation\Rule;
  * Class-level validation rules scoped to a single property.
  *
  * Applied to request classes to declare form-specific validation
- * without redeclaring the property itself.
+ * without re-declaring the property itself.
  *
  * @see Rule
  */

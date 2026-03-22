@@ -22,15 +22,19 @@ trait DbDelete
 
     private const string WHERE = ' WHERE ';
 
-    private const string PARAM_VALUE = ':value';
-
     /**
      * DELETE returning affected row count.
      *
      * Positional arguments map to the WHERE columns declared in {@see DeletesFrom::$where}.
+     * An optional trailing Database instance overrides the default connection.
      */
     public static function delete(mixed ...$where): int
     {
+        $database = null;
+        if ($where !== [] && end(array: $where) instanceof Database) {
+            $database = array_pop(array: $where);
+        }
+
         $DeletesFrom = new ReflectionClass(static::class)
             ->getAttributes(DeletesFrom::class)[0]
             ->newInstance();
@@ -44,22 +48,7 @@ trait DbDelete
         }
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        return db()->execute(self::DELETE_FROM . $DeletesFrom->table::tableName()
+        return ($database ?? db())->execute(self::DELETE_FROM . $DeletesFrom->table::tableName()
             . self::WHERE . implode(Sql::CONJUNCTION, array: $clauses), $params);
-    }
-
-    /**
-     * DELETE by a single column value, returning affected row count.
-     */
-    public static function byColumn(string $column, mixed $value, ?Database $Database = null): int
-    {
-        return ($Database ?? db())->execute(
-            self::DELETE_FROM . '`' . new ReflectionClass(static::class)
-                ->getAttributes(DeletesFrom::class)[0]
-                ->newInstance()
-                ->table::tableName() . '`'
-            . self::WHERE . '`' . $column . '` = ' . self::PARAM_VALUE,
-            [self::PARAM_VALUE => $value]
-        );
     }
 }

@@ -39,6 +39,9 @@ enum Domain: string
     case blade_templates = 'blade_templates';
 
     #[Group(EdgeKind::navigation)]
+    case handler_strategies = 'handler_strategies';
+
+    #[Group(EdgeKind::navigation)]
     case http_methods = 'http_methods';
 
     #[Group(EdgeKind::type_system)]

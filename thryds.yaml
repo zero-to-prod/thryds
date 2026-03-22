@@ -8,43 +8,43 @@ routes:
     description: About
     dev_only: false
     operations:
-      GET: 'Company and product information'
+      GET: { description: 'Company and product information', strategy: static_view }
     view: about
   home:
     path: /
     description: Home
     dev_only: false
     operations:
-      GET: 'Marketing home page'
+      GET: { description: 'Marketing home page', strategy: static_view }
     view: home
   login:
     path: /login
     description: Login
     dev_only: false
     operations:
-      GET: 'User authentication form'
+      GET: { description: 'User authentication form', strategy: static_view }
     view: login
   opcache_scripts:
     path: /_opcache/scripts
     description: 'OPcache scripts'
     dev_only: true
     operations:
-      GET: 'Scripts loaded in OPcache'
+      GET: { description: 'Scripts loaded in OPcache', strategy: controller }
     controller: OpcacheScriptsHandler
   opcache_status:
     path: /_opcache/status
     description: 'OPcache status'
     dev_only: true
     operations:
-      GET: 'OPcache runtime statistics'
+      GET: { description: 'OPcache runtime statistics', strategy: controller }
     controller: OpcacheStatusHandler
   register:
     path: /register
     description: Register
     dev_only: false
     operations:
-      GET: 'New user registration form'
-      POST: 'Handle registration submission'
+      GET: { description: 'New user registration form', strategy: form }
+      POST: { description: 'Handle registration submission', strategy: validated }
     controller: RegisterController
     view: register
   routes:
@@ -52,43 +52,43 @@ routes:
     description: Routes
     dev_only: true
     operations:
-      GET: 'Machine-readable manifest of all registered routes'
+      GET: { description: 'Machine-readable manifest of all registered routes', strategy: controller }
     controller: RouteManifestHandler
   styleguide:
     path: /_styleguide
     description: 'Style guide'
     dev_only: true
     operations:
-      GET: 'UI component and design token reference'
+      GET: { description: 'UI component and design token reference', strategy: static_view }
     view: styleguide
 
 controllers:
   OpcacheScriptsHandler:
     route: opcache_scripts
     operations:
-      GET: 'Scripts loaded in OPcache'
+      GET: { description: 'Scripts loaded in OPcache', strategy: controller }
     renders: ~
     persists: []
     redirects_to: []
   OpcacheStatusHandler:
     route: opcache_status
     operations:
-      GET: 'OPcache runtime statistics'
+      GET: { description: 'OPcache runtime statistics', strategy: controller }
     renders: ~
     persists: []
     redirects_to: []
   RegisterController:
     route: register
     operations:
-      GET: 'New user registration form'
-      POST: 'Handle registration submission'
+      GET: { description: 'New user registration form', strategy: form }
+      POST: { description: 'Handle registration submission', strategy: validated }
     renders: register
     persists: [User]
     redirects_to: [login]
   RouteManifestHandler:
     route: routes
     operations:
-      GET: 'Machine-readable manifest of all registered routes'
+      GET: { description: 'Machine-readable manifest of all registered routes', strategy: controller }
     renders: ~
     persists: []
     redirects_to: []

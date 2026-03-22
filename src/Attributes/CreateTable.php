@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
+use ZeroToProd\Thryds\Schema\DdlBuilder;
 
 /**
  * Declares that a migration creates a table defined by the referenced Table class.
@@ -19,10 +20,20 @@ use Attribute;
  * final readonly class CreateUsersTable {}
  */
 #[Attribute(Attribute::TARGET_CLASS)]
-readonly class CreateTable
+readonly class CreateTable implements MigrationAction
 {
     /** @param class-string $table Table class carrying #[Table], #[Column], #[PrimaryKey], and #[Index] attributes. */
     public function __construct(
         public string $table,
     ) {}
+
+    public function upSql(): string
+    {
+        return DdlBuilder::createTableSql($this->table);
+    }
+
+    public function downSql(): string
+    {
+        return DdlBuilder::dropTableSql($this->table);
+    }
 }

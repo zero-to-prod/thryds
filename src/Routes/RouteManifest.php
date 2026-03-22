@@ -28,5 +28,6 @@ readonly class RouteManifest
     public const string operations  = 'operations';
 
     // Operation-level fields (inside each operations entry)
-    public const string method = 'method';
+    public const string method   = 'method';
+    public const string strategy = 'strategy';
 }

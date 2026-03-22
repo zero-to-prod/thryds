@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
+use ZeroToProd\Thryds\Schema\DdlBuilder;
 
 /**
  * Declares that a migration drops a column from an existing table.
@@ -23,7 +24,7 @@ use Attribute;
  * final readonly class DropBioFromUsers {}
  */
 #[Attribute(Attribute::TARGET_CLASS)]
-readonly class DropColumn
+readonly class DropColumn implements MigrationAction
 {
     /**
      * @param class-string $table  Table class carrying #[Table] and #[Column] attributes.
@@ -33,4 +34,14 @@ readonly class DropColumn
         public string $table,
         public string $column,
     ) {}
+
+    public function upSql(): string
+    {
+        return DdlBuilder::dropColumnSql($this->table, $this->column);
+    }
+
+    public function downSql(): string
+    {
+        return DdlBuilder::addColumnSql($this->table, $this->column);
+    }
 }

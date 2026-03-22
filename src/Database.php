@@ -8,10 +8,33 @@ use Closure;
 use PDO;
 use PDOException;
 use PDOStatement;
+use ReflectionClass;
 use Throwable;
+use ZeroToProd\Thryds\Attributes\ConnectionOption;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
+use ZeroToProd\Thryds\Attributes\ReconnectOn;
+use ZeroToProd\Thryds\Attributes\Timezone;
 
 #[Infrastructure]
+#[ConnectionOption(
+    PDO::ATTR_ERRMODE,
+    PDO::ERRMODE_EXCEPTION
+)]
+#[ConnectionOption(
+    PDO::ATTR_DEFAULT_FETCH_MODE,
+    PDO::FETCH_ASSOC
+)]
+#[ConnectionOption(
+    PDO::ATTR_EMULATE_PREPARES,
+    false
+)]
+#[ConnectionOption(
+    PDO::ATTR_PERSISTENT,
+    false
+)]
+#[Timezone('+00:00')]
+#[ReconnectOn('server has gone away')]
+#[ReconnectOn('Lost connection')]
 class Database
 {
     private ?PDO $PDO = null;
@@ -141,25 +164,38 @@ class Database
 
     private static function connect(DatabaseConfig $DatabaseConfig): PDO
     {
+        $ReflectionClass = new ReflectionClass(self::class);
+
+        $options = [];
+        foreach ($ReflectionClass->getAttributes(ConnectionOption::class) as $attr) {
+            $ConnectionOption = $attr->newInstance();
+            $options[$ConnectionOption->attribute] = $ConnectionOption->value;
+        }
+
         $PDO = new PDO(
             dsn: $DatabaseConfig->dsn,
             username: $DatabaseConfig->username,
             password: $DatabaseConfig->password,
-            options: [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES   => false,
-                PDO::ATTR_PERSISTENT         => false,
-            ],
+            options: $options,
         );
-        $PDO->exec("SET time_zone = '+00:00'");
+
+        $timezone_attrs = $ReflectionClass->getAttributes(Timezone::class);
+        if ($timezone_attrs !== []) {
+            $PDO->exec("SET time_zone = '" . $timezone_attrs[0]->newInstance()->timezone . "'");
+        }
 
         return $PDO;
     }
 
     private static function isGoneAway(PDOException $PDOException): bool
     {
-        return str_contains($PDOException->getMessage(), 'server has gone away')
-            || str_contains($PDOException->getMessage(), 'Lost connection');
+        $message = $PDOException->getMessage();
+        foreach (new ReflectionClass(self::class)->getAttributes(ReconnectOn::class) as $attr) {
+            if (str_contains(haystack: $message, needle: $attr->newInstance()->message)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

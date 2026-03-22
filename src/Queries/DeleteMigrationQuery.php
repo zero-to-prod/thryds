@@ -10,12 +10,12 @@ use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\Tables\Migration;
 
 /**
- * @method static int byColumn(string $column, mixed $value, ?Database $Database = null)
+ * @method static int delete(string $id, ?Database $Database = null)
  */
 #[Infrastructure]
 #[DeletesFrom(
     table: Migration::class,
-    where: [],
+    where: [Migration::id],
 )]
 readonly class DeleteMigrationQuery
 {

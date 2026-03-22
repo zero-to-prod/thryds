@@ -20,8 +20,6 @@ trait DbRead
 {
     private const string SELECT = 'SELECT ';
 
-    private const string SELECT_ALL_FROM = 'SELECT * FROM `';
-
     private const string FROM = ' FROM ';
 
     private const string WHERE = ' WHERE ';
@@ -57,7 +55,7 @@ trait DbRead
     }
 
     /**
-     * SELECT * returning all rows ordered by the declared orderBy column.
+     * SELECT returning all rows ordered by the declared orderBy column.
      *
      * @return array<int, array<string, mixed>>
      */
@@ -66,7 +64,8 @@ trait DbRead
         $SelectsFrom = self::resolveSelectsFrom();
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        $sql = self::SELECT_ALL_FROM . $SelectsFrom->table::tableName() . '`';
+        $sql = self::SELECT . self::columnList($SelectsFrom)
+            . self::FROM . $SelectsFrom->table::tableName();
         if ($SelectsFrom->order_by !== '') {
             $sql .= self::ORDER_BY . '`' . $SelectsFrom->order_by . '` ASC';
         }
@@ -75,7 +74,7 @@ trait DbRead
     }
 
     /**
-     * SELECT * returning the last row by the declared orderBy column, or null.
+     * SELECT returning the last row by the declared orderBy column, or null.
      *
      * @return array<string, mixed>|null
      */
@@ -84,7 +83,8 @@ trait DbRead
         $SelectsFrom = self::resolveSelectsFrom();
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        $sql = self::SELECT_ALL_FROM . $SelectsFrom->table::tableName() . '`';
+        $sql = self::SELECT . self::columnList($SelectsFrom)
+            . self::FROM . $SelectsFrom->table::tableName();
         if ($SelectsFrom->order_by !== '') {
             $sql .= self::ORDER_BY . '`' . $SelectsFrom->order_by . '` DESC';
         }
@@ -104,7 +104,7 @@ trait DbRead
         $SelectsFrom = self::resolveSelectsFrom();
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        $sql = self::SELECT . implode(', ', $SelectsFrom->columns)
+        $sql = self::SELECT . self::columnList($SelectsFrom)
             . self::FROM . $SelectsFrom->table::tableName();
 
         $params = [];
@@ -119,6 +119,11 @@ trait DbRead
         }
 
         return [$sql, $params];
+    }
+
+    private static function columnList(SelectsFrom $SelectsFrom): string
+    {
+        return $SelectsFrom->columns !== [] ? implode(', ', $SelectsFrom->columns) : '*';
     }
 
     private static function resolveSelectsFrom(): SelectsFrom

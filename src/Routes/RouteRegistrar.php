@@ -39,34 +39,61 @@ readonly class RouteRegistrar
         }
     }
 
-    /** Resolve handler: #[HandledBy] controller takes priority, then #[RendersView] closure. */
+    /** Dispatch to the handler strategy declared on the #[RouteOperation]. */
     private static function handler(Route $Route, RouteOperation $RouteOperation, ?object $controller): callable
     {
-        if ($controller !== null) {
-            $attrs = new ReflectionClass(objectOrClass: $controller)->getAttributes(ValidatesRequest::class);
-            $ValidatesRequest = $attrs !== [] ? $attrs[0]->newInstance() : null;
+        return match ($RouteOperation->HandlerStrategy) {
+            HandlerStrategy::static_view => self::staticView($Route),
+            HandlerStrategy::controller  => self::controllerHandler($controller, $RouteOperation),
+            HandlerStrategy::form        => self::formView($Route, self::validatesRequest($controller)),
+            HandlerStrategy::validated   => self::withValidation(
+                $Route,
+                self::validatesRequest($controller),
+                handler: self::controllerHandler($controller, $RouteOperation),
+            ),
+        };
+    }
 
-            if ($ValidatesRequest !== null && $RouteOperation->HttpMethod === HttpMethod::GET) {
-                return self::formView($Route, $ValidatesRequest);
-            }
+    /** Render a Blade view with no controller. */
+    private static function staticView(Route $Route): Closure
+    {
+        return static fn(): ResponseInterface => new HtmlResponse(
+            html: blade()->make(view: ($Route->rendersView()
+                ?? throw new LogicException("Route::{$Route->name} has HandlerStrategy::static_view but no #[RendersView]."))->value)->render(),
+        );
+    }
 
-            $callable = is_callable(value: $controller)
-                ? $controller
-                : self::resolveMethod($controller, HttpMethod: $RouteOperation->HttpMethod);
-
-            if ($ValidatesRequest !== null && $RouteOperation->HttpMethod === HttpMethod::POST) {
-                /** @phpstan-ignore argument.type (invokable object satisfies callable at runtime) */
-                return self::withValidation($Route, $ValidatesRequest, handler: $callable);
-            }
-
-            /** @phpstan-ignore return.type (invokable object satisfies callable at runtime) */
-            return $callable;
+    /**
+     * Resolve the controller callable — either __invoke or a #[HandlesMethod]-annotated method.
+     *
+     * @return callable
+     */
+    private static function controllerHandler(?object $controller, RouteOperation $RouteOperation): callable
+    {
+        if ($controller === null) {
+            throw new LogicException("RouteOperation declares HandlerStrategy::{$RouteOperation->HandlerStrategy->name} but route has no #[HandledBy] controller.");
         }
 
-        return fn(): ResponseInterface => new HtmlResponse(
-            html: blade()->make(view: ($Route->rendersView()
-                ?? throw new LogicException("Route::{$Route->name} has no #[HandledBy] controller and no #[RendersView]."))->value)->render(),
-        );
+        if (is_callable(value: $controller)) {
+            return $controller;
+        }
+
+        /** @phpstan-ignore return.type (array{object, string} from resolveMethod satisfies callable at runtime) */
+        return self::resolveMethod($controller, HttpMethod: $RouteOperation->HttpMethod);
+    }
+
+    /** Read the #[ValidatesRequest] attribute from a controller, or throw if absent. */
+    private static function validatesRequest(?object $controller): ValidatesRequest
+    {
+        if ($controller === null) {
+            throw new LogicException('HandlerStrategy::form or ::validated requires a #[HandledBy] controller with #[ValidatesRequest].');
+        }
+
+        $attrs = new ReflectionClass(objectOrClass: $controller)->getAttributes(ValidatesRequest::class);
+
+        return $attrs !== []
+            ? $attrs[0]->newInstance()
+            : throw new LogicException($controller::class . ' must declare #[ValidatesRequest] for the form/validated handler strategy.');
     }
 
     /**

@@ -542,7 +542,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges, array $inventory
         $entry['dev_only'] = $routeCase->isDevOnly();
         $ops = [];
         foreach ($routeCase->operations() as $op) {
-            $ops[$op->HttpMethod->value] = $op->description;
+            $ops[$op->HttpMethod->value] = ['description' => $op->description, 'strategy' => $op->HandlerStrategy->value];
         }
         $entry['operations'] = $ops;
 
@@ -603,7 +603,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges, array $inventory
                 if ($routeEnum !== null) {
                     $ops = [];
                     foreach ($routeEnum->operations() as $op) {
-                        $ops[$op->HttpMethod->value] = $op->description;
+                        $ops[$op->HttpMethod->value] = ['description' => $op->description, 'strategy' => $op->HandlerStrategy->value];
                     }
                     $entry['operations'] = $ops;
                 }

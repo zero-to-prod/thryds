@@ -11,6 +11,7 @@ opcache_compile_file(__DIR__ . '/vendor/autoload.php');
 opcache_compile_file(__DIR__ . '/src/Routes/RouteRegistrar.php');
 opcache_compile_file(__DIR__ . '/src/Routes/Route.php');
 opcache_compile_file(__DIR__ . '/src/Routes/HttpMethod.php');
+opcache_compile_file(__DIR__ . '/src/Routes/HandlerStrategy.php');
 
 // ViewModels
 opcache_compile_file(__DIR__ . '/src/ViewModels/ErrorViewModel.php');

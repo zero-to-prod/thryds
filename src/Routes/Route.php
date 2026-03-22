@@ -34,7 +34,8 @@ enum Route: string
     #[RouteInfo('Home')]
     #[RouteOperation(
         HttpMethod::GET,
-        'Marketing home page'
+        'Marketing home page',
+        HandlerStrategy::static_view
     )]
     #[RendersView(View::home)]
     case home = '/';
@@ -42,7 +43,8 @@ enum Route: string
     #[RouteInfo('About')]
     #[RouteOperation(
         HttpMethod::GET,
-        'Company and product information'
+        'Company and product information',
+        HandlerStrategy::static_view
     )]
     #[RendersView(View::about)]
     case about = '/about';
@@ -50,7 +52,8 @@ enum Route: string
     #[RouteInfo('Login')]
     #[RouteOperation(
         HttpMethod::GET,
-        'User authentication form'
+        'User authentication form',
+        HandlerStrategy::static_view
     )]
     #[RendersView(View::login)]
     case login = '/login';
@@ -58,11 +61,13 @@ enum Route: string
     #[RouteInfo('Register')]
     #[RouteOperation(
         HttpMethod::GET,
-        'New user registration form'
+        'New user registration form',
+        HandlerStrategy::form
     )]
     #[RouteOperation(
         HttpMethod::POST,
-        'Handle registration submission'
+        'Handle registration submission',
+        HandlerStrategy::validated
     )]
     #[HandledBy(RegisterController::class)]
     #[RendersView(View::register)]
@@ -72,7 +77,8 @@ enum Route: string
     #[RouteInfo('OPcache status')]
     #[RouteOperation(
         HttpMethod::GET,
-        'OPcache runtime statistics'
+        'OPcache runtime statistics',
+        HandlerStrategy::controller
     )]
     #[HandledBy(OpcacheStatusHandler::class)]
     case opcache_status = '/_opcache/status';
@@ -81,7 +87,8 @@ enum Route: string
     #[RouteInfo('OPcache scripts')]
     #[RouteOperation(
         HttpMethod::GET,
-        'Scripts loaded in OPcache'
+        'Scripts loaded in OPcache',
+        HandlerStrategy::controller
     )]
     #[HandledBy(OpcacheScriptsHandler::class)]
     case opcache_scripts = '/_opcache/scripts';
@@ -90,7 +97,8 @@ enum Route: string
     #[RouteInfo('Style guide')]
     #[RouteOperation(
         HttpMethod::GET,
-        'UI component and design token reference'
+        'UI component and design token reference',
+        HandlerStrategy::static_view
     )]
     #[RendersView(View::styleguide)]
     case styleguide = '/_styleguide';
@@ -99,7 +107,8 @@ enum Route: string
     #[RouteInfo('Routes')]
     #[RouteOperation(
         HttpMethod::GET,
-        'Machine-readable manifest of all registered routes'
+        'Machine-readable manifest of all registered routes',
+        HandlerStrategy::controller
     )]
     #[HandledBy(RouteManifestHandler::class)]
     case routes = '/_routes';
