@@ -1,16 +1,47 @@
-docs/
-logs/
+# Build artifacts and dependencies (copied via multi-stage)
+vendor/
+node_modules/
+public/build/
+
+# Dev/test tooling
 tests/
 utils/
+docs/
+logs/
 var/
-vendor/
+
+# Docker and compose files (docker/ kept — referenced by COPY in Dockerfile)
+Dockerfile
+compose*.yaml
+
+# Frontend build inputs (kept for node stage: package.json, resources/, vite.config.js)
+
+# Config and tooling not needed at runtime
 .git/
+.claude/
+.idea/
+.phpstorm_helpers/
+.mysql/
+.githooks/
+.gitignore
+.env
+.env.example
 .php-cs-fixer.php
 .php-cs-fixer.cache
+.phpunit.cache/
 phpunit.xml.dist
+phpstan.neon
 rector.php
 CLAUDE.md
 docs.sh
 run
-node_modules/
-public/build/
+
+# Manifest and graph files (dev-time only)
+thryds.yaml
+thryds.schema.json
+attribute-graph.yaml
+graph-rules.yaml
+graph.md
+graph.png
+inventory.svg
+requirements.yaml
