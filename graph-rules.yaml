@@ -87,11 +87,13 @@ edge:
     fix: "Add #[ReceivesViewModel(ThisViewModel::class)] to a View enum case"
 
 hop:
-  # No path through consecutive semantic edges may exceed 1 hop.
+  # No path through consecutive semantic edges may exceed 2 hops.
   # Structural edges (hop_weight=0) are free — they don't require
   # reading the target to understand the source.
+  # 2 hops allows the natural request flow (route → controller → request/model)
+  # while preventing deeper indirection chains.
   max-semantic-hops:
-    max_semantic_hops: 0
+    max_semantic_hops: 2
     message: "Semantic hop limit exceeded"
     fix: "Reduce indirection: inline the dependency, merge intermediate nodes, or reclassify an edge as structural (#[HopWeight(0)])"
 

@@ -15,7 +15,7 @@ use Attribute;
  * class RegisterController { ... }
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
-#[HopWeight(0)]
+#[HopWeight(1)]
 readonly class Persists
 {
     /** @param class-string $model Fully-qualified model class name. */
