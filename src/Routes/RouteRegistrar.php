@@ -10,9 +10,11 @@ use LogicException;
 use Psr\Http\Message\ResponseInterface;
 use ReflectionClass;
 use ZeroToProd\Thryds\Attributes\HandlesRoute;
+use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\RouteOperation;
 use ZeroToProd\Thryds\Config;
 
+#[Infrastructure]
 readonly class RouteRegistrar
 {
     /** Namespace prefix for controller discovery, derived from this class's own namespace. */

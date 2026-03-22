@@ -25,6 +25,7 @@ use UnitEnum;
  * - `via`      — alternative instantiation method (default `from`)
  * - `ignore`   — skip the property entirely
  */
+#[Infrastructure]
 trait DataModel
 {
     use \Zerotoprod\DataModel\DataModel;

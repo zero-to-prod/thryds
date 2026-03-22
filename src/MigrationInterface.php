@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
+use ZeroToProd\Thryds\Attributes\Infrastructure;
+
 /**
  * Contract for all migration classes in migrations/.
  *
@@ -12,6 +14,7 @@ namespace ZeroToProd\Thryds;
  * so they cannot be rolled back if a migration fails mid-way. Write
  * down() defensively (e.g. DROP TABLE IF EXISTS) to handle partial states.
  */
+#[Infrastructure]
 interface MigrationInterface
 {
     public function up(Database $Database): void;

@@ -231,13 +231,22 @@ foreach ($rules['discovery'] ?? [] as $ruleName => $rule) {
         if ($strategy === 'node_file') {
             $claimed = isset($nodeFiles[$relPath]);
         } elseif ($strategy === 'enum_case_value') {
-            $nodeName = $rule['claimed_by']['node'] ?? '';
+            $nodeNames = $rule['claimed_by']['nodes'] ?? [];
+            if ($nodeNames === []) {
+                $single = $rule['claimed_by']['node'] ?? '';
+                $nodeNames = $single !== '' ? [$single] : [];
+            }
             $stripSuffix = $rule['claimed_by']['strip_suffix'] ?? '';
             $stem = basename($relPath);
             if ($stripSuffix !== '' && str_ends_with($stem, $stripSuffix)) {
                 $stem = substr($stem, 0, -strlen($stripSuffix));
             }
-            $claimed = isset($caseValuesByNode[$nodeName][$stem]);
+            foreach ($nodeNames as $nodeName) {
+                if (isset($caseValuesByNode[$nodeName][$stem])) {
+                    $claimed = true;
+                    break;
+                }
+            }
         }
 
         if (! $claimed) {

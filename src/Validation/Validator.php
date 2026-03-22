@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Validation;
 
 use ReflectionClass;
+use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\Validate;
 use ZeroToProd\Thryds\Attributes\ValidateWith;
 
+#[Infrastructure]
 final readonly class Validator
 {
     private const string _error = '_error';

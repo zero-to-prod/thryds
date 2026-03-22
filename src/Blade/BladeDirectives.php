@@ -6,9 +6,11 @@ namespace ZeroToProd\Thryds\Blade;
 
 use Jenssegers\Blade\Blade;
 use ZeroToProd\Thryds\AppEnv;
+use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Env;
 
+#[Infrastructure]
 readonly class BladeDirectives
 {
     public static function register(Blade $Blade, Config $Config, Vite $Vite): void

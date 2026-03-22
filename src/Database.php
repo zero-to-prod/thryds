@@ -9,7 +9,9 @@ use PDO;
 use PDOException;
 use PDOStatement;
 use Throwable;
+use ZeroToProd\Thryds\Attributes\Infrastructure;
 
+#[Infrastructure]
 class Database
 {
     private ?PDO $PDO = null;

@@ -6,6 +6,7 @@ namespace ZeroToProd\Thryds\Attributes;
 
 use ReflectionClass;
 
+#[Infrastructure]
 trait HasTableName
 {
     public static function tableName(): string

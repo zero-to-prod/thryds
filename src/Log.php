@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds;
 
+use ZeroToProd\Thryds\Attributes\Infrastructure;
+
+#[Infrastructure]
 readonly class Log
 {
     /** @param array<string, mixed> $context */

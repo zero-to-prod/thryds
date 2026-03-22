@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Requests;
 
 use ReflectionClass;
+use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\Input;
 use ZeroToProd\Thryds\Attributes\Validate;
 use ZeroToProd\Thryds\UI\InputType;
@@ -15,6 +16,7 @@ use ZeroToProd\Thryds\Validation\Rule;
  *
  * @see Input
  */
+#[Infrastructure]
 readonly class InputField
 {
     public const string fields = 'fields';

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Queries;
 
 use Random\RandomException;
+use ZeroToProd\Thryds\Attributes\Infrastructure;
 
+#[Infrastructure]
 trait DbCreate
 {
     /**

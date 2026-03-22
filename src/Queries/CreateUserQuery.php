@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Queries;
 
 use Random\RandomException;
+use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Tables\User;
 
 /**
  * @method static void create(?string $name, ?string $handle, ?string $email, ?string $password)
  */
+#[Infrastructure]
 readonly class CreateUserQuery
 {
     use DbCreate;

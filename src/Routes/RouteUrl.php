@@ -6,7 +6,9 @@ namespace ZeroToProd\Thryds\Routes;
 
 use InvalidArgumentException;
 use Stringable;
+use ZeroToProd\Thryds\Attributes\Infrastructure;
 
+#[Infrastructure]
 readonly class RouteUrl implements Stringable
 {
     /**
