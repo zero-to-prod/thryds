@@ -3,10 +3,13 @@
 declare(strict_types=1);
 
 /**
- * Verify that every query class with a write attribute has test coverage.
+ * Verify that every route with #[Persists] has test coverage for its side-effecting method.
  *
- * Layer 1 (static): each concrete query class must be referenced in a test file.
- * Layer 2 (dynamic): if clover XML exists, trait method execute() call sites must be covered.
+ * Walks the attribute graph: controller with #[Persists] → handlesroute → Route case,
+ * then checks that a test exercises the side-effecting HTTP method (e.g., POST) for that route.
+ *
+ * Static check: integration test file references the route AND calls the side-effecting HTTP method.
+ * Dynamic check: if clover XML exists, the controller's persist method has line coverage > 0.
  *
  * Usage: ./run check:side-effect-coverage
  * Output: JSON { ok: bool, violations: [...], warnings: [...] }
@@ -23,9 +26,7 @@ $projectRoot = realpath(__DIR__ . '/../') . '/';
 
 $config = Yaml::parseFile(__DIR__ . '/side-effect-coverage-config.yaml');
 $cloverFile = $projectRoot . $config['clover_file'];
-$writeAttributes = $config['write_attributes'];
-$traitMethodMap = $config['trait_method_map'];
-$testDirs = array_map(static fn(string $dir): string => $projectRoot . $dir, $config['test_dirs']);
+$testDir = $projectRoot . $config['test_dir'];
 
 fwrite(STDERR, "\n╔══════════════════════════════════════╗\n");
 fwrite(STDERR, "║   Check: Side-Effect Coverage        ║\n");
@@ -33,14 +34,9 @@ fwrite(STDERR, "╚════════════════════�
 
 // ── Load attribute graph ────────────────────────────────────────
 
-$attrFlags = implode(' ', array_map(
-    static fn(string $attr): string => '--attr=' . escapeshellarg($attr),
-    $writeAttributes,
-));
-
 $graphJson = shell_exec(
     'php ' . escapeshellarg($projectRoot . 'scripts/list-attributes.php')
-    . ' --format=json ' . $attrFlags . ' --sections=nodes 2>/dev/null',
+    . ' --format=json --attr=Persists --sections=nodes,edges 2>/dev/null',
 );
 
 if ($graphJson === null || $graphJson === '') {
@@ -69,111 +65,185 @@ if (!is_array($graph) || !isset($graph['nodes'])) {
 }
 
 $nodes = $graph['nodes'];
+$edges = $graph['edges'] ?? [];
 
-// ── Identify write query classes ────────────────────────────────
+// ── Build route side-effect map ─────────────────────────────────
 
-/** @var array<string, array{short_name: string, file: string, attributes: list<string>, trait: string|null, methods: list<string>}> */
-$writeQueries = [];
+/**
+ * For each controller with #[Persists], extract:
+ * - The Route pattern it handles
+ * - The HTTP method that triggers the side effect
+ * - The model(s) it persists to
+ * - The controller file path
+ */
+
+/** @var list<array{controller: string, file: string, route: string, method: string, models: list<string>}> */
+$sideEffectRoutes = [];
 
 foreach ($nodes as $fqcn => $node) {
     $attrs = $node['attributes'] ?? [];
-    $matchedAttrs = [];
-    foreach ($writeAttributes as $wa) {
-        if (isset($attrs[$wa])) {
-            $matchedAttrs[] = $wa;
-        }
-    }
-
-    if ($matchedAttrs === []) {
+    if (!isset($attrs['Persists'])) {
         continue;
     }
 
     $parts = explode('\\', $fqcn);
     $shortName = end($parts);
-    $filePath = $projectRoot . $node['file'];
 
-    // Determine which trait the class uses
-    $trait = null;
-    $methods = [];
-    if (is_file($filePath)) {
-        $contents = file_get_contents($filePath);
-        foreach ($traitMethodMap as $traitName => $traitMethods) {
-            if (preg_match('/\buse\s+' . preg_quote($traitName, '/') . '\b/', $contents)) {
-                $trait = $traitName;
-                $methods = $traitMethods;
-                break;
+    // Extract persisted models
+    $persists = $attrs['Persists'];
+    $models = [];
+    if (is_array($persists)) {
+        foreach ($persists as $p) {
+            if (isset($p['model'])) {
+                $modelParts = explode('\\', $p['model']);
+                $models[] = end($modelParts);
             }
         }
     }
 
-    $writeQueries[$fqcn] = [
-        'short_name' => $shortName,
+    // Find route pattern and side-effecting HTTP method from edges
+    $routePattern = null;
+    $httpMethod = null;
+
+    foreach ($edges as $edge) {
+        if ($edge['from'] !== $shortName) {
+            continue;
+        }
+
+        if ($edge['rel'] === 'handlesroute' && isset($edge['args']['Route'])) {
+            $routePattern = $edge['args']['Route'];
+        }
+
+        if ($edge['rel'] === 'handlesmethod' && isset($edge['args']['HttpMethod'])) {
+            $httpMethod = $edge['args']['HttpMethod'];
+        }
+    }
+
+    if ($routePattern === null) {
+        continue;
+    }
+
+    $sideEffectRoutes[] = [
+        'controller' => $shortName,
+        'fqcn' => $fqcn,
         'file' => $node['file'],
-        'attributes' => $matchedAttrs,
-        'trait' => $trait,
-        'methods' => $methods,
+        'route' => $routePattern,
+        'method' => $httpMethod ?? 'POST',
+        'models' => $models,
     ];
 }
 
-if ($writeQueries === []) {
+if ($sideEffectRoutes === []) {
     echo json_encode(['ok' => true, 'violations' => [], 'warnings' => []], JSON_PRETTY_PRINT) . "\n";
     exit(0);
 }
 
-fwrite(STDERR, sprintf("Found %d write query classes\n", count($writeQueries)));
+fwrite(STDERR, sprintf("Found %d route(s) with side effects\n", count($sideEffectRoutes)));
 
 // ── Collect test file contents ──────────────────────────────────
 
-/** @var array<string, string> path => contents */
+/** @var array<string, string> filename => contents */
 $testFiles = [];
-foreach ($testDirs as $testDir) {
-    if (!is_dir($testDir)) {
-        continue;
-    }
+if (is_dir($testDir)) {
     $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($testDir));
     foreach ($iterator as $file) {
         if ($file->isFile() && str_ends_with($file->getFilename(), '.php')) {
-            $testFiles[$file->getPathname()] = file_get_contents($file->getPathname());
+            $testFiles[$file->getFilename()] = file_get_contents($file->getPathname());
         }
     }
 }
 
-// ── Static reference check ──────────────────────────────────────
+// ── Static check: route test exercises side-effecting method ────
 
 $violations = [];
 $warnings = [];
 
-foreach ($writeQueries as $fqcn => $info) {
-    $found = false;
+foreach ($sideEffectRoutes as $route) {
+    $methodLower = strtolower($route['method']);
+    $modelLabel = implode(', ', $route['models']);
+
+    // Derive Route enum case name from the route pattern (e.g., /register → register)
+    $caseName = ltrim($route['route'], '/');
+    $caseName = str_replace(['/', '-'], '_', $caseName);
+
+    // Find any test file that references this route
+    $hasRouteTest = false;
+    $hasMethodTest = false;
+
     foreach ($testFiles as $testContent) {
-        if (str_contains($testContent, $info['short_name'])
-            || str_contains($testContent, $fqcn)) {
-            $found = true;
+        // Check for Route::case_name reference or literal route pattern
+        if (!str_contains($testContent, 'Route::' . $caseName)
+            && !str_contains($testContent, $route['route'])) {
+            continue;
+        }
+
+        $hasRouteTest = true;
+
+        // Check for the side-effecting HTTP method call
+        if (str_contains($testContent, '$this->' . $methodLower . '(')
+            || str_contains($testContent, "method: HttpMethod::{$route['method']}")
+            || str_contains($testContent, "HttpMethod::{$route['method']}")) {
+            $hasMethodTest = true;
             break;
         }
     }
 
-    if (!$found) {
-        $attrLabel = implode(', ', $info['attributes']);
-        $methodLabel = $info['methods'] !== [] ? implode('/', $info['methods']) : 'unknown';
+    if (!$hasRouteTest) {
         $violations[] = [
-            'class' => $info['short_name'],
-            'file' => $info['file'],
-            'attribute' => $attrLabel,
-            'check' => 'static_reference',
+            'controller' => $route['controller'],
+            'route' => $route['route'],
+            'method' => $route['method'],
+            'models' => $route['models'],
+            'check' => 'route_test_missing',
             'message' => sprintf(
-                '%s is not referenced in any test file',
-                $info['short_name'],
+                '%s %s has no integration test (persists to %s)',
+                $route['method'],
+                $route['route'],
+                $modelLabel,
             ),
             'fix' => sprintf(
-                'Add a database test for %s::%s() in tests/Database/',
-                $info['short_name'],
-                $info['methods'][0] ?? 'method',
+                'Add an integration test for %s %s in tests/Integration/',
+                $route['method'],
+                $route['route'],
             ),
         ];
-        fwrite(STDERR, sprintf("  FAIL  %s — not referenced in tests\n", $info['short_name']));
+        fwrite(STDERR, sprintf(
+            "  FAIL  %s %s — no route test\n",
+            $route['method'],
+            $route['route'],
+        ));
+    } elseif (!$hasMethodTest) {
+        $violations[] = [
+            'controller' => $route['controller'],
+            'route' => $route['route'],
+            'method' => $route['method'],
+            'models' => $route['models'],
+            'check' => 'method_not_exercised',
+            'message' => sprintf(
+                'Route %s has a test but does not exercise %s (persists to %s)',
+                $route['route'],
+                $route['method'],
+                $modelLabel,
+            ),
+            'fix' => sprintf(
+                'Add a test that calls $this->%s(Route::...) for %s',
+                $methodLower,
+                $route['route'],
+            ),
+        ];
+        fwrite(STDERR, sprintf(
+            "  FAIL  %s %s — test exists but %s not exercised\n",
+            $route['method'],
+            $route['route'],
+            $route['method'],
+        ));
     } else {
-        fwrite(STDERR, sprintf("  PASS  %s — referenced in tests\n", $info['short_name']));
+        fwrite(STDERR, sprintf(
+            "  PASS  %s %s → %s\n",
+            $route['method'],
+            $route['route'],
+            $modelLabel,
+        ));
     }
 }
 
@@ -188,101 +258,57 @@ if (!is_file($cloverFile)) {
 } else {
     $xml = new SimpleXMLElement(file_get_contents($cloverFile));
 
-    // Build file coverage index: normalized path → array of line coverage data
-    /** @var array<string, array<int, int>> file path suffix → [line_num => count] */
+    /** @var array<string, array<int, int>> normalized path → [line_num => count] */
     $fileCoverage = [];
     foreach ($xml->project->package as $package) {
         foreach ($package->file as $file) {
             $path = (string) $file['name'];
             $lines = [];
             foreach ($file->line as $line) {
-                if ((string) $line['type'] === 'stmt' || (string) $line['type'] === 'method') {
-                    $lines[(int) $line['num']] = (int) $line['count'];
+                if ((string) $line['type'] === 'method') {
+                    $lines[(string) $line['name']] = (int) $line['count'];
                 }
             }
-            // Normalize: strip /app/ prefix to match project-relative paths
             $normalized = preg_replace('#^/app/#', '', $path);
             $fileCoverage[$normalized] = $lines;
         }
     }
 
-    // For each trait, find execute() call site lines via source code
-    /** @var array<string, array{method: string, line: int}> trait name → execute call sites */
-    $traitCallSites = [];
-    foreach ($traitMethodMap as $traitName => $traitMethods) {
-        $traitFile = $projectRoot . 'src/Queries/' . $traitName . '.php';
-        if (!is_file($traitFile)) {
+    foreach ($sideEffectRoutes as $route) {
+        $controllerCoverage = $fileCoverage[$route['file']] ?? null;
+        if ($controllerCoverage === null) {
+            $warnings[] = sprintf('No coverage data for %s', $route['controller']);
             continue;
         }
 
-        $traitLines = file($traitFile);
-        $currentMethod = null;
+        // Check if the side-effecting method has coverage
+        $methodLower = strtolower($route['method']);
+        $count = $controllerCoverage[$methodLower] ?? null;
 
-        foreach ($traitLines as $lineIndex => $lineContent) {
-            $lineNum = $lineIndex + 1;
-
-            // Track current method
-            if (preg_match('/\bfunction\s+(\w+)\s*\(/', $lineContent, $m)) {
-                $currentMethod = $m[1];
-            }
-
-            // Detect execute() call sites
-            if (str_contains($lineContent, '->execute(') && $currentMethod !== null) {
-                $traitCallSites[$traitName][] = [
-                    'method' => $currentMethod,
-                    'line' => $lineNum,
-                ];
-            }
-        }
-    }
-
-    // Check coverage for each write query class's trait methods
-    foreach ($writeQueries as $fqcn => $info) {
-        if ($info['trait'] === null) {
-            continue;
-        }
-
-        $traitRelPath = 'src/Queries/' . $info['trait'] . '.php';
-        $coverage = $fileCoverage[$traitRelPath] ?? null;
-        if ($coverage === null) {
-            $warnings[] = sprintf('No coverage data for trait %s', $info['trait']);
-            continue;
-        }
-
-        $callSites = $traitCallSites[$info['trait']] ?? [];
-        foreach ($callSites as $site) {
-            if (!in_array($site['method'], $info['methods'], true)) {
-                continue;
-            }
-
-            $count = $coverage[$site['line']] ?? null;
-            if ($count === null || $count === 0) {
-                $violations[] = [
-                    'class' => $info['short_name'],
-                    'file' => $info['file'],
-                    'trait' => $info['trait'],
-                    'method' => $site['method'],
-                    'line' => $site['line'],
-                    'check' => 'branch_coverage',
-                    'message' => sprintf(
-                        '%s::%s() execute() call on line %d has no coverage',
-                        $info['trait'],
-                        $site['method'],
-                        $site['line'],
-                    ),
-                    'fix' => sprintf(
-                        'Add a test that exercises %s::%s()',
-                        $info['short_name'],
-                        $site['method'],
-                    ),
-                ];
-                fwrite(STDERR, sprintf(
-                    "  FAIL  %s::%s() — line %d uncovered\n",
-                    $info['trait'],
-                    $site['method'],
-                    $site['line'],
-                ));
-            }
+        if ($count === null || $count === 0) {
+            $modelLabel = implode(', ', $route['models']);
+            $violations[] = [
+                'controller' => $route['controller'],
+                'route' => $route['route'],
+                'method' => $route['method'],
+                'check' => 'controller_method_uncovered',
+                'message' => sprintf(
+                    '%s::%s() has no line coverage (persists to %s)',
+                    $route['controller'],
+                    $methodLower,
+                    $modelLabel,
+                ),
+                'fix' => sprintf(
+                    'Add a test that exercises %s %s end-to-end',
+                    $route['method'],
+                    $route['route'],
+                ),
+            ];
+            fwrite(STDERR, sprintf(
+                "  FAIL  %s::%s() — 0 coverage\n",
+                $route['controller'],
+                $methodLower,
+            ));
         }
     }
 }

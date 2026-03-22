@@ -14,6 +14,7 @@ use ZeroToProd\Thryds\Attributes\KeySource;
 )]
 readonly class Header
 {
+    public const string content_type = 'Content-Type';
     public const string request_id = 'X-Request-ID';
     public const string hx_request = 'HX-Request';
 }
