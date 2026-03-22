@@ -797,6 +797,7 @@ return static function (RectorConfig $rectorConfig): void {
         'allowList' => [
             'ZeroToProd\Thryds\Tests\Integration\IntegrationTestCase',
             'ZeroToProd\Thryds\Tests\Database\DatabaseTestCase',
+            'Zerotoprod\DataModel\Describe',
         ],
     ]);
 };

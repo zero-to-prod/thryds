@@ -38,8 +38,9 @@ readonly class MigrationStatusRow
 
     public MigrationStatus $MigrationStatus;
 
-    #[Describe([// TODO: [ForbidMagicStringArrayKeyRector] Constants name things — define a public const with value 'nullable' on the appropriate class.
-        'nullable' => true])]
+    #[Describe([
+        Describe::nullable => true,
+    ])]
     public ?string $applied_at;
 
     public string $checksum;

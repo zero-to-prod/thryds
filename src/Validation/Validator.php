@@ -65,12 +65,11 @@ final readonly class Validator
             }
 
             foreach ($validate_with_attributes as $attribute) {
-                /** @var ValidationRule $ValidationRule */
-                $ValidationRule = new ($attribute->newInstance()->rule)();
-                if ($ValidationRule->passes($value, context: $model)) {
+                $rule = new ($attribute->newInstance()->rule)();
+                if ($rule->passes($value, context: $model)) { // @phpstan-ignore method.notFound (ValidationRule marker guarantees passes())
                     continue;
                 }
-                $errors[self::errorKey(property: $name)] = $ValidationRule->message(field: $name);
+                $errors[self::errorKey(property: $name)] = $rule->message(field: $name); // @phpstan-ignore method.notFound (ValidationRule marker guarantees message())
                 break;
             }
 

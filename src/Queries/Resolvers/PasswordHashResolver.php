@@ -8,7 +8,8 @@ use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Queries\PersistResolver;
 
 #[Infrastructure]
-readonly class PasswordHashResolver implements PersistResolver
+#[PersistResolver]
+readonly class PasswordHashResolver
 {
     public function resolve(mixed $value): string
     {

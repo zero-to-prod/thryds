@@ -8,7 +8,8 @@ use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Queries\PersistResolver;
 
 #[Infrastructure]
-readonly class NowResolver implements PersistResolver
+#[PersistResolver]
+readonly class NowResolver
 {
     public function resolve(mixed $value): string
     {

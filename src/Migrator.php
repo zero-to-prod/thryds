@@ -23,7 +23,7 @@ use ZeroToProd\Thryds\Tables\Migration;
  * MigrationStatusResolver (status computation) to keep each concern
  * in a single-responsibility class.
  *
- * All migrations are attribute-driven via {@see MigrationAction} implementations
+ * All migrations are attribute-driven via classes carrying #[MigrationAction]
  * (#[CreateTable], #[AddColumn], #[DropColumn], #[RawSql]).
  *
  * DDL note: ensureTable() and migration actions that run DDL
@@ -151,36 +151,36 @@ readonly class Migrator
     /**
      * Executes the up action for a migration class.
      *
-     * Dispatches on any attribute implementing {@see MigrationAction}.
+     * Dispatches on any attribute class carrying #[MigrationAction].
      */
     private function runUp(string $class): void
     {
         /** @var class-string $class Validated by discover() via class_exists(). */
-        $this->Database->execute(self::resolveMigrationAction($class)->upSql());
+        $this->Database->execute(self::resolveMigrationAction($class)->upSql()); // @phpstan-ignore method.notFound (MigrationAction marker guarantees upSql())
     }
 
     /**
      * Executes the down action for a migration class.
      *
-     * Dispatches on any attribute implementing {@see MigrationAction}.
+     * Dispatches on any attribute class carrying #[MigrationAction].
      */
     private function runDown(string $class): void
     {
         /** @var class-string $class Validated by discover() via class_exists(). */
-        $this->Database->execute(self::resolveMigrationAction($class)->downSql());
+        $this->Database->execute(self::resolveMigrationAction($class)->downSql()); // @phpstan-ignore method.notFound (MigrationAction marker guarantees downSql())
     }
 
     /**
-     * Resolves the first {@see MigrationAction} attribute from a migration class.
+     * Resolves the first attribute carrying #[MigrationAction] from a migration class.
      *
      * @param class-string $class
      */
-    private static function resolveMigrationAction(string $class): MigrationAction
+    private static function resolveMigrationAction(string $class): object
     {
         foreach (new ReflectionClass(objectOrClass: $class)->getAttributes() as $attribute) {
-            $instance = $attribute->newInstance();
-            if ($instance instanceof MigrationAction) {
-                return $instance;
+            $ReflectionClass = new ReflectionClass($attribute->getName());
+            if ($ReflectionClass->getAttributes(MigrationAction::class) !== []) {
+                return $attribute->newInstance();
             }
         }
 

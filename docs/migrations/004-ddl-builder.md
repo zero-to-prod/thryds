@@ -18,6 +18,7 @@ Refactor `DdlBuilder` so every SQL generation method accepts a `Driver` paramete
 | `addColumnSql()` line 206 | Backtick quoting |
 | `dropColumnSql()` line 217 | Backtick quoting |
 | `reflectForeignKeys()` lines 268-272 | Backtick quoting in CONSTRAINT clause |
+| `ALTER_TABLE` constant line 30 | `` 'ALTER TABLE `' `` — hardcoded backtick |
 
 ## Target Signatures
 
@@ -33,6 +34,8 @@ public static function reflectForeignKeys(ReflectionClass $ReflectionClass, stri
 ```
 
 `columnTypeSql()` is deleted — its logic moves to `Driver::typeSql()`.
+
+The `ALTER_TABLE` constant is removed — it contains a hardcoded backtick.
 
 Reflection-only methods are unchanged:
 ```php
@@ -104,8 +107,8 @@ public static function columnDdl(string $name, Column $Column, Driver $Driver): 
     if ($Column->auto_increment && $Driver === Driver::mysql) {
         $parts[] = $Driver->autoIncrementSql();
     }
-    // PostgreSQL auto-increment is handled in typeSql() (SERIAL/BIGSERIAL)
-    // SQLite auto-increment is handled via PRIMARY KEY AUTOINCREMENT (separate)
+    // PostgreSQL: auto-increment is embedded in type (SERIAL/BIGSERIAL)
+    // SQLite: AUTOINCREMENT only valid on INTEGER PRIMARY KEY (handled separately)
 
     if ($Column->default !== null) {
         if ($Column->default === Column::CURRENT_TIMESTAMP) {
@@ -168,14 +171,13 @@ public static function reflectForeignKeys(ReflectionClass $ReflectionClass, stri
 ### `CreateTable` attribute
 
 ```php
-// src/Attributes/CreateTable.php
-// Current:
+// Current — upSql()/downSql() take no args (duck-typed from #[MigrationAction] marker)
 public function upSql(): string
 {
     return DdlBuilder::createTableSql($this->table);
 }
 
-// After — MigrationAction interface gains Driver parameter:
+// After — accepts Driver parameter
 public function upSql(Driver $Driver): string
 {
     return DdlBuilder::createTableSql($this->table, $Driver);
@@ -201,26 +203,64 @@ public function downSql(Driver $Driver): string
 }
 ```
 
-### `MigrationAction` interface
+### `DropColumn` attribute
 
 ```php
-interface MigrationAction
+public function upSql(Driver $Driver): string
 {
-    public function upSql(Driver $Driver): string;
-    public function downSql(Driver $Driver): string;
+    return DdlBuilder::dropColumnSql($this->table, $this->column, $Driver);
 }
+
+public function downSql(Driver $Driver): string
+{
+    return DdlBuilder::addColumnSql($this->table, $this->column, $Driver);
+}
+```
+
+### `RawSql` attribute — No change
+
+`RawSql::upSql()` and `downSql()` return consumer-authored SQL strings. They gain the `Driver` parameter for interface consistency but ignore it:
+
+```php
+public function upSql(Driver $Driver): string
+{
+    return $this->up;
+}
+
+public function downSql(Driver $Driver): string
+{
+    return $this->down;
+}
+```
+
+Note: `#[RawSql]` migrations are inherently driver-specific. The consumer is responsible for writing driver-appropriate SQL. The docblock should note this.
+
+### `#[MigrationAction]` marker — duck-type contract update
+
+The marker attribute's docblock is updated to reflect the new signature:
+
+```php
+/**
+ * Marks an attribute class as a migration action that provides DDL operations.
+ *
+ * Classes carrying this attribute must declare:
+ *   upSql(Driver $Driver): string
+ *   downSql(Driver $Driver): string
+ */
+#[Attribute(Attribute::TARGET_CLASS)]
+readonly class MigrationAction {}
 ```
 
 ### `Migrator` (preview of Phase 7)
 
 ```php
-// runUp() — passes driver to MigrationAction
-$action->upSql($this->Database->driver())
+// runUp() — passes driver to migration action
+$this->Database->execute(self::resolveMigrationAction($class)->upSql($this->Database->driver()));
 ```
 
 ## SQLite-Specific: ALTER TABLE Limitations
 
-SQLite before 3.35.0 does not support `DROP COLUMN`. `addColumnSql()` works on all three drivers. `dropColumnSql()` should guard:
+SQLite before 3.35.0 does not support `DROP COLUMN`. `dropColumnSql()` should guard:
 
 ```php
 public static function dropColumnSql(string $class, string $column, Driver $Driver): string
@@ -229,25 +269,23 @@ public static function dropColumnSql(string $class, string $column, Driver $Driv
         throw new RuntimeException('SQLite does not support DROP COLUMN. Recreate the table instead.');
     }
 
-    return self::ALTER_TABLE . $Driver->quote(
+    return 'ALTER TABLE ' . $Driver->quote(
         new ReflectionClass($class)->getAttributes(Table::class)[0]->newInstance()->TableName->value
     ) . ' DROP COLUMN ' . $Driver->quote($column);
 }
 ```
 
-## PostgreSQL-Specific: Index Syntax
-
-PostgreSQL uses `CREATE INDEX` as a separate statement, not inline in `CREATE TABLE`. For the initial implementation, keep indexes inline — PostgreSQL accepts this syntax in `CREATE TABLE` context. A future refinement can emit separate `CREATE INDEX` statements.
-
 ## Implementation Steps
 
-### Step 1: Update `MigrationAction` interface
+### Step 1: Update `#[MigrationAction]` marker docblock
+
+- Document `upSql(Driver $Driver): string` and `downSql(Driver $Driver): string`
+
+### Step 2: Update `CreateTable`, `AddColumn`, `DropColumn`, `RawSql`
 
 - Add `Driver` parameter to `upSql()` and `downSql()`
-
-### Step 2: Update `CreateTable`, `AddColumn`, `DropColumn` attributes
-
-- Pass `Driver` through to `DdlBuilder` methods
+- `CreateTable`/`AddColumn`/`DropColumn` pass `Driver` to `DdlBuilder`
+- `RawSql` accepts but ignores `Driver`
 
 ### Step 3: Refactor `DdlBuilder` public methods
 
@@ -258,6 +296,7 @@ PostgreSQL uses `CREATE INDEX` as a separate statement, not inline in `CREATE TA
 - Replace `'AUTO_INCREMENT'` with `$Driver->autoIncrementSql()` (MySQL only)
 - Add `Driver::enumConstraint()` calls for PostgreSQL ENUM emulation
 - Guard `dropColumnSql()` for SQLite
+- Delete `ALTER_TABLE` constant (contained hardcoded backtick)
 
 ### Step 4: Delete `columnTypeSql()` from `DdlBuilder`
 
@@ -270,7 +309,8 @@ PostgreSQL uses `CREATE INDEX` as a separate statement, not inline in `CREATE TA
 | File | Change |
 |------|--------|
 | `src/Schema/DdlBuilder.php` | All SQL methods accept `Driver`, delegate quoting and types |
-| `src/Attributes/MigrationAction.php` | `upSql(Driver)`, `downSql(Driver)` |
-| `src/Attributes/CreateTable.php` | Pass `Driver` to `DdlBuilder` |
-| `src/Attributes/AddColumn.php` | Pass `Driver` to `DdlBuilder` |
-| `src/Attributes/DropColumn.php` | Pass `Driver` to `DdlBuilder`, guard SQLite |
+| `src/Attributes/MigrationAction.php` | Docblock updated for `upSql(Driver)`/`downSql(Driver)` contract |
+| `src/Attributes/CreateTable.php` | `upSql(Driver)`, `downSql(Driver)` |
+| `src/Attributes/AddColumn.php` | `upSql(Driver)`, `downSql(Driver)` |
+| `src/Attributes/DropColumn.php` | `upSql(Driver)`, `downSql(Driver)`, SQLite guard |
+| `src/Attributes/RawSql.php` | `upSql(Driver)`, `downSql(Driver)` — param accepted, ignored |

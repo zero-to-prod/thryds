@@ -108,6 +108,8 @@
         "sync:manifest": "php scripts/sync-manifest.php",
         "list:inventory": "php scripts/list-inventory.php",
         "list:manifest": "php scripts/list-inventory.php --format=yaml",
-        "list:attributes": "php scripts/list-attributes.php"
+        "list:attributes": "php scripts/list-attributes.php",
+        "list:todos": "php scripts/list-todos.php",
+        "check:todos": "php scripts/check-todos.php"
     }
 }

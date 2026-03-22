@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
-use ZeroToProd\Thryds\Validation\ValidationRule;
 
-/** @template T of ValidationRule */
+/**
+ * Declares a validation rule class for a property.
+ *
+ * The rule class must carry #[ValidationRule].
+ */
 #[Attribute(Attribute::TARGET_PROPERTY | Attribute::IS_REPEATABLE)]
 readonly class ValidateWith
 {
-    /** @param class-string<T> $rule */
+    /** @param class-string $rule */
     public function __construct(public string $rule) {}
 }

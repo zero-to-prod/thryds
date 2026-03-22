@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
-use ZeroToProd\Thryds\Queries\PersistResolver;
 
 /**
  * Declares the resolver class for a persistence hook enum case.
  *
- * The resolver must implement {@see PersistResolver}. At runtime, the
+ * The resolver class must carry #[PersistResolver]. At runtime, the
  * Persist enum reads this attribute via reflection and delegates to the
  * resolver — no match statement or case-by-case dispatch needed.
  *
@@ -22,11 +21,11 @@ use ZeroToProd\Thryds\Queries\PersistResolver;
 readonly class ResolvesTo
 {
     public function __construct(
-        /** @var class-string<PersistResolver> */
+        /** @var class-string */
         public string $resolver,
     ) {}
 
-    public function newResolver(): PersistResolver
+    public function newResolver(): object
     {
         return new $this->resolver();
     }

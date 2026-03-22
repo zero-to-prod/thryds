@@ -13,8 +13,10 @@ export const options = {
 };
 
 export function setup() {
-    const res = http.get(`${BASE_URL}/_routes`);
-    return JSON.parse(res.body);
+    const res = http.get(`${BASE_URL}/`);
+    check(res, { 'app is reachable': (r) => r.status === 200 });
+
+    return ['/', '/about', '/login', '/register'];
 }
 
 export default function (routes) {

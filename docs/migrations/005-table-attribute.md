@@ -128,6 +128,7 @@ Update `Engine`, `Charset`, and `Collation` enum docblocks to clarify they are M
 | File | Change |
 |------|--------|
 | `src/Attributes/Table.php` | Make `Engine`, `Charset`, `Collation` nullable with null defaults |
-| `src/Schema/Engine.php` | Docblock update |
-| `src/Schema/Charset.php` | Docblock update |
-| `src/Schema/Collation.php` | Docblock update |
+| `src/Schema/Engine.php` | Docblock update — note MySQL/MariaDB only |
+| `src/Schema/Charset.php` | Docblock update — note MySQL/MariaDB only |
+| `src/Schema/Collation.php` | Docblock update — note MySQL/MariaDB only |
+| `src/Schema/SortDirection.php` | Docblock update — remove MySQL-specific note, standard SQL |

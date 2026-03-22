@@ -1,0 +1,18 @@
+# Directories to scan (relative to project root).
+scan_directories:
+  - src
+  - scripts
+  - tests
+  - migrations
+  - views
+
+# Comment markers to match (case-insensitive).
+markers: [TODO, FIXME, HACK, XXX]
+
+# File extensions to include.
+extensions:
+  - php
+  - blade.php
+  - js
+  - yaml
+  - yml

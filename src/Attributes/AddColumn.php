@@ -23,7 +23,8 @@ use ZeroToProd\Thryds\Schema\DdlBuilder;
  * final readonly class AddBioToUsers {}
  */
 #[Attribute(Attribute::TARGET_CLASS)]
-readonly class AddColumn implements MigrationAction
+#[MigrationAction]
+readonly class AddColumn
 {
     /**
      * @param class-string $table  Table class carrying #[Table] and #[Column] attributes.

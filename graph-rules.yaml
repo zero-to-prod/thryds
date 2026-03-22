@@ -69,6 +69,7 @@ node:
       - src/Attributes/OnUpdate.php
       - src/Attributes/RouteParam.php
       - src/Attributes/ValidateWith.php
+      - src/Validation/ValidationRule.php
     assert: used_as_attribute
     message: "Attribute definition is never applied to any class, property, method, or case"
     fix: "Apply this attribute somewhere in the codebase, or remove the unused attribute class"

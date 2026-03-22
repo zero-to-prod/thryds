@@ -18,12 +18,14 @@ Test pure logic that does not require a database connection.
 | `Driver::reconnectPatterns()` | Expected error substrings per driver |
 | `Driver::autoIncrementSql()` | Correct keyword per driver |
 | `Driver::supportsUnsigned()` | true for MySQL, false for others |
-| `Driver::typeSql()` | Type mapping per driver × DataType case |
+| `Driver::typeSql()` | Type mapping per driver x DataType case |
 | `Driver::tableOptions()` | MySQL suffix, empty for others |
 | `Driver::transactionalDdl()` | false for MySQL, true for others |
 | `Driver::enumConstraint()` | CHECK constraint for PostgreSQL, null for others |
 | `Driver::defaultPort()` | 3306, 5432, 0 |
 | `DatabaseConfig::computeDsn()` | DSN varies by driver |
+| `DatabaseConfig::computePort()` | Port defaults by driver |
+| `DatabaseConfig::castDriver()` | String-to-enum coercion |
 | `DdlBuilder::createTableSql()` | Full DDL output per driver |
 | `DdlBuilder::columnDdl()` | Column DDL per driver |
 | `DdlBuilder::addColumnSql()` | ALTER TABLE per driver |
@@ -32,6 +34,9 @@ Test pure logic that does not require a database connection.
 | `DdlBuilder::reflectColumns()` | Reflection logic (driver-agnostic) |
 | `DdlBuilder::reflectForeignKeys()` | FK clause per driver |
 | `Persist` resolvers | `RandomIdResolver`, `PasswordHashResolver`, `NowResolver` — pure logic |
+| `MigrationDiscovery` | Discovers files and attributes from fixture directory |
+| `MigrationStatusRow` | DTO construction via DataModel |
+| `Sql` constants | Compile-time — existence and values |
 
 ### Layer 2: Integration Tests (real database per driver)
 
@@ -45,17 +50,20 @@ Test actual SQL execution against each database backend.
 | `Database::scalar()` | SELECT scalar value per driver |
 | `Database::transaction()` | Commit and rollback per driver |
 | `Database::insert()` | lastInsertId per driver |
-| Reconnect behavior | MySQL/PostgreSQL reconnect; SQLite no-op |
+| Reconnect behavior | MySQL/PostgreSQL reconnect; SQLite empty patterns |
 | Timezone setting | MySQL/PostgreSQL execute; SQLite skips |
+| `Connection::resolve()` | Resolver returns correct Database per table |
 | `DbCreate::create()` | INSERT via trait per driver |
 | `DbRead::one()` | SELECT via trait per driver |
-| `DbRead::all()` | SELECT via trait per driver |
-| `DbRead::allRows()` | SELECT with ORDER BY per driver |
+| `DbRead::all()` | SELECT with WHERE per driver |
+| `DbRead::allRows()` | SELECT with ORDER BY, LIMIT, OFFSET per driver |
+| `DbRead::oneRow()` | SELECT with ORDER BY and LIMIT 1 per driver |
 | `DbDelete::delete()` | DELETE via trait per driver |
 | `DbUpdate::update()` | UPDATE via trait per driver |
 | `Migrator::migrate()` | Apply migrations per driver |
 | `Migrator::rollback()` | Rollback migrations per driver |
-| `Migrator::status()` | Status reporting per driver |
+| `Migrator::status()` | Status reporting per driver (returns `MigrationStatusRow` DTOs) |
+| `Migrator::create()` | Factory reads `#[MigrationsSource]` per driver |
 | Transactional DDL | PostgreSQL/SQLite rollback on failure; MySQL partial state |
 
 ### Layer 3: DDL Verification Tests
@@ -71,6 +79,7 @@ Parse generated DDL and execute it against each database to verify syntax.
 | ALTER TABLE ADD COLUMN | Add column per driver |
 | ALTER TABLE DROP COLUMN | Works on MySQL/PostgreSQL, throws on SQLite |
 | ENUM emulation | MySQL uses ENUM, PostgreSQL uses CHECK, SQLite uses TEXT |
+| `#[RawSql]` migration | Executes consumer SQL per driver |
 
 ## Test Infrastructure
 
@@ -125,7 +134,7 @@ SQLite requires no service — uses in-memory (`:memory:`) or a temp file.
 
 ### Driver-Parameterized Integration Tests
 
-Integration tests are parameterized by driver. A base test case provides database setup:
+A base test case provides database setup and `Connection::setResolver()`:
 
 ```php
 abstract class DatabaseTestCase extends TestCase
@@ -138,7 +147,11 @@ abstract class DatabaseTestCase extends TestCase
     protected function setUp(): void
     {
         $this->driver = static::driver();
-        $this->db = new Database(self::configFor($this->driver));
+        $config = self::configFor($this->driver);
+        $this->db = new Database($config);
+
+        // Wire the Connection resolver for this test
+        Connection::setResolver(fn(string $class) => $this->db);
     }
 
     protected function tearDown(): void
@@ -204,9 +217,11 @@ tests/
 │   │   └── DataTypeTest.php        # DataType enum completeness
 │   ├── Queries/
 │   │   └── PersistResolverTest.php  # Resolver unit tests
-│   └── DatabaseConfigTest.php       # DSN computation tests
+│   ├── DatabaseConfigTest.php       # DSN computation, port, driver coercion
+│   ├── MigrationDiscoveryTest.php   # Discovery from fixture directory
+│   └── MigrationStatusRowTest.php   # DTO construction
 ├── Integration/
-│   ├── DatabaseTestCase.php         # Abstract base with driver setup
+│   ├── DatabaseTestCase.php         # Abstract base with driver setup + Connection wiring
 │   ├── Mysql/
 │   │   ├── MysqlDatabaseTest.php
 │   │   ├── MysqlQueryTraitTest.php
@@ -225,6 +240,7 @@ tests/
 └── Fixtures/
     ├── TestTable.php                # Minimal table model for testing
     ├── TestTableName.php            # BackedEnum with test table name
+    ├── TestColumns.php              # Column trait for TestTable
     └── TestMigration.php            # Minimal migration for testing
 ```
 
@@ -247,12 +263,20 @@ strategy:
 ### Minimal Test Table
 
 ```php
+#[Connection(database: Database::class)]
 #[Table(TableName: TestTableName::test_items)]
 #[PrimaryKey(columns: ['id'])]
 class TestTable
 {
     use HasTableName;
+    use DataModel;
+    use TestColumns;
+}
+```
 
+```php
+trait TestColumns
+{
     public const string id = 'id';
     #[Column(DataType: DataType::VARCHAR, length: 26, ...)]
     #[PrimaryKey]
@@ -286,27 +310,32 @@ This fixture exercises: VARCHAR, INT, DATETIME, UNSIGNED, DEFAULT, PRIMARY KEY �
 ### Step 3: Write unit tests for `DdlBuilder` per driver
 
 - Pass each `Driver` case, assert generated DDL contains driver-appropriate syntax
-- No database needed — just string assertions
 
-### Step 4: Create test fixtures
+### Step 4: Write unit tests for `DatabaseConfig`
 
-- `TestTable`, `TestTableName`, `TestMigration`
+- Test `computeDsn()`, `computePort()`, `castDriver()` per driver
 
-### Step 5: Write `DatabaseTestCase` base class
+### Step 5: Create test fixtures
 
-### Step 6: Write integration tests per driver
+- `TestTable`, `TestTableName`, `TestColumns`, `TestMigration`
+
+### Step 6: Write `DatabaseTestCase` base class
+
+- Include `Connection::setResolver()` wiring
+
+### Step 7: Write integration tests per driver
 
 - MySQL, PostgreSQL, SQLite suites
-- Each suite: connection, CRUD, transactions, migrations
+- Each suite: connection, CRUD via traits, transactions, migrator
 
-### Step 7: Set up Docker Compose for CI
+### Step 8: Set up Docker Compose for CI
 
-### Step 8: Set up GitHub Actions matrix
+### Step 9: Set up GitHub Actions matrix
 
-### Step 9: Run full suite
+### Step 10: Run full suite
 
 ## Coverage Target
 
-- Unit tests: 100% of `Driver` methods, `DdlBuilder` public methods, `DatabaseConfig`
+- Unit tests: 100% of `Driver` methods, `DdlBuilder` public methods, `DatabaseConfig`, `MigrationDiscovery`
 - Integration tests: happy path + one error case per trait method per driver
 - DDL tests: every `DataType` case produces executable DDL per driver

@@ -9,7 +9,8 @@ use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Queries\PersistResolver;
 
 #[Infrastructure]
-readonly class RandomIdResolver implements PersistResolver
+#[PersistResolver]
+readonly class RandomIdResolver
 {
     /** @throws RandomException */
     public function resolve(mixed $value): string

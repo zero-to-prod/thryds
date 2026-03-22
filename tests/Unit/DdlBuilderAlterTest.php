@@ -13,6 +13,13 @@ use ZeroToProd\Thryds\Tables\User;
 
 final class DdlBuilderAlterTest extends TestCase
 {
+    private static ReflectionClass $ReflectionClass;
+
+    public static function setUpBeforeClass(): void
+    {
+        self::$ReflectionClass = new ReflectionClass(User::class);
+    }
+
     #[Test]
     public function addColumnSql_generates_alter_table_add_column(): void
     {
@@ -45,7 +52,6 @@ final class DdlBuilderAlterTest extends TestCase
     {
         $this->expectException(ReflectionException::class);
 
-        // TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md
-        DdlBuilder::reflectColumn(new ReflectionClass(User::class), 'nonexistent_prop');
+        DdlBuilder::reflectColumn(self::$ReflectionClass, 'nonexistent_prop');
     }
 }

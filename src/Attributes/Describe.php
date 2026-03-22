@@ -6,7 +6,6 @@ namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
 
-// TODO: [ForbidClassInheritanceRector] Inheritance couples classes to parent implementation — use PHP attributes and composition instead. See: utils/rector/docs/ForbidClassInheritanceRector.md
 /**
  * Attribute for controlling DataModel property population.
  *

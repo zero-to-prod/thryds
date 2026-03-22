@@ -20,7 +20,8 @@ use ZeroToProd\Thryds\Schema\DdlBuilder;
  * final readonly class CreateUsersTable {}
  */
 #[Attribute(Attribute::TARGET_CLASS)]
-readonly class CreateTable implements MigrationAction
+#[MigrationAction]
+readonly class CreateTable
 {
     /** @param class-string $table Table class carrying #[Table], #[Column], #[PrimaryKey], and #[Index] attributes. */
     public function __construct(

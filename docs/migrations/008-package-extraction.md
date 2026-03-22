@@ -12,26 +12,34 @@ zero-to-prod/db/
 ├── src/
 │   ├── Database.php
 │   ├── DatabaseConfig.php
-│   ├── MigrationInterface.php
+│   ├── MigrationDiscovery.php
+│   ├── MigrationStatusResolver.php
+│   ├── MigrationStatusRow.php
 │   ├── MigrationStatus.php
 │   ├── Migrator.php
+│   ├── RowAccess.php
 │   ├── Attributes/
 │   │   ├── AddColumn.php
 │   │   ├── Column.php
+│   │   ├── Connection.php
 │   │   ├── ConnectionOption.php
 │   │   ├── CreateTable.php
 │   │   ├── DeletesFrom.php
 │   │   ├── DropColumn.php
+│   │   ├── EnvVar.php
 │   │   ├── ForeignKey.php
 │   │   ├── HasTableName.php
 │   │   ├── Index.php
 │   │   ├── InsertsInto.php
 │   │   ├── Migration.php
 │   │   ├── MigrationAction.php
+│   │   ├── MigrationsSource.php
 │   │   ├── OnDelete.php
 │   │   ├── OnUpdate.php
 │   │   ├── PersistColumn.php
 │   │   ├── PrimaryKey.php
+│   │   ├── RawSql.php
+│   │   ├── ResolvesTo.php
 │   │   ├── SchemaSync.php
 │   │   ├── SelectsFrom.php
 │   │   ├── Table.php
@@ -42,18 +50,30 @@ zero-to-prod/db/
 │   │   ├── DbDelete.php
 │   │   ├── DbRead.php
 │   │   ├── DbUpdate.php
+│   │   ├── DeleteMigrationQuery.php
+│   │   ├── InsertMigrationQuery.php
 │   │   ├── Persist.php
 │   │   ├── PersistResolver.php
-│   │   └── Sql.php
-│   └── Schema/
-│       ├── Charset.php
-│       ├── Collation.php
-│       ├── DataType.php
-│       ├── DdlBuilder.php
-│       ├── Driver.php
-│       ├── Engine.php
-│       ├── ReferentialAction.php
-│       └── SchemaSource.php
+│   │   ├── SelectLastMigrationQuery.php
+│   │   ├── SelectMigrationsQuery.php
+│   │   ├── Sql.php
+│   │   └── Resolvers/
+│   │       ├── NowResolver.php
+│   │       ├── PasswordHashResolver.php
+│   │       └── RandomIdResolver.php
+│   ├── Schema/
+│   │   ├── Charset.php
+│   │   ├── Collation.php
+│   │   ├── DataType.php
+│   │   ├── DdlBuilder.php
+│   │   ├── Driver.php
+│   │   ├── Engine.php
+│   │   ├── ReferentialAction.php
+│   │   ├── SchemaSource.php
+│   │   └── SortDirection.php
+│   └── Tables/
+│       ├── Migration.php
+│       └── MigrationColumns.php
 └── tests/
 ```
 
@@ -106,106 +126,124 @@ All classes move from `ZeroToProd\Thryds\*` to `ZeroToProd\Db\*`.
 | `src/Queries/FindUserByIdQuery.php` | App-specific query |
 | `src/Queries/DeleteUserByIdQuery.php` | App-specific query |
 | `src/Queries/UpdateUserQuery.php` | App-specific query |
-| `src/Queries/InsertMigrationQuery.php` | App-specific — uses `DbCreate` trait from package |
-| `src/Queries/DeleteMigrationQuery.php` | App-specific — uses `DbDelete` trait from package |
-| `src/Queries/SelectMigrationsQuery.php` | App-specific — uses `DbRead` trait from package |
-| `src/Queries/Resolvers/*.php` | App-specific persist resolvers |
 | `migrations/*.php` | App-specific migration files |
-| `src/Tables/Migration.php` | App-specific — defines the migration tracking table |
 
 ## Coupling Points to Sever
 
-### 1. `db()` Global Function
+### 1. `#[Connection]` and `app()` Dependency
 
-**Problem:** Query traits call `db()` from Thryds' `functions.php`.
-
-**Solution:** The package does NOT define `db()`. Query traits already accept an optional `?Database` parameter. The consuming app is responsible for providing either:
-- A `db()` global function (current pattern)
-- Dependency injection
-- A service locator
-
-The package requires that one of these is available. Document that `db()` must return a `Database` instance if the global function pattern is used.
+**Problem:** `Connection::resolve()` calls `app()->make()` to resolve the `Database` instance from a container:
 
 ```php
-// In package: traits use this pattern
-$db = $Database ?? db();
-
-// The package does not define db(). The app must provide it.
-// Example in app's functions.php:
-function db(): \ZeroToProd\Db\Database
+public static function resolve(string $class): Database
 {
-    return app()->database();
+    $attrs = new ReflectionClass($class)->getAttributes(self::class);
+    return app()->make($attrs !== [] ? $attrs[0]->newInstance()->database : Database::class);
 }
 ```
 
-### 2. `Persist` Enum — Closed vs Open
+`app()` is a Thryds global function — the package cannot depend on it.
 
-**Problem:** `Persist` is a closed enum with app-specific cases (`random_id`, `password_hash`, `now`).
+**Solution:** The package defines `Connection` with a pluggable resolver. The consuming app registers the resolver at boot:
 
-**Solution:** The package provides:
-- `PersistResolver` interface (unchanged)
-- `Persist` enum with the `#[ResolvesTo]` pattern
+```php
+// Package — Connection attribute
+#[Attribute(Attribute::TARGET_CLASS)]
+readonly class Connection
+{
+    /** @var null|Closure(class-string): Database */
+    private static ?Closure $resolver = null;
 
-The cases `random_id`, `password_hash`, and `now` are general enough to ship with the package. They are not app-specific — they are common persistence hooks. The resolvers (`RandomIdResolver`, `PasswordHashResolver`, `NowResolver`) move to the package too.
+    public function __construct(public string $database) {}
 
-If the app needs custom cases, it can create its own enum implementing the same pattern. The `#[PersistColumn]` attribute accepts `Persist` — to support app-defined enums, change it to accept `PersistResolver|Persist`. This is a future extension point, not required for extraction.
+    public static function setResolver(Closure $resolver): void
+    {
+        self::$resolver = $resolver;
+    }
 
-### 3. `TableName` Enum
+    public static function resolve(string $class): Database
+    {
+        if (self::$resolver === null) {
+            throw new RuntimeException('Connection resolver not configured. Call Connection::setResolver() at boot.');
+        }
 
-**Problem:** `#[Table]` currently requires `TableName`, an app-specific enum.
+        $attrs = new ReflectionClass($class)->getAttributes(self::class);
+        $db_class = $attrs !== [] ? $attrs[0]->newInstance()->database : Database::class;
 
-**Solution:** Change `#[Table]` to accept `BackedEnum` instead of `TableName`:
+        return (self::$resolver)($db_class);
+    }
+}
+
+// App bootstrap (Thryds)
+Connection::setResolver(static fn(string $class) => app()->make($class));
+```
+
+### 2. `TableName` Enum
+
+**Problem:** `#[Table]` requires `TableName`, an app-specific enum.
+
+**Solution:** Change `#[Table]` to accept `BackedEnum`:
 
 ```php
 // Before
-public function __construct(
-    public TableName $TableName,
-    ...
-)
+public function __construct(public TableName $TableName, ...)
 
 // After
-public function __construct(
-    public \BackedEnum $TableName,
-    ...
-)
+public function __construct(public \BackedEnum $TableName, ...)
 ```
 
-The app defines its own `TableName` enum. The package is agnostic to which enum is used — it reads `->value` for the SQL table name.
+The app defines its own `TableName` enum. The package reads `->value`.
 
-### 4. `HasTableName` Trait
+### 3. `#[MigrationsSource]` on Migrator
 
-This trait reads `#[Table]` and returns `->TableName->value`. It works with any `BackedEnum` — no change needed beyond the `#[Table]` attribute itself.
+**Problem:** The attribute hardcodes Thryds-specific values:
 
-### 5. `DataModel` Trait
+```php
+#[MigrationsSource(
+    directory: 'migrations',
+    namespace: 'ZeroToProd\\Thryds\\Migrations',
+)]
+```
 
-Already an external dependency (`zero-to-prod/data-model`). No change.
+**Solution:** The package ships `Migrator` without `#[MigrationsSource]`. The app subclasses or decorates:
 
-### 6. App-Specific Attributes
+Option A — App puts `#[MigrationsSource]` on its own class:
+```php
+// In package: Migrator::create() reads #[MigrationsSource] from static::class
+// In app: extend or configure via the attribute on a project-level class
+```
 
-These attributes are used by Thryds but are NOT part of the database layer:
+Option B — The factory accepts parameters directly (already supported via constructor). `Migrator::create()` is a convenience that reads from the attribute. The app can use either path.
 
-| Attribute | Why it stays in Thryds |
-|-----------|----------------------|
-| `#[Infrastructure]` | Attribute graph metadata |
-| `#[ClosedSet]` | Attribute graph metadata |
-| `#[KeyRegistry]` | Attribute graph metadata |
-| `#[KeySource]` | Attribute graph metadata |
-| `#[Describe]` | DataModel configuration |
-| `#[StubValue]` | Preload system |
-| `#[Input]` | Form generation |
-| `#[DataModel]` | Re-exported from `zero-to-prod/data-model` |
+### 4. App-Specific Attributes to Strip
 
-The package's attributes (`#[Column]`, `#[Table]`, etc.) must NOT import these Thryds-specific attributes. Currently some files use `#[Infrastructure]` — remove these from the package versions.
+These Thryds-specific attributes appear on package files and must be removed:
 
-### 7. Migration Table Model
+| Attribute | Where used | Action |
+|-----------|-----------|--------|
+| `#[Infrastructure]` | On most classes/traits | Remove from package files |
+| `#[ClosedSet]` | On enums (`DataType`, `Engine`, etc.) | Remove from package files |
+| `#[KeyRegistry]` / `#[KeySource]` | On `Sql`, `Migrator` | Remove from package files |
+| `#[Describe]` | On `DatabaseConfig`, `MigrationStatusRow`, `MigrationColumns` | Keep — comes from `zero-to-prod/data-model` |
+| `#[DataModel]` | On table/DTO classes | Keep — comes from `zero-to-prod/data-model` |
 
-`Migration.php` (the table model for tracking migrations) defines the schema for the `migrations` table. It uses `#[Table]`, `#[Column]`, `#[PrimaryKey]` — all package attributes.
+### 5. `Migration` Table Model and Queries
 
-**Decision:** Ship `Migration.php` with the package. It is the migrator's own tracking table — not app-specific. The `TableName` reference changes to use the package's approach (a `BackedEnum` with `migrations` value).
+The `Migration` table, `MigrationColumns` trait, and migration query classes (`InsertMigrationQuery`, `DeleteMigrationQuery`, `SelectMigrationsQuery`, `SelectLastMigrationQuery`) are internal to the migrator. They ship with the package.
 
-### 8. Migration Query Classes
+The `#[Connection(database: Database::class)]` on `Migration.php` stays — it uses the base `Database` class which is the package's own type.
 
-`InsertMigrationQuery`, `DeleteMigrationQuery`, `SelectMigrationsQuery` are used only by `Migrator`. They should ship with the package.
+The `TableName::migrations` reference changes. The package provides its own internal enum or the `#[Table]` attribute accepts `BackedEnum` (solution from point 2).
+
+### 6. `Persist` Enum and Resolvers
+
+The `Persist` enum, `PersistResolver` marker, `ResolvesTo` attribute, and the three resolvers (`RandomIdResolver`, `PasswordHashResolver`, `NowResolver`) are general-purpose. They ship with the package.
+
+`#[ClosedSet]` and `Domain::*` references on `Persist` are stripped (Thryds-specific graph metadata).
+
+### 7. `SortDirection` Enum
+
+Ships with the package — used by `SelectsFrom` attribute. `#[ClosedSet]` reference stripped.
 
 ## Extraction Sequence
 
@@ -217,28 +255,35 @@ The package's attributes (`#[Column]`, `#[Table]`, etc.) must NOT import these T
 
 ### Step 2: Copy files with namespace changes
 
-- Copy all files listed in the package structure above
+- Copy all files listed in the package structure
 - Find-and-replace `ZeroToProd\Thryds\` → `ZeroToProd\Db\` in package files
-- Remove `#[Infrastructure]`, `#[ClosedSet]`, `#[KeyRegistry]` references from package files
-- These are Thryds attribute-graph metadata, not database concerns
+- Remove `#[Infrastructure]`, `#[ClosedSet]`, `#[KeyRegistry]`, `#[KeySource]` and their imports
+- Remove `Domain::*` references
 
 ### Step 3: Update `#[Table]` to accept `BackedEnum`
 
 - Change `TableName` type hint to `\BackedEnum`
-- Ensure `HasTableName::tableName()` still works (reads `->value`)
+- `HasTableName::tableName()` still reads `->value` — works unchanged
 
-### Step 4: Create package-internal `Migration` table model
+### Step 4: Refactor `Connection::resolve()` to use pluggable resolver
 
-- Ship `Migration.php` with the package
-- Create a minimal `MigrationTableName` enum (or use a string constant) for the `migrations` table name
-- Update migration query classes to reference the package-internal model
+- Add static `$resolver` property and `setResolver()` method
+- `resolve()` calls the resolver closure instead of `app()->make()`
+- Remove `use function app` import
 
-### Step 5: Verify `db()` is not defined in the package
+### Step 5: Create package-internal table name handling
 
-- Grep for `function db()` — must not exist in package
-- Traits use `$Database ?? db()` — the app provides `db()`
+- The `Migration` table model needs a `BackedEnum` for its table name
+- Ship a minimal internal enum or use the existing `TableName` pattern
+- Migration query classes reference the package-internal model
 
-### Step 6: Update Thryds to require the package
+### Step 6: Verify no Thryds dependencies remain
+
+- Grep for `ZeroToProd\Thryds` — must not exist in package
+- Grep for `app()` — must not exist in package
+- Grep for `#[Infrastructure]`, `#[ClosedSet]`, `#[KeyRegistry]` — must not exist
+
+### Step 7: Update Thryds to require the package
 
 ```json
 {
@@ -248,18 +293,18 @@ The package's attributes (`#[Column]`, `#[Table]`, etc.) must NOT import these T
 }
 ```
 
-### Step 7: Update Thryds imports
+### Step 8: Update Thryds imports
 
-- Find-and-replace `ZeroToProd\Thryds\Database` → `ZeroToProd\Db\Database`
-- Same for all extracted classes
+- Find-and-replace `ZeroToProd\Thryds\Database` → `ZeroToProd\Db\Database` (etc.)
 - Update `use` statements throughout Thryds
+- Add `Connection::setResolver()` call to app bootstrap
 
-### Step 8: Delete extracted files from Thryds
+### Step 9: Delete extracted files from Thryds
 
 - Remove all files that now live in the package
 - Run `composer dump-autoload`
 
-### Step 9: Run check:all in Thryds
+### Step 10: Run check:all in Thryds
 
 ## Files Moved to Package
 
@@ -267,25 +312,33 @@ The package's attributes (`#[Column]`, `#[Table]`, etc.) must NOT import these T
 |-------------|-------------|
 | `src/Database.php` | `src/Database.php` |
 | `src/DatabaseConfig.php` | `src/DatabaseConfig.php` |
-| `src/MigrationInterface.php` | `src/MigrationInterface.php` |
+| `src/MigrationDiscovery.php` | `src/MigrationDiscovery.php` |
 | `src/MigrationStatus.php` | `src/MigrationStatus.php` |
+| `src/MigrationStatusResolver.php` | `src/MigrationStatusResolver.php` |
+| `src/MigrationStatusRow.php` | `src/MigrationStatusRow.php` |
 | `src/Migrator.php` | `src/Migrator.php` |
+| `src/RowAccess.php` | `src/RowAccess.php` |
 | `src/Attributes/AddColumn.php` | `src/Attributes/AddColumn.php` |
 | `src/Attributes/Column.php` | `src/Attributes/Column.php` |
+| `src/Attributes/Connection.php` | `src/Attributes/Connection.php` |
 | `src/Attributes/ConnectionOption.php` | `src/Attributes/ConnectionOption.php` |
 | `src/Attributes/CreateTable.php` | `src/Attributes/CreateTable.php` |
 | `src/Attributes/DeletesFrom.php` | `src/Attributes/DeletesFrom.php` |
 | `src/Attributes/DropColumn.php` | `src/Attributes/DropColumn.php` |
+| `src/Attributes/EnvVar.php` | `src/Attributes/EnvVar.php` |
 | `src/Attributes/ForeignKey.php` | `src/Attributes/ForeignKey.php` |
 | `src/Attributes/HasTableName.php` | `src/Attributes/HasTableName.php` |
 | `src/Attributes/Index.php` | `src/Attributes/Index.php` |
 | `src/Attributes/InsertsInto.php` | `src/Attributes/InsertsInto.php` |
 | `src/Attributes/Migration.php` | `src/Attributes/Migration.php` |
 | `src/Attributes/MigrationAction.php` | `src/Attributes/MigrationAction.php` |
+| `src/Attributes/MigrationsSource.php` | `src/Attributes/MigrationsSource.php` |
 | `src/Attributes/OnDelete.php` | `src/Attributes/OnDelete.php` |
 | `src/Attributes/OnUpdate.php` | `src/Attributes/OnUpdate.php` |
 | `src/Attributes/PersistColumn.php` | `src/Attributes/PersistColumn.php` |
 | `src/Attributes/PrimaryKey.php` | `src/Attributes/PrimaryKey.php` |
+| `src/Attributes/RawSql.php` | `src/Attributes/RawSql.php` |
+| `src/Attributes/ResolvesTo.php` | `src/Attributes/ResolvesTo.php` |
 | `src/Attributes/SchemaSync.php` | `src/Attributes/SchemaSync.php` |
 | `src/Attributes/SelectsFrom.php` | `src/Attributes/SelectsFrom.php` |
 | `src/Attributes/Table.php` | `src/Attributes/Table.php` |
@@ -295,15 +348,16 @@ The package's attributes (`#[Column]`, `#[Table]`, etc.) must NOT import these T
 | `src/Queries/DbDelete.php` | `src/Queries/DbDelete.php` |
 | `src/Queries/DbRead.php` | `src/Queries/DbRead.php` |
 | `src/Queries/DbUpdate.php` | `src/Queries/DbUpdate.php` |
+| `src/Queries/DeleteMigrationQuery.php` | `src/Queries/DeleteMigrationQuery.php` |
+| `src/Queries/InsertMigrationQuery.php` | `src/Queries/InsertMigrationQuery.php` |
 | `src/Queries/Persist.php` | `src/Queries/Persist.php` |
 | `src/Queries/PersistResolver.php` | `src/Queries/PersistResolver.php` |
-| `src/Queries/Sql.php` | `src/Queries/Sql.php` |
-| `src/Queries/Resolvers/RandomIdResolver.php` | `src/Queries/Resolvers/RandomIdResolver.php` |
-| `src/Queries/Resolvers/PasswordHashResolver.php` | `src/Queries/Resolvers/PasswordHashResolver.php` |
-| `src/Queries/Resolvers/NowResolver.php` | `src/Queries/Resolvers/NowResolver.php` |
-| `src/Queries/InsertMigrationQuery.php` | `src/Queries/InsertMigrationQuery.php` |
-| `src/Queries/DeleteMigrationQuery.php` | `src/Queries/DeleteMigrationQuery.php` |
+| `src/Queries/SelectLastMigrationQuery.php` | `src/Queries/SelectLastMigrationQuery.php` |
 | `src/Queries/SelectMigrationsQuery.php` | `src/Queries/SelectMigrationsQuery.php` |
+| `src/Queries/Sql.php` | `src/Queries/Sql.php` |
+| `src/Queries/Resolvers/NowResolver.php` | `src/Queries/Resolvers/NowResolver.php` |
+| `src/Queries/Resolvers/PasswordHashResolver.php` | `src/Queries/Resolvers/PasswordHashResolver.php` |
+| `src/Queries/Resolvers/RandomIdResolver.php` | `src/Queries/Resolvers/RandomIdResolver.php` |
 | `src/Schema/Charset.php` | `src/Schema/Charset.php` |
 | `src/Schema/Collation.php` | `src/Schema/Collation.php` |
 | `src/Schema/DataType.php` | `src/Schema/DataType.php` |
@@ -312,4 +366,6 @@ The package's attributes (`#[Column]`, `#[Table]`, etc.) must NOT import these T
 | `src/Schema/Engine.php` | `src/Schema/Engine.php` |
 | `src/Schema/ReferentialAction.php` | `src/Schema/ReferentialAction.php` |
 | `src/Schema/SchemaSource.php` | `src/Schema/SchemaSource.php` |
+| `src/Schema/SortDirection.php` | `src/Schema/SortDirection.php` |
 | `src/Tables/Migration.php` | `src/Tables/Migration.php` |
+| `src/Tables/MigrationColumns.php` | `src/Tables/MigrationColumns.php` |

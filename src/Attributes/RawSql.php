@@ -23,7 +23,8 @@ use Attribute;
  * final readonly class SeedDefaultRoles {}
  */
 #[Attribute(Attribute::TARGET_CLASS)]
-readonly class RawSql implements MigrationAction
+#[MigrationAction]
+readonly class RawSql
 {
     public function __construct(
         public string $up,

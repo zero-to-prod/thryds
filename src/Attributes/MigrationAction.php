@@ -4,19 +4,17 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Attributes;
 
-// TODO: [ForbidInterfaceRector] Interfaces define implicit contracts — use PHP attributes to declare properties explicitly. Attributes are discoverable, enforceable, and composable without coupling. See: utils/rector/docs/ForbidInterfaceRector.md
-/**
- * Contract for migration attributes that declare DDL operations.
- *
- * Implemented by #[CreateTable], #[AddColumn], #[DropColumn], and #[RawSql].
- * The Migrator dispatches generically on any attribute implementing
- * this interface — adding a new action attribute requires no changes
- * to the Migrator itself.
- */
-#[Infrastructure]
-interface MigrationAction
-{
-    public function upSql(): string;
+use Attribute;
 
-    public function downSql(): string;
-}
+/**
+ * Marks an attribute class as a migration action that provides DDL operations.
+ *
+ * Applied to #[CreateTable], #[AddColumn], #[DropColumn], and #[RawSql].
+ * The Migrator dispatches generically on any attribute carrying this marker
+ * — adding a new action attribute requires no changes to the Migrator itself.
+ *
+ * Classes carrying this attribute must declare upSql(): string and downSql(): string.
+ */
+#[Attribute(Attribute::TARGET_CLASS)]
+#[Infrastructure]
+readonly class MigrationAction {}

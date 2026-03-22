@@ -29,5 +29,7 @@ checks:
     fix: "./run sync:preload"
   check:graph:
     command: "php scripts/check-graph.php"
+  check:todos:
+    command: "php scripts/check-todos.php"
   test:
     command: "vendor/bin/paratest"
