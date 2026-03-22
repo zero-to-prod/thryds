@@ -1,0 +1,16 @@
+clover_file: var/coverage/clover.xml
+write_attributes:
+  - InsertsInto
+  - UpdatesIn
+  - DeletesFrom
+trait_method_map:
+  DbCreate:
+    - create
+    - createMany
+  DbUpdate:
+    - update
+  DbDelete:
+    - delete
+test_dirs:
+  - tests/Database
+  - tests/Integration

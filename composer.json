@@ -71,6 +71,7 @@
         "test:database": "./vendor/bin/paratest --testsuite database",
         "test:rector": "./vendor/bin/phpunit utils",
         "check:coverage": "php scripts/check-coverage.php",
+        "check:side-effect-coverage": "php scripts/check-side-effect-coverage.php",
         "fix:all": "php scripts/fix-all.php",
         "fix:style": "./vendor/bin/php-cs-fixer fix",
         "check:composer": "@composer validate",

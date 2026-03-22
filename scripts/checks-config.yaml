@@ -35,5 +35,7 @@ checks:
     command: "php scripts/check-columns.php"
   check:coverage:
     command: "php scripts/check-coverage.php"
+  check:side-effect-coverage:
+    command: "php scripts/check-side-effect-coverage.php"
   test:
     command: "vendor/bin/paratest"

@@ -108,6 +108,7 @@ use Utils\Rector\Rector\RequireHandlesRouteAttributeRector;
 use Utils\Rector\Rector\EnforceLayerCoverageRector;
 use Utils\Rector\Rector\ForbidInterfaceRector;
 use Utils\Rector\Rector\ForbidClassInheritanceRector;
+use Utils\Rector\Rector\ForbidUndeclaredSideEffectRector;
 use Rector\CodeQuality\Rector\FuncCall\SortCallLikeNamedArgsRector;
 use Rector\CodeQuality\Rector\Attribute\SortAttributeNamedArgsRector;
 use ZeroToProd\Thryds\Attributes\Requirement;
@@ -152,6 +153,8 @@ return static function (RectorConfig $rectorConfig): void {
         SuggestDuplicateStringConstantRector::class => [__DIR__ . '/migrations', __DIR__ . '/src/Schema/Driver.php'],
         DetectParallelBladePhpBehaviorRector::class => [__DIR__ . '/src/Schema/Driver.php', __DIR__ . '/src/Schema/DdlBuilder.php'],
         ForbidCrossFileStringDuplicationRector::class => [__DIR__ . '/src/Schema/Driver.php', __DIR__ . '/src/Schema/DdlBuilder.php'],
+        // Test infrastructure legitimately calls Database write methods
+        ForbidUndeclaredSideEffectRector::class => [__DIR__ . '/tests'],
     ]);
     $rectorConfig->importNames();
 
@@ -802,5 +805,10 @@ return static function (RectorConfig $rectorConfig): void {
             'ZeroToProd\Thryds\Tests\Database\DatabaseTestCase',
             'Zerotoprod\DataModel\Describe',
         ],
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(ForbidUndeclaredSideEffectRector::class, [
+        'mode' => 'warn',
+        'message' => 'Side-effecting call must be inside a query class with #[InsertsInto], #[UpdatesIn], or #[DeletesFrom]. See: utils/rector/docs/ForbidUndeclaredSideEffectRector.md',
     ]);
 };
