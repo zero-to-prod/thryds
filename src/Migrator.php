@@ -43,10 +43,6 @@ readonly class Migrator
 {
     use RowAccess;
 
-    // --- Public status key ---
-
-    public const string col_status = 'status';
-
     private MigrationDiscovery $MigrationDiscovery;
 
     private MigrationStatusResolver $MigrationStatusResolver;
@@ -87,10 +83,7 @@ readonly class Migrator
     /**
      * Returns one row per migration file, ordered by id.
      *
-     * Each row: {Migration::id, Migration::description, col_status, Migration::applied_at, Migration::checksum}
-     * col_status value is a MigrationStatus enum case (applied, pending, or modified).
-     *
-     * @return array<int, array<string, mixed>>
+     * @return list<MigrationStatusRow>
      */
     public function status(): array
     {
@@ -106,24 +99,23 @@ readonly class Migrator
     {
         $applied = [];
         foreach ($this->status() as $row) {
-            $id = $this->rowStr($row, key: Migration::id);
-            if ($row[self::col_status] === MigrationStatus::modified) {
+            if ($row->MigrationStatus === MigrationStatus::modified) {
                 throw new RuntimeException(
-                    "Migration $id was modified after being applied — checksum mismatch. Restore the file or roll back."
+                    "Migration $row->id was modified after being applied — checksum mismatch. Restore the file or roll back."
                 );
             }
-            if ($row[self::col_status] !== MigrationStatus::pending) {
+            if ($row->MigrationStatus !== MigrationStatus::pending) {
                 continue;
             }
-            $this->runUp(class: $this->MigrationDiscovery->fqcn($id));
+            $this->runUp(class: $this->MigrationDiscovery->fqcn($row->id));
             InsertMigrationQuery::create((object) [
-                Migration::id          => $id,
-                Migration::description => $row[Migration::description],
-                Migration::checksum    => $row[Migration::checksum],
+                Migration::id          => $row->id,
+                Migration::description => $row->description,
+                Migration::checksum    => $row->checksum,
             ], $this->Database);
             $applied[] = [
-                Migration::id          => $id,
-                Migration::description => $this->rowStr($row, key: Migration::description),
+                Migration::id          => $row->id,
+                Migration::description => $row->description,
             ];
         }
 

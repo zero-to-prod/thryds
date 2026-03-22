@@ -20,7 +20,6 @@ use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\DatabaseConfig;
 use ZeroToProd\Thryds\MigrationStatus;
 use ZeroToProd\Thryds\Migrator;
-use ZeroToProd\Thryds\Tables\Migration;
 
 try {
     $Migrator = Migrator::create(
@@ -40,19 +39,19 @@ try {
 $violations = [];
 
 foreach ($rows as $row) {
-    if ($row[Migrator::col_status] === MigrationStatus::pending) {
+    if ($row->MigrationStatus === MigrationStatus::pending) {
         $violations[] = [
-            'id'      => $row[Migration::id],
+            'id'      => $row->id,
             'rule'    => 'pending-migration',
-            'message' => "migration {$row[Migration::id]} not yet applied",
+            'message' => "migration $row->id not yet applied",
             'fix'     => './run migrate',
         ];
     }
-    if ($row[Migrator::col_status] === MigrationStatus::modified) {
+    if ($row->MigrationStatus === MigrationStatus::modified) {
         $violations[] = [
-            'id'      => $row[Migration::id],
+            'id'      => $row->id,
             'rule'    => 'modified-migration',
-            'message' => "migration {$row[Migration::id]} checksum mismatch — file was modified after apply",
+            'message' => "migration $row->id checksum mismatch — file was modified after apply",
             'fix'     => 'Restore the original file or run ./run migrate:rollback',
         ];
     }

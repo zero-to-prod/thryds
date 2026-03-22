@@ -23,7 +23,6 @@ use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\DatabaseConfig;
 use ZeroToProd\Thryds\MigrationStatus;
 use ZeroToProd\Thryds\Migrator;
-use ZeroToProd\Thryds\Tables\Migration;
 
 try {
     $Migrator = Migrator::create(
@@ -47,18 +46,18 @@ $modified = [];
 $applied = [];
 
 foreach ($rows as $row) {
-    $label = match ($row[Migrator::col_status]) {
+    $label = match ($row->MigrationStatus) {
         MigrationStatus::applied  => '[ OK ]',
         MigrationStatus::pending  => '[PEND]',
         MigrationStatus::modified => '[WARN]',
     };
-    $applied_at = $row[Migration::applied_at] !== null ? ' (applied ' . $row[Migration::applied_at] . ')' : '';
-    fwrite(STDERR, sprintf("  %s %-8s %s %s%s\n", $label, $row[Migrator::col_status]->value, $row[Migration::id], $row[Migration::description], $applied_at));
+    $applied_at = $row->applied_at !== null ? ' (applied ' . $row->applied_at . ')' : '';
+    fwrite(STDERR, sprintf("  %s %-8s %s %s%s\n", $label, $row->MigrationStatus->value, $row->id, $row->description, $applied_at));
 
-    match ($row[Migrator::col_status]) {
-        MigrationStatus::pending  => $pending[]  = $row[Migration::id],
-        MigrationStatus::modified => $modified[] = $row[Migration::id],
-        MigrationStatus::applied  => $applied[]  = $row[Migration::id],
+    match ($row->MigrationStatus) {
+        MigrationStatus::pending  => $pending[]  = $row->id,
+        MigrationStatus::modified => $modified[] = $row->id,
+        MigrationStatus::applied  => $applied[]  = $row->id,
     };
 }
 

@@ -27,9 +27,7 @@ readonly class MigrationStatusResolver
     /**
      * Returns one row per migration file, ordered by id.
      *
-     * Each row: {Migration::id, Migration::description, Migrator::col_status, Migration::applied_at, Migration::checksum}
-     *
-     * @return array<int, array<string, mixed>>
+     * @return list<MigrationStatusRow>
      */
     public function status(): array
     {
@@ -42,21 +40,22 @@ readonly class MigrationStatusResolver
         foreach ($this->MigrationDiscovery->ids() as $id) {
             $checksum = $this->MigrationDiscovery->checksum($id);
             if (isset($applied[$id])) {
-                $result[] = [
-                    Migration::id          => $id,
-                    Migration::description => $this->MigrationDiscovery->description($id),
-                    Migrator::col_status         => $checksum === $applied[$id][Migration::checksum] ? MigrationStatus::applied : MigrationStatus::modified,
-                    Migration::applied_at  => $applied[$id][Migration::applied_at],
-                    Migration::checksum    => $checksum,
-                ];
+                $applied_row = $applied[$id];
+                $result[] = MigrationStatusRow::from([
+                    MigrationStatusRow::id              => $id,
+                    MigrationStatusRow::description     => $this->MigrationDiscovery->description($id),
+                    MigrationStatusRow::MigrationStatus => $checksum === $applied_row[Migration::checksum] ? MigrationStatus::applied : MigrationStatus::modified,
+                    MigrationStatusRow::applied_at      => is_string($applied_row[Migration::applied_at]) ? $applied_row[Migration::applied_at] : null,
+                    MigrationStatusRow::checksum        => $checksum,
+                ]);
             } else {
-                $result[] = [
-                    Migration::id          => $id,
-                    Migration::description => $this->MigrationDiscovery->description($id),
-                    Migrator::col_status         => MigrationStatus::pending,
-                    Migration::applied_at  => null,
-                    Migration::checksum    => $checksum,
-                ];
+                $result[] = MigrationStatusRow::from([
+                    MigrationStatusRow::id              => $id,
+                    MigrationStatusRow::description     => $this->MigrationDiscovery->description($id),
+                    MigrationStatusRow::MigrationStatus => MigrationStatus::pending,
+                    MigrationStatusRow::applied_at      => null,
+                    MigrationStatusRow::checksum        => $checksum,
+                ]);
             }
         }
 

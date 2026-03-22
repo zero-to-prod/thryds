@@ -8,6 +8,7 @@ parameters:
             paths:
                 - src/Config.php
                 - src/DatabaseConfig.php
+                - src/MigrationStatusRow.php
                 - src/Tables/Migration.php
                 - src/Tables/User.php
                 - src/Requests/RegisterRequest.php

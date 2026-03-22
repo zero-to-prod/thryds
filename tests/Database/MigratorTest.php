@@ -7,6 +7,7 @@ namespace ZeroToProd\Thryds\Tests\Database;
 use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
 use ZeroToProd\Thryds\MigrationStatus;
+use ZeroToProd\Thryds\MigrationStatusRow;
 use ZeroToProd\Thryds\Migrator;
 use ZeroToProd\Thryds\Tables\Migration;
 
@@ -129,9 +130,10 @@ final class MigratorTest extends DatabaseTestCase
         $rows = $this->Migrator->status();
 
         $this->assertCount(1, haystack: $rows);
-        $this->assertSame(MigrationStatus::pending, $rows[0][Migrator::col_status]);
-        $this->assertSame('0001', $rows[0][Migration::id]);
-        $this->assertNull($rows[0][Migration::applied_at]);
+        $this->assertInstanceOf(MigrationStatusRow::class, $rows[0]);
+        $this->assertSame(MigrationStatus::pending, $rows[0]->MigrationStatus);
+        $this->assertSame('0001', $rows[0]->id);
+        $this->assertNull($rows[0]->applied_at);
     }
 
     #[Test]
@@ -142,8 +144,8 @@ final class MigratorTest extends DatabaseTestCase
         $rows = $this->Migrator->status();
 
         $this->assertCount(1, haystack: $rows);
-        $this->assertSame(MigrationStatus::applied, $rows[0][Migrator::col_status]);
-        $this->assertNotNull($rows[0][Migration::applied_at]);
+        $this->assertSame(MigrationStatus::applied, $rows[0]->MigrationStatus);
+        $this->assertNotNull($rows[0]->applied_at);
     }
 
     #[Test]
@@ -156,7 +158,7 @@ final class MigratorTest extends DatabaseTestCase
             self::tamper_checksum
         );
 
-        $this->assertSame(MigrationStatus::modified, $this->Migrator->status()[0][Migrator::col_status]);
+        $this->assertSame(MigrationStatus::modified, $this->Migrator->status()[0]->MigrationStatus);
     }
 
     #[Test]
