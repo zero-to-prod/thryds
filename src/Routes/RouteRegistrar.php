@@ -12,7 +12,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use ReflectionClass;
 use ZeroToProd\Thryds\Attributes\HandlesMethod;
-use ZeroToProd\Thryds\Attributes\HandlesRoute;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\RouteOperation;
 use ZeroToProd\Thryds\Attributes\ValidatesRequest;
@@ -23,13 +22,8 @@ use ZeroToProd\Thryds\Validation\Validator;
 #[Infrastructure]
 readonly class RouteRegistrar
 {
-    /** Namespace prefix for controller discovery, derived from this class's own namespace. */
-    private const string CONTROLLER_NAMESPACE = 'ZeroToProd\\Thryds\\Controllers\\';
-
     public static function register(Router $Router, Config $Config): void
     {
-        $controllers = self::discoverControllers();
-
         foreach (Route::cases() as $Route) {
             if ($Route->isDevOnly() && $Config->isProduction()) {
                 continue;
@@ -39,40 +33,13 @@ readonly class RouteRegistrar
                 $Router->map(
                     $op->HttpMethod->value,
                     $Route->value,
-                    handler: self::handler($Route, RouteOperation: $op, controller: $controllers[$Route->name] ?? null),
+                    handler: self::handler($Route, RouteOperation: $op, controller: $Route->controller()),
                 );
             }
         }
     }
 
-    /**
-     * Scan src/Controllers/ for classes carrying #[HandlesRoute] and return instances keyed by Route case name.
-     *
-     * @return array<string, object>
-     */
-    private static function discoverControllers(): array
-    {
-        $controllers = [];
-        $dir = dirname(__DIR__) . '/Controllers';
-
-        foreach (glob($dir . '/*.php') ?: [] as $file) {
-            $fqcn = self::CONTROLLER_NAMESPACE . basename(path: $file, suffix: '.php');
-
-            if (!class_exists(class: $fqcn)) {
-                continue;
-            }
-            $attrs = new ReflectionClass(objectOrClass: $fqcn)->getAttributes(HandlesRoute::class);
-
-            if ($attrs === []) {
-                continue;
-            }
-            $controllers[$attrs[0]->newInstance()->Route->name] = new $fqcn();
-        }
-
-        return $controllers;
-    }
-
-    /** Resolve handler: #[HandlesRoute] controller takes priority, then #[RendersView] closure. */
+    /** Resolve handler: #[HandledBy] controller takes priority, then #[RendersView] closure. */
     private static function handler(Route $Route, RouteOperation $RouteOperation, ?object $controller): callable
     {
         if ($controller !== null) {
@@ -94,7 +61,7 @@ readonly class RouteRegistrar
 
         return fn(): ResponseInterface => new HtmlResponse(
             html: blade()->make(view: ($Route->rendersView()
-                ?? throw new LogicException("Route::{$Route->name} has no #[HandlesRoute] controller and no #[RendersView]."))->value)->render(),
+                ?? throw new LogicException("Route::{$Route->name} has no #[HandledBy] controller and no #[RendersView]."))->value)->render(),
         );
     }
 

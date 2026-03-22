@@ -65,15 +65,7 @@ readonly class Migrator
 
     public function ensureTable(): void
     {
-        $this->Database->execute(
-            'CREATE TABLE IF NOT EXISTS `' . Migration::tableName() . '` (
-                id          VARCHAR(20)  NOT NULL,
-                description VARCHAR(255) NOT NULL,
-                checksum    VARCHAR(64)  NOT NULL,
-                applied_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                PRIMARY KEY (id)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
-        );
+        $this->Database->execute(DdlBuilder::createTableSql(Migration::class));
     }
 
     /**

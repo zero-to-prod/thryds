@@ -16,7 +16,6 @@ routes:
     dev_only: false
     operations:
       GET: 'Marketing home page'
-    controller: HomeController
     view: home
   login:
     path: /login
@@ -64,13 +63,6 @@ routes:
     view: styleguide
 
 controllers:
-  HomeController:
-    route: home
-    operations:
-      GET: 'Marketing home page'
-    renders: home
-    persists: []
-    redirects_to: []
   OpcacheScriptsHandler:
     route: opcache_scripts
     operations:
@@ -228,7 +220,7 @@ tests:
   HOT004Test:
     type: integration
     covers_routes: []
-  HomeControllerTest:
+  HomeRouteTest:
     type: integration
     covers_routes: [home]
   LoginRouteTest:

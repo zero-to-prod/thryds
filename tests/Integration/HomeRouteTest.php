@@ -9,7 +9,7 @@ use ZeroToProd\Thryds\Attributes\CoversRoute;
 use ZeroToProd\Thryds\Routes\Route;
 
 #[CoversRoute(Route::home)]
-final class HomeControllerTest extends IntegrationTestCase
+final class HomeRouteTest extends IntegrationTestCase
 {
     #[Test]
     public function rendersHomePageAsHtml(): void

@@ -8,10 +8,15 @@ use ReflectionAttribute;
 use ReflectionEnumUnitCase;
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 use ZeroToProd\Thryds\Attributes\DevOnly;
+use ZeroToProd\Thryds\Attributes\HandledBy;
 use ZeroToProd\Thryds\Attributes\RendersView;
 use ZeroToProd\Thryds\Attributes\RouteInfo;
 use ZeroToProd\Thryds\Attributes\RouteOperation;
 use ZeroToProd\Thryds\Blade\View;
+use ZeroToProd\Thryds\Controllers\OpcacheScriptsHandler;
+use ZeroToProd\Thryds\Controllers\OpcacheStatusHandler;
+use ZeroToProd\Thryds\Controllers\RegisterController;
+use ZeroToProd\Thryds\Controllers\RouteManifestHandler;
 use ZeroToProd\Thryds\UI\Domain;
 
 #[ClosedSet(
@@ -58,6 +63,7 @@ enum Route: string
         HttpMethod::POST,
         'Handle registration submission'
     )]
+    #[HandledBy(RegisterController::class)]
     #[RendersView(View::register)]
     case register = '/register';
 
@@ -67,6 +73,7 @@ enum Route: string
         HttpMethod::GET,
         'OPcache runtime statistics'
     )]
+    #[HandledBy(OpcacheStatusHandler::class)]
     case opcache_status = '/_opcache/status';
 
     #[DevOnly]
@@ -75,6 +82,7 @@ enum Route: string
         HttpMethod::GET,
         'Scripts loaded in OPcache'
     )]
+    #[HandledBy(OpcacheScriptsHandler::class)]
     case opcache_scripts = '/_opcache/scripts';
 
     #[DevOnly]
@@ -92,6 +100,7 @@ enum Route: string
         HttpMethod::GET,
         'Machine-readable manifest of all registered routes'
     )]
+    #[HandledBy(RouteManifestHandler::class)]
     case routes = '/_routes';
 
     public function isDevOnly(): bool
@@ -139,6 +148,21 @@ enum Route: string
             $attrs = new ReflectionEnumUnitCase(self::class, $this->name)
                 ->getAttributes(RendersView::class);
             $cache[$this->name] = $attrs !== [] ? $attrs[0]->newInstance()->View : null;
+        }
+
+        return $cache[$this->name];
+    }
+
+    /** Returns the controller class declared via #[HandledBy], or null if this route has no controller. */
+    public function controller(): ?object
+    {
+        /** @var array<string, ?object> $cache */
+        static $cache = [];
+
+        if (!array_key_exists($this->name, array: $cache)) {
+            $attrs = new ReflectionEnumUnitCase(self::class, $this->name)
+                ->getAttributes(HandledBy::class);
+            $cache[$this->name] = $attrs !== [] ? new ($attrs[0]->newInstance()->controller)() : null;
         }
 
         return $cache[$this->name];
