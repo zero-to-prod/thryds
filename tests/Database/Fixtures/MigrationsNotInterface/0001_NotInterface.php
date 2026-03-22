@@ -6,7 +6,7 @@ namespace ZeroToProd\Thryds\Migrations;
 
 use ZeroToProd\Thryds\Attributes\Migration;
 
-// Intentionally does not implement MigrationInterface so that instantiate()
+// Intentionally has no MigrationAction attribute so that resolveMigrationAction()
 // throws a RuntimeException when migrate() or rollback() tries to use it.
 #[Migration(id: '0001', description: 'Not interface fixture')]
 final class NotInterface {}

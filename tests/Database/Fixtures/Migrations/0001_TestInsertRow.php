@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Migrations;
 
 use ZeroToProd\Thryds\Attributes\Migration;
-use ZeroToProd\Thryds\Database;
-use ZeroToProd\Thryds\MigrationInterface;
+use ZeroToProd\Thryds\Attributes\RawSql;
 
 /**
  * Test fixture migration. Uses DML only (no DDL) so that it can run inside a
@@ -19,15 +18,8 @@ use ZeroToProd\Thryds\MigrationInterface;
     id: '0001',
     description: 'Insert fixture row'
 )]
-final readonly class TestInsertRow implements MigrationInterface
-{
-    public function up(Database $Database): void
-    {
-        $Database->execute('INSERT INTO _migration_fixture (id) VALUES (1)');
-    }
-
-    public function down(Database $Database): void
-    {
-        $Database->execute('DELETE FROM _migration_fixture WHERE id = 1');
-    }
-}
+#[RawSql(
+    up: 'INSERT INTO _migration_fixture (id) VALUES (1)',
+    down: 'DELETE FROM _migration_fixture WHERE id = 1',
+)]
+final readonly class TestInsertRow {}

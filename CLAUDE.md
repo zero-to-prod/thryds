@@ -25,7 +25,9 @@ The attribute graph is the primary way to understand the codebase. Query it firs
 ./run list:attributes                          # full graph, YAML (default)
 ./run list:attributes -- --format=json         # full graph, JSON
 ./run list:attributes -- --format=markdown     # readable document
-./run list:attributes -- --format=mermaid      # class diagram
+./run list:attributes -- --format=mermaid      # class diagram (Mermaid)
+./run list:attributes -- --format=dot          # class diagram (Graphviz DOT)
+./run list:attributes -- --format=png --output=var/graph.png  # rendered DOT diagram (Kroki API)
 ./run list:attributes -- --output=var/graph.yaml
 ```
 

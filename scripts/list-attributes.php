@@ -5,9 +5,9 @@ declare(strict_types=1);
 /**
  * Generate a complete graph of all PHP attributes in the project.
  *
- * Outputs YAML, JSON (structured data), Markdown (readable document), or Mermaid (class diagram) based on --format= argument.
+ * Outputs YAML, JSON (structured data), Markdown (readable document), Mermaid (class diagram), or PNG (rendered diagram via Kroki API) based on --format= argument.
  *
- * Usage: docker compose exec web php scripts/list-attributes.php [--config=FILE] [--format=yaml|json|markdown|mermaid] [--output=FILE] [--dir=src] [filters...]
+ * Usage: docker compose exec web php scripts/list-attributes.php [--config=FILE] [--format=yaml|json|markdown|mermaid|png] [--output=FILE] [--dir=src] [filters...]
  * Via Composer: ./run list:attributes [-- --format=markdown --node=RegisterController --layer=controllers]
  *
  * Filters (all repeatable, combined with AND across types, OR within same type):
@@ -62,8 +62,13 @@ foreach ($argv as $arg) {
 
 $hasFilters = $filterNodes !== [] || $filterLayers !== [] || $filterKinds !== [] || $filterAttrs !== [] || $filterRels !== [] || $filterFiles !== [];
 
-if (! in_array($format, ['yaml', 'json', 'markdown', 'mermaid'], true)) {
-    fwrite(STDERR, "Unknown format: $format. Use yaml, json or mermaid.\n");
+if (! in_array($format, ['yaml', 'json', 'markdown', 'mermaid', 'dot', 'png'], true)) {
+    fwrite(STDERR, "Unknown format: $format. Use yaml, json, markdown, mermaid, dot or png.\n");
+    exit(1);
+}
+
+if ($format === 'png' && $output === null) {
+    fwrite(STDERR, "PNG format requires --output=FILE.\n");
     exit(1);
 }
 
@@ -1006,6 +1011,126 @@ if ($format === 'yaml') {
     }
 
     $result = implode("\n", $lines) . "\n";
+} elseif ($format === 'dot' || $format === 'png') {
+    // Graphviz DOT directed graph (also used as intermediate for PNG).
+    $lines = [
+        'digraph AttributeGraph {',
+        '    rankdir=TB;',
+        '    fontname="Helvetica";',
+        '    node [shape=record fontname="Helvetica" fontsize=10];',
+        '    edge [fontname="Helvetica" fontsize=9];',
+        '',
+    ];
+
+    // Group nodes into subgraph clusters by layer.
+    $layerNodes = [];
+    foreach ($graph as $fqcn => $entry) {
+        $layerNodes[$entry['layer']][$fqcn] = $entry;
+    }
+    ksort($layerNodes);
+
+    $layerColors = [
+        'core' => '#E8F5E9',
+        'controllers' => '#E3F2FD',
+        'views' => '#FFF3E0',
+        'schema' => '#F3E5F5',
+        'tables' => '#FCE4EC',
+        'migrations' => '#E0F2F1',
+        'config' => '#FFF9C4',
+        'attributes' => '#E8EAF6',
+    ];
+
+    foreach ($layerNodes as $layer => $entries) {
+        $color = $layerColors[$layer] ?? '#F5F5F5';
+        $lines[] = "    subgraph cluster_{$layer} {";
+        $lines[] = "        label=\"{$layer}\";";
+        $lines[] = '        style=filled;';
+        $lines[] = "        color=\"{$color}\";";
+        $lines[] = "        fillcolor=\"{$color}\";";
+        $lines[] = '';
+
+        foreach ($entries as $fqcn => $entry) {
+            $short = $shortNames[$fqcn];
+            $nodeId = sanitizeDotId($short);
+            $stereotype = $entry['kind'];
+
+            $labelParts = ["{$short}\\n\\<\\<{$stereotype}\\>\\>"];
+
+            // Class-level attributes.
+            $attrLines = [];
+            foreach ($entry['attributes'] ?? [] as $attrName => $attrArgs) {
+                $attrLines[] = sanitizeDot(formatDotAttr($attrName, $attrArgs));
+            }
+
+            // Properties with attributes.
+            foreach ($entry['properties'] ?? [] as $propName => $propData) {
+                foreach ($propData['attributes'] ?? [] as $attrName => $attrArgs) {
+                    $attrLines[] = sanitizeDot($propName . ' : ' . formatDotAttr($attrName, $attrArgs));
+                }
+            }
+
+            // Methods with attributes.
+            foreach ($entry['methods'] ?? [] as $methodName => $methodData) {
+                foreach ($methodData['attributes'] ?? [] as $attrName => $attrArgs) {
+                    $attrLines[] = sanitizeDot($methodName . '() : ' . formatDotAttr($attrName, $attrArgs));
+                }
+            }
+
+            // Enum cases / constants with attributes.
+            foreach (['cases', 'constants'] as $section) {
+                foreach ($entry[$section] ?? [] as $caseName => $caseData) {
+                    foreach ($caseData['attributes'] ?? [] as $attrName => $attrArgs) {
+                        $attrLines[] = sanitizeDot($caseName . ' : ' . formatDotAttr($attrName, $attrArgs));
+                    }
+                }
+            }
+
+            $label = $labelParts[0];
+            if ($attrLines !== []) {
+                $label .= '|' . implode('\\l', $attrLines) . '\\l';
+            }
+
+            $lines[] = "        {$nodeId} [label=\"{$label}\"];";
+        }
+
+        $lines[] = '    }';
+        $lines[] = '';
+    }
+
+    // Edges grouped by from|to|rel.
+    $edgeGroups = [];
+    foreach ($edges as $edge) {
+        $key = $edge['from'] . '|' . $edge['to'] . '|' . $edge['rel'];
+        $edgeGroups[$key] ??= ['from' => $edge['from'], 'to' => $edge['to'], 'rel' => $edge['rel'], 'kind' => $edge['kind'], 'sources' => []];
+        $edgeGroups[$key]['sources'][] = $edge['source'];
+    }
+    foreach ($edgeGroups as $group) {
+        $fromId = sanitizeDotId($group['from']);
+        $toId = sanitizeDotId($group['to']);
+        $label = $group['rel'];
+        if ($group['kind'] !== null) {
+            $label = '(' . $group['kind'] . ') ' . $label;
+        }
+        $nonClass = array_filter($group['sources'], static fn(string $s): bool => $s !== 'class');
+        if ($nonClass !== []) {
+            $shortSources = array_map(static function (string $s): string {
+                $parts = explode(':', $s, 2);
+                return match ($parts[0]) {
+                    'method' => $parts[1] . '()',
+                    default => $parts[1] ?? $s,
+                };
+            }, array_unique($nonClass));
+            $sourceList = implode(', ', $shortSources);
+            if (strlen($sourceList) > 40) {
+                $sourceList = substr($sourceList, 0, 37) . '...';
+            }
+            $label .= '\\nvia ' . $sourceList;
+        }
+        $lines[] = "    {$fromId} -> {$toId} [label=\"" . sanitizeDot($label) . '" style=dashed];';
+    }
+
+    $lines[] = '}';
+    $result = implode("\n", $lines) . "\n";
 } else {
     // Mermaid class diagram.
     $lines = ['classDiagram'];
@@ -1097,6 +1222,62 @@ if ($format === 'yaml') {
     }
 
     $result = implode("\n", $lines) . "\n";
+}
+
+if ($format === 'png') {
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => "Content-Type: text/plain\r\nAccept: image/png\r\n",
+            'content' => $result,
+            'timeout' => 30,
+        ],
+    ]);
+    $png = file_get_contents('https://kroki.io/graphviz/png', false, $context);
+    if ($png === false) {
+        fwrite(STDERR, "Failed to render PNG via Kroki API.\n");
+        exit(1);
+    }
+    $result = $png;
+}
+
+/** Sanitize a node name into a valid DOT identifier. */
+function sanitizeDotId(string $name): string
+{
+    return preg_replace('/[^A-Za-z0-9_]/', '_', $name);
+}
+
+/** Escape a string for use inside DOT double-quoted labels. */
+function sanitizeDot(string $text): string
+{
+    return str_replace(
+        ['"', "\n", "\r", '<', '>', '{', '}', '|'],
+        ['\\"', ' ', ' ', '\\<', '\\>', '\\{', '\\}', '\\|'],
+        $text,
+    );
+}
+
+/** Format an attribute for display in a DOT record label field. */
+function formatDotAttr(string $name, mixed $args): string
+{
+    if ($args === true) {
+        return $name;
+    }
+    if (is_scalar($args)) {
+        $s = (string) $args;
+        if (strlen($s) > 50) {
+            $s = substr($s, 0, 47) . '...';
+        }
+        return $name . ' : ' . $s;
+    }
+    if (is_array($args)) {
+        $summary = summarizeArgs($args);
+        if (strlen($summary) > 50) {
+            $summary = substr($summary, 0, 47) . '...';
+        }
+        return $name . ' : ' . $summary;
+    }
+    return $name;
 }
 
 /** Format attribute arguments as an inline markdown string. */

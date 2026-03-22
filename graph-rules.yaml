@@ -61,6 +61,7 @@ node:
       - src/Attributes/CreateTable.php
       - src/Attributes/DropColumn.php
       - src/Attributes/Migration.php
+      - src/Attributes/RawSql.php
       # Schema attributes — defined for future table columns
       - src/Attributes/ForeignKey.php
       - src/Attributes/Index.php

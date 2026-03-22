@@ -44,6 +44,8 @@ foreach ($diff['missing_from_code'] as $item) {
             'viewmodels' => scaffoldViewModel($name, $props, $projectRoot, $scaffold, $created),
             'tests' => scaffoldTest($name, $props, $projectRoot, $scaffold, $created),
             'controllers' => scaffoldController($name, $props, $projectRoot, $scaffold, $created),
+            'tables' => scaffoldTable($name, $props, $projectRoot, $scaffold, $created),
+            'enums' => scaffoldEnum($name, $props, $projectRoot, $scaffold, $created),
             default => $skipped[] = ['section' => $section, 'name' => $name, 'reason' => "No scaffold handler for $section"],
         };
     } catch (\Throwable $e) {
@@ -307,5 +309,221 @@ function scaffoldController(string $name, array $props, string $root, array $sca
 
     if ($files !== []) {
         $created[] = ['section' => 'controllers', 'name' => $name, 'files' => $files];
+    }
+}
+
+function scaffoldTable(string $name, array $props, string $root, array $scaffold, array &$created): void
+{
+    $tablesDir       = $scaffold['directories']['tables'];
+    $tablesNamespace = $scaffold['namespaces']['tables'];
+    $schemaNamespace = $scaffold['namespaces']['schema'];
+    $closedSet       = $scaffold['attributes']['closed_set'];
+    $schemaSync      = $scaffold['attributes']['schema_sync'];
+    $tableAttr       = $scaffold['attributes']['table'];
+    $hasTableName    = $scaffold['attributes']['has_table_name'];
+    $dataModel       = $scaffold['attributes']['data_model'];
+    $columnAttr      = $scaffold['attributes']['column'];
+    $primaryKeyAttr  = $scaffold['attributes']['primary_key'];
+    $files           = [];
+
+    $tableName   = $props['table'] ?? strtolower($name) . 's';
+    $engine      = $props['engine'] ?? 'InnoDB';
+    $columns     = $props['columns'] ?? [];
+    $primaryKeys = $props['primary_key'] ?? [];
+
+    $closedSetShort    = basename(str_replace('\\', '/', $closedSet));
+    $schemaSyncShort   = basename(str_replace('\\', '/', $schemaSync));
+    $tableAttrShort    = basename(str_replace('\\', '/', $tableAttr));
+    $hasTableNameShort = basename(str_replace('\\', '/', $hasTableName));
+    $dataModelShort    = basename(str_replace('\\', '/', $dataModel));
+    $columnShort       = basename(str_replace('\\', '/', $columnAttr));
+    $primaryKeyShort   = basename(str_replace('\\', '/', $primaryKeyAttr));
+
+    // --- Columns trait ---
+    $traitName = $name . 'Columns';
+    $traitPath = $root . $tablesDir . '/' . $traitName . '.php';
+
+    if (! file_exists($traitPath)) {
+        $traitBody = '';
+        foreach ($columns as $colName => $colDef) {
+            $type     = $colDef['type'] ?? 'VARCHAR';
+            $length   = $colDef['length'] ?? null;
+            $nullable = ($colDef['nullable'] ?? false) ? 'true' : 'false';
+            $default  = $colDef['default'] ?? null;
+            $comment  = $colDef['comment'] ?? ucfirst(str_replace('_', ' ', $colName));
+
+            $defaultStr = match (true) {
+                $default === 'CURRENT_TIMESTAMP' => "$columnShort::CURRENT_TIMESTAMP",
+                $default === null                => 'null',
+                is_string($default)              => "'" . addslashes($default) . "'",
+                default                          => (string) $default,
+            };
+
+            $lengthStr = $length !== null ? (string) $length : 'null';
+
+            $pkLine = in_array($colName, $primaryKeys, true)
+                ? "    #[$primaryKeyShort(columns: [])]\n"
+                : '';
+
+            $phpType     = $nullable === 'true' ? '?string' : 'string';
+            $traitBody .= <<<COLUMN
+                /** @see \$$colName */
+                public const string $colName = '$colName';
+                #[$columnShort(
+                    DataType: DataType::$type,
+                    length: $lengthStr,
+                    precision: null,
+                    scale: null,
+                    unsigned: false,
+                    nullable: $nullable,
+                    auto_increment: false,
+                    default: $defaultStr,
+                    values: null,
+                    comment: '$comment',
+                )]
+            {$pkLine}    public readonly $phpType \$$colName;
+
+
+            COLUMN;
+        }
+
+        $trait = <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace $tablesNamespace;
+
+            use $columnAttr;
+            use $primaryKeyAttr;
+            use $schemaNamespace\\DataType;
+
+            trait $traitName
+            {
+            $traitBody}
+
+            PHP;
+
+        $trait = preg_replace('/^ {12}/m', '', $trait);
+        file_put_contents($traitPath, $trait);
+        $files[] = "$tablesDir/$traitName.php";
+    }
+
+    // --- Main table class ---
+    $classPath = $root . $tablesDir . '/' . $name . '.php';
+
+    if (! file_exists($classPath)) {
+        $class = <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace $tablesNamespace;
+
+            use $closedSet;
+            use $dataModel;
+            use $hasTableName;
+            use $schemaSync;
+            use $tableAttr;
+            use $schemaNamespace\\Charset;
+            use $schemaNamespace\\Collation;
+            use $schemaNamespace\\Engine;
+            use $schemaNamespace\\SchemaSource;
+            use ZeroToProd\\Thryds\\UI\\Domain;
+
+            #[$closedSetShort(
+                Domain::database_table_columns,
+                addCase: <<<TEXT
+                1. Add enum case with #[$columnShort] attribute.
+                2. Write a migration to ALTER TABLE $tableName ADD COLUMN ...
+                TEXT
+            )]
+            #[$schemaSyncShort(SchemaSource::attributes)]
+            #[$tableAttrShort(
+                TableName: TableName::$tableName,
+                Engine: Engine::$engine,
+                Charset: Charset::utf8mb4,
+                Collation: Collation::utf8mb4_unicode_ci
+            )]
+            readonly class $name
+            {
+                use $dataModelShort;
+                use $hasTableNameShort;
+                use $traitName;
+            }
+
+            PHP;
+
+        $class = preg_replace('/^ {12}/m', '', $class);
+        file_put_contents($classPath, $class);
+        $files[] = "$tablesDir/$name.php";
+    }
+
+    // --- Add case to TableName enum if missing ---
+    $tableNamePath = $root . $tablesDir . '/TableName.php';
+    if (file_exists($tableNamePath)) {
+        $enumContent = file_get_contents($tableNamePath);
+        if (! str_contains($enumContent, "case $tableName")) {
+            $enumContent = preg_replace(
+                '/^}\s*$/m',
+                "    case $tableName = '$tableName';\n}\n",
+                $enumContent,
+            );
+            file_put_contents($tableNamePath, $enumContent);
+            $files[] = "$tablesDir/TableName.php (added case $tableName)";
+        }
+    }
+
+    if ($files !== []) {
+        $created[] = ['section' => 'tables', 'name' => $name, 'files' => $files];
+    }
+}
+
+function scaffoldEnum(string $name, array $props, string $root, array $scaffold, array &$created): void
+{
+    $enumDir       = $scaffold['directories']['enums'];
+    $enumNamespace = $scaffold['namespaces']['enums'];
+    $closedSet     = $scaffold['attributes']['closed_set'];
+    $classPath     = $root . $enumDir . '/' . $name . '.php';
+    $files         = [];
+
+    if (! file_exists($classPath)) {
+        $cases        = $props['cases'] ?? [];
+        $closedSetShort = basename(str_replace('\\', '/', $closedSet));
+
+        // Derive domain name: PascalCase → snake_case, then pluralize.
+        $domain = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $name)) . 's';
+
+        $caseLines = '';
+        foreach ($cases as $case) {
+            $caseLines .= "    case $case = '$case';\n";
+        }
+
+        $class = <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace $enumNamespace;
+
+            use $closedSet;
+
+            #[$closedSetShort(
+                Domain::$domain,
+                addCase: '1. Add enum case.'
+            )]
+            enum $name: string
+            {
+            $caseLines}
+
+            PHP;
+
+        $class = preg_replace('/^ {12}/m', '', $class);
+        file_put_contents($classPath, $class);
+        $files[] = "$enumDir/$name.php";
+    }
+
+    if ($files !== []) {
+        $created[] = ['section' => 'enums', 'name' => $name, 'files' => $files];
     }
 }

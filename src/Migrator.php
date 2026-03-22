@@ -22,7 +22,10 @@ use ZeroToProd\Thryds\Tables\Migration;
  * MigrationStatusResolver (status computation) to keep each concern
  * in a single-responsibility class.
  *
- * DDL note: ensureTable() and migration up()/down() methods that run DDL
+ * All migrations are attribute-driven via {@see MigrationAction} implementations
+ * (#[CreateTable], #[AddColumn], #[DropColumn], #[RawSql]).
+ *
+ * DDL note: ensureTable() and migration actions that run DDL
  * (CREATE TABLE, ALTER TABLE, etc.) cause MySQL to implicitly commit any open
  * transaction. Call ensureTable() before opening a transaction.
  */
@@ -131,48 +134,30 @@ readonly class Migrator
      * Executes the up action for a migration class.
      *
      * Dispatches on any attribute implementing {@see MigrationAction}.
-     * Falls back to {@see MigrationInterface::up()} for imperative migrations.
      */
     private function runUp(string $class): void
     {
         /** @var class-string $class Validated by discover() via class_exists(). */
-        $action = self::resolveMigrationAction($class);
-
-        if ($action !== null) {
-            $this->Database->execute($action->upSql());
-
-            return;
-        }
-
-        $this->instantiate($class)->up(Database: $this->Database);
+        $this->Database->execute(self::resolveMigrationAction($class)->upSql());
     }
 
     /**
      * Executes the down action for a migration class.
      *
      * Dispatches on any attribute implementing {@see MigrationAction}.
-     * Falls back to {@see MigrationInterface::down()} for imperative migrations.
      */
     private function runDown(string $class): void
     {
         /** @var class-string $class Validated by discover() via class_exists(). */
-        $action = self::resolveMigrationAction($class);
-
-        if ($action !== null) {
-            $this->Database->execute($action->downSql());
-
-            return;
-        }
-
-        $this->instantiate($class)->down(Database: $this->Database);
+        $this->Database->execute(self::resolveMigrationAction($class)->downSql());
     }
 
     /**
-     * Resolves the first {@see MigrationAction} attribute from a migration class, or null.
+     * Resolves the first {@see MigrationAction} attribute from a migration class.
      *
      * @param class-string $class
      */
-    private static function resolveMigrationAction(string $class): ?MigrationAction
+    private static function resolveMigrationAction(string $class): MigrationAction
     {
         foreach (new ReflectionClass(objectOrClass: $class)->getAttributes() as $attribute) {
             $instance = $attribute->newInstance();
@@ -181,20 +166,9 @@ readonly class Migrator
             }
         }
 
-        return null;
-    }
-
-    private function instantiate(string $class): MigrationInterface
-    {
-        if (!class_exists($class)) {
-            throw new RuntimeException("Migration class $class does not exist."); // @codeCoverageIgnore
-        }
-        $instance = new $class();
-        if (!$instance instanceof MigrationInterface) {
-            throw new RuntimeException("$class must implement MigrationInterface.");
-        }
-
-        return $instance;
+        throw new RuntimeException(
+            "$class must declare a MigrationAction attribute (#[CreateTable], #[AddColumn], #[DropColumn], or #[RawSql])."
+        );
     }
 
     /**

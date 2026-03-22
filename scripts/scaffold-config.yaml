@@ -5,6 +5,8 @@ namespaces:
   tables: ZeroToProd\Thryds\Tables
   routes: ZeroToProd\Thryds\Routes
   blade: ZeroToProd\Thryds\Blade
+  enums: ZeroToProd\Thryds\UI
+  schema: ZeroToProd\Thryds\Schema
 
 directories:
   templates: templates
@@ -12,6 +14,8 @@ directories:
   viewmodels: src/ViewModels
   tests_integration: tests/Integration
   controllers: src/Controllers
+  tables: src/Tables
+  enums: src/UI
 
 attributes:
   viewmodel: ZeroToProd\Thryds\Attributes\ViewModel
@@ -21,3 +25,9 @@ attributes:
   persists: ZeroToProd\Thryds\Attributes\Persists
   redirects_to: ZeroToProd\Thryds\Attributes\RedirectsTo
   renders_view: ZeroToProd\Thryds\Attributes\RendersView
+  closed_set: ZeroToProd\Thryds\Attributes\ClosedSet
+  schema_sync: ZeroToProd\Thryds\Attributes\SchemaSync
+  table: ZeroToProd\Thryds\Attributes\Table
+  has_table_name: ZeroToProd\Thryds\Attributes\HasTableName
+  column: ZeroToProd\Thryds\Attributes\Column
+  primary_key: ZeroToProd\Thryds\Attributes\PrimaryKey

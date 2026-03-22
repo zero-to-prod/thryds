@@ -215,7 +215,7 @@ final class MigratorTest extends DatabaseTestCase
     }
 
     #[Test]
-    public function migrate_throws_when_migration_class_does_not_implement_interface(): void
+    public function migrate_throws_when_migration_class_has_no_action_attribute(): void
     {
         $Migrator = new Migrator(
             Database: $this->Database,
@@ -224,7 +224,7 @@ final class MigratorTest extends DatabaseTestCase
         );
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessageMatches('/must implement MigrationInterface/');
+        $this->expectExceptionMessageMatches('/must declare a MigrationAction attribute/');
 
         $Migrator->migrate();
     }

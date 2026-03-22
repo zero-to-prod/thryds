@@ -62,9 +62,8 @@ $description = preg_replace('/(?<!^)[A-Z]/', ' $0', $class_name) ?? $class_name;
 
 $namespace  = $config['namespace'];
 $imports    = implode("\n", array_map(static fn(string $fqcn): string => "use {$fqcn};", $config['imports']));
-$interface  = $config['interface'];
 $attribute  = $config['attribute'];
-$db_class   = new ReflectionClass($config['imports'][1])->getShortName();
+$action     = $config['action'];
 
 $content = <<<PHP
 <?php
@@ -76,21 +75,11 @@ namespace {$namespace};
 {$imports}
 
 #[{$attribute}(id: '{$next_id}', description: '{$description}')]
-final readonly class {$class_name} implements {$interface}
-{
-    public function up({$db_class} \$Database): void
-    {
-        // DDL example: CREATE TABLE IF NOT EXISTS `table` (...) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        // DML example: \$Database->execute('INSERT INTO `table` (col) VALUES (:col)', [':col' => 'value'])
-    }
-
-    public function down({$db_class} \$Database): void
-    {
-        // Undo up() defensively — DDL auto-commits, so partial states are possible.
-        // DDL example: DROP TABLE IF EXISTS `table`
-        // DML example: \$Database->execute('DELETE FROM `table` WHERE col = :col', [':col' => 'value'])
-    }
-}
+#[{$action}(
+    up: '',
+    down: '',
+)]
+final readonly class {$class_name} {}
 PHP;
 
 file_put_contents(filename: $path, data: $content);
@@ -99,7 +88,7 @@ echo json_encode(
     value: [
         'created'    => [$filename],
         'next_steps' => [
-            ['action' => "Implement up() and down() in {$filename}"],
+            ['action' => "Fill in the up and down SQL in #[{$action}] in {$filename}"],
             ['action' => 'Apply the migration', 'command' => './run migrate'],
         ],
     ],

@@ -16,7 +16,7 @@ final class RequireDownMigrationRector extends AbstractRector implements Configu
 {
     private string $mode = 'warn';
 
-    private string $message = 'TODO: [RequireDownMigrationRector] Migration class is missing a down() method — add it to support rollback. See: utils/rector/docs/RequireDownMigrationRector.md';
+    private string $message = 'TODO: [RequireDownMigrationRector] Migration class has no MigrationAction attribute — add #[CreateTable], #[AddColumn], #[DropColumn], or #[RawSql]. See: utils/rector/docs/RequireDownMigrationRector.md';
 
     public function configure(array $configuration): void
     {
@@ -27,29 +27,17 @@ final class RequireDownMigrationRector extends AbstractRector implements Configu
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
-            'Flags migration classes that are missing a down() rollback method',
+            'Flags migration classes that have no MigrationAction attribute',
             [
                 new ConfiguredCodeSample(
                     <<<'CODE_SAMPLE'
 #[Migration(id: '0001', description: 'Create users table')]
-final class CreateUsersTable implements MigrationInterface
-{
-    public function up(Database $Database): void
-    {
-        $Database->execute('CREATE TABLE users (id INT)');
-    }
-}
+final class CreateUsersTable {}
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: [RequireDownMigrationRector] Migration class is missing a down() method — add it to support rollback. See: utils/rector/docs/RequireDownMigrationRector.md
+// TODO: [RequireDownMigrationRector] Migration class has no MigrationAction attribute — add #[CreateTable], #[AddColumn], #[DropColumn], or #[RawSql]. See: utils/rector/docs/RequireDownMigrationRector.md
 #[Migration(id: '0001', description: 'Create users table')]
-final class CreateUsersTable implements MigrationInterface
-{
-    public function up(Database $Database): void
-    {
-        $Database->execute('CREATE TABLE users (id INT)');
-    }
-}
+final class CreateUsersTable {}
 CODE_SAMPLE,
                     ['mode' => 'warn'],
                 ),
@@ -73,11 +61,7 @@ CODE_SAMPLE,
             return null;
         }
 
-        if ($this->hasDownMethod(node: $node)) {
-            return null;
-        }
-
-        if ($this->hasCreateTableAttribute(node: $node)) {
+        if ($this->hasMigrationActionAttribute(node: $node)) {
             return null;
         }
 
@@ -109,24 +93,19 @@ CODE_SAMPLE,
         return false;
     }
 
-    private function hasDownMethod(Class_ $node): bool
+    private function hasMigrationActionAttribute(Class_ $node): bool
     {
-        foreach ($node->getMethods() as $method) {
-            if ($this->getName($method->name) === 'down') {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private function hasCreateTableAttribute(Class_ $node): bool
-    {
+        $suffixes = ['CreateTable', 'AddColumn', 'DropColumn', 'RawSql'];
         foreach ($node->attrGroups as $attrGroup) {
             foreach ($attrGroup->attrs as $attr) {
                 $name = $this->getName($attr->name);
-                if ($name !== null && str_ends_with($name, 'CreateTable')) {
-                    return true;
+                if ($name === null) {
+                    continue;
+                }
+                foreach ($suffixes as $suffix) {
+                    if (str_ends_with($name, $suffix)) {
+                        return true;
+                    }
                 }
             }
         }
