@@ -6,7 +6,7 @@ namespace ZeroToProd\Thryds\Validation;
 
 use ReflectionClass;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
-use ZeroToProd\Thryds\Attributes\Validate;
+use ZeroToProd\Thryds\Attributes\Validates;
 use ZeroToProd\Thryds\Attributes\ValidateWith;
 
 #[Infrastructure]
@@ -20,21 +20,27 @@ final readonly class Validator
         $errors = [];
         $ReflectionClass = new ReflectionClass(objectOrClass: $model);
 
+        /** @var array<string, list<Validates>> */
+        $class_validation_map = [];
+        foreach ($ReflectionClass->getAttributes(Validates::class) as $attribute) {
+            /** @var Validates $Validates */
+            $Validates = $attribute->newInstance();
+            $class_validation_map[$Validates->property][] = $Validates;
+        }
+
         foreach ($ReflectionClass->getProperties() as $property) {
-            $validate_attributes = $property->getAttributes(Validate::class);
+            $name = $property->getName();
+            $class_validates = $class_validation_map[$name] ?? [];
             $validate_with_attributes = $property->getAttributes(ValidateWith::class);
 
-            if ($validate_attributes === [] && $validate_with_attributes === []) {
+            if ($class_validates === [] && $validate_with_attributes === []) {
                 continue;
             }
 
-            $name = $property->getName();
             $value = $property->getValue(object: $model);
 
-            foreach ($validate_attributes as $attribute) {
-                /** @var Validate $Validate */
-                $Validate = $attribute->newInstance();
-                foreach ($Validate->rules as [$rule, $config]) {
+            foreach ($class_validates as $Validates) {
+                foreach ($Validates->rules as [$rule, $config]) {
                     if ($rule->passes($value, $config, context: $model)) {
                         continue;
                     }

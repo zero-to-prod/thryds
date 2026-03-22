@@ -49,6 +49,7 @@ opcache_compile_file(__DIR__ . '/src/UI/ButtonSize.php');
 opcache_compile_file(__DIR__ . '/src/Tables/UserColumns.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/Column.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/PrimaryKey.php');
+opcache_compile_file(__DIR__ . '/src/Attributes/Input.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/PageTitle.php');
 opcache_compile_file(__DIR__ . '/src/UI/AlertVariant.php');
 opcache_compile_file(__DIR__ . '/src/RequestId.php');

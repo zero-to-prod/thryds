@@ -7,15 +7,25 @@ namespace ZeroToProd\Thryds\Attributes;
 use Attribute;
 use ZeroToProd\Thryds\Validation\Rule;
 
-#[Attribute(Attribute::TARGET_PROPERTY)]
-readonly class Validate
+/**
+ * Class-level validation rules scoped to a single property.
+ *
+ * Applied to request classes to declare form-specific validation
+ * without redeclaring the property itself.
+ *
+ * @see Rule
+ */
+#[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
+readonly class Validates
 {
     /** @var list<array{Rule, int|string|null}> */
     public array $rules;
 
     /** @param Rule|array{Rule, int|string|null} ...$rules */
-    public function __construct(Rule|array ...$rules)
-    {
+    public function __construct(
+        public string $property,
+        Rule|array ...$rules,
+    ) {
         $this->rules = array_values(array_map(
             static fn(Rule|array $rule): array => $rule instanceof Rule
                 ? [$rule, null]

@@ -1,0 +1,716 @@
+classDiagram
+    class App {
+        <<class>>
+        Config : Bind
+        Blade : Bind
+        Database : Bind
+        boot() : Requirement : ids: PERF-001
+    }
+    class AppEnv {
+        <<enum>>
+        +ClosedSet : Domain: application_environment, addCase: 1. Ad...
+    }
+    class Bind {
+        <<class>>
+    }
+    class ClosedSet {
+        <<class>>
+    }
+    class Column {
+        <<class>>
+    }
+    class CoversRoute {
+        <<class>>
+    }
+    class CreateTable {
+        <<class>>
+    }
+    class DataModel {
+        <<trait>>
+        +Infrastructure
+    }
+    class Describe {
+        <<class>>
+    }
+    class DevOnly {
+        <<class>>
+    }
+    class EdgeKind {
+        <<enum>>
+        +ClosedSet : Domain: edge_kinds, addCase: Add enum case. The...
+    }
+    class ExtendsLayout {
+        <<class>>
+    }
+    class ForeignKey {
+        <<class>>
+    }
+    class Group {
+        <<class>>
+    }
+    class HandlesException {
+        <<class>>
+    }
+    class HandlesRoute {
+        <<class>>
+    }
+    class HasTableName {
+        <<trait>>
+        +Infrastructure
+    }
+    class Index {
+        <<class>>
+    }
+    class Infrastructure {
+        <<class>>
+    }
+    class Input {
+        <<class>>
+    }
+    class KeyRegistry {
+        <<class>>
+    }
+    class KeySource {
+        <<enum>>
+        +ClosedSet : Domain: key_sources, addCase: Add enum case. Th...
+    }
+    class Layer {
+        <<enum>>
+        +ClosedSet : Domain: namespace_layers, addCase:     1. Add e...
+        views : Segment : namespace: Blade
+        routing : Segment : namespace: Routes
+        ui : Segment : namespace: UI
+        viewmodels : Segment : namespace: ViewModels
+    }
+    class Migration {
+        <<class>>
+    }
+    class OnDelete {
+        <<class>>
+    }
+    class OnUpdate {
+        <<class>>
+    }
+    class PageTitle {
+        <<class>>
+    }
+    class Persists {
+        <<class>>
+    }
+    class PrimaryKey {
+        <<class>>
+    }
+    class Prop {
+        <<class>>
+    }
+    class ReceivesViewModel {
+        <<class>>
+    }
+    class RedirectsTo {
+        <<class>>
+    }
+    class RendersView {
+        <<class>>
+    }
+    class Requirement {
+        <<class>>
+    }
+    class RequiresLength {
+        <<class>>
+    }
+    class RequiresPrecisionScale {
+        <<class>>
+    }
+    class RequiresValues {
+        <<class>>
+    }
+    class RouteInfo {
+        <<class>>
+    }
+    class RouteOperation {
+        <<class>>
+    }
+    class Segment {
+        <<class>>
+    }
+    class SourceOfTruth {
+        <<class>>
+    }
+    class SourceOfTruthConcept {
+        <<enum>>
+        +ClosedSet : Domain: source_of_truth_concepts, addCase: 1. A...
+    }
+    class SupportsAutoIncrement {
+        <<class>>
+    }
+    class SupportsUnsigned {
+        <<class>>
+    }
+    class Table {
+        <<class>>
+    }
+    class UsesComponent {
+        <<class>>
+    }
+    class Validate {
+        <<class>>
+    }
+    class ValidateWith {
+        <<class>>
+    }
+    class ViewModel {
+        <<class>>
+    }
+    class BladeDirective {
+        <<enum>>
+        +ClosedSet : Domain: blade_directives, addCase: 1. Add enum ...
+    }
+    class BladeDirectives {
+        <<class>>
+        +Infrastructure
+    }
+    class Component {
+        <<enum>>
+        +ClosedSet : Domain: blade_components, addCase:     1. Add e...
+        alert : Prop : Props: variant, default: info
+        button : Prop : Props: variant, default: primary, Props: size, ...
+        form_group : Prop : Props: label, default: , Props: error, default: 
+        input : Prop : Props: type, default: text
+    }
+    class ScalarDefault {
+        <<enum>>
+        +ClosedSet : Domain: scalar_defaults, addCase: Add enum case...
+    }
+    class View {
+        <<enum>>
+        +ClosedSet : Domain: blade_templates, addCase:     1. Add en...
+        about : ExtendsLayout : Layout: base
+        about : PageTitle : title: About — Thryds
+        about : UsesComponent : components: card
+        error : ExtendsLayout : Layout: base
+        error : PageTitle : title: Error — Thryds
+        error : UsesComponent : components: alert, card
+        error : ReceivesViewModel : viewModels: ZeroToProd.Thryds.ViewModels.ErrorV...
+        home : ExtendsLayout : Layout: base
+        home : PageTitle : title: Thryds
+        home : UsesComponent : components: card, button
+        login : ExtendsLayout : Layout: base
+        login : PageTitle : title: Login — Thryds
+        login : UsesComponent : components: card, form-group, input, button
+        register : ExtendsLayout : Layout: base
+        register : PageTitle : title: Register — Thryds
+        register : UsesComponent : components: card, form-group, input, button
+        register : ReceivesViewModel : viewModels: ZeroToProd.Thryds.ViewModels.Regist...
+        styleguide : ExtendsLayout : Layout: base
+        styleguide : PageTitle : title: Styleguide — Thryds
+        styleguide : UsesComponent : components: alert, button, card, form-group, input
+    }
+    class Vite {
+        <<class>>
+        +KeyRegistry : KeySource: Vite entry points, superglobals: , a...
+    }
+    class Config {
+        <<class>>
+        AppEnv : Describe : attributes: default: production
+        blade_cache_dir : Describe : attributes: default: /app/var/cache/blade
+        template_dir : Describe : attributes: default: /app/templates
+        DatabaseConfig : Describe : attributes: cast: ZeroToProd.Thryds.DatabaseCon...
+    }
+    class ConfigKey {
+        <<enum>>
+        +ClosedSet : Domain: config_keys, addCase:     1. Add enum c...
+    }
+    class HomeController {
+        <<class>>
+        +HandlesRoute : Route: /
+        +RendersView : View: home
+    }
+    class OpcacheScriptsHandler {
+        <<class>>
+        +HandlesRoute : Route: /_opcache/scripts
+    }
+    class OpcacheStatusHandler {
+        <<class>>
+        +HandlesRoute : Route: /_opcache/status
+    }
+    class RegisterController {
+        <<class>>
+        +HandlesRoute : Route: /register
+        +RendersView : View: register
+        +Persists : model: ZeroToProd.Thryds.Tables.User
+        +RedirectsTo : Route: /login
+    }
+    class RouteManifestHandler {
+        <<class>>
+        +HandlesRoute : Route: /_routes
+    }
+    class Database {
+        <<class>>
+        +Infrastructure
+    }
+    class DatabaseConfig {
+        <<class>>
+        host : Describe : attributes: default: 
+        port : Describe : attributes: default: 3306
+        database : Describe : attributes: default: 
+        username : Describe : attributes: default: 
+        password : Describe : attributes: default: 
+        dsn : Describe : attributes: cast: ZeroToProd.Thryds.DatabaseCon...
+    }
+    class DevPath {
+        <<enum>>
+        +ClosedSet : Domain: dev_paths, addCase: 1. Add enum case wi...
+        phpunit : Group : BackedEnum: vendor
+        phpstan : Group : BackedEnum: vendor
+        rector : Group : BackedEnum: vendor
+        friendsofphp : Group : BackedEnum: vendor
+        myclabs : Group : BackedEnum: vendor
+        sebastian : Group : BackedEnum: vendor
+        theseer : Group : BackedEnum: vendor
+        nikic_php_parser : Group : BackedEnum: vendor
+        var_cache : Group : BackedEnum: excluded_dir
+        tests : Group : BackedEnum: excluded_dir
+        utils : Group : BackedEnum: excluded_dir
+    }
+    class DevPathGroup {
+        <<enum>>
+        +ClosedSet : Domain: dev_path_groups, addCase: Add enum case...
+    }
+    class Env {
+        <<class>>
+        +SourceOfTruth : SourceOfTruthConcept: environment variable keys...
+        +KeyRegistry : KeySource: _SERVER / _ENV, superglobals: _SERVE...
+    }
+    class ExceptionHandler {
+        <<class>>
+        handleHttpException() : HandlesException : exception: League.Route.Http.Exception
+        handleThrowable() : HandlesException : exception: Throwable
+    }
+    class Header {
+        <<class>>
+        +KeyRegistry : KeySource: HTTP headers, superglobals: , addKey...
+    }
+    class Log {
+        <<class>>
+        +Infrastructure
+    }
+    class LogContext {
+        <<class>>
+        +KeyRegistry : KeySource: Log context array, superglobals: , a...
+    }
+    class LogLevel {
+        <<enum>>
+        +ClosedSet : Domain: log_severity_levels, addCase: Add enum ...
+    }
+    class MigrationInterface {
+        <<interface>>
+        +Infrastructure
+    }
+    class MigrationStatus {
+        <<enum>>
+        +ClosedSet : Domain: migration_statuses, addCase: Add enum c...
+    }
+    class Migrator {
+        <<class>>
+        +KeyRegistry : KeySource: migrations tracking table, superglob...
+    }
+    class OpcacheStatus {
+        <<class>>
+        +KeyRegistry : KeySource: opcache_get_status(), superglobals: ...
+    }
+    class CreateUserQuery {
+        <<class>>
+        +Infrastructure
+    }
+    class DbCreate {
+        <<trait>>
+        +Infrastructure
+    }
+    class RequestId {
+        <<class>>
+        +Requirement : ids: TRACE-001, SEC-001
+        init() : Requirement : ids: TRACE-001
+        reset() : Requirement : ids: SEC-001
+    }
+    class InputField {
+        <<class>>
+        +Infrastructure
+    }
+    class RegisterRequest {
+        <<class>>
+        name : Input : InputType: text, label: Name
+        name : Validate : rules: required
+        handle : Input : InputType: text, label: Handle
+        handle : Validate : rules: required
+        email : Input : InputType: email, label: Email
+        email : Validate : rules: required, email
+        password : Input : InputType: password, label: Password
+        password : Validate : rules: required, min, 8
+        password_confirmation : Input : InputType: password, label: Confirm Password
+        password_confirmation : Validate : rules: required, matches, password
+        id : Column : DataType: CHAR, length: 26, comment: Primary key
+        id : PrimaryKey : columns: 
+        id : Describe : attributes: nullable: true
+        email_verified_at : Column : DataType: TIMESTAMP, nullable: true, comment: T...
+        email_verified_at : Describe : attributes: nullable: true
+        created_at : Column : DataType: TIMESTAMP, default: CURRENT_TIMESTAMP...
+        created_at : Describe : attributes: nullable: true
+        updated_at : Column : DataType: TIMESTAMP, default: CURRENT_TIMESTAMP...
+        updated_at : Describe : attributes: nullable: true
+    }
+    class HttpMethod {
+        <<enum>>
+        +ClosedSet : Domain: http_methods, addCase: Add enum case. N...
+    }
+    class Route {
+        <<enum>>
+        +ClosedSet : Domain: url_routes, addCase: 1. Add entry to th...
+        home : RouteInfo : description: Home
+        home : RouteOperation : HttpMethod: GET, description: Marketing home page
+        home : RendersView : View: home
+        about : RouteInfo : description: About
+        about : RouteOperation : HttpMethod: GET, description: Company and produ...
+        about : RendersView : View: about
+        login : RouteInfo : description: Login
+        login : RouteOperation : HttpMethod: GET, description: User authenticati...
+        login : RendersView : View: login
+        register : RouteInfo : description: Register
+        register : RouteOperation : HttpMethod: GET, description: New user registra...
+        register : RendersView : View: register
+        opcache_status : DevOnly
+        opcache_status : RouteInfo : description: OPcache status
+        opcache_status : RouteOperation : HttpMethod: GET, description: OPcache runtime s...
+        opcache_scripts : DevOnly
+        opcache_scripts : RouteInfo : description: OPcache scripts
+        opcache_scripts : RouteOperation : HttpMethod: GET, description: Scripts loaded in...
+        styleguide : DevOnly
+        styleguide : RouteInfo : description: Style guide
+        styleguide : RouteOperation : HttpMethod: GET, description: UI component and ...
+        styleguide : RendersView : View: styleguide
+        routes : DevOnly
+        routes : RouteInfo : description: Routes
+        routes : RouteOperation : HttpMethod: GET, description: Machine-readable ...
+    }
+    class RouteManifest {
+        <<class>>
+        +KeyRegistry : KeySource: Route manifest JSON, superglobals: ,...
+    }
+    class RouteRegistrar {
+        <<class>>
+        +Infrastructure
+    }
+    class RouteUrl {
+        <<class>>
+        +Infrastructure
+    }
+    class Charset {
+        <<enum>>
+        +ClosedSet : Domain: sql_charsets, addCase: 1. Add enum case...
+    }
+    class Collation {
+        <<enum>>
+        +ClosedSet : Domain: sql_collations, addCase: 1. Add enum ca...
+    }
+    class DataType {
+        <<enum>>
+        +ClosedSet : Domain: sql_data_types, addCase: 1. Add enum ca...
+        BIGINT : SupportsUnsigned
+        BIGINT : SupportsAutoIncrement
+        INT : SupportsUnsigned
+        INT : SupportsAutoIncrement
+        SMALLINT : SupportsUnsigned
+        SMALLINT : SupportsAutoIncrement
+        TINYINT : SupportsUnsigned
+        TINYINT : SupportsAutoIncrement
+        VARCHAR : RequiresLength
+        CHAR : RequiresLength
+        DECIMAL : SupportsUnsigned
+        DECIMAL : RequiresPrecisionScale
+        FLOAT : SupportsUnsigned
+        DOUBLE : SupportsUnsigned
+        ENUM : RequiresValues
+        SET : RequiresValues
+        BINARY : RequiresLength
+        VARBINARY : RequiresLength
+    }
+    class DdlBuilder {
+        <<class>>
+        +Infrastructure
+    }
+    class Engine {
+        <<enum>>
+        +ClosedSet : Domain: sql_storage_engines, addCase: 1. Add en...
+    }
+    class ReferentialAction {
+        <<enum>>
+        +ClosedSet : Domain: sql_referential_actions, addCase: 1. Ad...
+    }
+    class Migration {
+        <<class>>
+        +ClosedSet : Domain: database_table_columns, addCase: 1. Add...
+        +Table : TableName: migrations, Engine: InnoDB, Charset:...
+        id : Column : DataType: VARCHAR, length: 20, comment: Migrati...
+        id : PrimaryKey : columns: 
+        description : Column : DataType: VARCHAR, length: 255, comment: Human-...
+        checksum : Column : DataType: VARCHAR, length: 64, comment: SHA-256...
+        applied_at : Column : DataType: DATETIME, default: CURRENT_TIMESTAMP,...
+    }
+    class TableName {
+        <<enum>>
+        +ClosedSet : Domain: database_table_names, addCase: 1. Add e...
+    }
+    class User {
+        <<class>>
+        +ClosedSet : Domain: database_table_columns, addCase: 1. Add...
+        +Table : TableName: users, Engine: InnoDB, Charset: utf8...
+        id : Column : DataType: CHAR, length: 26, comment: Primary key
+        id : PrimaryKey : columns: 
+        id : Describe : attributes: nullable: true
+        name : Column : DataType: VARCHAR, length: 255, comment: Displa...
+        name : Describe : attributes: nullable: true
+        handle : Column : DataType: VARCHAR, length: 30, comment: Unique ...
+        handle : Describe : attributes: nullable: true
+        email : Column : DataType: VARCHAR, length: 255, nullable: true,...
+        email : Describe : attributes: nullable: true
+        email_verified_at : Column : DataType: TIMESTAMP, nullable: true, comment: T...
+        email_verified_at : Describe : attributes: nullable: true
+        password : Column : DataType: VARCHAR, length: 255, comment: Hashed...
+        password : Describe : attributes: nullable: true
+        created_at : Column : DataType: TIMESTAMP, default: CURRENT_TIMESTAMP...
+        created_at : Describe : attributes: nullable: true
+        updated_at : Column : DataType: TIMESTAMP, default: CURRENT_TIMESTAMP...
+        updated_at : Describe : attributes: nullable: true
+    }
+    class UserColumns {
+        <<trait>>
+        id : Column : DataType: CHAR, length: 26, comment: Primary key
+        id : PrimaryKey : columns: 
+        id : Describe : attributes: nullable: true
+        name : Column : DataType: VARCHAR, length: 255, comment: Displa...
+        name : Describe : attributes: nullable: true
+        handle : Column : DataType: VARCHAR, length: 30, comment: Unique ...
+        handle : Describe : attributes: nullable: true
+        email : Column : DataType: VARCHAR, length: 255, nullable: true,...
+        email : Describe : attributes: nullable: true
+        email_verified_at : Column : DataType: TIMESTAMP, nullable: true, comment: T...
+        email_verified_at : Describe : attributes: nullable: true
+        password : Column : DataType: VARCHAR, length: 255, comment: Hashed...
+        password : Describe : attributes: nullable: true
+        created_at : Column : DataType: TIMESTAMP, default: CURRENT_TIMESTAMP...
+        created_at : Describe : attributes: nullable: true
+        updated_at : Column : DataType: TIMESTAMP, default: CURRENT_TIMESTAMP...
+        updated_at : Describe : attributes: nullable: true
+    }
+    class AlertVariant {
+        <<enum>>
+        +ClosedSet : Domain: alert_variants, addCase:     1. Add enu...
+    }
+    class ButtonSize {
+        <<enum>>
+        +ClosedSet : Domain: button_sizes, addCase:     1. Add enum ...
+    }
+    class ButtonVariant {
+        <<enum>>
+        +ClosedSet : Domain: button_variants, addCase: 1. Add enum c...
+    }
+    class Domain {
+        <<enum>>
+        +ClosedSet : Domain: closed_set_domains, addCase: Add enum c...
+        closed_set_domains : Group : BackedEnum: type-system
+        source_of_truth_concepts : Group : BackedEnum: type-system
+        application_environment : Group : BackedEnum: type-system
+        blade_directives : Group : BackedEnum: composition
+        blade_components : Group : BackedEnum: composition
+        blade_templates : Group : BackedEnum: composition
+        http_methods : Group : BackedEnum: navigation
+        key_sources : Group : BackedEnum: type-system
+        log_severity_levels : Group : BackedEnum: type-system
+        dev_path_groups : Group : BackedEnum: type-system
+        dev_paths : Group : BackedEnum: type-system
+        url_routes : Group : BackedEnum: navigation
+        error_messages : Group : BackedEnum: type-system
+        button_variants : Group : BackedEnum: composition
+        button_sizes : Group : BackedEnum: composition
+        alert_variants : Group : BackedEnum: composition
+        input_types : Group : BackedEnum: composition
+        component_props : Group : BackedEnum: composition
+        layouts : Group : BackedEnum: composition
+        sql_data_types : Group : BackedEnum: schema
+        sql_storage_engines : Group : BackedEnum: schema
+        sql_charsets : Group : BackedEnum: schema
+        sql_collations : Group : BackedEnum: schema
+        sql_referential_actions : Group : BackedEnum: schema
+        database_table_columns : Group : BackedEnum: schema
+        migration_statuses : Group : BackedEnum: type-system
+        scalar_defaults : Group : BackedEnum: type-system
+        validation_rules : Group : BackedEnum: data-flow
+        database_table_names : Group : BackedEnum: schema
+        edge_kinds : Group : BackedEnum: type-system
+        namespace_layers : Group : BackedEnum: type-system
+        config_keys : Group : BackedEnum: data-flow
+    }
+    class InputType {
+        <<enum>>
+        +ClosedSet : Domain: input_types, addCase: 1. Add enum case....
+    }
+    class Layout {
+        <<enum>>
+        +ClosedSet : Domain: layouts, addCase: 1. Add enum case. 2. ...
+    }
+    class Props {
+        <<enum>>
+        +ClosedSet : Domain: component_props, addCase: 1. Add enum c...
+    }
+    class Rule {
+        <<enum>>
+        +ClosedSet : Domain: validation_rules, addCase: Add enum cas...
+    }
+    class ValidationRule {
+        <<interface>>
+        +Infrastructure
+    }
+    class Validator {
+        <<class>>
+        +Infrastructure
+    }
+    class ErrorMessages {
+        <<enum>>
+        +ClosedSet : Domain: error_messages, addCase: Add enum case....
+    }
+    class ErrorViewModel {
+        <<class>>
+        +ViewModel
+    }
+    class RegisterViewModel {
+        <<class>>
+        +ViewModel
+        name_error : Describe : attributes: nullable: true
+        email_error : Describe : attributes: nullable: true
+        handle_error : Describe : attributes: nullable: true
+        password_error : Describe : attributes: nullable: true
+        password_confirmation_error : Describe : attributes: nullable: true
+        id : Column : DataType: CHAR, length: 26, comment: Primary key
+        id : PrimaryKey : columns: 
+        id : Describe : attributes: nullable: true
+        name : Column : DataType: VARCHAR, length: 255, comment: Displa...
+        name : Describe : attributes: nullable: true
+        handle : Column : DataType: VARCHAR, length: 30, comment: Unique ...
+        handle : Describe : attributes: nullable: true
+        email : Column : DataType: VARCHAR, length: 255, nullable: true,...
+        email : Describe : attributes: nullable: true
+        email_verified_at : Column : DataType: TIMESTAMP, nullable: true, comment: T...
+        email_verified_at : Describe : attributes: nullable: true
+        password : Column : DataType: VARCHAR, length: 255, comment: Hashed...
+        password : Describe : attributes: nullable: true
+        created_at : Column : DataType: TIMESTAMP, default: CURRENT_TIMESTAMP...
+        created_at : Describe : attributes: nullable: true
+        updated_at : Column : DataType: TIMESTAMP, default: CURRENT_TIMESTAMP...
+        updated_at : Describe : attributes: nullable: true
+    }
+    AppEnv ..> Domain : (type-system) closedset %% src/AppEnv.php → src/UI/Domain.php
+    EdgeKind ..> Domain : (type-system) closedset %% src/Attributes/EdgeKind.php → src/UI/Domain.php
+    KeySource ..> Domain : (type-system) closedset %% src/Attributes/KeySource.php → src/UI/Domain.php
+    Layer ..> Domain : (type-system) closedset %% src/Attributes/Layer.php → src/UI/Domain.php
+    SourceOfTruthConcept ..> Domain : (type-system) closedset %% src/Attributes/SourceOfTruthConcept.php → src/UI/Domain.php
+    BladeDirective ..> Domain : (type-system) closedset %% src/Blade/BladeDirective.php → src/UI/Domain.php
+    Component ..> Domain : (type-system) closedset %% src/Blade/Component.php → src/UI/Domain.php
+    Component ..> Props : (composition) prop via alert, button, form_group, input %% src/Blade/Component.php → src/UI/Props.php
+    Component ..> AlertVariant : (composition) prop via alert %% src/Blade/Component.php → src/UI/AlertVariant.php
+    Component ..> ButtonVariant : (composition) prop via button %% src/Blade/Component.php → src/UI/ButtonVariant.php
+    Component ..> ButtonSize : (composition) prop via button %% src/Blade/Component.php → src/UI/ButtonSize.php
+    Component ..> InputType : (composition) prop via input %% src/Blade/Component.php → src/UI/InputType.php
+    ScalarDefault ..> Domain : (type-system) closedset %% src/Blade/ScalarDefault.php → src/UI/Domain.php
+    View ..> Domain : (type-system) closedset %% src/Blade/View.php → src/UI/Domain.php
+    View ..> Layout : (composition) extendslayout via about, error, home, login, register, ... %% src/Blade/View.php → src/UI/Layout.php
+    View ..> Component : (composition) usescomponent via about, error, home, login, register, ... %% src/Blade/View.php → src/Blade/Component.php
+    View ..> ErrorViewModel : (data-flow) receivesviewmodel via error %% src/Blade/View.php → src/ViewModels/ErrorViewModel.php
+    View ..> RegisterViewModel : (data-flow) receivesviewmodel via register %% src/Blade/View.php → src/ViewModels/RegisterViewModel.php
+    Vite ..> KeySource : (type-system) keyregistry %% src/Blade/Vite.php → src/Attributes/KeySource.php
+    Config ..> AppEnv : (data-flow) describe via AppEnv %% src/Config.php → src/AppEnv.php
+    Config ..> DatabaseConfig : (data-flow) describe via DatabaseConfig %% src/Config.php → src/DatabaseConfig.php
+    ConfigKey ..> Domain : (type-system) closedset %% src/ConfigKey.php → src/UI/Domain.php
+    HomeController ..> Route : (navigation) handlesroute %% src/Controllers/HomeController.php → src/Routes/Route.php
+    HomeController ..> View : (composition) rendersview %% src/Controllers/HomeController.php → src/Blade/View.php
+    OpcacheScriptsHandler ..> Route : (navigation) handlesroute %% src/Controllers/OpcacheScriptsHandler.php → src/Routes/Route.php
+    OpcacheStatusHandler ..> Route : (navigation) handlesroute %% src/Controllers/OpcacheStatusHandler.php → src/Routes/Route.php
+    RegisterController ..> Route : (navigation) handlesroute %% src/Controllers/RegisterController.php → src/Routes/Route.php
+    RegisterController ..> View : (composition) rendersview %% src/Controllers/RegisterController.php → src/Blade/View.php
+    RegisterController ..> User : (data-flow) persists %% src/Controllers/RegisterController.php → src/Tables/User.php
+    RegisterController ..> Route : (navigation) redirectsto %% src/Controllers/RegisterController.php → src/Routes/Route.php
+    RouteManifestHandler ..> Route : (navigation) handlesroute %% src/Controllers/RouteManifestHandler.php → src/Routes/Route.php
+    DevPath ..> Domain : (type-system) closedset %% src/DevPath.php → src/UI/Domain.php
+    DevPath ..> DevPathGroup : (type-system) group via phpunit, phpstan, rector, friendsofph... %% src/DevPath.php → src/DevPathGroup.php
+    DevPathGroup ..> Domain : (type-system) closedset %% src/DevPathGroup.php → src/UI/Domain.php
+    Env ..> SourceOfTruthConcept : (type-system) sourceoftruth %% src/Env.php → src/Attributes/SourceOfTruthConcept.php
+    Env ..> KeySource : (type-system) keyregistry %% src/Env.php → src/Attributes/KeySource.php
+    ExceptionHandler ..> Exception : (data-flow) handlesexception via handleHttpException() %% src/ExceptionHandler.php
+    Header ..> KeySource : (type-system) keyregistry %% src/Header.php → src/Attributes/KeySource.php
+    LogContext ..> KeySource : (type-system) keyregistry %% src/LogContext.php → src/Attributes/KeySource.php
+    LogLevel ..> Domain : (type-system) closedset %% src/LogLevel.php → src/UI/Domain.php
+    MigrationStatus ..> Domain : (type-system) closedset %% src/MigrationStatus.php → src/UI/Domain.php
+    Migrator ..> KeySource : (type-system) keyregistry %% src/Migrator.php → src/Attributes/KeySource.php
+    OpcacheStatus ..> KeySource : (type-system) keyregistry %% src/OpcacheStatus.php → src/Attributes/KeySource.php
+    RegisterRequest ..> InputType : (composition) input via name, handle, email, password, passwo... %% src/Requests/RegisterRequest.php → src/UI/InputType.php
+    RegisterRequest ..> Rule : (data-flow) validate via name, handle, email, password, passwo... %% src/Requests/RegisterRequest.php → src/Validation/Rule.php
+    RegisterRequest ..> DataType : (schema) column via id, email_verified_at, created_at, up... %% src/Requests/RegisterRequest.php → src/Schema/DataType.php
+    HttpMethod ..> Domain : (type-system) closedset %% src/Routes/HttpMethod.php → src/UI/Domain.php
+    Route ..> Domain : (type-system) closedset %% src/Routes/Route.php → src/UI/Domain.php
+    Route ..> HttpMethod : (navigation) routeoperation via home, about, login, register, opcache... %% src/Routes/Route.php → src/Routes/HttpMethod.php
+    Route ..> View : (composition) rendersview via home, about, login, register, styleguide %% src/Routes/Route.php → src/Blade/View.php
+    RouteManifest ..> KeySource : (type-system) keyregistry %% src/Routes/RouteManifest.php → src/Attributes/KeySource.php
+    Charset ..> Domain : (type-system) closedset %% src/Schema/Charset.php → src/UI/Domain.php
+    Collation ..> Domain : (type-system) closedset %% src/Schema/Collation.php → src/UI/Domain.php
+    DataType ..> Domain : (type-system) closedset %% src/Schema/DataType.php → src/UI/Domain.php
+    Engine ..> Domain : (type-system) closedset %% src/Schema/Engine.php → src/UI/Domain.php
+    ReferentialAction ..> Domain : (type-system) closedset %% src/Schema/ReferentialAction.php → src/UI/Domain.php
+    Migration ..> Domain : (type-system) closedset %% src/Tables/Migration.php → src/UI/Domain.php
+    Migration ..> TableName : (schema) table %% src/Tables/Migration.php → src/Tables/TableName.php
+    Migration ..> Engine : (schema) table %% src/Tables/Migration.php → src/Schema/Engine.php
+    Migration ..> Charset : (schema) table %% src/Tables/Migration.php → src/Schema/Charset.php
+    Migration ..> Collation : (schema) table %% src/Tables/Migration.php → src/Schema/Collation.php
+    Migration ..> DataType : (schema) column via id, description, checksum, applied_at %% src/Tables/Migration.php → src/Schema/DataType.php
+    TableName ..> Domain : (type-system) closedset %% src/Tables/TableName.php → src/UI/Domain.php
+    User ..> Domain : (type-system) closedset %% src/Tables/User.php → src/UI/Domain.php
+    User ..> TableName : (schema) table %% src/Tables/User.php → src/Tables/TableName.php
+    User ..> Engine : (schema) table %% src/Tables/User.php → src/Schema/Engine.php
+    User ..> Charset : (schema) table %% src/Tables/User.php → src/Schema/Charset.php
+    User ..> Collation : (schema) table %% src/Tables/User.php → src/Schema/Collation.php
+    User ..> DataType : (schema) column via id, name, handle, email, email_verifi... %% src/Tables/User.php → src/Schema/DataType.php
+    UserColumns ..> DataType : (schema) column via id, name, handle, email, email_verifi... %% src/Tables/UserColumns.php → src/Schema/DataType.php
+    AlertVariant ..> Domain : (type-system) closedset %% src/UI/AlertVariant.php → src/UI/Domain.php
+    ButtonSize ..> Domain : (type-system) closedset %% src/UI/ButtonSize.php → src/UI/Domain.php
+    ButtonVariant ..> Domain : (type-system) closedset %% src/UI/ButtonVariant.php → src/UI/Domain.php
+    Domain ..> EdgeKind : (type-system) group via closed_set_domains, source_of_truth_c... %% src/UI/Domain.php → src/Attributes/EdgeKind.php
+    InputType ..> Domain : (type-system) closedset %% src/UI/InputType.php → src/UI/Domain.php
+    Layout ..> Domain : (type-system) closedset %% src/UI/Layout.php → src/UI/Domain.php
+    Props ..> Domain : (type-system) closedset %% src/UI/Props.php → src/UI/Domain.php
+    Rule ..> Domain : (type-system) closedset %% src/Validation/Rule.php → src/UI/Domain.php
+    ErrorMessages ..> Domain : (type-system) closedset %% src/ViewModels/ErrorMessages.php → src/UI/Domain.php
+    RegisterViewModel ..> DataType : (schema) column via id, name, handle, email, email_verifi... %% src/ViewModels/RegisterViewModel.php → src/Schema/DataType.php
+    note for AlertVariant "Dependents: Component via prop (case:alert)"
+    note for AppEnv "Dependents: Config via describe (property:AppEnv)"
+    note for ButtonSize "Dependents: Component via prop (case:button)"
+    note for ButtonVariant "Dependents: Component via prop (case:button)"
+    note for Charset "Dependents: Migration via table, User via table"
+    note for Collation "Dependents: Migration via table, User via table"
+    note for Component "Dependents: View via usescomponent (case:about), View via usescomponent (case:error), View via usescomponent (case:home), View via usescomponent (case:login), View via usescomponent (case:register), View via usescomponent (case:styleguide)"
+    note for DataType "Dependents: RegisterRequest via column (property:id), RegisterRequest via column (property:email_verified_at), RegisterRequest via column (property:created_at), RegisterRequest via column (property:updated_at), Migration via column (property:id), Migration via column (property:description), Migration via column (property:checksum), Migration via column (property:applied_at), User via column (property:id), User via column (property:name), User via column (property:handle), User via column (property:email), User via column (property:email_verified_at), User via column (property:password), User via column (property:created_at), User via column (property:updated_at), UserColumns via column (property:id), UserColumns via column (property:name), UserColumns via column (property:handle), UserColumns via column (property:email), UserColumns via column (property:email_verified_at), UserColumns via column (property:password), UserColumns via column (property:created_at), UserColumns via column (property:updated_at), RegisterViewModel via column (property:id), RegisterViewModel via column (property:name), RegisterViewModel via column (property:handle), RegisterViewModel via column (property:email), RegisterViewModel via column (property:email_verified_at), RegisterViewModel via column (property:password), RegisterViewModel via column (property:created_at), RegisterViewModel via column (property:updated_at)"
+    note for DatabaseConfig "Dependents: Config via describe (property:DatabaseConfig)"
+    note for DevPathGroup "Dependents: DevPath via group (case:phpunit), DevPath via group (case:phpstan), DevPath via group (case:rector), DevPath via group (case:friendsofphp), DevPath via group (case:myclabs), DevPath via group (case:sebastian), DevPath via group (case:theseer), DevPath via group (case:nikic_php_parser), DevPath via group (case:var_cache), DevPath via group (case:tests), DevPath via group (case:utils)"
+    note for Domain "Dependents: AppEnv via closedset, EdgeKind via closedset, KeySource via closedset, Layer via closedset, SourceOfTruthConcept via closedset, BladeDirective via closedset, Component via closedset, ScalarDefault via closedset, View via closedset, ConfigKey via closedset, DevPath via closedset, DevPathGroup via closedset, LogLevel via closedset, MigrationStatus via closedset, HttpMethod via closedset, Route via closedset, Charset via closedset, Collation via closedset, DataType via closedset, Engine via closedset, ReferentialAction via closedset, Migration via closedset, TableName via closedset, User via closedset, AlertVariant via closedset, ButtonSize via closedset, ButtonVariant via closedset, InputType via closedset, Layout via closedset, Props via closedset, Rule via closedset, ErrorMessages via closedset"
+    note for EdgeKind "Dependents: Domain via group (case:closed_set_domains), Domain via group (case:source_of_truth_concepts), Domain via group (case:application_environment), Domain via group (case:blade_directives), Domain via group (case:blade_components), Domain via group (case:blade_templates), Domain via group (case:http_methods), Domain via group (case:key_sources), Domain via group (case:log_severity_levels), Domain via group (case:dev_path_groups), Domain via group (case:dev_paths), Domain via group (case:url_routes), Domain via group (case:error_messages), Domain via group (case:button_variants), Domain via group (case:button_sizes), Domain via group (case:alert_variants), Domain via group (case:input_types), Domain via group (case:component_props), Domain via group (case:layouts), Domain via group (case:sql_data_types), Domain via group (case:sql_storage_engines), Domain via group (case:sql_charsets), Domain via group (case:sql_collations), Domain via group (case:sql_referential_actions), Domain via group (case:database_table_columns), Domain via group (case:migration_statuses), Domain via group (case:scalar_defaults), Domain via group (case:validation_rules), Domain via group (case:database_table_names), Domain via group (case:edge_kinds), Domain via group (case:namespace_layers), Domain via group (case:config_keys)"
+    note for Engine "Dependents: Migration via table, User via table"
+    note for ErrorViewModel "Dependents: View via receivesviewmodel (case:error)"
+    note for Exception "Dependents: ExceptionHandler via handlesexception (method:handleHttpException)"
+    note for HttpMethod "Dependents: Route via routeoperation (case:home), Route via routeoperation (case:about), Route via routeoperation (case:login), Route via routeoperation (case:register), Route via routeoperation (case:opcache_status), Route via routeoperation (case:opcache_scripts), Route via routeoperation (case:styleguide), Route via routeoperation (case:routes)"
+    note for InputType "Dependents: Component via prop (case:input), RegisterRequest via input (property:name), RegisterRequest via input (property:handle), RegisterRequest via input (property:email), RegisterRequest via input (property:password), RegisterRequest via input (property:password_confirmation)"
+    note for KeySource "Dependents: Vite via keyregistry, Env via keyregistry, Header via keyregistry, LogContext via keyregistry, Migrator via keyregistry, OpcacheStatus via keyregistry, RouteManifest via keyregistry"
+    note for Layout "Dependents: View via extendslayout (case:about), View via extendslayout (case:error), View via extendslayout (case:home), View via extendslayout (case:login), View via extendslayout (case:register), View via extendslayout (case:styleguide)"
+    note for Props "Dependents: Component via prop (case:alert), Component via prop (case:button), Component via prop (case:form_group), Component via prop (case:input)"
+    note for RegisterViewModel "Dependents: View via receivesviewmodel (case:register)"
+    note for Route "Dependents: HomeController via handlesroute, OpcacheScriptsHandler via handlesroute, OpcacheStatusHandler via handlesroute, RegisterController via handlesroute, RegisterController via redirectsto, RouteManifestHandler via handlesroute"
+    note for Rule "Dependents: RegisterRequest via validate (property:name), RegisterRequest via validate (property:handle), RegisterRequest via validate (property:email), RegisterRequest via validate (property:password), RegisterRequest via validate (property:password_confirmation)"
+    note for SourceOfTruthConcept "Dependents: Env via sourceoftruth"
+    note for TableName "Dependents: Migration via table, User via table"
+    note for User "Dependents: RegisterController via persists"
+    note for View "Dependents: HomeController via rendersview, RegisterController via rendersview, Route via rendersview (case:home), Route via rendersview (case:about), Route via rendersview (case:login), Route via rendersview (case:register), Route via rendersview (case:styleguide)"

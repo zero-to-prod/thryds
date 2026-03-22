@@ -45,6 +45,7 @@ TEST
 
 FIX (modifies files)
   fix:all          Apply all fixes, regenerate preload, then verify with check:all
+                   Pass --dry-run (-n) to preview what would be fixed without mutating files
   fix:style        Auto-format all PHP files to project style
   fix:rector       Apply automated refactor rules to the codebase
 
@@ -88,10 +89,8 @@ elif [ "$1" = "prod" ]; then
     sed -i '' 's/^APP_ENV=.*/APP_ENV=production/' .env
     docker compose -f compose.yaml up -d
 elif [ "$1" = "fix:all" ]; then
-    docker compose $COMPOSE_FILES exec web composer fix:style \
-    && docker compose $COMPOSE_FILES exec web composer fix:rector \
-    && docker compose $COMPOSE_FILES exec web composer generate:preload \
-    && docker compose $COMPOSE_FILES exec web composer check:all
+    shift
+    docker compose $COMPOSE_FILES exec web composer fix:all -- "$@"
 elif [ "$1" = "composer" ]; then
     shift
     docker compose $COMPOSE_FILES exec web composer "$@"

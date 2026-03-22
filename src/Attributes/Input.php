@@ -12,7 +12,7 @@ use ZeroToProd\Thryds\UI\InputType;
  *
  * Applied to properties on request classes to describe how the field
  * should be rendered as a form input. The `name` attribute and `required`
- * flag are derived from the property name and {@see Validate} presence.
+ * flag are derived from the property name and {@see Validates} presence.
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 readonly class Input

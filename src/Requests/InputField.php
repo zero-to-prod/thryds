@@ -7,7 +7,7 @@ namespace ZeroToProd\Thryds\Requests;
 use ReflectionClass;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\Input;
-use ZeroToProd\Thryds\Attributes\Validate;
+use ZeroToProd\Thryds\Attributes\Validates;
 use ZeroToProd\Thryds\UI\InputType;
 use ZeroToProd\Thryds\Validation\Rule;
 
@@ -59,8 +59,17 @@ readonly class InputField
     public static function reflect(string $class): array
     {
         $fields = [];
+        $ReflectionClass = new ReflectionClass(objectOrClass: $class);
 
-        foreach (new ReflectionClass(objectOrClass: $class)->getProperties() as $property) {
+        /** @var array<string, list<Validates>> */
+        $class_validation_map = [];
+        foreach ($ReflectionClass->getAttributes(Validates::class) as $attribute) {
+            /** @var Validates $Validates */
+            $Validates = $attribute->newInstance();
+            $class_validation_map[$Validates->property][] = $Validates;
+        }
+
+        foreach ($ReflectionClass->getProperties() as $property) {
             $input_attributes = $property->getAttributes(Input::class);
             if ($input_attributes === []) {
                 continue;
@@ -69,11 +78,11 @@ readonly class InputField
             /** @var Input $Input */
             $Input = $input_attributes[0]->newInstance();
 
+            $name = $property->getName();
             $required = false;
-            foreach ($property->getAttributes(Validate::class) as $validate_attribute) {
-                /** @var Validate $Validate */
-                $Validate = $validate_attribute->newInstance();
-                foreach ($Validate->rules as [$rule]) {
+
+            foreach ($class_validation_map[$name] ?? [] as $Validates) {
+                foreach ($Validates->rules as [$rule]) {
                     if ($rule !== Rule::required) {
                         continue;
                     }
@@ -83,7 +92,7 @@ readonly class InputField
             }
 
             $fields[] = new self(
-                name: $property->getName(),
+                $name,
                 InputType: $Input->InputType,
                 label: $Input->label,
                 required: $required,

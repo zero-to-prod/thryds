@@ -24,6 +24,9 @@ checks:
     command: "php scripts/lint-blade-templates.php"
   check:blade-push:
     command: "php scripts/check-blade-push.php"
+  check:preload:
+    command: "php scripts/check-preload.php"
+    fix: "./run generate:preload"
   check:graph:
     command: "php scripts/check-graph.php"
   test:

@@ -1,0 +1,18 @@
+# Each step maps a fix command to its read-only check equivalent.
+# Steps run sequentially in order. check:all runs last as verification.
+steps:
+  sync:manifest:
+    fix: "composer sync:manifest"
+    check: "composer check:manifest"
+  fix:style:
+    fix: "composer fix:style"
+    check: "composer check:style"
+  fix:rector:
+    fix: "composer fix:rector"
+    check: "composer check:rector"
+  generate:preload:
+    fix: "composer generate:preload"
+    check: "composer check:preload"
+
+# Final verification step (always runs, both modes)
+verify: "composer check:all"

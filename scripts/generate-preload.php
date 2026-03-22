@@ -82,7 +82,13 @@ echo sprintf("Filtered to %d app scripts (excluded temp/cache/dev files)\n", cou
 
 $ordered = resolveOrder($app_scripts);
 
-$preload_path = $base_dir . '/preload.php';
+$output_arg   = null;
+foreach ($argv ?? [] as $arg) {
+    if (str_starts_with($arg, '--output=')) {
+        $output_arg = substr($arg, strlen('--output='));
+    }
+}
+$preload_path = $output_arg ?? $base_dir . '/preload.php';
 writePreload($preload_path, $ordered, $preload_config);
 
 echo sprintf("Wrote %s with %d scripts\n", $preload_path, count($ordered));
