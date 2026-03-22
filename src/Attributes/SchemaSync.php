@@ -19,6 +19,7 @@ use ZeroToProd\Thryds\Schema\SchemaSource;
  * readonly class User { ... }
  */
 #[Attribute(Attribute::TARGET_CLASS)]
+#[HopWeight(0)]
 readonly class SchemaSync
 {
     public function __construct(

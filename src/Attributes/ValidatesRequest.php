@@ -15,6 +15,7 @@ use Attribute;
  * the validated request.
  */
 #[Attribute(Attribute::TARGET_CLASS)]
+#[HopWeight(0)]
 readonly class ValidatesRequest
 {
     /**

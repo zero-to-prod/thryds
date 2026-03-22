@@ -29,6 +29,7 @@ use ZeroToProd\Thryds\UI\Domain;
  * }
  */
 #[Attribute(Attribute::TARGET_CLASS)]
+#[HopWeight(0)]
 readonly class ClosedSet
 {
     /**

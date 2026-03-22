@@ -18,6 +18,7 @@ use Attribute;
  * case random_id = 'random_id';
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
+#[HopWeight(1)]
 readonly class ResolvesTo
 {
     public function __construct(

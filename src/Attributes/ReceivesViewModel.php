@@ -16,6 +16,7 @@ use Attribute;
  * case error = 'error';
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
+#[HopWeight(0)]
 readonly class ReceivesViewModel
 {
     /** @var class-string[] */

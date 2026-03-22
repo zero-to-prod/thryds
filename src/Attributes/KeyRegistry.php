@@ -34,6 +34,7 @@ use Attribute;
  * }
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
+#[HopWeight(0)]
 readonly class KeyRegistry
 {
     /**

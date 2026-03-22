@@ -13,6 +13,7 @@ use ZeroToProd\Thryds\Queries\Persist;
  * @see Persist
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
+#[HopWeight(0)]
 readonly class PersistColumn
 {
     public function __construct(

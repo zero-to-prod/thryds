@@ -17,6 +17,7 @@ use ZeroToProd\Thryds\UI\Layout;
  * case home = 'home';
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
+#[HopWeight(0)]
 readonly class ExtendsLayout
 {
     public string $layout;

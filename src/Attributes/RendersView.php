@@ -15,6 +15,7 @@ use ZeroToProd\Thryds\Blade\View;
  * discover view bindings via this attribute.
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_CLASS_CONSTANT)]
+#[HopWeight(0)]
 readonly class RendersView
 {
     public function __construct(public View $View) {}

@@ -14,6 +14,7 @@ use Attribute;
  * Combine with {@see PersistColumn} for transformed values and {@see DbUpdate} trait for execution.
  */
 #[Attribute(Attribute::TARGET_CLASS)]
+#[HopWeight(0)]
 readonly class UpdatesIn
 {
     /**

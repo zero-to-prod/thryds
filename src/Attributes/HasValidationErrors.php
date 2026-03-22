@@ -16,6 +16,7 @@ use Attribute;
  * @template T of object
  */
 #[Attribute(Attribute::TARGET_CLASS)]
+#[HopWeight(0)]
 readonly class HasValidationErrors
 {
     /** @param class-string<T> $request */

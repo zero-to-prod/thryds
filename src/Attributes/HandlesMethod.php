@@ -18,6 +18,7 @@ use ZeroToProd\Thryds\Routes\HttpMethod;
  * public function post(RegisterRequest $request): ResponseInterface { ... }
  */
 #[Attribute(Attribute::TARGET_METHOD)]
+#[HopWeight(0)]
 readonly class HandlesMethod
 {
     public function __construct(public HttpMethod $HttpMethod) {}

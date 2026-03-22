@@ -16,6 +16,7 @@ use ZeroToProd\Thryds\Validation\Rule;
  * @see Rule
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
+#[HopWeight(0)]
 readonly class Validates
 {
     /** @var list<array{Rule, int|string|null}> */

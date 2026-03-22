@@ -15,6 +15,7 @@ use BackedEnum;
  * case phpunit = '/vendor/phpunit/';
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
+#[HopWeight(0)]
 readonly class Group
 {
     public function __construct(

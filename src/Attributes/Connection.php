@@ -22,6 +22,7 @@ use ZeroToProd\Thryds\Database;
  * readonly class User { ... }
  */
 #[Attribute(Attribute::TARGET_CLASS)]
+#[HopWeight(0)]
 readonly class Connection
 {
     /** @param class-string $database Container-resolvable class for the connection. */

@@ -16,6 +16,7 @@ use ZeroToProd\Thryds\Routes\Route;
  * class RegisterController { ... }
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
+#[HopWeight(0)]
 readonly class RedirectsTo
 {
     public function __construct(public Route $Route) {}

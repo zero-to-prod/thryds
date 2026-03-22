@@ -13,6 +13,7 @@ use Attribute;
  * Combine with {@see PersistColumn} for generated or transformed columns.
  */
 #[Attribute(Attribute::TARGET_CLASS)]
+#[HopWeight(0)]
 readonly class InsertsInto
 {
     /**

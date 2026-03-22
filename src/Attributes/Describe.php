@@ -25,4 +25,5 @@ use Attribute;
  * @see \Zerotoprod\DataModel\Describe
  */
 #[Attribute]
+#[HopWeight(0)]
 class Describe extends \Zerotoprod\DataModel\Describe {}

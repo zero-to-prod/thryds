@@ -86,6 +86,15 @@ edge:
     message: "ViewModel has no incoming #[ReceivesViewModel] edge — no View consumes it"
     fix: "Add #[ReceivesViewModel(ThisViewModel::class)] to a View enum case"
 
+hop:
+  # No path through consecutive semantic edges may exceed 1 hop.
+  # Structural edges (hop_weight=0) are free — they don't require
+  # reading the target to understand the source.
+  max-semantic-hops:
+    max_semantic_hops: 0
+    message: "Semantic hop limit exceeded"
+    fix: "Reduce indirection: inline the dependency, merge intermediate nodes, or reclassify an edge as structural (#[HopWeight(0)])"
+
 layer:
   # Controllers must not reference other controllers
   no-controller-to-controller:

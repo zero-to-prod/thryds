@@ -18,6 +18,7 @@ use ZeroToProd\Thryds\Routes\Route;
  * class RegisterController { ... }
  */
 #[Attribute(Attribute::TARGET_CLASS)]
+#[HopWeight(0)]
 readonly class HandlesRoute
 {
     public function __construct(public Route $Route) {}

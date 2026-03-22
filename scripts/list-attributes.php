@@ -385,6 +385,24 @@ function resolveEdgeKind(string $attributeClass, string $targetFqcn, array $conf
     return $config['edge_kind']['default'] ?? null;
 }
 
+/** Resolve the #[HopWeight] value from an attribute class. Returns null when not annotated. */
+function resolveHopWeight(string $attributeClass): ?int
+{
+    static $cache = [];
+    if (array_key_exists($attributeClass, $cache)) {
+        return $cache[$attributeClass];
+    }
+    if (! class_exists($attributeClass)) {
+        return $cache[$attributeClass] = null;
+    }
+    $ref = new ReflectionClass($attributeClass);
+    $attrs = $ref->getAttributes(\ZeroToProd\Thryds\Attributes\HopWeight::class);
+    if ($attrs === []) {
+        return $cache[$attributeClass] = null;
+    }
+    return $cache[$attributeClass] = $attrs[0]->newInstance()->weight;
+}
+
 /** Collect raw edges from ReflectionAttribute instances for a given source. */
 function collectEdges(array $reflectionAttributes, string $fromFqcn, string $source, array &$rawEdges, array $config): void
 {
@@ -404,6 +422,7 @@ function collectEdges(array $reflectionAttributes, string $fromFqcn, string $sou
                     'source' => $source,
                     'args' => $args,
                     'kind' => resolveEdgeKind($attr->getName(), $targetFqcn, $config),
+                    'hop_weight' => resolveHopWeight($attr->getName()),
                 ];
             }
         }
@@ -685,6 +704,7 @@ foreach ($rawEdges as $raw) {
         'to' => $toShort,
         'rel' => strtolower($raw['attr']),
         'kind' => $raw['kind'],
+        'hop_weight' => $raw['hop_weight'],
         'source' => $raw['source'],
         'args' => $raw['args'] ?? [],
         'from_file' => $graph[$raw['from_fqcn']]['file'] ?? null,
@@ -771,6 +791,9 @@ function serializeEdge(array $e, bool $compact): array
     $entry = ['from' => $e['from'], 'to' => $e['to'], 'rel' => $e['rel']];
     if ($e['kind'] !== null) {
         $entry['kind'] = $e['kind'];
+    }
+    if ($e['hop_weight'] !== null) {
+        $entry['hop_weight'] = $e['hop_weight'];
     }
     if (! $compact) {
         if ($e['source'] !== 'class') {

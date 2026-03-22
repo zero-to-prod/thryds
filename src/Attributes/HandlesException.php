@@ -19,6 +19,7 @@ use Throwable;
  * public function handleHttpException(HttpException $e): void {}
  */
 #[Attribute(Attribute::TARGET_METHOD)]
+#[HopWeight(1)]
 final readonly class HandlesException
 {
     /** @param class-string<Throwable> $exception */

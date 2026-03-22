@@ -375,6 +375,73 @@ foreach ($rules['layer'] ?? [] as $ruleName => $rule) {
     }
 }
 
+// ── Evaluate hop rules ──────────────────────────────────────────
+
+foreach ($rules['hop'] ?? [] as $ruleName => $rule) {
+    $maxHops = $rule['max_semantic_hops'] ?? 1;
+
+    // Build adjacency list from semantic edges (hop_weight = 1).
+    $semanticAdj = [];
+    $semanticEdgeMap = [];
+    foreach ($edges as $edge) {
+        if (($edge['hop_weight'] ?? null) !== 1) {
+            continue;
+        }
+        $semanticAdj[$edge['from']][] = $edge['to'];
+        $semanticEdgeMap[$edge['from'] . '|' . $edge['to']][] = $edge['rel'];
+    }
+
+    // BFS from each node through semantic edges. Flag paths exceeding maxHops.
+    $reported = [];
+    foreach ($semanticAdj as $start => $_) {
+        $queue = [[$start, [$start]]];
+        $visited = [$start => true];
+
+        while ($queue !== []) {
+            [$current, $path] = array_shift($queue);
+            foreach ($semanticAdj[$current] ?? [] as $neighbor) {
+                if (isset($visited[$neighbor])) {
+                    continue;
+                }
+                $newPath = [...$path, $neighbor];
+                $hops = count($newPath) - 1;
+
+                if ($hops > $maxHops) {
+                    // Build readable chain: A --rel--> B --rel--> C
+                    $chain = [];
+                    for ($i = 0; $i < count($newPath) - 1; $i++) {
+                        $rels = $semanticEdgeMap[$newPath[$i] . '|' . $newPath[$i + 1]] ?? ['?'];
+                        $chain[] = $newPath[$i] . ' --' . implode(',', $rels) . '-->';
+                    }
+                    $chain[] = $newPath[count($newPath) - 1];
+                    $chainStr = implode(' ', $chain);
+
+                    $key = implode('|', $newPath);
+                    if (! isset($reported[$key])) {
+                        $reported[$key] = true;
+                        $startFqcn = $shortToFqcn[$start] ?? '';
+                        $violations[] = [
+                            'rule' => $ruleName,
+                            'file' => $nodes[$startFqcn]['file'] ?? '',
+                            'message' => sprintf(
+                                '%s — %d semantic hops: %s',
+                                $rule['message'] ?? 'Semantic hop limit exceeded',
+                                $hops,
+                                $chainStr,
+                            ),
+                            'fix' => $rule['fix'] ?? '',
+                        ];
+                    }
+                    continue;
+                }
+
+                $visited[$neighbor] = true;
+                $queue[] = [$neighbor, $newPath];
+            }
+        }
+    }
+}
+
 // ── Output ──────────────────────────────────────────────────────
 
 echo json_encode(

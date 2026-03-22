@@ -15,6 +15,7 @@ use ZeroToProd\Thryds\UI\InputType;
  * flag are derived from the property name and {@see Validates} presence.
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
+#[HopWeight(0)]
 readonly class Input
 {
     public function __construct(

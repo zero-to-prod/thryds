@@ -37,6 +37,7 @@ use ZeroToProd\Thryds\Schema\DataType;
  * case created_at = 'created_at';
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
+#[HopWeight(0)]
 readonly class Column
 {
     /** Use as $default to generate DEFAULT CURRENT_TIMESTAMP in DDL. */

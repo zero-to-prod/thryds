@@ -17,6 +17,7 @@ use ZeroToProd\Thryds\Blade\Component;
  * case home = 'home';
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
+#[HopWeight(0)]
 readonly class UsesComponent
 {
     /** @var Component[] */

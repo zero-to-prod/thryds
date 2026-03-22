@@ -18,6 +18,7 @@ use Attribute;
  * @example #[SourceOfTruth(Concept::environment_variable_keys, addCase: '1. Add constant. 2. Add to compose.yaml.')]
  */
 #[Attribute(Attribute::TARGET_CLASS)]
+#[HopWeight(0)]
 readonly class SourceOfTruth
 {
     /**

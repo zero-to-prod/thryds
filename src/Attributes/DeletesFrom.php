@@ -13,6 +13,7 @@ use Attribute;
  * Combine with {@see DbDelete} trait for attribute-driven DELETE execution.
  */
 #[Attribute(Attribute::TARGET_CLASS)]
+#[HopWeight(0)]
 readonly class DeletesFrom
 {
     /**

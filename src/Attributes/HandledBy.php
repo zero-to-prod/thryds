@@ -18,6 +18,7 @@ use Attribute;
  * case register = '/register';
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
+#[HopWeight(1)]
 readonly class HandledBy
 {
     /** @param class-string $controller */

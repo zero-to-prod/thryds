@@ -34,6 +34,7 @@ use ZeroToProd\Thryds\Tables\TableName;
  * }
  */
 #[Attribute(Attribute::TARGET_CLASS)]
+#[HopWeight(0)]
 readonly class Table
 {
     /**

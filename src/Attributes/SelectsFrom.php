@@ -15,6 +15,7 @@ use ZeroToProd\Thryds\Schema\SortDirection;
  * Combine with {@see DbRead} trait for attribute-driven SELECT execution.
  */
 #[Attribute(Attribute::TARGET_CLASS)]
+#[HopWeight(0)]
 readonly class SelectsFrom
 {
     /**

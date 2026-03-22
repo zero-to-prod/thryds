@@ -19,6 +19,7 @@ use ZeroToProd\Thryds\Routes\HttpMethod;
  * case login = '/login';
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT | Attribute::IS_REPEATABLE)]
+#[HopWeight(0)]
 readonly class RouteOperation
 {
     public function __construct(

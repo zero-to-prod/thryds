@@ -21,6 +21,7 @@ use ZeroToProd\Thryds\UI\Props;
  * case button = 'button';
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT | Attribute::IS_REPEATABLE)]
+#[HopWeight(0)]
 readonly class Prop
 {
     /** Resolved default value from the backing enum or a plain string. */
