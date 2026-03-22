@@ -56,8 +56,10 @@ node:
       is_attribute: true
     exclude:
       # Used in tests/ and migrations/ (outside the graph scan scope)
+      - src/Attributes/AddColumn.php
       - src/Attributes/CoversRoute.php
       - src/Attributes/CreateTable.php
+      - src/Attributes/DropColumn.php
       - src/Attributes/Migration.php
       # Schema attributes — defined for future table columns
       - src/Attributes/ForeignKey.php

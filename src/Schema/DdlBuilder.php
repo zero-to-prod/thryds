@@ -7,6 +7,7 @@ namespace ZeroToProd\Thryds\Schema;
 use ReflectionClass;
 use ReflectionClassConstant;
 use ReflectionProperty;
+use RuntimeException;
 use ZeroToProd\Thryds\Attributes\Column;
 use ZeroToProd\Thryds\Attributes\ForeignKey;
 use ZeroToProd\Thryds\Attributes\Index;
@@ -26,6 +27,8 @@ use ZeroToProd\Thryds\Attributes\Table;
 #[Infrastructure]
 final readonly class DdlBuilder
 {
+    private const string ALTER_TABLE = 'ALTER TABLE `';
+
     private const string INDENT = '    ';
 
     private const string UNSIGNED = ' UNSIGNED';
@@ -188,6 +191,48 @@ final readonly class DdlBuilder
         }
 
         return $columns;
+    }
+
+    /**
+     * Generates an ALTER TABLE ADD COLUMN statement from a Table class property's #[Column] attribute.
+     *
+     * @param class-string $class  A class carrying #[Table] and #[Column] attributes.
+     * @param string       $column Property name on the class that carries the #[Column] attribute.
+     */
+    public static function addColumnSql(string $class, string $column): string
+    {
+        $ReflectionClass = new ReflectionClass(objectOrClass: $class);
+
+        return self::ALTER_TABLE . $ReflectionClass->getAttributes(Table::class)[0]->newInstance()->TableName->value . '` ADD COLUMN ' . self::columnDdl(name: $column, Column: self::reflectColumn($ReflectionClass, $column));
+    }
+
+    /**
+     * Generates an ALTER TABLE DROP COLUMN statement from a Table class property name.
+     *
+     * @param class-string $class  A class carrying a #[Table] attribute.
+     * @param string       $column Column name to drop.
+     */
+    public static function dropColumnSql(string $class, string $column): string
+    {
+        return self::ALTER_TABLE . new ReflectionClass(objectOrClass: $class)->getAttributes(Table::class)[0]->newInstance()->TableName->value . '` DROP COLUMN `' . $column . '`';
+    }
+
+    /**
+     * Reflects a single #[Column] attribute from a named property on a Table class.
+     *
+     * @param ReflectionClass<object> $ReflectionClass
+     */
+    public static function reflectColumn(ReflectionClass $ReflectionClass, string $column): Column
+    {
+        $col_attrs = $ReflectionClass->getProperty(name: $column)->getAttributes(Column::class);
+
+        if ($col_attrs === []) {
+            throw new RuntimeException(
+                "Property '$column' on {$ReflectionClass->getName()} does not have a #[Column] attribute."
+            );
+        }
+
+        return $col_attrs[0]->newInstance();
     }
 
     /**

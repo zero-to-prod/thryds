@@ -6,7 +6,9 @@ namespace ZeroToProd\Thryds;
 
 use ReflectionClass;
 use RuntimeException;
+use ZeroToProd\Thryds\Attributes\AddColumn;
 use ZeroToProd\Thryds\Attributes\CreateTable;
+use ZeroToProd\Thryds\Attributes\DropColumn;
 use ZeroToProd\Thryds\Attributes\KeyRegistry;
 use ZeroToProd\Thryds\Attributes\KeySource;
 use ZeroToProd\Thryds\Attributes\Migration as MigrationAttribute;
@@ -260,16 +262,32 @@ readonly class Migrator
     /**
      * Executes the up action for a migration class.
      *
-     * Attribute-driven: if #[CreateTable] is present, generates DDL from the target Table class.
+     * Attribute-driven: dispatches DDL based on #[CreateTable], #[AddColumn], or #[DropColumn].
      * Imperative fallback: delegates to MigrationInterface::up().
-     *
      */
     private function runUp(string $class): void
     {
-        $create_table = self::createTableAttribute($class);
+        // TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md
+        /** @var class-string $class Validated by discover() via class_exists(). */
+        $ReflectionClass = new ReflectionClass(objectOrClass: $class);
 
+        $create_table = self::firstAttribute($ReflectionClass, attribute: CreateTable::class);
         if ($create_table !== null) {
             $this->Database->execute(DdlBuilder::createTableSql($create_table->table));
+
+            return;
+        }
+
+        $add_column = self::firstAttribute($ReflectionClass, attribute: AddColumn::class);
+        if ($add_column !== null) {
+            $this->Database->execute(DdlBuilder::addColumnSql($add_column->table, $add_column->column));
+
+            return;
+        }
+
+        $drop_column = self::firstAttribute($ReflectionClass, attribute: DropColumn::class);
+        if ($drop_column !== null) {
+            $this->Database->execute(DdlBuilder::dropColumnSql($drop_column->table, $drop_column->column));
 
             return;
         }
@@ -280,16 +298,32 @@ readonly class Migrator
     /**
      * Executes the down action for a migration class.
      *
-     * Attribute-driven: if #[CreateTable] is present, generates DROP TABLE DDL.
+     * Attribute-driven: dispatches reverse DDL based on #[CreateTable], #[AddColumn], or #[DropColumn].
      * Imperative fallback: delegates to MigrationInterface::down().
-     *
      */
     private function runDown(string $class): void
     {
-        $create_table = self::createTableAttribute($class);
+        // TODO: Reflection on static class structure should be resolved at construction, not per-invocation. See: utils/rector/docs/ForbidReflectionInInstanceMethodRector.md
+        /** @var class-string $class Validated by discover() via class_exists(). */
+        $ReflectionClass = new ReflectionClass(objectOrClass: $class);
 
+        $create_table = self::firstAttribute($ReflectionClass, attribute: CreateTable::class);
         if ($create_table !== null) {
             $this->Database->execute(DdlBuilder::dropTableSql($create_table->table));
+
+            return;
+        }
+
+        $add_column = self::firstAttribute($ReflectionClass, attribute: AddColumn::class);
+        if ($add_column !== null) {
+            $this->Database->execute(DdlBuilder::dropColumnSql($add_column->table, $add_column->column));
+
+            return;
+        }
+
+        $drop_column = self::firstAttribute($ReflectionClass, attribute: DropColumn::class);
+        if ($drop_column !== null) {
+            $this->Database->execute(DdlBuilder::addColumnSql($drop_column->table, $drop_column->column));
 
             return;
         }
@@ -297,10 +331,17 @@ readonly class Migrator
         $this->instantiate($class)->down(Database: $this->Database);
     }
 
-    private static function createTableAttribute(string $class): ?CreateTable
+    /**
+     * Extracts the first instance of an attribute from a class, or null if absent.
+     *
+     * @template T of object
+     * @param ReflectionClass<object> $ReflectionClass
+     * @param class-string<T>         $attribute
+     * @return T|null
+     */
+    private static function firstAttribute(ReflectionClass $ReflectionClass, string $attribute): ?object
     {
-        /** @var class-string $class Validated by discover() via class_exists(). */
-        $attrs = new ReflectionClass(objectOrClass: $class)->getAttributes(CreateTable::class);
+        $attrs = $ReflectionClass->getAttributes(name: $attribute);
 
         return $attrs !== [] ? $attrs[0]->newInstance() : null;
     }

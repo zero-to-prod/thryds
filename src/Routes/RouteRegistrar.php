@@ -43,16 +43,20 @@ readonly class RouteRegistrar
     private static function handler(Route $Route, RouteOperation $RouteOperation, ?object $controller): callable
     {
         if ($controller !== null) {
+            $attrs = new ReflectionClass(objectOrClass: $controller)->getAttributes(ValidatesRequest::class);
+            $ValidatesRequest = $attrs !== [] ? $attrs[0]->newInstance() : null;
+
+            if ($ValidatesRequest !== null && $RouteOperation->HttpMethod === HttpMethod::GET) {
+                return self::formView($Route, $ValidatesRequest);
+            }
+
             $callable = is_callable(value: $controller)
                 ? $controller
                 : self::resolveMethod($controller, HttpMethod: $RouteOperation->HttpMethod);
 
-            if ($RouteOperation->HttpMethod === HttpMethod::POST) {
-                $attrs = new ReflectionClass(objectOrClass: $controller)->getAttributes(ValidatesRequest::class);
-                if ($attrs !== []) {
-                    /** @phpstan-ignore argument.type (invokable object satisfies callable at runtime) */
-                    return self::withValidation($Route, $attrs[0]->newInstance(), handler: $callable);
-                }
+            if ($ValidatesRequest !== null && $RouteOperation->HttpMethod === HttpMethod::POST) {
+                /** @phpstan-ignore argument.type (invokable object satisfies callable at runtime) */
+                return self::withValidation($Route, $ValidatesRequest, handler: $callable);
             }
 
             /** @phpstan-ignore return.type (invokable object satisfies callable at runtime) */
@@ -85,29 +89,40 @@ readonly class RouteRegistrar
         );
     }
 
+    /** Render an empty form view derived from #[ValidatesRequest] and #[RendersView]. */
+    private static function formView(Route $Route, ValidatesRequest $ValidatesRequest): Closure
+    {
+        return static fn(): ResponseInterface => self::renderForm($Route, $ValidatesRequest, data: []);
+    }
+
     /** Wrap a POST handler with attribute-driven validation and error re-rendering. */
     private static function withValidation(Route $Route, ValidatesRequest $ValidatesRequest, callable $handler): Closure
     {
         return static function (ServerRequestInterface $ServerRequestInterface) use ($Route, $ValidatesRequest, $handler): ResponseInterface {
-            $request_class = $ValidatesRequest->request;
-            $requestObject = $request_class::from($ServerRequestInterface->getParsedBody());
+            $requestObject = $ValidatesRequest->request::from($ServerRequestInterface->getParsedBody());
 
             $errors = Validator::validate(model: $requestObject);
             if ($errors === []) {
                 return $handler($requestObject);
             }
 
-            $View = $Route->rendersView()
-                ?? throw new LogicException("Route::{$Route->name} has #[ValidatesRequest] but no #[RendersView].");
-            $view_model_class = $ValidatesRequest->view_model;
-
-            return new HtmlResponse(
-                html: blade()->make(view: $View->value, data: [
-                    $view_model_class::view_key => $view_model_class::from([...$requestObject->toArray(), $view_model_class::errors => $errors]),
-                    InputField::fields => InputField::reflect(class: $request_class),
-                ])->render()
-            );
+            return self::renderForm($Route, $ValidatesRequest, data: [...$requestObject->toArray(), $ValidatesRequest->view_model::errors => $errors]);
         };
+    }
+
+    /** @param array<string, mixed> $data */
+    private static function renderForm(Route $Route, ValidatesRequest $ValidatesRequest, array $data): HtmlResponse
+    {
+        $View = $Route->rendersView()
+            ?? throw new LogicException("Route::{$Route->name} has #[ValidatesRequest] but no #[RendersView].");
+        $view_model_class = $ValidatesRequest->view_model;
+
+        return new HtmlResponse(
+            html: blade()->make(view: $View->value, data: [
+                $view_model_class::view_key => $view_model_class::from($data),
+                InputField::fields => InputField::reflect(class: $ValidatesRequest->request),
+            ])->render()
+        );
     }
 
 }
