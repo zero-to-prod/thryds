@@ -9,11 +9,13 @@ use ZeroToProd\Thryds\Attributes\Column;
 use ZeroToProd\Thryds\Attributes\DataModel;
 use ZeroToProd\Thryds\Attributes\HasTableName;
 use ZeroToProd\Thryds\Attributes\PrimaryKey;
+use ZeroToProd\Thryds\Attributes\SchemaSync;
 use ZeroToProd\Thryds\Attributes\Table;
 use ZeroToProd\Thryds\Schema\Charset;
 use ZeroToProd\Thryds\Schema\Collation;
 use ZeroToProd\Thryds\Schema\DataType;
 use ZeroToProd\Thryds\Schema\Engine;
+use ZeroToProd\Thryds\Schema\SchemaSource;
 use ZeroToProd\Thryds\UI\Domain;
 
 #[ClosedSet(
@@ -23,6 +25,7 @@ use ZeroToProd\Thryds\UI\Domain;
     2. Write a migration to ALTER TABLE migrations ADD COLUMN ...
     TEXT
 )]
+#[SchemaSync(SchemaSource::attributes)]
 #[Table(
     TableName: TableName::migrations,
     Engine: Engine::InnoDB,

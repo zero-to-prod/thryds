@@ -66,6 +66,7 @@ node:
       - src/Attributes/Index.php
       - src/Attributes/OnDelete.php
       - src/Attributes/OnUpdate.php
+      - src/Attributes/RouteParam.php
       - src/Attributes/ValidateWith.php
     assert: used_as_attribute
     message: "Attribute definition is never applied to any class, property, method, or case"

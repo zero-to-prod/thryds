@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Blade;
 
+use ReflectionEnum;
 use Tempest\Blade\Blade;
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 use ZeroToProd\Thryds\Attributes\Prop;
+use ZeroToProd\Thryds\Attributes\TemplateDirectory;
 use ZeroToProd\Thryds\UI\AlertVariant;
 use ZeroToProd\Thryds\UI\ButtonSize;
 use ZeroToProd\Thryds\UI\ButtonVariant;
@@ -19,6 +21,7 @@ use ZeroToProd\Thryds\UI\Props;
  *
  * Components are registered as <x-{value}> aliases in App::bootBlade().
  */
+#[TemplateDirectory('components')]
 #[ClosedSet(
     Domain::blade_components,
     addCase: <<<TEXT
@@ -82,9 +85,18 @@ enum Component: string
         }
     }
 
+    /** Resolve the template directory declared by #[TemplateDirectory]. */
+    public static function templateDirectory(): string
+    {
+        return new ReflectionEnum(self::class)
+            ->getAttributes(TemplateDirectory::class)[0]
+            ->newInstance()
+            ->directory;
+    }
+
     /** Blade view name used by compiler()->component(). */
     public function viewName(): string
     {
-        return 'components.' . $this->value;
+        return self::templateDirectory() . '.' . $this->value;
     }
 }

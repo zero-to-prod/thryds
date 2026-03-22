@@ -34,9 +34,11 @@ imports:
   - ZeroToProd\Thryds\Attributes\DataModel
   - ZeroToProd\Thryds\Attributes\HasTableName
   - ZeroToProd\Thryds\Attributes\PrimaryKey
+  - ZeroToProd\Thryds\Attributes\SchemaSync
   - ZeroToProd\Thryds\Attributes\Table
   - ZeroToProd\Thryds\Schema\Charset
   - ZeroToProd\Thryds\Schema\Collation
   - ZeroToProd\Thryds\Schema\DataType
   - ZeroToProd\Thryds\Schema\Engine
+  - ZeroToProd\Thryds\Schema\SchemaSource
   - ZeroToProd\Thryds\UI\Domain

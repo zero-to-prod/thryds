@@ -187,6 +187,7 @@ tables:
   Migration:
     table: migrations
     engine: InnoDB
+    schema_source: attributes
     primary_key: [id]
     indexes: []
     columns:
@@ -198,6 +199,7 @@ tables:
   User:
     table: users
     engine: InnoDB
+    schema_source: attributes
     primary_key: [id]
     indexes: []
     columns:

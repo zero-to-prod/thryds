@@ -115,4 +115,7 @@ enum Domain: string
 
     #[Group(EdgeKind::data_flow)]
     case config_keys = 'config_keys';
+
+    #[Group(EdgeKind::schema)]
+    case schema_sync_sources = 'schema_sync_sources';
 }

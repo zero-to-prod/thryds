@@ -12,6 +12,7 @@ use ZeroToProd\Thryds\Attributes\HandledBy;
 use ZeroToProd\Thryds\Attributes\RendersView;
 use ZeroToProd\Thryds\Attributes\RouteInfo;
 use ZeroToProd\Thryds\Attributes\RouteOperation;
+use ZeroToProd\Thryds\Attributes\RouteParam;
 use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Controllers\OpcacheScriptsHandler;
 use ZeroToProd\Thryds\Controllers\OpcacheStatusHandler;
@@ -168,12 +169,17 @@ enum Route: string
         return $cache[$this->name];
     }
 
-    /** @return string[] Parameter names extracted from {placeholders} in the route pattern. */
+    /** @return string[] Parameter names declared via #[RouteParam] on this route case. */
     public function params(): array
     {
-        preg_match_all(pattern: '/\{(\w+)}/', subject: $this->value, matches: $matches);
+        /** @var array<string, string[]> $cache */
+        static $cache = [];
 
-        return $matches[1];
+        return $cache[$this->name] ??= array_map(
+            static fn(ReflectionAttribute $ReflectionAttribute): string => $ReflectionAttribute->newInstance()->name,
+            new ReflectionEnumUnitCase(self::class, $this->name)
+                ->getAttributes(RouteParam::class),
+        );
     }
 
     /**

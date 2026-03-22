@@ -743,6 +743,12 @@ function buildYamlManifest(array $decoratedNodes, array $edges, array $inventory
                 $entry['engine'] = $tableAttr->newInstance()->Engine->value;
             }
 
+            // Schema sync source
+            $schemaSyncAttrs = $ref->getAttributes($inventoryConfig['attributes']['schema_sync']);
+            if ($schemaSyncAttrs !== []) {
+                $entry['schema_source'] = $schemaSyncAttrs[0]->newInstance()->SchemaSource->value;
+            }
+
             // Primary key
             $pkColumns = [];
             $classPk = $ref->getAttributes($inventoryConfig['attributes']['primary_key']);

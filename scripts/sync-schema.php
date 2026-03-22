@@ -3,8 +3,14 @@
 declare(strict_types=1);
 
 /**
- * Sync Column attribute values in Table model files to match the live MySQL schema.
- * Creates the table if it does not exist.
+ * Sync table column definitions between PHP attributes and the live MySQL schema.
+ *
+ * Each Table class declares its source of truth via #[SchemaSync]:
+ *   - SchemaSource::database   — DB is authoritative; update PHP #[Column] attributes from DB.
+ *   - SchemaSource::attributes — Attributes are authoritative; report drift without mutating.
+ *
+ * Tables without #[SchemaSync] default to SchemaSource::database.
+ * Tables that do not yet exist in the database are always created from attributes.
  *
  * Usage: docker compose exec web php scripts/sync-schema.php [--dry-run]
  * Via Composer: ./run sync:schema [-- --dry-run]
@@ -19,11 +25,13 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use Symfony\Component\Yaml\Yaml;
 use ZeroToProd\Thryds\Attributes\Column;
+use ZeroToProd\Thryds\Attributes\SchemaSync;
 use ZeroToProd\Thryds\Attributes\Table;
 use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\DatabaseConfig;
 use ZeroToProd\Thryds\Schema\DataType;
 use ZeroToProd\Thryds\Schema\DdlBuilder;
+use ZeroToProd\Thryds\Schema\SchemaSource;
 
 $tables_config  = Yaml::parseFile(__DIR__ . '/tables-config.yaml');
 $tables_dir     = $tables_config['directory'];
@@ -47,6 +55,7 @@ try {
 $result = [
     'created'                    => [],
     'synced'                     => [],
+    'drifted'                    => [],
     'flagged_missing_from_model' => [],
     'flagged_missing_from_db'    => [],
     'no_changes'                 => [],
@@ -73,20 +82,11 @@ foreach (glob(__DIR__ . '/../' . $tables_dir . '/*.php') as $path) {
     $table_attr = $table_attrs[0]->newInstance();
     $table_name = $table_attr->TableName->value;
 
-    fwrite(STDERR, "Processing: {$table_name} ({$basename}.php)\n");
+    $schema_source = resolve_schema_source($rc);
 
-    // Build $php_cols before querying DB so it is available for CREATE TABLE if needed.
-    $php_cols = [];
+    fwrite(STDERR, "Processing: {$table_name} ({$basename}.php) [source: {$schema_source->value}]\n");
 
-    foreach ($rc->getProperties(ReflectionProperty::IS_PUBLIC) as $prop) {
-        $col_attrs = $prop->getAttributes(Column::class);
-
-        if ($col_attrs === []) {
-            continue;
-        }
-
-        $php_cols[$prop->getName()] = $col_attrs[0]->newInstance();
-    }
+    $php_cols = DdlBuilder::reflectColumns($rc);
 
     try {
         $db_rows = $database->all(
@@ -125,7 +125,47 @@ foreach (glob(__DIR__ . '/../' . $tables_dir . '/*.php') as $path) {
         continue;
     }
 
-    // Build $db_cols keyed by column name with normalised field values.
+    $db_cols = normalize_db_columns($db_rows, $data_type_map);
+
+    flag_missing_columns($php_cols, $db_cols, $table_name, $result);
+
+    $changes = detect_drift($php_cols, $db_cols);
+
+    $all_diffs = $changes !== [] ? array_merge(...array_column($changes, 'diffs')) : [];
+
+    match ($schema_source) {
+        SchemaSource::database   => sync_from_database($path, $php_cols, $db_cols, $changes, $all_diffs, $table_name, $fqcn, $tables_dir, $basename, $dry_run, $result),
+        SchemaSource::attributes => report_drift($changes, $all_diffs, $table_name, $fqcn, $tables_dir, $basename, $result),
+    };
+}
+
+echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n";
+
+exit(0);
+
+// --- Functions ---
+
+/**
+ * Reads #[SchemaSync] from a Table class. Defaults to SchemaSource::database when absent.
+ *
+ * @param ReflectionClass<object> $rc
+ */
+function resolve_schema_source(ReflectionClass $rc): SchemaSource
+{
+    $attrs = $rc->getAttributes(SchemaSync::class);
+
+    return $attrs !== [] ? $attrs[0]->newInstance()->SchemaSource : SchemaSource::database;
+}
+
+/**
+ * Converts INFORMATION_SCHEMA rows into a normalised column map.
+ *
+ * @param array<int, array<string, mixed>>  $db_rows
+ * @param array<string, DataType>           $data_type_map
+ * @return array<string, array<string, mixed>>
+ */
+function normalize_db_columns(array $db_rows, array $data_type_map): array
+{
     $db_cols = [];
 
     foreach ($db_rows as $row) {
@@ -173,30 +213,50 @@ foreach (glob(__DIR__ . '/../' . $tables_dir . '/*.php') as $path) {
         ];
     }
 
+    return $db_cols;
+}
+
+/**
+ * Flags columns present in one system but missing from the other.
+ *
+ * @param array<string, Column>             $php_cols
+ * @param array<string, array<string, mixed>> $db_cols
+ * @param array<string, list<array<string, mixed>>> $result
+ */
+function flag_missing_columns(array $php_cols, array $db_cols, string $table_name, array &$result): void
+{
     foreach (array_keys($db_cols) as $col_name) {
-        if (! isset($php_cols[$col_name])) {
+        if (!isset($php_cols[$col_name])) {
             $result['flagged_missing_from_model'][] = ['table' => $table_name, 'column' => $col_name];
         }
     }
 
     foreach (array_keys($php_cols) as $prop_name) {
-        if (! isset($db_cols[$prop_name])) {
+        if (!isset($db_cols[$prop_name])) {
             $result['flagged_missing_from_db'][] = ['table' => $table_name, 'column' => $prop_name];
         }
     }
+}
 
-    // Compute per-property diffs against the live schema.
+/**
+ * Compares PHP #[Column] attributes against normalised DB columns.
+ *
+ * @param array<string, Column>               $php_cols
+ * @param array<string, array<string, mixed>> $db_cols
+ * @return array<string, array{diffs: list<array<string, mixed>>, db_col: array<string, mixed>, db_data_type: DataType}>
+ */
+function detect_drift(array $php_cols, array $db_cols): array
+{
     $changes = [];
 
     foreach ($php_cols as $prop_name => $php_col) {
-        if (! isset($db_cols[$prop_name])) {
+        if (!isset($db_cols[$prop_name])) {
             continue;
         }
 
         $db_col       = $db_cols[$prop_name];
         $db_data_type = $db_col['data_type'];
 
-        // MySQL stores BOOLEAN as tinyint — preserve the PHP declaration if already BOOLEAN.
         if ($db_data_type === DataType::TINYINT && $php_col->DataType === DataType::BOOLEAN) {
             $db_data_type = DataType::BOOLEAN;
         }
@@ -248,8 +308,46 @@ foreach (glob(__DIR__ . '/../' . $tables_dir . '/*.php') as $path) {
         }
     }
 
-    $all_diffs = $changes !== [] ? array_merge(...array_column($changes, 'diffs')) : [];
+    return $changes;
+}
 
+/**
+ * SchemaSource::attributes — reports drift without mutating PHP files.
+ *
+ * @param array<string, array{diffs: list<array<string, mixed>>, db_col: array<string, mixed>, db_data_type: DataType}> $changes
+ * @param list<array<string, mixed>> $all_diffs
+ * @param array<string, list<mixed>> $result
+ */
+function report_drift(array $changes, array $all_diffs, string $table_name, string $fqcn, string $tables_dir, string $basename, array &$result): void
+{
+    if ($changes !== []) {
+        fwrite(STDERR, '  Drift detected in ' . count($changes) . " column(s) — attributes are authoritative, no files modified.\n");
+        foreach ($all_diffs as $diff) {
+            fwrite(STDERR, "    {$diff['column']}.{$diff['field']}: attribute=" . format_value($diff['from']) . ' db=' . format_value($diff['to']) . "\n");
+        }
+        $result['drifted'][] = [
+            'table'   => $table_name,
+            'class'   => $fqcn,
+            'file'    => "{$tables_dir}/{$basename}.php",
+            'changes' => $all_diffs,
+        ];
+    } else {
+        $result['no_changes'][] = $table_name;
+        fwrite(STDERR, "  No drift.\n");
+    }
+}
+
+/**
+ * SchemaSource::database — updates PHP #[Column] attributes to match DB values.
+ *
+ * @param array<string, Column>               $php_cols
+ * @param array<string, array<string, mixed>> $db_cols
+ * @param array<string, array{diffs: list<array<string, mixed>>, db_col: array<string, mixed>, db_data_type: DataType}> $changes
+ * @param list<array<string, mixed>>          $all_diffs
+ * @param array<string, list<mixed>>          $result
+ */
+function sync_from_database(string $path, array $php_cols, array $db_cols, array $changes, array $all_diffs, string $table_name, string $fqcn, string $tables_dir, string $basename, bool $dry_run, array &$result): void
+{
     if ($dry_run) {
         if ($changes !== []) {
             fwrite(STDERR, '  [dry-run] Would update ' . count($changes) . " column(s).\n");
@@ -264,15 +362,14 @@ foreach (glob(__DIR__ . '/../' . $tables_dir . '/*.php') as $path) {
             fwrite(STDERR, "  No changes.\n");
         }
 
-        continue;
+        return;
     }
 
-    // Re-render ALL matching columns for canonical parameter order, applying DB values where they differ.
     $lines            = file($path, FILE_IGNORE_NEW_LINES);
     $original_content = implode("\n", $lines) . "\n";
 
     foreach ($php_cols as $prop_name => $php_col) {
-        if (! isset($db_cols[$prop_name])) {
+        if (!isset($db_cols[$prop_name])) {
             continue;
         }
 
@@ -304,7 +401,6 @@ foreach (glob(__DIR__ . '/../' . $tables_dir . '/*.php') as $path) {
                 continue;
             }
 
-            // Locate the matching closing )] line.
             $end = $i;
 
             for ($j = $i + 1; $j < count($lines); $j++) {
@@ -315,7 +411,6 @@ foreach (glob(__DIR__ . '/../' . $tables_dir . '/*.php') as $path) {
                 }
             }
 
-            // Walk forward past sibling attributes to find the property declaration.
             $prop_line = null;
 
             for ($k = $end + 1; $k < count($lines); $k++) {
@@ -336,7 +431,6 @@ foreach (glob(__DIR__ . '/../' . $tables_dir . '/*.php') as $path) {
                 continue;
             }
 
-            // Replace the #[Column(...)] block with the re-rendered lines.
             $indent    = strlen($lines[$i]) - strlen(ltrim($lines[$i]));
             $pad       = str_repeat(' ', $indent);
             $new_lines = array_map(static fn($l) => $pad . $l, $rendered);
@@ -346,7 +440,6 @@ foreach (glob(__DIR__ . '/../' . $tables_dir . '/*.php') as $path) {
 
             $prop_line += count($new_lines) - $old_count;
 
-            // Update the nullable type hint if nullability changed.
             if ($php_col->nullable !== $db_col['nullable']) {
                 if ($db_col['nullable']) {
                     $lines[$prop_line] = preg_replace(
@@ -368,7 +461,7 @@ foreach (glob(__DIR__ . '/../' . $tables_dir . '/*.php') as $path) {
             break;
         }
 
-        if (! $found) {
+        if (!$found) {
             fwrite(STDERR, "  Warning: could not locate #[Column] block for \${$prop_name}.\n");
         }
     }
@@ -390,9 +483,25 @@ foreach (glob(__DIR__ . '/../' . $tables_dir . '/*.php') as $path) {
     }
 }
 
-echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n";
+/**
+ * Formats a value for human-readable stderr output.
+ */
+function format_value(mixed $v): string
+{
+    if ($v === null) {
+        return 'null';
+    }
 
-exit(0);
+    if ($v === true) {
+        return 'true';
+    }
+
+    if ($v === false) {
+        return 'false';
+    }
+
+    return (string) $v;
+}
 
 /**
  * Renders a #[Column(...)] attribute block as an array of unindented lines.

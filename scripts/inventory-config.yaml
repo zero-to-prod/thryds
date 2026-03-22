@@ -33,6 +33,7 @@ attributes:
   column: ZeroToProd\Thryds\Attributes\Column
   primary_key: ZeroToProd\Thryds\Attributes\PrimaryKey
   index: ZeroToProd\Thryds\Attributes\Index
+  schema_sync: ZeroToProd\Thryds\Attributes\SchemaSync
   persists: ZeroToProd\Thryds\Attributes\Persists
   redirects_to: ZeroToProd\Thryds\Attributes\RedirectsTo
   route_operation: ZeroToProd\Thryds\Attributes\RouteOperation

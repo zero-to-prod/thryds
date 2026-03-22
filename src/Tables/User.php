@@ -7,10 +7,12 @@ namespace ZeroToProd\Thryds\Tables;
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 use ZeroToProd\Thryds\Attributes\DataModel;
 use ZeroToProd\Thryds\Attributes\HasTableName;
+use ZeroToProd\Thryds\Attributes\SchemaSync;
 use ZeroToProd\Thryds\Attributes\Table;
 use ZeroToProd\Thryds\Schema\Charset;
 use ZeroToProd\Thryds\Schema\Collation;
 use ZeroToProd\Thryds\Schema\Engine;
+use ZeroToProd\Thryds\Schema\SchemaSource;
 use ZeroToProd\Thryds\UI\Domain;
 
 #[ClosedSet(
@@ -20,6 +22,7 @@ use ZeroToProd\Thryds\UI\Domain;
     2. Write a migration to ALTER TABLE users ADD COLUMN ...
     TEXT
 )]
+#[SchemaSync(SchemaSource::attributes)]
 #[Table(
     TableName: TableName::users,
     Engine: Engine::InnoDB,

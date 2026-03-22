@@ -20,4 +20,5 @@ enum SourceOfTruthConcept: string
     case blade_template_names = 'Blade template names';
     case environment_variable_keys = 'environment variable keys';
     case route_paths = 'route paths';
+    case exception_dispatch_methods = 'exception dispatch methods';
 }

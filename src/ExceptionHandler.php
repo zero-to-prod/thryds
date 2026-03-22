@@ -11,9 +11,18 @@ use ReflectionClass;
 use ReflectionMethod;
 use Throwable;
 use ZeroToProd\Thryds\Attributes\HandlesException;
+use ZeroToProd\Thryds\Attributes\SourceOfTruth;
+use ZeroToProd\Thryds\Attributes\SourceOfTruthConcept;
 use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
+#[SourceOfTruth(
+    SourceOfTruthConcept::exception_dispatch_methods,
+    addCase: <<<TEXT
+        1. Add public method with #[HandlesException(ExceptionClass::class)] attribute.
+        2. The constructor auto-discovers it via reflection.
+    TEXT,
+)]
 readonly class ExceptionHandler
 {
     /** @var list<array{ReflectionMethod, class-string<Throwable>}> */

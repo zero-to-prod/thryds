@@ -32,6 +32,7 @@ opcache_compile_file(__DIR__ . '/src/App.php');
 opcache_compile_file(__DIR__ . '/src/Blade/BladeDirectives.php');
 opcache_compile_file(__DIR__ . '/src/Blade/BladeDirective.php');
 opcache_compile_file(__DIR__ . '/src/Blade/Component.php');
+opcache_compile_file(__DIR__ . '/src/Attributes/TemplateDirectory.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/RouteOperation.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/HandledBy.php');
 opcache_compile_file(__DIR__ . '/src/Controllers/RegisterController.php');
