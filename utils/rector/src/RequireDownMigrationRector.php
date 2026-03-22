@@ -77,6 +77,10 @@ CODE_SAMPLE,
             return null;
         }
 
+        if ($this->hasCreateTableAttribute(node: $node)) {
+            return null;
+        }
+
         $marker = '[RequireDownMigrationRector]';
         foreach ($node->getComments() as $comment) {
             if (str_contains($comment->getText(), $marker)) {
@@ -110,6 +114,20 @@ CODE_SAMPLE,
         foreach ($node->getMethods() as $method) {
             if ($this->getName($method->name) === 'down') {
                 return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function hasCreateTableAttribute(Class_ $node): bool
+    {
+        foreach ($node->attrGroups as $attrGroup) {
+            foreach ($attrGroup->attrs as $attr) {
+                $name = $this->getName($attr->name);
+                if ($name !== null && str_ends_with($name, 'CreateTable')) {
+                    return true;
+                }
             }
         }
 

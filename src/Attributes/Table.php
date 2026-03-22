@@ -42,7 +42,7 @@ readonly class Table
     public const string addCase
         = "1. Add entry to thryds.yaml tables section.\n"
         . "2. Run ./run sync:manifest.\n"
-        . "3. Write a migration to CREATE TABLE ...\n"
+        . "3. Write a migration with #[CreateTable(TableClass::class)].\n"
         . '4. Run ./run fix:all.';
 
     public function __construct(

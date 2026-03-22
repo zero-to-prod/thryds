@@ -6,9 +6,11 @@ namespace ZeroToProd\Thryds;
 
 use ReflectionClass;
 use RuntimeException;
+use ZeroToProd\Thryds\Attributes\CreateTable;
 use ZeroToProd\Thryds\Attributes\KeyRegistry;
 use ZeroToProd\Thryds\Attributes\KeySource;
 use ZeroToProd\Thryds\Attributes\Migration as MigrationAttribute;
+use ZeroToProd\Thryds\Schema\DdlBuilder;
 use ZeroToProd\Thryds\Tables\Migration;
 
 /**
@@ -132,7 +134,7 @@ readonly class Migrator
             if ($row[self::col_status] !== MigrationStatus::pending) {
                 continue;
             }
-            $this->instantiate(class: $this->discovered[$id][self::key_class])->up(Database: $this->Database);
+            $this->runUp(class: $this->discovered[$id][self::key_class]);
             $this->Database->execute(
                 'INSERT INTO `' . Migration::tableName() . '` (id, description, checksum, applied_at) VALUES (' . self::param_id . ', ' . self::param_description . ', ' . self::param_checksum . ', NOW())',
                 [self::param_id => $id, self::param_description => $row[Migration::description], self::param_checksum => $row[Migration::checksum]]
@@ -163,7 +165,7 @@ readonly class Migrator
         if (!isset($this->discovered[$id])) {
             throw new RuntimeException("Migration $id is applied but its file was not found in {$this->migrations_dir}.");
         }
-        $this->instantiate(class: $this->discovered[$id][self::key_class])->down(Database: $this->Database);
+        $this->runDown(class: $this->discovered[$id][self::key_class]);
         $this->Database->execute(
             'DELETE FROM `' . Migration::tableName() . '` WHERE id = ' . self::param_id,
             [self::param_id => $id]
@@ -261,6 +263,54 @@ readonly class Migrator
         }
 
         return $value;
+    }
+
+    /**
+     * Executes the up action for a migration class.
+     *
+     * Attribute-driven: if #[CreateTable] is present, generates DDL from the target Table class.
+     * Imperative fallback: delegates to MigrationInterface::up().
+     *
+     */
+    private function runUp(string $class): void
+    {
+        $create_table = self::createTableAttribute($class);
+
+        if ($create_table !== null) {
+            $this->Database->execute(DdlBuilder::createTableSql($create_table->table));
+
+            return;
+        }
+
+        $this->instantiate($class)->up(Database: $this->Database);
+    }
+
+    /**
+     * Executes the down action for a migration class.
+     *
+     * Attribute-driven: if #[CreateTable] is present, generates DROP TABLE DDL.
+     * Imperative fallback: delegates to MigrationInterface::down().
+     *
+     */
+    private function runDown(string $class): void
+    {
+        $create_table = self::createTableAttribute($class);
+
+        if ($create_table !== null) {
+            $this->Database->execute(DdlBuilder::dropTableSql($create_table->table));
+
+            return;
+        }
+
+        $this->instantiate($class)->down(Database: $this->Database);
+    }
+
+    private static function createTableAttribute(string $class): ?CreateTable
+    {
+        /** @var class-string $class Validated by discover() via class_exists(). */
+        $attrs = new ReflectionClass(objectOrClass: $class)->getAttributes(CreateTable::class);
+
+        return $attrs !== [] ? $attrs[0]->newInstance() : null;
     }
 
     private function instantiate(string $class): MigrationInterface

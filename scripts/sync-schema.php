@@ -19,12 +19,11 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use Symfony\Component\Yaml\Yaml;
 use ZeroToProd\Thryds\Attributes\Column;
-use ZeroToProd\Thryds\Attributes\Index;
-use ZeroToProd\Thryds\Attributes\PrimaryKey;
 use ZeroToProd\Thryds\Attributes\Table;
 use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\DatabaseConfig;
 use ZeroToProd\Thryds\Schema\DataType;
+use ZeroToProd\Thryds\Schema\DdlBuilder;
 
 $tables_config  = Yaml::parseFile(__DIR__ . '/tables-config.yaml');
 $tables_dir     = $tables_config['directory'];
@@ -106,7 +105,7 @@ foreach (glob(__DIR__ . '/../' . $tables_dir . '/*.php') as $path) {
     }
 
     if ($db_rows === []) {
-        $sql = build_create_table_sql($table_name, $table_attr, $php_cols, $rc);
+        $sql = DdlBuilder::createTableSql($fqcn);
 
         if ($dry_run) {
             fwrite(STDERR, "  [dry-run] Would create table {$table_name}.\n");
@@ -394,113 +393,6 @@ foreach (glob(__DIR__ . '/../' . $tables_dir . '/*.php') as $path) {
 echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n";
 
 exit(0);
-
-/**
- * Generates a CREATE TABLE statement from a Table model's reflection and Column attributes.
- *
- * @param array<string, Column> $php_cols
- */
-function build_create_table_sql(string $table_name, Table $table_attr, array $php_cols, ReflectionClass $rc): string
-{
-    $col_lines = [];
-
-    foreach ($php_cols as $prop_name => $col) {
-        $col_lines[] = '    ' . column_ddl($prop_name, $col);
-    }
-
-    // Primary key: class-level composite takes precedence over property-level single.
-    $pk_columns = [];
-    $class_pks  = $rc->getAttributes(PrimaryKey::class);
-
-    if ($class_pks !== [] && $class_pks[0]->newInstance()->columns !== []) {
-        $pk_columns = $class_pks[0]->newInstance()->columns;
-    } else {
-        foreach ($rc->getProperties(ReflectionProperty::IS_PUBLIC) as $prop) {
-            if ($prop->getAttributes(PrimaryKey::class) !== []) {
-                $pk_columns[] = $prop->getName();
-            }
-        }
-    }
-
-    if ($pk_columns !== []) {
-        $pk_list     = implode(', ', array_map(fn($c) => '`' . $c . '`', $pk_columns));
-        $col_lines[] = "    PRIMARY KEY ({$pk_list})";
-    }
-
-    foreach ($rc->getAttributes(Index::class) as $idx_attr) {
-        $idx         = $idx_attr->newInstance();
-        $idx_cols    = implode(', ', array_map(fn($c) => '`' . $c . '`', $idx->columns));
-        $name        = $idx->name !== '' ? $idx->name : 'idx_' . $table_name . '_' . implode('_', $idx->columns);
-        $unique      = $idx->unique ? 'UNIQUE ' : '';
-        $col_lines[] = "    {$unique}KEY `{$name}` ({$idx_cols})";
-    }
-
-    return 'CREATE TABLE `' . $table_name . "` (\n"
-        . implode(",\n", $col_lines) . "\n"
-        . ') ENGINE=' . $table_attr->Engine->value
-        . ' DEFAULT CHARSET=' . $table_attr->Charset->value
-        . ' COLLATE=' . $table_attr->Collation->value;
-}
-
-function column_ddl(string $name, Column $col): string
-{
-    $parts = ['`' . $name . '`', column_type_sql($col)];
-    $parts[] = $col->nullable ? 'NULL' : 'NOT NULL';
-
-    if ($col->auto_increment) {
-        $parts[] = 'AUTO_INCREMENT';
-    }
-
-    if ($col->default !== null) {
-        if ($col->default === Column::CURRENT_TIMESTAMP) {
-            $parts[] = 'DEFAULT CURRENT_TIMESTAMP';
-        } elseif (is_bool($col->default)) {
-            $parts[] = 'DEFAULT ' . ($col->default ? '1' : '0');
-        } elseif (is_int($col->default) || is_float($col->default)) {
-            $parts[] = 'DEFAULT ' . $col->default;
-        } else {
-            $parts[] = "DEFAULT '" . addslashes((string) $col->default) . "'";
-        }
-    }
-
-    if ($col->comment !== '') {
-        $parts[] = "COMMENT '" . addslashes($col->comment) . "'";
-    }
-
-    return implode(' ', $parts);
-}
-
-function column_type_sql(Column $col): string
-{
-    return match ($col->DataType) {
-        DataType::VARCHAR    => 'VARCHAR(' . $col->length . ')',
-        DataType::CHAR       => 'CHAR(' . $col->length . ')',
-        DataType::BIGINT     => 'BIGINT' . ($col->unsigned ? ' UNSIGNED' : ''),
-        DataType::INT        => 'INT' . ($col->unsigned ? ' UNSIGNED' : ''),
-        DataType::SMALLINT   => 'SMALLINT' . ($col->unsigned ? ' UNSIGNED' : ''),
-        DataType::TINYINT    => 'TINYINT' . ($col->unsigned ? ' UNSIGNED' : ''),
-        DataType::TEXT       => 'TEXT',
-        DataType::MEDIUMTEXT => 'MEDIUMTEXT',
-        DataType::LONGTEXT   => 'LONGTEXT',
-        DataType::DATETIME   => 'DATETIME',
-        DataType::DATE       => 'DATE',
-        DataType::TIME       => 'TIME',
-        DataType::TIMESTAMP  => 'TIMESTAMP',
-        DataType::YEAR       => 'YEAR',
-        DataType::DECIMAL    => 'DECIMAL(' . $col->precision . ',' . $col->scale . ')',
-        DataType::FLOAT      => 'FLOAT' . ($col->unsigned ? ' UNSIGNED' : ''),
-        DataType::DOUBLE     => 'DOUBLE' . ($col->unsigned ? ' UNSIGNED' : ''),
-        DataType::BOOLEAN    => 'BOOLEAN',
-        DataType::JSON       => 'JSON',
-        DataType::ENUM       => 'ENUM(' . implode(', ', array_map(fn($v) => "'" . addslashes($v) . "'", $col->values ?? [])) . ')',
-        DataType::SET        => 'SET(' . implode(', ', array_map(fn($v) => "'" . addslashes($v) . "'", $col->values ?? [])) . ')',
-        DataType::BINARY     => 'BINARY(' . $col->length . ')',
-        DataType::VARBINARY  => 'VARBINARY(' . $col->length . ')',
-        DataType::BLOB       => 'BLOB',
-        DataType::MEDIUMBLOB => 'MEDIUMBLOB',
-        DataType::LONGBLOB   => 'LONGBLOB',
-    };
-}
 
 /**
  * Renders a #[Column(...)] attribute block as an array of unindented lines.

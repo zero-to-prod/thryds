@@ -57,6 +57,7 @@ node:
     exclude:
       # Used in tests/ and migrations/ (outside the graph scan scope)
       - src/Attributes/CoversRoute.php
+      - src/Attributes/CreateTable.php
       - src/Attributes/Migration.php
       # Schema attributes — defined for future table columns
       - src/Attributes/ForeignKey.php
