@@ -8,6 +8,7 @@ use ReflectionClass;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\SelectsFrom;
 use ZeroToProd\Thryds\Database;
+use ZeroToProd\Thryds\Schema\SortDirection;
 
 /**
  * Attribute-driven SELECT execution.
@@ -18,14 +19,6 @@ use ZeroToProd\Thryds\Database;
 #[Infrastructure]
 trait DbRead
 {
-    private const string SELECT = 'SELECT ';
-
-    private const string FROM = ' FROM ';
-
-    private const string WHERE = ' WHERE ';
-
-    private const string ORDER_BY = ' ORDER BY ';
-
     /**
      * SELECT returning one row or null.
      *
@@ -64,10 +57,10 @@ trait DbRead
         $SelectsFrom = self::resolveSelectsFrom();
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        $sql = self::SELECT . self::columnList($SelectsFrom)
-            . self::FROM . $SelectsFrom->table::tableName();
+        $sql = Sql::SELECT . self::columnList($SelectsFrom)
+            . Sql::FROM . $SelectsFrom->table::tableName();
         if ($SelectsFrom->order_by !== '') {
-            $sql .= self::ORDER_BY . '`' . $SelectsFrom->order_by . '` ASC';
+            $sql .= Sql::ORDER_BY . '`' . $SelectsFrom->order_by . '` ' . $SelectsFrom->SortDirection->value;
         }
 
         return ($Database ?? db())->all($sql);
@@ -83,10 +76,12 @@ trait DbRead
         $SelectsFrom = self::resolveSelectsFrom();
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        $sql = self::SELECT . self::columnList($SelectsFrom)
-            . self::FROM . $SelectsFrom->table::tableName();
+        $sql = Sql::SELECT . self::columnList($SelectsFrom)
+            . Sql::FROM . $SelectsFrom->table::tableName();
         if ($SelectsFrom->order_by !== '') {
-            $sql .= self::ORDER_BY . '`' . $SelectsFrom->order_by . '` DESC';
+            $sql .= Sql::ORDER_BY . '`' . $SelectsFrom->order_by . '` ' . ($SelectsFrom->SortDirection === SortDirection::ASC
+                ? SortDirection::DESC
+                : SortDirection::ASC)->value;
         }
         $sql .= ' LIMIT 1';
 
@@ -104,8 +99,8 @@ trait DbRead
         $SelectsFrom = self::resolveSelectsFrom();
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        $sql = self::SELECT . self::columnList($SelectsFrom)
-            . self::FROM . $SelectsFrom->table::tableName();
+        $sql = Sql::SELECT . self::columnList($SelectsFrom)
+            . Sql::FROM . $SelectsFrom->table::tableName();
 
         $params = [];
 
@@ -115,7 +110,7 @@ trait DbRead
                 $clauses[] = $column . ' = :' . $column;
                 $params[':' . $column] = $where_values[$index] ?? null;
             }
-            $sql .= self::WHERE . implode(Sql::CONJUNCTION, array: $clauses);
+            $sql .= Sql::WHERE . implode(Sql::CONJUNCTION, array: $clauses);
         }
 
         return [$sql, $params];

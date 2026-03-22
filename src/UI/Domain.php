@@ -121,4 +121,7 @@ enum Domain: string
 
     #[Group(EdgeKind::schema)]
     case schema_sync_sources = 'schema_sync_sources';
+
+    #[Group(EdgeKind::schema)]
+    case sort_directions = 'sort_directions';
 }

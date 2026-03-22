@@ -3,4 +3,12 @@ parameters:
     paths:
         - src
     ignoreErrors:
-        - identifier: property.uninitializedReadonly
+        -
+            identifier: property.uninitializedReadonly
+            paths:
+                - src/Config.php
+                - src/DatabaseConfig.php
+                - src/Tables/User.php
+                - src/Requests/RegisterRequest.php
+                - src/ViewModels/ErrorViewModel.php
+                - src/ViewModels/RegisterViewModel.php

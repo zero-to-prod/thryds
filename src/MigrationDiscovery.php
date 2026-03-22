@@ -5,18 +5,17 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds;
 
 use ReflectionClass;
-use RuntimeException;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\Migration as MigrationAttribute;
 use ZeroToProd\Thryds\Tables\Migration;
 
 /**
- * Discovers migration files from the filesystem.
+ * Discovers migration classes from the filesystem via their #[Migration] attribute.
  *
- * Scans a directory for files matching NNNN_ClassName.php, validates each
- * against its #[Migration] attribute, and provides typed accessors for the
- * discovered set. Checksum computation lives here because it is a property
- * of the discovered file, not of the database state.
+ * Scans all PHP files in a directory, derives the class name by stripping any
+ * optional numeric prefix (e.g. 0001_), and uses the #[Migration] attribute as
+ * the sole source of truth for id, description, and ordering. Filenames are not
+ * authoritative — the attribute drives discovery.
  */
 #[Infrastructure]
 readonly class MigrationDiscovery
@@ -72,13 +71,13 @@ readonly class MigrationDiscovery
     }
 
     /**
-     * Discovers migration files, sorted by id.
+     * Discovers migration classes, sorted by attribute id.
      *
      * @return array<string, array<string, string>>
      */
     private static function discover(string $migrations_dir, string $migrations_namespace): array
     {
-        $files = glob($migrations_dir . '/[0-9][0-9][0-9][0-9]_*.php');
+        $files = glob($migrations_dir . '/*.php');
         if ($files === false || $files === []) {
             return [];
         }
@@ -86,10 +85,11 @@ readonly class MigrationDiscovery
         /** @var array<string, array<string, string>> $migrations */
         $migrations = [];
         foreach ($files as $path) {
-            if (!preg_match('/^(\d{4})_(.+)$/', basename($path, suffix: '.php'), $matches)) {
+            $class_name = preg_replace('/^\d+_/', '', basename($path, suffix: '.php'));
+            if ($class_name === '' || $class_name === null) {
                 continue;
             }
-            $fqcn = $migrations_namespace . $matches[2];
+            $fqcn = $migrations_namespace . $class_name;
             if (!class_exists(class: $fqcn)) {
                 continue;
             }
@@ -98,19 +98,14 @@ readonly class MigrationDiscovery
                 continue;
             }
             $Migration = $attrs[0]->newInstance();
-            if ($Migration->id !== $matches[1]) {
-                throw new RuntimeException(
-                    "Migration attribute id '{$Migration->id}' does not match filename prefix '{$matches[1]}' in " . basename($path) . ' — keep the attribute id and filename prefix in sync.'
-                );
-            }
             $migrations[$Migration->id] = [
-                self::key_path               => $path,
-                self::key_class              => $fqcn,
+                self::key_path         => $path,
+                self::key_class        => $fqcn,
                 Migration::description => $Migration->description,
             ];
         }
         ksort(array: $migrations);
 
-        return $migrations; // @phpstan-ignore return.type
+        return $migrations;
     }
 }

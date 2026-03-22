@@ -21,15 +21,13 @@ use ZeroToProd\Thryds\Database;
 #[Infrastructure]
 trait DbCreate
 {
-    private const string INSERT_INTO = 'INSERT INTO ';
-
     /** @throws RandomException */
     public static function create(object $request, ?Database $Database = null): void
     {
         [$all_columns, $hooks, $table_name] = self::resolveInsertMeta();
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        ($Database ?? db())->execute(self::INSERT_INTO . $table_name
+        ($Database ?? db())->execute(Sql::INSERT_INTO . $table_name
             . ' (' . implode(', ', array: $all_columns) . ')'
             . ' VALUES (' . implode(', ', array_map(
                 static fn(string $column): string => ':' . $column,
@@ -60,7 +58,7 @@ trait DbCreate
         }
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        db()->execute(self::INSERT_INTO . $table_name
+        db()->execute(Sql::INSERT_INTO . $table_name
             . ' (' . implode(', ', array: $all_columns) . ')'
             . ' VALUES ' . implode(', ', array: $value_groups), $params);
     }

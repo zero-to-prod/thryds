@@ -18,10 +18,6 @@ use ZeroToProd\Thryds\Database;
 #[Infrastructure]
 trait DbDelete
 {
-    private const string DELETE_FROM = 'DELETE FROM ';
-
-    private const string WHERE = ' WHERE ';
-
     /**
      * DELETE returning affected row count.
      *
@@ -48,7 +44,7 @@ trait DbDelete
         }
 
         /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
-        return ($database ?? db())->execute(self::DELETE_FROM . $DeletesFrom->table::tableName()
-            . self::WHERE . implode(Sql::CONJUNCTION, array: $clauses), $params);
+        return ($database ?? db())->execute(Sql::DELETE_FROM . $DeletesFrom->table::tableName()
+            . Sql::WHERE . implode(Sql::CONJUNCTION, array: $clauses), $params);
     }
 }

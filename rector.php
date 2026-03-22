@@ -105,6 +105,7 @@ use Utils\Rector\Rector\ForbidReflectionInInstanceMethodRector;
 use Utils\Rector\Rector\ForbidReflectionInClosureRector;
 use Utils\Rector\Rector\ForbidHttpMethodBranchingInControllerRector;
 use Utils\Rector\Rector\RequireHandlesRouteAttributeRector;
+use Utils\Rector\Rector\EnforceLayerCoverageRector;
 use Rector\CodeQuality\Rector\FuncCall\SortCallLikeNamedArgsRector;
 use Rector\CodeQuality\Rector\Attribute\SortAttributeNamedArgsRector;
 use ZeroToProd\Thryds\Attributes\Requirement;
@@ -773,5 +774,13 @@ return static function (RectorConfig $rectorConfig): void {
         'controllerSuffixes' => ['Controller', 'Handler'],
         'controllersNamespace' => 'ZeroToProd\\Thryds\\Controllers',
         'message' => 'TODO: [RequireHandlesRouteAttributeRector] Attributes define properties — %s in Controllers/ is missing #[HandlesRoute]. Every controller must declare which route it handles so the router can discover it via reflection. See: utils/rector/docs/RequireHandlesRouteAttributeRector.md',
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(EnforceLayerCoverageRector::class, [
+        'layerEnum' => 'Layer',
+        'segmentAttribute' => 'Segment',
+        'srcDir' => 'src',
+        'mode' => 'warn',
+        'message' => 'TODO: [EnforceLayerCoverageRector] Namespace segment "%s" has no corresponding Layer enum case — add one to ensure attribute graph visibility. See: utils/rector/docs/EnforceLayerCoverageRector.md',
     ]);
 };

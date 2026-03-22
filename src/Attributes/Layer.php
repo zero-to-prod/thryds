@@ -33,6 +33,7 @@ enum Layer: string
     #[Segment('Routes')]
     case routing = 'routing';
 
+    case queries = 'queries';
     case schema = 'schema';
     case tables = 'tables';
 

@@ -20,12 +20,6 @@ use ZeroToProd\Thryds\Attributes\UpdatesIn;
 #[Infrastructure]
 trait DbUpdate
 {
-    private const string UPDATE = 'UPDATE ';
-
-    private const string SET = ' SET ';
-
-    private const string WHERE = ' WHERE ';
-
     /**
      * UPDATE returning affected row count.
      *
@@ -35,6 +29,42 @@ trait DbUpdate
      * @throws RandomException
      */
     public static function update(object $request, mixed ...$where): int
+    {
+        [$columns, $hooks, $where_columns, $table_name] = self::resolveUpdateMeta();
+
+        $set_clauses = [];
+        $params = [];
+
+        foreach ($columns as $column) {
+            $value = property_exists(object_or_class: $request, property: $column)
+                ? $request->$column
+                : null;
+
+            $params[':set_' . $column] = isset($hooks[$column])
+                ? $hooks[$column]->resolve($value)
+                : $value;
+
+            $set_clauses[] = $column . ' = :set_' . $column;
+        }
+
+        $where_clauses = [];
+        foreach ($where_columns as $index => $column) {
+            $where_clauses[] = $column . ' = :where_' . $column;
+            $params[':where_' . $column] = $where[$index] ?? null;
+        }
+
+        /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
+        return db()->execute(Sql::UPDATE . $table_name
+            . Sql::SET . implode(', ', array: $set_clauses)
+            . Sql::WHERE . implode(Sql::CONJUNCTION, array: $where_clauses), $params);
+    }
+
+    /**
+     * Reflect attribute metadata for the using query class.
+     *
+     * @return array{list<string>, array<string, Persist>, list<string>, string}
+     */
+    private static function resolveUpdateMeta(): array
     {
         $ReflectionClass = new ReflectionClass(static::class);
 
@@ -51,29 +81,7 @@ trait DbUpdate
             $hooks[$PersistColumn->column] = $PersistColumn->Persist;
         }
 
-        $set_clauses = [];
-        $params = [];
-
-        foreach ($UpdatesIn->columns as $column) {
-            $value = property_exists(object_or_class: $request, property: $column)
-                ? $request->$column
-                : null;
-
-            $params[':set_' . $column] = isset($hooks[$column])
-                ? $hooks[$column]->resolve($value)
-                : $value;
-
-            $set_clauses[] = $column . ' = :set_' . $column;
-        }
-
-        $where_clauses = [];
-        foreach ($UpdatesIn->where as $index => $column) {
-            $where_clauses[] = $column . ' = :where_' . $column;
-            $params[':where_' . $column] = $where[$index] ?? null;
-        }
-
-        return db()->execute(self::UPDATE . $UpdatesIn->table::tableName()
-            . self::SET . implode(', ', array: $set_clauses)
-            . self::WHERE . implode(Sql::CONJUNCTION, array: $where_clauses), $params);
+        /** @phpstan-ignore method.nonObject (class-string with HasTableName) */
+        return [$UpdatesIn->columns, $hooks, $UpdatesIn->where, $UpdatesIn->table::tableName()];
     }
 }

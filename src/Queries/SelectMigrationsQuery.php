@@ -7,6 +7,7 @@ namespace ZeroToProd\Thryds\Queries;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\SelectsFrom;
 use ZeroToProd\Thryds\Database;
+use ZeroToProd\Thryds\Schema\SortDirection;
 use ZeroToProd\Thryds\Tables\Migration;
 
 /**
@@ -19,6 +20,7 @@ use ZeroToProd\Thryds\Tables\Migration;
     columns: [],
     where: [],
     order_by: Migration::id,
+    SortDirection: SortDirection::ASC,
 )]
 readonly class SelectMigrationsQuery
 {
