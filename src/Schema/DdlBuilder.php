@@ -5,18 +5,23 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Schema;
 
 use ReflectionClass;
+use ReflectionClassConstant;
 use ReflectionProperty;
 use ZeroToProd\Thryds\Attributes\Column;
+use ZeroToProd\Thryds\Attributes\ForeignKey;
 use ZeroToProd\Thryds\Attributes\Index;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
+use ZeroToProd\Thryds\Attributes\OnDelete;
+use ZeroToProd\Thryds\Attributes\OnUpdate;
 use ZeroToProd\Thryds\Attributes\PrimaryKey;
 use ZeroToProd\Thryds\Attributes\Table;
 
 /**
  * Generates DDL statements from Table class attributes.
  *
- * Reads #[Table], #[Column], #[PrimaryKey], and #[Index] attributes via reflection
- * to produce CREATE TABLE and DROP TABLE SQL without hand-written DDL.
+ * Reads #[Table], #[Column], #[PrimaryKey], #[Index], #[ForeignKey], #[OnDelete],
+ * and #[OnUpdate] attributes via reflection to produce CREATE TABLE and DROP TABLE
+ * SQL without hand-written DDL.
  */
 #[Infrastructure]
 final readonly class DdlBuilder
@@ -54,6 +59,10 @@ final readonly class DdlBuilder
         foreach ($ReflectionClass->getAttributes(Index::class) as $idx_attr) {
             $Index = $idx_attr->newInstance();
             $col_lines[] = self::INDENT . ($Index->unique ? 'UNIQUE ' : '') . 'KEY `' . ($Index->name !== '' ? $Index->name : 'idx_' . $table_name . '_' . implode('_', $Index->columns)) . '` (' . implode(', ', array_map(static fn(string $c): string => '`' . $c . '`', $Index->columns)) . ')';
+        }
+
+        foreach (self::reflectForeignKeys($ReflectionClass, $table_name) as $fk_clause) {
+            $col_lines[] = self::INDENT . $fk_clause;
         }
 
         return 'CREATE TABLE IF NOT EXISTS `' . $table_name . "` (\n"
@@ -180,4 +189,45 @@ final readonly class DdlBuilder
 
         return $columns;
     }
+
+    /**
+     * Reflects #[ForeignKey], #[OnDelete], and #[OnUpdate] attributes from a Table class's
+     * constants and returns CONSTRAINT ... FOREIGN KEY DDL clauses.
+     *
+     * @param ReflectionClass<object> $ReflectionClass
+     * @return list<string>
+     */
+    public static function reflectForeignKeys(ReflectionClass $ReflectionClass, string $table_name): array
+    {
+        $clauses = [];
+
+        foreach ($ReflectionClass->getReflectionConstants(ReflectionClassConstant::IS_PUBLIC) as $const) {
+            $fk_attrs = $const->getAttributes(ForeignKey::class);
+
+            if ($fk_attrs === []) {
+                continue;
+            }
+
+            /** @var ForeignKey $ForeignKey */
+            $ForeignKey = $fk_attrs[0]->newInstance();
+            $column = (string) $const->getValue(); // @phpstan-ignore cast.string
+            $target_table = new ReflectionClass($ForeignKey->BackedEnum)
+                ->getAttributes(Table::class)[0]
+                ->newInstance()
+                ->TableName->value;
+            $target_column = (string) $ForeignKey->BackedEnum->value;
+
+            $on_delete_attrs = $const->getAttributes(OnDelete::class);
+            $on_update_attrs = $const->getAttributes(OnUpdate::class);
+
+            $clauses[] = 'CONSTRAINT `' . ($ForeignKey->name !== '' ? $ForeignKey->name : 'fk_' . $table_name . '_' . $column . '_' . $target_table) . '`'
+                . ' FOREIGN KEY (`' . $column . '`)'
+                . ' REFERENCES `' . $target_table . '` (`' . $target_column . '`)'
+                . ' ON DELETE ' . ($on_delete_attrs !== [] ? $on_delete_attrs[0]->newInstance()->ReferentialAction : ReferentialAction::RESTRICT)->value
+                . ' ON UPDATE ' . ($on_update_attrs !== [] ? $on_update_attrs[0]->newInstance()->ReferentialAction : ReferentialAction::RESTRICT)->value;
+        }
+
+        return $clauses;
+    }
+
 }

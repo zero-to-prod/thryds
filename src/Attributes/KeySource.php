@@ -24,4 +24,5 @@ enum KeySource: string
     case migrations_table = 'migrations tracking table';
     case vite_entry_points = 'Vite entry points';
     case route_manifest = 'Route manifest JSON';
+    case sql_fragments = 'SQL query fragments';
 }

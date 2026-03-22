@@ -7,7 +7,7 @@ namespace ZeroToProd\Thryds\Controllers;
 use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\Response\RedirectResponse;
 use Psr\Http\Message\ResponseInterface;
-use Random\RandomException;
+use ZeroToProd\Thryds\Attributes\HandlesMethod;
 use ZeroToProd\Thryds\Attributes\HandlesRoute;
 use ZeroToProd\Thryds\Attributes\Persists;
 use ZeroToProd\Thryds\Attributes\RedirectsTo;
@@ -17,17 +17,22 @@ use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Queries\CreateUserQuery;
 use ZeroToProd\Thryds\Requests\InputField;
 use ZeroToProd\Thryds\Requests\RegisterRequest;
+use ZeroToProd\Thryds\Routes\HttpMethod;
 use ZeroToProd\Thryds\Routes\Route;
 use ZeroToProd\Thryds\Tables\User;
 use ZeroToProd\Thryds\ViewModels\RegisterViewModel;
 
 #[HandlesRoute(Route::register)]
-#[ValidatesRequest(RegisterRequest::class)]
+#[ValidatesRequest(
+    RegisterRequest::class,
+    view_model: RegisterViewModel::class
+)]
 #[RendersView(View::register)]
 #[Persists(User::class)]
 #[RedirectsTo(Route::login)]
 readonly class RegisterController
 {
+    #[HandlesMethod(HttpMethod::GET)]
     public function get(): HtmlResponse
     {
         return new HtmlResponse(
@@ -41,9 +46,7 @@ readonly class RegisterController
         );
     }
 
-    /**
-     * @throws RandomException
-     */
+    #[HandlesMethod(HttpMethod::POST)]
     public function post(RegisterRequest $RegisterRequest): ResponseInterface
     {
         CreateUserQuery::create($RegisterRequest);

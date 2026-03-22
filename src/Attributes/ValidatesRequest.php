@@ -11,11 +11,18 @@ use Attribute;
  *
  * Infrastructure intercepts the POST handler, creates the request from
  * the parsed body, validates it, and re-renders the view with errors
- * or delegates to the controller with the validated request.
+ * using the declared ViewModel, or delegates to the controller with
+ * the validated request.
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 readonly class ValidatesRequest
 {
-    /** @param class-string $request */
-    public function __construct(public string $request) {}
+    /**
+     * @param class-string $request
+     * @param class-string $view_model ViewModel that receives validation errors on failure.
+     */
+    public function __construct(
+        public string $request,
+        public string $view_model,
+    ) {}
 }
