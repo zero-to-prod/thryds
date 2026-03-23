@@ -107,6 +107,7 @@ use Utils\Rector\Rector\EnforceLayerCoverageRector;
 use Utils\Rector\Rector\ForbidInterfaceRector;
 use Utils\Rector\Rector\ForbidClassInheritanceRector;
 use Utils\Rector\Rector\ForbidUndeclaredSideEffectRector;
+use Utils\Rector\Rector\ForbidHardcodedCodeReferencesInCommentsRector;
 use Rector\CodeQuality\Rector\FuncCall\SortCallLikeNamedArgsRector;
 use Rector\CodeQuality\Rector\Attribute\SortAttributeNamedArgsRector;
 use ZeroToProd\Thryds\Attributes\Requirement;
@@ -793,5 +794,9 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(ForbidUndeclaredSideEffectRector::class, [
         'mode' => 'warn',
         'message' => 'Side-effecting call must be inside a query class with #[InsertsInto], #[UpdatesIn], or #[DeletesFrom]. See: utils/rector/docs/ForbidUndeclaredSideEffectRector.md',
+    ]);
+
+    $rectorConfig->ruleWithConfiguration(ForbidHardcodedCodeReferencesInCommentsRector::class, [
+        'mode' => 'warn',
     ]);
 };
