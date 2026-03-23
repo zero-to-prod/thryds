@@ -6,15 +6,15 @@ namespace ZeroToProd\Thryds\Tests\Integration;
 
 use PHPUnit\Framework\Attributes\Test;
 use ZeroToProd\Thryds\Attributes\CoversRoute;
-use ZeroToProd\Thryds\Routes\Route;
+use ZeroToProd\Thryds\Routes\RouteList;
 
-#[CoversRoute(Route::styleguide)]
+#[CoversRoute(RouteList::styleguide)]
 final class StyleguideRouteTest extends IntegrationTestCase
 {
     #[Test]
     public function rendersStyleguidePageAsHtml(): void
     {
-        $ResponseInterface = $this->get(Route::styleguide);
+        $ResponseInterface = $this->get(RouteList::styleguide);
 
         $this->assertSame(200, $ResponseInterface->getStatusCode());
         $this->assertStringContainsString(self::TEXT_HTML, $ResponseInterface->getHeaderLine('Content-Type'));

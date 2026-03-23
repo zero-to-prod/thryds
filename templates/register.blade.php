@@ -2,7 +2,7 @@
     use ZeroToProd\Thryds\Blade\View;
     use ZeroToProd\Thryds\Requests\InputField;
     use ZeroToProd\Thryds\Routes\HttpMethod;
-    use ZeroToProd\Thryds\Routes\Route;
+    use ZeroToProd\Thryds\Routes\RouteList;
     use ZeroToProd\Thryds\UI\ButtonVariant;
     use ZeroToProd\Thryds\ViewModels\RegisterViewModel;
     /** @var RegisterViewModel $RegisterViewModel */
@@ -15,20 +15,20 @@
 @section('body')
     <x-card>
         <h1 class="text-2xl font-bold text-text mb-6">Create an account</h1>
-        <form method="{{ HttpMethod::POST->value }}" action="{{ Route::register->value }}">
+        <form method="{{ HttpMethod::POST->value }}" action="{{ RouteList::register->value }}">
             @foreach ($fields as $field)
                 <x-form-group :label="$field->label" :error="$field->error($RegisterViewModel)">
                     <x-input
-                        :type="$field->InputType->value"
-                        :id="$field->name"
-                        :name="$field->name"
-                        :required="$field->required"
-                        :value="$field->value($RegisterViewModel)"
+                            :type="$field->InputType->value"
+                            :id="$field->name"
+                            :name="$field->name"
+                            :required="$field->required"
+                            :value="$field->value($RegisterViewModel)"
                     />
                 </x-form-group>
             @endforeach
             <x-button :variant="ButtonVariant::primary->value" type="submit">Register</x-button>
         </form>
-        <p class="mt-4"><a href="{{ Route::login->value }}" class="text-primary hover:text-primary-hover">Already have an account? Login</a></p>
+        <p class="mt-4"><a href="{{ RouteList::login->value }}" class="text-primary hover:text-primary-hover">Already have an account? Login</a></p>
     </x-card>
 @endsection

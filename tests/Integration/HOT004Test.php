@@ -6,7 +6,7 @@ namespace ZeroToProd\Thryds\Tests\Integration;
 
 use PHPUnit\Framework\Attributes\Test;
 use ZeroToProd\Thryds\Env;
-use ZeroToProd\Thryds\Routes\Route;
+use ZeroToProd\Thryds\Routes\RouteList;
 
 final class HOT004Test extends IntegrationTestCase
 {
@@ -20,7 +20,7 @@ final class HOT004Test extends IntegrationTestCase
     {
         unset($_SERVER[Env::FRANKENPHP_HOT_RELOAD]);
 
-        $body = (string) $this->get(Route::home)->getBody();
+        $body = (string) $this->get(RouteList::home)->getBody();
 
         $this->assertStringNotContainsString(self::meta_mercure_url, haystack: $body);
         $this->assertStringNotContainsString(self::script_idiomorph, haystack: $body);
@@ -33,7 +33,7 @@ final class HOT004Test extends IntegrationTestCase
     {
         $_SERVER[Env::FRANKENPHP_HOT_RELOAD] = '/.well-known/mercure?topic=test';
 
-        $body = (string) $this->get(Route::home)->getBody();
+        $body = (string) $this->get(RouteList::home)->getBody();
 
         $this->assertStringContainsString(self::meta_mercure_url, haystack: $body);
         $this->assertStringContainsString(self::script_idiomorph, haystack: $body);

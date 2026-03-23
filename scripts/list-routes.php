@@ -15,18 +15,18 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use ZeroToProd\Thryds\Attributes\RouteOperation;
-use ZeroToProd\Thryds\Routes\Route;
+use ZeroToProd\Thryds\Attributes\Route;
+use ZeroToProd\Thryds\Routes\RouteList;
 
 $routes = array_map(
-    fn(Route $Route): array => [
+    fn(RouteList $Route): array => [
         'name'        => $Route->name,
         'path'        => $Route->value,
         'params'      => $Route->params(),
         'dev_only'    => $Route->isDevOnly(),
         'description' => $Route->description(),
         'operations'  => array_map(
-            fn(RouteOperation $op): array => [
+            fn(Route $op): array => [
                 'method'      => $op->HttpMethod->value,
                 'description' => $op->description,
                 'action'      => $op->actionName(),
@@ -34,7 +34,7 @@ $routes = array_map(
             $Route->operations(),
         ),
     ],
-    Route::cases(),
+    RouteList::cases(),
 );
 
 echo json_encode($routes, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n";

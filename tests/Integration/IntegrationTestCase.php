@@ -20,7 +20,7 @@ use ZeroToProd\Thryds\DatabaseConfig;
 use ZeroToProd\Thryds\Header;
 use ZeroToProd\Thryds\RequestId;
 use ZeroToProd\Thryds\Routes\HttpMethod;
-use ZeroToProd\Thryds\Routes\Route;
+use ZeroToProd\Thryds\Routes\RouteList;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 /**
@@ -62,7 +62,7 @@ abstract class IntegrationTestCase extends TestCase
     }
 
     /** @param array<string, string[]> $headers */
-    protected function dispatch(Route $Route, array $headers = [], HttpMethod $HttpMethod = HttpMethod::GET): ResponseInterface
+    protected function dispatch(RouteList $Route, array $headers = [], HttpMethod $HttpMethod = HttpMethod::GET): ResponseInterface
     {
         $ServerRequest = new ServerRequest(
             serverParams: [],
@@ -79,21 +79,21 @@ abstract class IntegrationTestCase extends TestCase
     /**
      * @throws InvalidArgumentException
      */
-    protected function get(Route $Route): ResponseInterface
+    protected function get(RouteList $Route): ResponseInterface
     {
         return $this->App->Router->dispatch(
             new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($Route->value), method: HttpMethod::GET->value),
         );
     }
 
-    protected function post(Route $Route): ResponseInterface
+    protected function post(RouteList $Route): ResponseInterface
     {
         return $this->App->Router->dispatch(
             new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($Route->value), method: HttpMethod::POST->value),
         );
     }
 
-    protected function assertErrorResponse(int $expected_status, string $expected_message, Route $Route, HttpMethod $HttpMethod = HttpMethod::GET): void
+    protected function assertErrorResponse(int $expected_status, string $expected_message, RouteList $Route, HttpMethod $HttpMethod = HttpMethod::GET): void
     {
         try {
             $this->App->Router->dispatch(

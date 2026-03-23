@@ -7,7 +7,7 @@ use Utils\Rector\Rector\RequireRouteEnumInMapCallRector;
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RequireRouteEnumInMapCallRector::class, [
-        'enumClass' => 'ZeroToProd\\Thryds\\Routes\\Route',
+        'enumClass' => 'ZeroToProd\\Thryds\\Routes\\RouteList',
         'methods' => ['map'],
         'argPosition' => 1,
         'mode' => 'warn',

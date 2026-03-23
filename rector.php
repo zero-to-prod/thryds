@@ -455,7 +455,7 @@ return static function (RectorConfig $rectorConfig): void {
         'message' => "TODO: [ForbidStringRoutePatternRector] Enumerations define sets — replace inline string '%s' with a Route enum case reference (e.g. Route::case->value).",
     ]);
     $rectorConfig->ruleWithConfiguration(RequireRouteEnumInMapCallRector::class, [
-        'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
+        'enumClass' => \ZeroToProd\Thryds\Routes\RouteList::class,
         'methods' => ['map'],
         'argPosition' => 1,
         'mode' => 'warn',
@@ -469,7 +469,7 @@ return static function (RectorConfig $rectorConfig): void {
         'message' => "TODO: [RequireViewEnumInMakeCallRector] Enumerations define sets — use View::%s->value instead of string '%s'.",
     ]);
     $rectorConfig->ruleWithConfiguration(ForbidHardcodedRouteStringRector::class, [
-        'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
+        'enumClass' => \ZeroToProd\Thryds\Routes\RouteList::class,
         'mode' => 'warn',
         'message' => "TODO: [ForbidHardcodedRouteStringRector] Enumerations define sets — use Route::%s->value instead of hardcoded '%s'.",
     ]);
@@ -481,7 +481,7 @@ return static function (RectorConfig $rectorConfig): void {
         'message' => "TODO: [ForbidDuplicateRouteRegistrationRector] Each route declares once — duplicate registration: '%s %s' was already registered above.",
     ]);
     $rectorConfig->ruleWithConfiguration(RequireAllRouteCasesRegisteredRector::class, [
-        'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
+        'enumClass' => \ZeroToProd\Thryds\Routes\RouteList::class,
         'methods' => ['map'],
         'argPosition' => 1,
         'scanDir' => __DIR__ . '/src',
@@ -489,7 +489,7 @@ return static function (RectorConfig $rectorConfig): void {
         'message' => "TODO: [RequireAllRouteCasesRegisteredRector] Enumerations define sets — route case '%s' is defined but never registered in any router map() call.",
     ]);
     $rectorConfig->ruleWithConfiguration(RequireRouteTestRector::class, [
-        'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
+        'enumClass' => \ZeroToProd\Thryds\Routes\RouteList::class,
         'testDir' => __DIR__ . '/tests',
         'mode' => 'warn',
         'message' => "TODO: [RequireRouteTestRector] Route case '%s' has no corresponding test — add a test that exercises this route.",
@@ -544,7 +544,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RequireEnumValueAccessRector::class, [
         'enumClasses' => [
             View::class,
-            \ZeroToProd\Thryds\Routes\Route::class,
+            \ZeroToProd\Thryds\Routes\RouteList::class,
             HttpMethod::class,
             \ZeroToProd\Thryds\AppEnv::class,
             LogLevel::class,
@@ -556,7 +556,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(ForbidStringComparisonOnEnumPropertyRector::class, [
         'enumClasses' => [
             \ZeroToProd\Thryds\AppEnv::class,
-            \ZeroToProd\Thryds\Routes\Route::class,
+            \ZeroToProd\Thryds\Routes\RouteList::class,
             HttpMethod::class,
             LogLevel::class,
             View::class,
@@ -618,7 +618,7 @@ return static function (RectorConfig $rectorConfig): void {
         'enumClasses' => [
             \ZeroToProd\Thryds\AppEnv::class,
             HttpMethod::class,
-            \ZeroToProd\Thryds\Routes\Route::class,
+            \ZeroToProd\Thryds\Routes\RouteList::class,
             View::class,
             LogLevel::class,
             ButtonVariant::class,
@@ -713,8 +713,8 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
 
     $rectorConfig->ruleWithConfiguration(RouteOperationRequiredRector::class, [
-        'enumClass'      => 'ZeroToProd\\Thryds\\Routes\\Route',
-        'attributeClass' => 'ZeroToProd\\Thryds\\Attributes\\RouteOperation',
+        'enumClass'      => 'ZeroToProd\\Thryds\\Routes\\RouteList',
+        'attributeClass' => 'ZeroToProd\\Thryds\\Attributes\\Route',
         'mode'           => 'warn',
         'message'        => "TODO: [RouteOperationRequiredRector] Attributes define properties — route case '%s' must declare at least one #[RouteOperation] so the inventory graph can emit HTTP methods for this route.",
     ]);

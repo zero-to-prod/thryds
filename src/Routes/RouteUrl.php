@@ -16,7 +16,7 @@ readonly class RouteUrl implements Stringable
      * @param array<string, string> $query
      */
     public function __construct(
-        public Route $Route,
+        public RouteList $Route,
         public array $params = [],
         public array $query = [],
     ) {}

@@ -1,4 +1,4 @@
-@php use ZeroToProd\Thryds\Routes\Route; @endphp
+@php use ZeroToProd\Thryds\Routes\RouteList; @endphp
 @extends('base')
 
 @section('title', 'Styleguide — Thryds')
@@ -39,9 +39,9 @@
             <h2 class="text-xl font-semibold text-text">x-input</h2>
 
             <div class="max-w-sm space-y-3">
-                <x-input type="text" placeholder="Text input" />
-                <x-input type="email" placeholder="Email input" />
-                <x-input type="password" placeholder="Password input" />
+                <x-input type="text" placeholder="Text input"/>
+                <x-input type="email" placeholder="Email input"/>
+                <x-input type="password" placeholder="Password input"/>
             </div>
         </section>
 
@@ -51,11 +51,11 @@
 
             <div class="max-w-sm">
                 <x-form-group label="Username">
-                    <x-input type="text" placeholder="Enter username" />
+                    <x-input type="text" placeholder="Enter username"/>
                 </x-form-group>
 
                 <x-form-group label="Email" error="This email is already taken.">
-                    <x-input type="email" placeholder="Enter email" />
+                    <x-input type="email" placeholder="Enter email"/>
                 </x-form-group>
             </div>
         </section>
@@ -81,6 +81,6 @@
             </div>
         </section>
 
-        <p class="text-sm text-text-muted"><a href="{{ Route::home->value }}" class="text-primary hover:text-primary-hover">Home</a></p>
+        <p class="text-sm text-text-muted"><a href="{{ RouteList::home->value }}" class="text-primary hover:text-primary-hover">Home</a></p>
     </div>
 @endsection

@@ -15,13 +15,13 @@ use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Queries\CreateUserQuery;
 use ZeroToProd\Thryds\Requests\RegisterRequest;
 use ZeroToProd\Thryds\Routes\HttpMethod;
-use ZeroToProd\Thryds\Routes\Route;
+use ZeroToProd\Thryds\Routes\RouteList;
 use ZeroToProd\Thryds\Tables\User;
 
-#[HandlesRoute(Route::register)]
+#[HandlesRoute(RouteList::register)]
 #[RendersView(View::register)]
 #[Persists(User::class)]
-#[RedirectsTo(Route::login)]
+#[RedirectsTo(RouteList::login)]
 readonly class RegisterController
 {
     #[HandlesMethod(HttpMethod::POST)]
@@ -29,6 +29,6 @@ readonly class RegisterController
     {
         CreateUserQuery::create($RegisterRequest);
 
-        return new RedirectResponse(Route::login->value);
+        return new RedirectResponse(RouteList::login->value);
     }
 }

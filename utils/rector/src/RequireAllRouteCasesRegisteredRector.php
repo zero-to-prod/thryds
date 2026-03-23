@@ -15,7 +15,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 final class RequireAllRouteCasesRegisteredRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    private string $enumClass = 'ZeroToProd\\Thryds\\Routes\\Route';
+    private string $enumClass = 'ZeroToProd\\Thryds\\Routes\\RouteList';
 
     /** @var string[] */
     private array $methods = ['map'];
@@ -35,7 +35,7 @@ final class RequireAllRouteCasesRegisteredRector extends AbstractRector implemen
 
     public function configure(array $configuration): void
     {
-        $this->enumClass = $configuration['enumClass'] ?? 'ZeroToProd\\Thryds\\Routes\\Route';
+        $this->enumClass = $configuration['enumClass'] ?? 'ZeroToProd\\Thryds\\Routes\\RouteList';
         $this->methods = $configuration['methods'] ?? ['map'];
         $this->argPosition = $configuration['argPosition'] ?? 1;
         $this->mode = $configuration['mode'] ?? 'warn';
@@ -69,7 +69,7 @@ enum Route: string
 }
 CODE_SAMPLE,
                     [
-                        'enumClass' => 'ZeroToProd\\Thryds\\Routes\\Route',
+                        'enumClass' => 'ZeroToProd\\Thryds\\Routes\\RouteList',
                         'methods' => ['map'],
                         'argPosition' => 1,
                         'scanDir' => __DIR__ . '/src/Routes',

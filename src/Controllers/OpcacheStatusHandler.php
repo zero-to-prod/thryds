@@ -6,9 +6,9 @@ namespace ZeroToProd\Thryds\Controllers;
 
 use Laminas\Diactoros\Response\JsonResponse;
 use ZeroToProd\Thryds\Attributes\HandlesRoute;
-use ZeroToProd\Thryds\Routes\Route;
+use ZeroToProd\Thryds\Routes\RouteList;
 
-#[HandlesRoute(Route::opcache_status)]
+#[HandlesRoute(RouteList::opcache_status)]
 readonly class OpcacheStatusHandler
 {
     public function __invoke(): JsonResponse

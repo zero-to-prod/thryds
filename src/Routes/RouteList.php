@@ -9,7 +9,7 @@ use ReflectionAttribute;
 use ReflectionEnumUnitCase;
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 use ZeroToProd\Thryds\Attributes\DevOnly;
-use ZeroToProd\Thryds\Attributes\RouteOperation;
+use ZeroToProd\Thryds\Attributes\Route;
 use ZeroToProd\Thryds\Attributes\RouteParam;
 use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Controllers\OpcacheScriptsHandler;
@@ -32,30 +32,30 @@ use ZeroToProd\Thryds\ViewModels\RegisterViewModel;
     4. Run ./run fix:all.
     TEXT
 )]
-enum Route: string
+enum RouteList: string
 {
-    #[RouteOperation(
+    #[Route(
         HttpMethod::GET,
         new StaticView(View::home),
         'Marketing home page'
     )]
     case home = '/';
 
-    #[RouteOperation(
+    #[Route(
         HttpMethod::GET,
         new StaticView(View::about),
         'Company and product information'
     )]
     case about = '/about';
 
-    #[RouteOperation(
+    #[Route(
         HttpMethod::GET,
         new StaticView(View::login),
         'User authentication form'
     )]
     case login = '/login';
 
-    #[RouteOperation(
+    #[Route(
         HttpMethod::GET,
         new Form(
             View::register,
@@ -65,7 +65,7 @@ enum Route: string
         ),
         'New user registration form',
     )]
-    #[RouteOperation(
+    #[Route(
         HttpMethod::POST,
         new Validated(
             controller: RegisterController::class,
@@ -77,7 +77,7 @@ enum Route: string
     case register = '/register';
 
     #[DevOnly]
-    #[RouteOperation(
+    #[Route(
         HttpMethod::GET,
         OpcacheStatusHandler::class,
         'OPcache runtime statistics'
@@ -85,7 +85,7 @@ enum Route: string
     case opcache_status = '/_opcache/status';
 
     #[DevOnly]
-    #[RouteOperation(
+    #[Route(
         HttpMethod::GET,
         OpcacheScriptsHandler::class,
         'Scripts loaded in OPcache'
@@ -93,7 +93,7 @@ enum Route: string
     case opcache_scripts = '/_opcache/scripts';
 
     #[DevOnly]
-    #[RouteOperation(
+    #[Route(
         HttpMethod::GET,
         new StaticView(View::styleguide),
         'UI component and design token reference'
@@ -101,7 +101,7 @@ enum Route: string
     case styleguide = '/_styleguide';
 
     #[DevOnly]
-    #[RouteOperation(
+    #[Route(
         HttpMethod::GET,
         RouteManifestHandler::class,
         'Machine-readable manifest of all registered routes'
@@ -134,16 +134,16 @@ enum Route: string
         })();
     }
 
-    /** @return RouteOperation[] HTTP operations declared on this route via #[RouteOperation]. */
+    /** @return Route[] HTTP operations declared on this route via #[RouteOperation]. */
     public function operations(): array
     {
-        /** @var array<string, RouteOperation[]> $cache */
+        /** @var array<string, Route[]> $cache */
         static $cache = [];
 
         return $cache[$this->name] ??= array_map(
-            static fn(ReflectionAttribute $ReflectionAttribute): RouteOperation => $ReflectionAttribute->newInstance(),
+            static fn(ReflectionAttribute $ReflectionAttribute): Route => $ReflectionAttribute->newInstance(),
             new ReflectionEnumUnitCase(self::class, $this->name)
-                ->getAttributes(RouteOperation::class),
+                ->getAttributes(Route::class),
         );
     }
 

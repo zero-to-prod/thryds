@@ -61,8 +61,8 @@ enum Route: string
 }
 CODE_SAMPLE,
                     [
-                        'enumClass'      => 'ZeroToProd\\Thryds\\Routes\\Route',
-                        'attributeClass' => 'ZeroToProd\\Thryds\\Attributes\\RouteOperation',
+                        'enumClass'      => 'ZeroToProd\\Thryds\\Routes\\RouteList',
+                        'attributeClass' => 'ZeroToProd\\Thryds\\Attributes\\Route',
                         'mode'           => 'warn',
                     ]
                 ),

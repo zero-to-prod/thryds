@@ -6,15 +6,15 @@ namespace ZeroToProd\Thryds\Tests\Integration;
 
 use PHPUnit\Framework\Attributes\Test;
 use ZeroToProd\Thryds\Attributes\CoversRoute;
-use ZeroToProd\Thryds\Routes\Route;
+use ZeroToProd\Thryds\Routes\RouteList;
 
-#[CoversRoute(Route::about)]
+#[CoversRoute(RouteList::about)]
 final class AboutRouteTest extends IntegrationTestCase
 {
     #[Test]
     public function rendersAboutPageAsHtml(): void
     {
-        $ResponseInterface = $this->get(Route::about);
+        $ResponseInterface = $this->get(RouteList::about);
 
         $this->assertSame(200, $ResponseInterface->getStatusCode());
         $this->assertStringContainsString(self::TEXT_HTML, $ResponseInterface->getHeaderLine('Content-Type'));

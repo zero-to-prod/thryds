@@ -39,7 +39,7 @@ Project configuration in `rector.php`:
 
 ```php
 $rectorConfig->ruleWithConfiguration(RequireAllRouteCasesRegisteredRector::class, [
-    'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
+    'enumClass' => \ZeroToProd\Thryds\Routes\RouteList::class,
     'methods' => ['map'],
     'argPosition' => 1,
     'scanDir' => __DIR__ . '/src',

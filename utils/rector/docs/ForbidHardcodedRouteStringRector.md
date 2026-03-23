@@ -34,7 +34,7 @@ Project configuration in `rector.php`:
 
 ```php
 $rectorConfig->ruleWithConfiguration(ForbidHardcodedRouteStringRector::class, [
-    'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
+    'enumClass' => \ZeroToProd\Thryds\Routes\RouteList::class,
     'mode' => 'warn',
     'message' => "TODO: [ForbidHardcodedRouteStringRector] Use Route::%s->value instead of hardcoded '%s'.",
 ]);

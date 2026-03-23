@@ -7,7 +7,7 @@ namespace ZeroToProd\Thryds\Tests\Integration;
 use PHPUnit\Framework\Attributes\Test;
 use ZeroToProd\Thryds\Header;
 use ZeroToProd\Thryds\RequestId;
-use ZeroToProd\Thryds\Routes\Route;
+use ZeroToProd\Thryds\Routes\RouteList;
 
 final class TRACE001Test extends IntegrationTestCase
 {
@@ -15,7 +15,7 @@ final class TRACE001Test extends IntegrationTestCase
     // Criterion: TRACE-001-a — Every dispatched response includes a non-empty X-Request-ID header
     public function test_TRACE_001_a(): void
     {
-        $this->assertNotEmpty($this->dispatch(Route::home)->getHeaderLine(Header::request_id));
+        $this->assertNotEmpty($this->dispatch(RouteList::home)->getHeaderLine(Header::request_id));
     }
 
     #[Test]
@@ -24,7 +24,7 @@ final class TRACE001Test extends IntegrationTestCase
     {
         $incoming_id = 'abc123-correlation';
 
-        $this->assertSame(expected: $incoming_id, actual: $this->dispatch(Route::home, headers: [Header::request_id => [$incoming_id]])->getHeaderLine(Header::request_id));
+        $this->assertSame(expected: $incoming_id, actual: $this->dispatch(RouteList::home, headers: [Header::request_id => [$incoming_id]])->getHeaderLine(Header::request_id));
     }
 
     #[Test]
@@ -33,7 +33,7 @@ final class TRACE001Test extends IntegrationTestCase
     {
         $this->assertMatchesRegularExpression(
             '/^[a-f0-9]{32}$/',
-            $this->dispatch(Route::home)->getHeaderLine(Header::request_id),
+            $this->dispatch(RouteList::home)->getHeaderLine(Header::request_id),
         );
     }
 

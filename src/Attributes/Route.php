@@ -34,7 +34,7 @@ use ZeroToProd\Thryds\Routes\HttpMethod;
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT | Attribute::IS_REPEATABLE)]
 #[HopWeight(0)]
-readonly class RouteOperation
+readonly class Route
 {
     /** @param StaticView|Form|Validated|class-string|array{class-string, string}|Closure $action */
     public function __construct(

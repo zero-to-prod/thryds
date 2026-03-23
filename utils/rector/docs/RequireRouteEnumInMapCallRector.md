@@ -40,7 +40,7 @@ Project configuration in `rector.php`:
 
 ```php
 $rectorConfig->ruleWithConfiguration(RequireRouteEnumInMapCallRector::class, [
-    'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
+    'enumClass' => \ZeroToProd\Thryds\Routes\RouteList::class,
     'methods' => ['map'],
     'argPosition' => 1,
     'mode' => 'warn',
@@ -82,13 +82,13 @@ $Router->map('GET', SomeClass::PATTERN, $handler);
 ### Skipped (correct enum value)
 
 ```php
-$Router->map('GET', ZeroToProd\Thryds\Routes\Route::home->value, $handler);
+$Router->map('GET', ZeroToProd\Thryds\Routes\RouteList::home->value, $handler);
 ```
 
 ### Skipped (dynamic registration via `cases()` loop)
 
 ```php
-foreach (ZeroToProd\Thryds\Routes\Route::cases() as $Route) {
+foreach (ZeroToProd\Thryds\Routes\RouteList::cases() as $Route) {
     $Router->map('GET', $Route->value, $handler);
 }
 ```

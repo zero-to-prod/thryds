@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\Test;
 use ZeroToProd\Thryds\Controllers\RegisterController;
 use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\Requests\RegisterRequest;
-use ZeroToProd\Thryds\Routes\Route;
+use ZeroToProd\Thryds\Routes\RouteList;
 use ZeroToProd\Thryds\Tables\User;
 
 final class RegisterControllerTest extends DatabaseTestCase
@@ -35,7 +35,7 @@ final class RegisterControllerTest extends DatabaseTestCase
         ]));
 
         $this->assertSame(302, $ResponseInterface->getStatusCode());
-        $this->assertSame(Route::login->value, $ResponseInterface->getHeaderLine('Location'));
+        $this->assertSame(RouteList::login->value, $ResponseInterface->getHeaderLine('Location'));
         $this->assertSame(1, (int) $this->Database->scalar(
             'SELECT COUNT(*) FROM ' . User::tableName() . ' WHERE ' . User::email . ' = ?',
             [self::TEST_EMAIL],

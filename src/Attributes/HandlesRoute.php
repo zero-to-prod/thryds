@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
-use ZeroToProd\Thryds\Routes\Route;
+use ZeroToProd\Thryds\Routes\RouteList;
 
 /**
  * Declares which route a controller handles.
@@ -21,5 +21,5 @@ use ZeroToProd\Thryds\Routes\Route;
 #[HopWeight(0)]
 readonly class HandlesRoute
 {
-    public function __construct(public Route $Route) {}
+    public function __construct(public RouteList $Route) {}
 }

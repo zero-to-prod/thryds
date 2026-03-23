@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
-use ZeroToProd\Thryds\Routes\Route;
+use ZeroToProd\Thryds\Routes\RouteList;
 
 /**
  * Declares the route a controller redirects to on success.
@@ -19,5 +19,5 @@ use ZeroToProd\Thryds\Routes\Route;
 #[HopWeight(0)]
 readonly class RedirectsTo
 {
-    public function __construct(public Route $Route) {}
+    public function __construct(public RouteList $Route) {}
 }

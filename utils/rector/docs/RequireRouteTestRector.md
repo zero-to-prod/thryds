@@ -35,7 +35,7 @@ Project configuration in `rector.php`:
 
 ```php
 $rectorConfig->ruleWithConfiguration(RequireRouteTestRector::class, [
-    'enumClass' => \ZeroToProd\Thryds\Routes\Route::class,
+    'enumClass' => \ZeroToProd\Thryds\Routes\RouteList::class,
     'testDir' => __DIR__ . '/tests',
     'mode' => 'warn',
     'message' => "TODO: [RequireRouteTestRector] Route case '%s' has no corresponding test. Add a test that exercises this route.",

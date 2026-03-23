@@ -13,7 +13,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use ReflectionClass;
 use ZeroToProd\Thryds\Attributes\HandlesMethod;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
-use ZeroToProd\Thryds\Attributes\RouteOperation;
+use ZeroToProd\Thryds\Attributes\Route;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Requests\InputField;
 use ZeroToProd\Thryds\Routes\Actions\Form;
@@ -26,7 +26,7 @@ readonly class RouteRegistrar
 {
     public static function register(Router $Router, Config $Config): void
     {
-        foreach (Route::cases() as $Route) {
+        foreach (RouteList::cases() as $Route) {
             if ($Route->isDevOnly() && $Config->isProduction()) {
                 continue;
             }
@@ -42,7 +42,7 @@ readonly class RouteRegistrar
     }
 
     /** Dispatch to the handler strategy declared on the #[RouteOperation]. */
-    private static function handler(Route $Route, RouteOperation $RouteOperation): callable
+    private static function handler(RouteList $Route, Route $RouteOperation): callable
     {
         $action = $RouteOperation->action;
 
@@ -102,7 +102,7 @@ readonly class RouteRegistrar
     }
 
     /** Wrap a POST handler with action-driven validation and error re-rendering. */
-    private static function withValidation(Route $Route, Validated $Validated, callable $handler): Closure
+    private static function withValidation(RouteList $Route, Validated $Validated, callable $handler): Closure
     {
         return static function (ServerRequestInterface $ServerRequestInterface) use ($Route, $Validated, $handler): ResponseInterface {
             $requestObject = $Validated->request::from($ServerRequestInterface->getParsedBody());

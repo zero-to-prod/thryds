@@ -22,7 +22,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 final class RequireRouteEnumInMapCallRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    private string $enumClass = 'ZeroToProd\\Thryds\\Routes\\Route';
+    private string $enumClass = 'ZeroToProd\\Thryds\\Routes\\RouteList';
 
     /** @var string[] */
     private array $methods = ['map'];
@@ -76,7 +76,7 @@ $Router->map('GET', '/posts/{post}', $handler);
 $Router->map('GET', SomeClass::PATTERN, $handler);
 CODE_SAMPLE,
                     [
-                        'enumClass' => 'ZeroToProd\\Thryds\\Routes\\Route',
+                        'enumClass' => 'ZeroToProd\\Thryds\\Routes\\RouteList',
                         'methods' => ['map'],
                         'argPosition' => 1,
                         'mode' => 'warn',

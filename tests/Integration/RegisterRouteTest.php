@@ -11,9 +11,9 @@ use ZeroToProd\Thryds\Attributes\CoversRoute;
 use ZeroToProd\Thryds\Header;
 use ZeroToProd\Thryds\Requests\RegisterRequest;
 use ZeroToProd\Thryds\Routes\HttpMethod;
-use ZeroToProd\Thryds\Routes\Route;
+use ZeroToProd\Thryds\Routes\RouteList;
 
-#[CoversRoute(Route::register)]
+#[CoversRoute(RouteList::register)]
 final class RegisterRouteTest extends IntegrationTestCase
 {
     private const string REGISTER = 'Register';
@@ -21,7 +21,7 @@ final class RegisterRouteTest extends IntegrationTestCase
     #[Test]
     public function rendersRegistrationPageAsHtml(): void
     {
-        $ResponseInterface = $this->get(Route::register);
+        $ResponseInterface = $this->get(RouteList::register);
 
         $this->assertSame(200, $ResponseInterface->getStatusCode());
         $this->assertStringContainsString(self::TEXT_HTML, $ResponseInterface->getHeaderLine(Header::content_type));
@@ -37,7 +37,7 @@ final class RegisterRouteTest extends IntegrationTestCase
         $ResponseInterface = $this->App->Router->dispatch(new ServerRequest(
             serverParams: [],
             uploadedFiles: [],
-            uri: new Uri(Route::register->value),
+            uri: new Uri(RouteList::register->value),
             method: HttpMethod::POST->value,
         )->withParsedBody([
             RegisterRequest::name => '',

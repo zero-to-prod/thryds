@@ -53,7 +53,7 @@ CODE_SAMPLE,
 $url = '/about';
 CODE_SAMPLE,
                     [
-                        'enumClass' => 'ZeroToProd\\Thryds\\Routes\\Route',
+                        'enumClass' => 'ZeroToProd\\Thryds\\Routes\\RouteList',
                         'mode' => 'warn',
                         'message' => "TODO: [ForbidHardcodedRouteStringRector] Use Route::%s->value instead of hardcoded '%s'.",
                     ]

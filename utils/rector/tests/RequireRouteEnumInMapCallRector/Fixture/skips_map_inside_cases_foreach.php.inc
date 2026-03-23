@@ -1,5 +1,5 @@
 <?php
 
-foreach (ZeroToProd\Thryds\Routes\Route::cases() as $Route) {
+foreach (ZeroToProd\Thryds\Routes\RouteList::cases() as $Route) {
     $Router->map('GET', $Route->value, $handler);
 }
