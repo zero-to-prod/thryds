@@ -16,31 +16,31 @@ readonly class RouteUrl implements Stringable
      * @param array<string, string> $query
      */
     public function __construct(
-        public RouteList $Route,
+        public RouteList $RouteList,
         public array $params = [],
         public array $query = [],
     ) {}
 
     public function render(): string
     {
-        $expected = $this->Route->params();
+        $expected = $this->RouteList->params();
         $provided = array_keys($this->params);
 
         $missing = array_diff($expected, $provided);
         if ($missing !== []) {
             throw new InvalidArgumentException(
-                $this->Route->name . ' requires params: ' . implode(separator: ', ', array: $missing),
+                $this->RouteList->name . ' requires params: ' . implode(separator: ', ', array: $missing),
             );
         }
 
         $extra = array_diff($provided, $expected);
         if ($extra !== []) {
             throw new InvalidArgumentException(
-                $this->Route->name . ' does not accept params: ' . implode(separator: ', ', array: $extra),
+                $this->RouteList->name . ' does not accept params: ' . implode(separator: ', ', array: $extra),
             );
         }
 
-        $path = $this->Route->value;
+        $path = $this->RouteList->value;
         foreach ($this->params as $key => $value) {
             $path = str_replace(search: "{{$key}}", replace: $value, subject: $path);
         }

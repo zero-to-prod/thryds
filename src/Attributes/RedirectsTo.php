@@ -19,5 +19,5 @@ use ZeroToProd\Thryds\Routes\RouteList;
 #[HopWeight(0)]
 readonly class RedirectsTo
 {
-    public function __construct(public RouteList $Route) {}
+    public function __construct(public RouteList $RouteList) {}
 }

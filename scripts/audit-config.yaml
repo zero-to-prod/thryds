@@ -1,2 +1,2 @@
-route_class: ZeroToProd\Thryds\Routes\Route
+route_class: ZeroToProd\Thryds\Routes\RouteList
 access_log: logs/frankenphp/access.log

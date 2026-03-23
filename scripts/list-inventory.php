@@ -78,7 +78,7 @@ foreach (glob($controllersDir . '/*.php') ?: [] as $controllerFile) {
     $controllerRef = new ReflectionClass($controllerFqcn);
     $handlesRouteAttrs = $controllerRef->getAttributes($HandlesRoute);
     if ($handlesRouteAttrs !== []) {
-        $handledRoute = $handlesRouteAttrs[0]->newInstance()->Route;
+        $handledRoute = $handlesRouteAttrs[0]->newInstance()->RouteList;
         $explicitControllers[$handledRoute->name] = $controllerClassName;
     }
 }
@@ -145,7 +145,7 @@ foreach ($Route::cases() as $routeCase) {
             }
         }
     } elseif ($view !== null) {
-        // View-only route: view parameter on #[RouteOperation].
+        // View-only route: view parameter on #[Route].
         $nodes[$routeId]['registration'] = 'attribute';
         $viewId = 'view:' . $view->value;
         $addNode($viewId, 'view', $view->value);
@@ -172,7 +172,7 @@ foreach ($explicitControllers as $controllerName) {
         }
     }
     foreach ($ref->getAttributes($RedirectsTo) as $attr) {
-        $route   = $attr->newInstance()->Route;
+        $route   = $attr->newInstance()->RouteList;
         $routeId = 'route:' . $route->name;
         if (isset($nodes[$routeId])) {
             $addEdge('controller:' . $controllerName, $routeId, 'redirects_to');

@@ -9,7 +9,7 @@ opcache_compile_file(__DIR__ . '/vendor/autoload.php');
 
 // Routes
 opcache_compile_file(__DIR__ . '/src/Routes/RouteRegistrar.php');
-opcache_compile_file(__DIR__ . '/src/Routes/Route.php');
+opcache_compile_file(__DIR__ . '/src/Routes/RouteList.php');
 opcache_compile_file(__DIR__ . '/src/Routes/HttpMethod.php');
 opcache_compile_file(__DIR__ . '/src/Routes/Actions/StaticView.php');
 opcache_compile_file(__DIR__ . '/src/Routes/Actions/Form.php');
@@ -38,7 +38,7 @@ opcache_compile_file(__DIR__ . '/src/Blade/BladeDirectives.php');
 opcache_compile_file(__DIR__ . '/src/Blade/BladeDirective.php');
 opcache_compile_file(__DIR__ . '/src/Blade/Component.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/TemplateDirectory.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/RouteOperation.php');
+opcache_compile_file(__DIR__ . '/src/Attributes/Route.php');
 opcache_compile_file(__DIR__ . '/src/Blade/View.php');
 opcache_compile_file(__DIR__ . '/src/Controllers/RegisterController.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/HandlesMethod.php');

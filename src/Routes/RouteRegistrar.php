@@ -35,27 +35,27 @@ readonly class RouteRegistrar
                 $Router->map(
                     $op->HttpMethod->value,
                     $Route->value,
-                    handler: self::handler($Route, RouteOperation: $op),
+                    handler: self::handler(RouteList: $Route, Route: $op),
                 );
             }
         }
     }
 
     /** Dispatch to the handler strategy declared on the #[RouteOperation]. */
-    private static function handler(RouteList $Route, Route $RouteOperation): callable
+    private static function handler(RouteList $RouteList, Route $Route): callable
     {
-        $action = $RouteOperation->action;
+        $action = $Route->action;
 
         return match (true) {
             $action instanceof StaticView  => self::staticView(StaticView: $action),
             $action instanceof Form        => self::formView(Form: $action),
             $action instanceof Validated   => self::withValidation(
-                $Route,
+                $RouteList,
                 Validated: $action,
-                handler: self::resolveCallable($action->controller, $RouteOperation->HttpMethod),
+                handler: self::resolveCallable($action->controller, $Route->HttpMethod),
             ),
             $action instanceof Closure     => $action,
-            is_string(value: $action)             => self::resolveCallable(class: $action, HttpMethod: $RouteOperation->HttpMethod),
+            is_string(value: $action)             => self::resolveCallable(class: $action, HttpMethod: $Route->HttpMethod),
             is_array(value: $action)              => new $action[0]()->{$action[1]}(...),
         };
     }
@@ -102,9 +102,9 @@ readonly class RouteRegistrar
     }
 
     /** Wrap a POST handler with action-driven validation and error re-rendering. */
-    private static function withValidation(RouteList $Route, Validated $Validated, callable $handler): Closure
+    private static function withValidation(RouteList $RouteList, Validated $Validated, callable $handler): Closure
     {
-        return static function (ServerRequestInterface $ServerRequestInterface) use ($Route, $Validated, $handler): ResponseInterface {
+        return static function (ServerRequestInterface $ServerRequestInterface) use ($RouteList, $Validated, $handler): ResponseInterface {
             $requestObject = $Validated->request::from($ServerRequestInterface->getParsedBody());
 
             $errors = Validator::validate(model: $requestObject);
@@ -114,7 +114,7 @@ readonly class RouteRegistrar
 
             // Find the Form action on the same route to get the View for re-rendering.
             $form_action = null;
-            foreach ($Route->operations() as $op) {
+            foreach ($RouteList->operations() as $op) {
                 if ($op->action instanceof Form) {
                     $form_action = $op->action;
                     break;
@@ -122,7 +122,7 @@ readonly class RouteRegistrar
             }
 
             if ($form_action === null) {
-                throw new LogicException("Route::{$Route->name} has a Validated action but no Form action to re-render on validation failure.");
+                throw new LogicException("Route::{$RouteList->name} has a Validated action but no Form action to re-render on validation failure.");
             }
 
             return self::renderForm(Form: $form_action, data: [...$requestObject->toArray(), $Validated->view_model::errors => $errors]);

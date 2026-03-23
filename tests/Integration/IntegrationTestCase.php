@@ -62,12 +62,12 @@ abstract class IntegrationTestCase extends TestCase
     }
 
     /** @param array<string, string[]> $headers */
-    protected function dispatch(RouteList $Route, array $headers = [], HttpMethod $HttpMethod = HttpMethod::GET): ResponseInterface
+    protected function dispatch(RouteList $RouteList, array $headers = [], HttpMethod $HttpMethod = HttpMethod::GET): ResponseInterface
     {
         $ServerRequest = new ServerRequest(
             serverParams: [],
             uploadedFiles: [],
-            uri: new Uri($Route->value),
+            uri: new Uri($RouteList->value),
             method: $HttpMethod->value,
             headers: $headers,
         );
@@ -79,25 +79,25 @@ abstract class IntegrationTestCase extends TestCase
     /**
      * @throws InvalidArgumentException
      */
-    protected function get(RouteList $Route): ResponseInterface
+    protected function get(RouteList $RouteList): ResponseInterface
     {
         return $this->App->Router->dispatch(
-            new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($Route->value), method: HttpMethod::GET->value),
+            new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($RouteList->value), method: HttpMethod::GET->value),
         );
     }
 
-    protected function post(RouteList $Route): ResponseInterface
+    protected function post(RouteList $RouteList): ResponseInterface
     {
         return $this->App->Router->dispatch(
-            new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($Route->value), method: HttpMethod::POST->value),
+            new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($RouteList->value), method: HttpMethod::POST->value),
         );
     }
 
-    protected function assertErrorResponse(int $expected_status, string $expected_message, RouteList $Route, HttpMethod $HttpMethod = HttpMethod::GET): void
+    protected function assertErrorResponse(int $expected_status, string $expected_message, RouteList $RouteList, HttpMethod $HttpMethod = HttpMethod::GET): void
     {
         try {
             $this->App->Router->dispatch(
-                new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($Route->value), method: $HttpMethod->value),
+                new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($RouteList->value), method: $HttpMethod->value),
             );
             $this->fail("Expected HttpException with status $expected_status, but no exception was thrown.");
         } catch (HttpException $HttpException) {

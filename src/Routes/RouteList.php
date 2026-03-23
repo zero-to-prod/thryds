@@ -210,6 +210,6 @@ enum RouteList: string
      */
     public function with(array $params = [], array $query = []): RouteUrl
     {
-        return new RouteUrl(Route: $this, params: $params, query: $query);
+        return new RouteUrl(RouteList: $this, params: $params, query: $query);
     }
 }

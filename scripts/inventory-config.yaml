@@ -11,7 +11,7 @@ namespaces:
   tests_integration: ZeroToProd\Thryds\Tests\Integration
 
 source_paths:
-  route: src/Routes/Route.php
+  route: src/Routes/RouteList.php
   view: src/Blade/View.php
   component: src/Blade/Component.php
   controllers: src/Controllers
@@ -36,11 +36,11 @@ attributes:
   schema_sync: ZeroToProd\Thryds\Attributes\SchemaSync
   persists: ZeroToProd\Thryds\Attributes\Persists
   redirects_to: ZeroToProd\Thryds\Attributes\RedirectsTo
-  route_operation: ZeroToProd\Thryds\Attributes\RouteOperation
+  route_operation: ZeroToProd\Thryds\Attributes\Route
   prop: ZeroToProd\Thryds\Attributes\Prop
   closed_set: ZeroToProd\Thryds\Attributes\ClosedSet
 
 enums:
-  route: ZeroToProd\Thryds\Routes\Route
+  route: ZeroToProd\Thryds\Routes\RouteList
   view: ZeroToProd\Thryds\Blade\View
   component: ZeroToProd\Thryds\Blade\Component

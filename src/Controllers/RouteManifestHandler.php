@@ -17,20 +17,20 @@ readonly class RouteManifestHandler
     {
         return new JsonResponse(
             data: array_values(array_map(
-                static fn(RouteList $Route): array => [
-                    RouteManifest::name        => $Route->name,
-                    RouteManifest::path        => $Route->value,
-                    RouteManifest::description => $Route->description(),
+                static fn(RouteList $RouteList): array => [
+                    RouteManifest::name        => $RouteList->name,
+                    RouteManifest::path        => $RouteList->value,
+                    RouteManifest::description => $RouteList->description(),
                     RouteManifest::operations  => array_map(
-                        static fn(Route $RouteOperation): array => [
-                            RouteManifest::method      => $RouteOperation->HttpMethod->value,
-                            RouteManifest::description => $RouteOperation->description,
-                            RouteManifest::strategy    => $RouteOperation->actionName(),
+                        static fn(Route $Route): array => [
+                            RouteManifest::method      => $Route->HttpMethod->value,
+                            RouteManifest::description => $Route->description,
+                            RouteManifest::strategy    => $Route->actionName(),
                         ],
-                        $Route->operations(),
+                        $RouteList->operations(),
                     ),
                 ],
-                array_filter(RouteList::cases(), static fn(RouteList $Route): bool => !$Route->isDevOnly() && $Route->params() === []),
+                array_filter(RouteList::cases(), static fn(RouteList $RouteList): bool => !$RouteList->isDevOnly() && $RouteList->params() === []),
             )),
         );
     }
