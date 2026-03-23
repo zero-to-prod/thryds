@@ -6,6 +6,7 @@ namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
 use Closure;
+use Stringable;
 use ZeroToProd\Thryds\Routes\Actions\Form;
 use ZeroToProd\Thryds\Routes\Actions\StaticView;
 use ZeroToProd\Thryds\Routes\Actions\Validated;
@@ -46,12 +47,10 @@ readonly class RouteOperation
     public function actionName(): string
     {
         return match (true) {
-            $this->action instanceof StaticView,
-            $this->action instanceof Form,
-            $this->action instanceof Validated  => basename(str_replace('\\', '/', $this->action::class)),
-            is_string($this->action)            => basename(str_replace('\\', '/', $this->action)),
-            is_array($this->action)             => basename(str_replace('\\', '/', $this->action[0])) . '::' . $this->action[1],
-            $this->action instanceof Closure    => 'Closure',
+            $this->action instanceof Stringable => (string) $this->action,
+            is_string($this->action)             => basename(str_replace('\\', '/', $this->action)),
+            is_array($this->action)              => basename(str_replace('\\', '/', $this->action[0])) . '::' . $this->action[1],
+            $this->action instanceof Closure     => 'Closure',
         };
     }
 }

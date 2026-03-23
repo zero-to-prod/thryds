@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Routes\Actions;
 
+use Stringable;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 
 /** Validate the request body; re-render on error, delegate on success. */
 #[Infrastructure]
-final readonly class Validated
+final readonly class Validated implements Stringable
 {
     /**
      * @param class-string $controller
@@ -20,4 +21,9 @@ final readonly class Validated
         public string $request,
         public string $view_model,
     ) {}
+
+    public function __toString(): string
+    {
+        return 'Validated';
+    }
 }
