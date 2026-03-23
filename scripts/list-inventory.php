@@ -47,7 +47,7 @@ $Component   = $inventoryConfig['enums']['component'];
 /** Collect all route cases across all route sources. */
 $allRouteCases = [];
 foreach ($RouteSource::cases() as $source) {
-    foreach ($source->enumClass()::cases() as $case) {
+    foreach (\ZeroToProd\Thryds\Attributes\RouteEnum::of($source)::cases() as $case) {
         $allRouteCases[] = $case;
     }
 }
@@ -545,7 +545,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges, array $inventory
     $RouteSource = $inventoryConfig['enums']['route_source'];
     $allRouteCases = [];
     foreach ($RouteSource::cases() as $src) {
-        foreach ($src->enumClass()::cases() as $c) {
+        foreach (\ZeroToProd\Thryds\Attributes\RouteEnum::of($src)::cases() as $c) {
             $allRouteCases[] = $c;
         }
     }

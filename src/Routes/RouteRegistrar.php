@@ -17,6 +17,7 @@ use ZeroToProd\Thryds\Attributes\HandlesMethod;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\Middleware;
 use ZeroToProd\Thryds\Attributes\Route;
+use ZeroToProd\Thryds\Attributes\RouteEnum;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Requests\InputField;
 use ZeroToProd\Thryds\Routes\Actions\Form;
@@ -30,7 +31,7 @@ readonly class RouteRegistrar
     public static function register(Router $Router, Config $Config): void
     {
         foreach (RouteSource::cases() as $RouteSource) {
-            foreach ($RouteSource->enumClass()::cases() as $BackedEnum) {
+            foreach (RouteEnum::of(UnitEnum: $RouteSource)::cases() as $BackedEnum) {
                 if (Guarded::of($BackedEnum)?->passes($Config) === false) {
                     continue;
                 }

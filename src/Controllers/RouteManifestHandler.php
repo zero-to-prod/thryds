@@ -8,6 +8,7 @@ use Laminas\Diactoros\Response\JsonResponse;
 use ZeroToProd\Thryds\Attributes\Guarded;
 use ZeroToProd\Thryds\Attributes\HandlesRoute;
 use ZeroToProd\Thryds\Attributes\Route;
+use ZeroToProd\Thryds\Attributes\RouteEnum;
 use ZeroToProd\Thryds\Attributes\RouteParam;
 use ZeroToProd\Thryds\Routes\DevRouteList;
 use ZeroToProd\Thryds\Routes\RouteManifest;
@@ -21,7 +22,7 @@ readonly class RouteManifestHandler
         $entries = [];
 
         foreach (RouteSource::cases() as $source) {
-            foreach ($source->enumClass()::cases() as $route) {
+            foreach (RouteEnum::of(UnitEnum: $source)::cases() as $route) {
                 if (Guarded::of(BackedEnum: $route) !== null || RouteParam::on(BackedEnum: $route) !== []) {
                     continue;
                 }

@@ -27,7 +27,7 @@ $samples  = max(5, (int) ($argv[1] ?? 20));
 
 $publicRoutes = [];
 foreach (\ZeroToProd\Thryds\Routes\RouteSource::cases() as $source) {
-    foreach ($source->enumClass()::cases() as $r) {
+    foreach (\ZeroToProd\Thryds\Attributes\RouteEnum::of($source)::cases() as $r) {
         if (\ZeroToProd\Thryds\Attributes\Guarded::of($r) === null) {
             $publicRoutes[] = $r;
         }

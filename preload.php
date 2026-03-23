@@ -41,6 +41,7 @@ opcache_compile_file(__DIR__ . '/src/Blade/BladeDirectives.php');
 opcache_compile_file(__DIR__ . '/src/Blade/BladeDirective.php');
 opcache_compile_file(__DIR__ . '/src/Blade/Component.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/TemplateDirectory.php');
+opcache_compile_file(__DIR__ . '/src/Attributes/RouteEnum.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/Guarded.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/Middleware.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/Route.php');

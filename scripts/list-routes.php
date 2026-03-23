@@ -23,7 +23,7 @@ use ZeroToProd\Thryds\Routes\RouteSource;
 $routes = [];
 
 foreach (RouteSource::cases() as $source) {
-    foreach ($source->enumClass()::cases() as $route) {
+    foreach (\ZeroToProd\Thryds\Attributes\RouteEnum::of($source)::cases() as $route) {
         $routes[] = [
             'name'        => $route->name,
             'path'        => $route->value,
