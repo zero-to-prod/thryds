@@ -11,25 +11,20 @@ use ZeroToProd\Thryds\Schema\DdlBuilder;
  * Declares that a migration drops a column from an existing table.
  *
  * The Migrator reads this attribute to auto-generate ALTER TABLE DROP COLUMN DDL (up)
- * and ALTER TABLE ADD COLUMN DDL (down) from the target class's #[Column] attribute
+ * and ALTER TABLE ADD COLUMN DDL (down) from the column definition attribute
  * on the named property. No imperative up()/down() methods are needed.
  *
  * The column definition must still exist on the $table class for rollback support.
  * Remove the property from the table class only after the migration is applied
  * and rollback is no longer needed.
- *
- * @example
- * #[Migration(id: '0003', description: 'Drop bio column from users')]
- * #[DropColumn(User::class, column: User::bio)]
- * final readonly class DropBioFromUsers {}
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 #[MigrationAction]
 readonly class DropColumn
 {
     /**
-     * @param class-string $table  Table class carrying #[Table] and #[Column] attributes.
-     * @param string       $column Property name on the table class that carries the #[Column] attribute.
+     * @param class-string $table  Table class carrying table declaration and column definition attributes.
+     * @param string       $column Property name on the table class that carries the column definition attribute.
      */
     public function __construct(
         public string $table,

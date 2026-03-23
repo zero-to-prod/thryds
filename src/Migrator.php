@@ -23,8 +23,7 @@ use ZeroToProd\Thryds\Tables\Migration;
  * MigrationStatusResolver (status computation) to keep each concern
  * in a single-responsibility class.
  *
- * All migrations are attribute-driven via classes carrying #[MigrationAction]
- * (#[CreateTable], #[AddColumn], #[DropColumn], #[RawSql]).
+ * All migrations are attribute-driven via classes carrying a migration action attribute.
  *
  * Transaction behavior depends on the active driver:
  * - MySQL: DDL causes implicit commit; migrations run without wrapping.
@@ -57,7 +56,7 @@ readonly class Migrator
     }
 
     /**
-     * Builds a Migrator from the #[MigrationsSource] attribute on this class.
+     * Builds a Migrator from the source configuration attribute on this class.
      *
      * @param string $base_dir Absolute path to the project root.
      */
@@ -93,7 +92,7 @@ readonly class Migrator
     /**
      * Applies all pending migrations in id order. Throws if any applied migration has been modified.
      *
-     * @return list<array{id: string, description: string}> Key names match Migration::id and Migration::description constants.
+     * @return list<array{id: string, description: string}> Key names match the migration table column constants.
      */
     public function migrate(): array
     {
@@ -127,7 +126,7 @@ readonly class Migrator
      *
      * Returns the rolled-back migration, or null if there was nothing to roll back.
      *
-     * @return array{id: string, description: string}|null Key names match Migration::id and Migration::description constants.
+     * @return array{id: string, description: string}|null Key names match the migration table column constants.
      */
     public function rollback(): ?array
     {
@@ -151,7 +150,7 @@ readonly class Migrator
     /**
      * Executes the up action for a migration class.
      *
-     * Dispatches on any attribute class carrying #[MigrationAction].
+     * Dispatches on any attribute class carrying a migration action attribute.
      */
     private function runUp(string $class): void
     {
@@ -170,7 +169,7 @@ readonly class Migrator
     /**
      * Executes the down action for a migration class.
      *
-     * Dispatches on any attribute class carrying #[MigrationAction].
+     * Dispatches on any attribute class carrying a migration action attribute.
      */
     private function runDown(string $class): void
     {
@@ -187,7 +186,7 @@ readonly class Migrator
     }
 
     /**
-     * Resolves the first attribute carrying #[MigrationAction] from a migration class.
+     * Resolves the first attribute carrying a migration action marker from a migration class.
      *
      * @param class-string $class
      */

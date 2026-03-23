@@ -10,13 +10,8 @@ use ZeroToProd\Thryds\Schema\SchemaSource;
 /**
  * Declares the schema synchronization source of truth for a Table class.
  *
- * Placed on classes carrying #[Table] to control how sync:schema resolves drift
- * between the live database and PHP #[Column] attributes.
- *
- * @example
- * #[SchemaSync(SchemaSource::attributes)]
- * #[Table(TableName: TableName::users, ...)]
- * readonly class User { ... }
+ * Placed on classes carrying the table declaration attribute to control how sync:schema resolves drift
+ * between the live database and column definition attributes.
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 #[HopWeight(0)]

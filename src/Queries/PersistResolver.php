@@ -12,7 +12,7 @@ use ZeroToProd\Thryds\Attributes\Infrastructure;
  *
  * Each class carrying this attribute handles a single transformation strategy
  * (e.g. ID generation, password hashing, timestamp generation).
- * Referenced by the #[ResolvesTo] attribute on Persist enum cases.
+ * Referenced by the resolution target attribute on Persist enum cases.
  *
  * Classes carrying this attribute must declare resolve(mixed $value): string.
  */

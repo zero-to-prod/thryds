@@ -8,15 +8,10 @@ use Attribute;
 use ZeroToProd\Thryds\Schema\ReferentialAction;
 
 /**
- * Declares the ON DELETE referential action for a #[ForeignKey] column.
+ * Declares the ON DELETE referential action for a foreign key column.
  *
- * Place on the same enum case as #[ForeignKey].
+ * Place on the same enum case as the foreign key declaration attribute.
  * Defaults to RESTRICT when omitted.
- *
- * @example
- * #[ForeignKey(BackedEnum: UserTable::id)]
- * #[OnDelete(ReferentialAction: ReferentialAction::CASCADE)]
- * case user_id = 'user_id';
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
 readonly class OnDelete

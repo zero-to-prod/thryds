@@ -13,12 +13,6 @@ use ZeroToProd\Thryds\UI\Props;
  *
  * Applied to Component enum cases. Replaces @props() parsing as the structural metadata source.
  * Pass a BackedEnum case as default to auto-derive the enum constraint.
- *
- * @example
- * #[Prop(Props::variant, ButtonVariant::primary)]
- * #[Prop(Props::size, ButtonSize::md)]
- * #[Prop(Props::type, 'button')]
- * case button = 'button';
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT | Attribute::IS_REPEATABLE)]
 #[HopWeight(0)]

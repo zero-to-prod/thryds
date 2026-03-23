@@ -10,11 +10,7 @@ use ZeroToProd\Thryds\Routes\RouteList;
 /**
  * Declares which routes a test class covers.
  *
- * Applied to test classes. Replaces Route:: reference scanning as the structural metadata source.
- *
- * @example
- * #[CoversRoute(Route::home)]
- * final class HomeControllerTest extends IntegrationTestCase
+ * Applied to test classes. Replaces route-reference scanning as the structural metadata source.
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 readonly class CoversRoute

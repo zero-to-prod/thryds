@@ -12,7 +12,7 @@ use ZeroToProd\Thryds\Blade\View;
  *
  * Applied to controller classes that render a template. The inventory
  * graph discovers view bindings via this attribute. Route-level view
- * bindings are declared via the view parameter on #[RouteOperation].
+ * bindings are declared via the view parameter on the route operation attribute.
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 #[HopWeight(0)]

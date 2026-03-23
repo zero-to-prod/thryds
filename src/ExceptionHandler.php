@@ -65,7 +65,7 @@ readonly class ExceptionHandler
     }
 
     /**
-     * Dispatches to the handler method whose #[HandlesException] type is the most
+     * Dispatches to the handler method whose exception handler attribute type is the most
      * specific match for the thrown exception. Falls back to handleThrowable for
      * any unmatched exception type.
      */

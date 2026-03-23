@@ -10,23 +10,7 @@ use ZeroToProd\Thryds\UI\Domain;
 /**
  * Marks a backed enum as a closed set of allowed values in a specific domain.
  *
- * This is the single annotation for enums. For readonly classes, use #[SourceOfTruth] instead.
- *
- * @example
- * #[ClosedSet(Domain::http_methods, addCase: 'Add enum case. No other changes needed.')]
- * enum HTTP_METHOD: string
- * {
- *     case GET = 'GET';
- *     case POST = 'POST';
- * }
- *
- * @example
- * #[ClosedSet(Domain::application_environment, addCase: '1. Add an enum case. 2. Handle in Config::__construct().')]
- * enum AppEnv: string
- * {
- *     case production = 'production';
- *     case development = 'development';
- * }
+ * This is the single annotation for enums. For readonly classes, use the source-of-truth attribute instead.
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 #[HopWeight(0)]

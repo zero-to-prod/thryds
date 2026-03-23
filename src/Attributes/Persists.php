@@ -9,10 +9,6 @@ use Attribute;
 /**
  * Declares that a controller persists data to a model class.
  * Apply multiple times when a controller writes to more than one model.
- *
- * @example
- * #[Persists(User::class)]
- * class RegisterController { ... }
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 #[HopWeight(1)]

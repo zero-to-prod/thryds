@@ -9,18 +9,10 @@ use Attribute;
 /**
  * Declares arbitrary SQL for a migration's forward and rollback operations.
  *
- * Use when no structured action attribute (#[CreateTable], #[AddColumn], #[DropColumn])
+ * Use when no structured migration action attribute
  * fits — e.g. DML, data backfills, index changes, or multi-step DDL.
  *
  * Both $up and $down are required to enforce reversibility at the attribute level.
- *
- * @example
- * #[Migration(id: '0003', description: 'Seed default roles')]
- * #[RawSql(
- *     up: "INSERT INTO roles (name) VALUES ('admin'), ('user')",
- *     down: "DELETE FROM roles WHERE name IN ('admin', 'user')",
- * )]
- * final readonly class SeedDefaultRoles {}
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 #[MigrationAction]

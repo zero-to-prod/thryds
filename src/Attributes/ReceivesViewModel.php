@@ -10,10 +10,6 @@ use Attribute;
  * Declares which ViewModels a view receives as template data.
  *
  * Applied to View enum cases. Replaces `use` import scanning as the structural metadata source.
- *
- * @example
- * #[ReceivesViewModel(ErrorViewModel::class)]
- * case error = 'error';
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
 #[HopWeight(0)]

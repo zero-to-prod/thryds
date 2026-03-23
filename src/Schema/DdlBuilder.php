@@ -21,8 +21,8 @@ use ZeroToProd\Thryds\Attributes\Table;
 /**
  * Generates DDL statements from Table class attributes.
  *
- * Reads #[Table], #[Column], #[PrimaryKey], #[Index], #[ForeignKey], #[OnDelete],
- * and #[OnUpdate] attributes via reflection to produce CREATE TABLE and DROP TABLE
+ * Reads table, column, primary key, index, foreign key, on-delete,
+ * and on-update attributes via reflection to produce CREATE TABLE and DROP TABLE
  * SQL without hand-written DDL.
  */
 #[Infrastructure]
@@ -36,7 +36,7 @@ final readonly class DdlBuilder
     /**
      * Generates a CREATE TABLE statement from a Table class's attributes.
      *
-     * @param class-string $class A class carrying #[Table], #[Column], #[PrimaryKey], and optionally #[Index] attributes.
+     * @param class-string $class A class carrying table, column, primary key, and optionally index definition attributes.
      */
     public static function createTableSql(string $class, Driver $Driver): string
     {
@@ -84,7 +84,7 @@ final readonly class DdlBuilder
     /**
      * Generates a DROP TABLE IF EXISTS statement from a Table class's attributes.
      *
-     * @param class-string $class A class carrying a #[Table] attribute.
+     * @param class-string $class A class carrying a table definition attribute.
      */
     public static function dropTableSql(string $class, Driver $Driver): string
     {
@@ -120,7 +120,7 @@ final readonly class DdlBuilder
     }
 
     /**
-     * Reflects #[Column] attributes from a Table class's public properties.
+     * Reflects column definition attributes from a Table class's public properties.
      *
      * @param ReflectionClass<object> $ReflectionClass
      * @return array<string, Column>
@@ -168,10 +168,10 @@ final readonly class DdlBuilder
     }
 
     /**
-     * Generates an ALTER TABLE ADD COLUMN statement from a Table class property's #[Column] attribute.
+     * Generates an ALTER TABLE ADD COLUMN statement from a Table class property's column definition attribute.
      *
-     * @param class-string $class  A class carrying #[Table] and #[Column] attributes.
-     * @param string       $column Property name on the class that carries the #[Column] attribute.
+     * @param class-string $class  A class carrying table and column definition attributes.
+     * @param string       $column Property name on the class that carries the column definition attribute.
      */
     public static function addColumnSql(string $class, string $column, Driver $Driver): string
     {
@@ -183,7 +183,7 @@ final readonly class DdlBuilder
     /**
      * Generates an ALTER TABLE DROP COLUMN statement from a Table class property name.
      *
-     * @param class-string $class  A class carrying a #[Table] attribute.
+     * @param class-string $class  A class carrying a table definition attribute.
      * @param string       $column Column name to drop.
      */
     public static function dropColumnSql(string $class, string $column, Driver $Driver): string
@@ -196,7 +196,7 @@ final readonly class DdlBuilder
     }
 
     /**
-     * Reflects a single #[Column] attribute from a named property on a Table class.
+     * Reflects a single column definition attribute from a named property on a Table class.
      *
      * @param ReflectionClass<object> $ReflectionClass
      */
@@ -214,7 +214,7 @@ final readonly class DdlBuilder
     }
 
     /**
-     * Reflects #[ForeignKey], #[OnDelete], and #[OnUpdate] attributes from a Table class's
+     * Reflects foreign key, on-delete, and on-update attributes from a Table class's
      * constants and returns CONSTRAINT ... FOREIGN KEY DDL clauses.
      *
      * @param ReflectionClass<object> $ReflectionClass

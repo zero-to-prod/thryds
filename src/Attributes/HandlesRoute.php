@@ -12,10 +12,6 @@ use ZeroToProd\Thryds\Routes\RouteList;
  *
  * The router discovers controllers via this attribute at boot time,
  * eliminating manual wiring in the route registrar.
- *
- * @example
- * #[HandlesRoute(Route::register)]
- * class RegisterController { ... }
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 #[HopWeight(0)]

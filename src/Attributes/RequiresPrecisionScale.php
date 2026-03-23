@@ -7,7 +7,7 @@ namespace ZeroToProd\Thryds\Attributes;
 use Attribute;
 
 /**
- * Marks a DataType that requires $precision and $scale on its #[Column].
+ * Marks a DataType that requires $precision and $scale on its column definition attribute.
  *
  * Applies to: DECIMAL.
  */

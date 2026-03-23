@@ -9,9 +9,9 @@ use Attribute;
 /**
  * Links a class or method to one or more requirements in requirements.yaml.
  *
- * Usage: #[Requirement('TRACE-001')] or #[Requirement('AUTH-001', 'SEC-001')]
+ * Accepts one or more requirement IDs as arguments.
  *
- * Validated by ValidateRequirementIdsRector — every ID must exist in requirements.yaml.
+ * Validated by a Rector rule — every ID must exist in requirements.yaml.
  *
  * @see docs/requirement-tracing.md
  */

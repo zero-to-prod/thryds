@@ -6,7 +6,7 @@ namespace ZeroToProd\Thryds\UI;
 
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 
-/** Prop names accepted by Blade components via #[Prop]. */
+/** Prop names accepted by Blade components via the component property attribute. */
 #[ClosedSet(
     Domain::component_props,
     addCase: <<<TEXT

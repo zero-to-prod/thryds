@@ -41,7 +41,7 @@ readonly class RouteRegistrar
         }
     }
 
-    /** Dispatch to the handler strategy declared on the #[RouteOperation]. */
+    /** Dispatch to the handler strategy declared on the route operation attribute. */
     private static function handler(RouteList $RouteList, Route $Route): callable
     {
         $action = $Route->action;
@@ -69,7 +69,7 @@ readonly class RouteRegistrar
     }
 
     /**
-     * Resolve a class-string to a callable — invokable or #[HandlesMethod]-annotated.
+     * Resolve a class-string to a callable — invokable or method-dispatch-annotated.
      *
      * @param class-string $class
      * @return callable

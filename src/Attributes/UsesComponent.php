@@ -11,10 +11,6 @@ use ZeroToProd\Thryds\Blade\Component;
  * Declares which Blade components a view uses.
  *
  * Applied to View enum cases. Replaces <x-*> tag scanning as the structural metadata source.
- *
- * @example
- * #[UsesComponent(Component::card, Component::button)]
- * case home = 'home';
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
 #[HopWeight(0)]

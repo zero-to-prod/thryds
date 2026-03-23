@@ -19,7 +19,7 @@ use ZeroToProd\Thryds\UI\Props;
 /**
  * Blade component identifiers. Each case maps to templates/components/{value}.blade.php.
  *
- * Components are registered as <x-{value}> aliases in App::bootBlade().
+ * Components are registered as <x-{value}> aliases during the Blade bootstrap phase.
  */
 #[TemplateDirectory('components')]
 #[ClosedSet(
@@ -85,7 +85,7 @@ enum Component: string
         }
     }
 
-    /** Resolve the template directory declared by #[TemplateDirectory]. */
+    /** Resolve the template directory declared by the template directory attribute. */
     public static function templateDirectory(): string
     {
         return new ReflectionEnum(self::class)
@@ -94,7 +94,7 @@ enum Component: string
             ->directory;
     }
 
-    /** Blade view name used by compiler()->component(). */
+    /** Blade view name used for component registration. */
     public function viewName(): string
     {
         return self::templateDirectory() . '.' . $this->value;

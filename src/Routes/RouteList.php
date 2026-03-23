@@ -118,7 +118,7 @@ enum RouteList: string
         );
     }
 
-    /** Returns the route-level description from the first #[RouteOperation] with a non-null description. */
+    /** Returns the route-level description from the first route operation with a non-null description. */
     public function description(): string
     {
         /** @var array<string, string> $cache */
@@ -134,7 +134,7 @@ enum RouteList: string
         })();
     }
 
-    /** @return Route[] HTTP operations declared on this route via #[RouteOperation]. */
+    /** @return Route[] HTTP operations declared on this route via the route operation attribute. */
     public function operations(): array
     {
         /** @var array<string, Route[]> $cache */
@@ -191,7 +191,7 @@ enum RouteList: string
         return $cache[$this->name];
     }
 
-    /** @return string[] Parameter names declared via #[RouteParam] on this route case. */
+    /** @return string[] Parameter names declared via the route parameter attribute on this case. */
     public function params(): array
     {
         /** @var array<string, string[]> $cache */

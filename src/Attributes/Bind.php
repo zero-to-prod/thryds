@@ -11,10 +11,6 @@ use Attribute;
  *
  * Applied to readonly properties on the App class. At boot, properties carrying this
  * attribute are reflected and bound as container instances keyed by their declared type.
- *
- * @example
- * public function __construct(
- *     #[Bind] public Blade $Blade, *) {}
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 final readonly class Bind {}

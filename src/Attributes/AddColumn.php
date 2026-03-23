@@ -11,24 +11,19 @@ use ZeroToProd\Thryds\Schema\DdlBuilder;
  * Declares that a migration adds a column to an existing table.
  *
  * The Migrator reads this attribute to auto-generate ALTER TABLE ADD COLUMN DDL (up)
- * and ALTER TABLE DROP COLUMN DDL (down) from the target class's #[Column] attribute
+ * and ALTER TABLE DROP COLUMN DDL (down) from the column definition attribute
  * on the named property. No imperative up()/down() methods are needed.
  *
  * The column definition is read from the $column property on the $table class,
- * which must carry a #[Column] attribute.
- *
- * @example
- * #[Migration(id: '0002', description: 'Add bio column to users')]
- * #[AddColumn(User::class, column: User::bio)]
- * final readonly class AddBioToUsers {}
+ * which must carry a column definition attribute.
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 #[MigrationAction]
 readonly class AddColumn
 {
     /**
-     * @param class-string $table  Table class carrying #[Table] and #[Column] attributes.
-     * @param string       $column Property name on the table class that carries the #[Column] attribute.
+     * @param class-string $table  Table class carrying table declaration and column definition attributes.
+     * @param string       $column Property name on the table class that carries the column definition attribute.
      */
     public function __construct(
         public string $table,

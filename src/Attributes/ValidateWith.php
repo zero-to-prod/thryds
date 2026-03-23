@@ -9,7 +9,7 @@ use Attribute;
 /**
  * Declares a validation rule class for a property.
  *
- * The rule class must carry #[ValidationRule].
+ * The rule class must carry the validation rule attribute.
  */
 #[Attribute(Attribute::TARGET_PROPERTY | Attribute::IS_REPEATABLE)]
 readonly class ValidateWith

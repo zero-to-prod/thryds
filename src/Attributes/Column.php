@@ -15,26 +15,12 @@ use ZeroToProd\Thryds\Schema\DataType;
  *
  * $default behavior:
  *   - null (omitted) → no DEFAULT clause in DDL
- *   - Column::CURRENT_TIMESTAMP → DEFAULT CURRENT_TIMESTAMP
+ *   - The current-timestamp sentinel → DEFAULT CURRENT_TIMESTAMP
  *   - Any other scalar → DEFAULT '<value>' (quoted string or raw numeric)
  *
- * $values are required when $DataType is DataType::ENUM or DataType::SET.
- * $length is required for DataType::VARCHAR and DataType::CHAR.
- * $precision and $scale are required for DataType::DECIMAL.
- *
- * @example
- * #[Column(DataType: DataType::BIGINT, unsigned: true, auto_increment: true)]
- * #[PrimaryKey]
- * case id = 'id';
- *
- * #[Column(DataType: DataType::VARCHAR, length: 255)]
- * case email = 'email';
- *
- * #[Column(DataType: DataType::ENUM, values: ['active', 'suspended'], default: 'active')]
- * case status = 'status';
- *
- * #[Column(DataType: DataType::DATETIME, default: Column::CURRENT_TIMESTAMP)]
- * case created_at = 'created_at';
+ * $values are required when $DataType is ENUM or SET.
+ * $length is required for VARCHAR and CHAR.
+ * $precision and $scale are required for DECIMAL.
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 #[HopWeight(0)]
@@ -51,7 +37,7 @@ readonly class Column
      * @param bool                        $unsigned       Applies to integer and numeric types.
      * @param bool                        $nullable       If true, column allows NULL.
      * @param bool                        $auto_increment If true, the column is AUTO_INCREMENT.
-     * @param string|int|float|bool|null  $default        Default value, Column::CURRENT_TIMESTAMP, or null (no default).
+     * @param string|int|float|bool|null  $default        Default value, the current-timestamp sentinel, or null (no default).
      * @param string[]|null               $values         Required for ENUM and SET types: the allowed values.
      * @param string                      $comment        Stored as the MySQL column COMMENT and serves as the canonical human-readable description of the column. Replaces the need for a separate docblock on the enum case.
      */

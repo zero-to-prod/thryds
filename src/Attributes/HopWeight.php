@@ -16,13 +16,6 @@ use Attribute;
  *
  * Used by check:graph to enforce the 1-hop rule: no path through
  * consecutive semantic edges may exceed the configured maximum.
- *
- * @example
- * #[HopWeight(0)]  // structural — taxonomy only
- * readonly class ClosedSet { ... }
- *
- * #[HopWeight(1)]  // semantic — must read target to understand source
- * readonly class ValidatesRequest { ... }
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 readonly class HopWeight

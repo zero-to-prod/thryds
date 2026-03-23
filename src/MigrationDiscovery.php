@@ -10,10 +10,10 @@ use ZeroToProd\Thryds\Attributes\Migration as MigrationAttribute;
 use ZeroToProd\Thryds\Tables\Migration;
 
 /**
- * Discovers migration classes from the filesystem via their #[Migration] attribute.
+ * Discovers migration classes from the filesystem via their migration attribute.
  *
  * Scans all PHP files in a directory, derives the class name by stripping any
- * optional numeric prefix (e.g. 0001_), and uses the #[Migration] attribute as
+ * optional numeric prefix (e.g. 0001_), and uses the migration attribute as
  * the sole source of truth for id, description, and ordering. Filenames are not
  * authoritative — the attribute drives discovery.
  */

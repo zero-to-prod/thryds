@@ -66,7 +66,7 @@ readonly class DatabaseConfig
     }
 
     /**
-     * Builds configuration from an environment array using #[EnvVar] attribute declarations.
+     * Builds configuration from an environment array using environment variable declaration attributes.
      *
      * @param array<string, string> $env
      */

@@ -11,7 +11,7 @@ use ZeroToProd\Thryds\UI\Domain;
  *
  * Each case's backing value is the layer name in graph output.
  * The namespace segment defaults to PascalCase of the layer name,
- * overridden via #[Segment] where it differs.
+ * overridden via the segment attribute where it differs.
  */
 #[ClosedSet(
     Domain::namespace_layers,

@@ -25,7 +25,7 @@ use ZeroToProd\Thryds\Routes\RouteRegistrar;
 
 readonly class App
 {
-    /** @var list<array{string, string}> Property name and type name pairs for #[Bind] properties. */
+    /** @var list<array{string, string}> Property name and type name pairs for container-bound properties. */
     private array $bindings;
 
     public function __construct(
@@ -52,7 +52,7 @@ readonly class App
         $this->bindings = $bindings;
     }
 
-    /** Registers properties marked with #[Bind] as container instances using pre-resolved metadata. */
+    /** Registers properties marked with the container binding attribute as container instances using pre-resolved metadata. */
     public function registerBindings(): void
     {
         $Container = Container::getInstance();

@@ -17,18 +17,12 @@ use ZeroToProd\Thryds\Routes\HttpMethod;
  * Apply multiple times to register more than one method on the same path.
  *
  * The $action parameter accepts strategy objects or callable references:
- * - new StaticView(View::home)                          — render a view
- * - new Form(View::register, controller: ..., ...)      — form with validation
- * - new Validated(controller: ..., request: ..., ...)    — validate then delegate
- * - InvokableController::class                          — class-string (invokable)
- * - [SomeController::class, 'method']                   — array callable
- * - SomeController::method(...)                         — first-class callable
- *
- * @example
- * #[RouteOperation(HttpMethod::GET, new StaticView(View::home), 'Marketing home page')]
- * #[RouteOperation(HttpMethod::GET, new Form(...), 'New user registration form')]
- * #[RouteOperation(HttpMethod::POST, new Validated(...))]
- * #[RouteOperation(HttpMethod::GET, OpcacheStatusHandler::class, 'OPcache runtime statistics')]
+ * - a static view strategy object                       — render a view
+ * - a form strategy object with a view and controller   — form with validation
+ * - a validated strategy object with controller/request  — validate then delegate
+ * - a class-string for an invokable controller          — invokable dispatch
+ * - an array callable (class-string + method name)      — array callable
+ * - a first-class callable                              — first-class callable
  *
  * @param StaticView|Form|Validated|class-string|array{class-string, string}|Closure $action
  */

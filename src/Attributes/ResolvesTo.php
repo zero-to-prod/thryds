@@ -9,13 +9,9 @@ use Attribute;
 /**
  * Declares the resolver class for a persistence hook enum case.
  *
- * The resolver class must carry #[PersistResolver]. At runtime, the
+ * The resolver class must carry the persist resolver attribute. At runtime, the
  * Persist enum reads this attribute via reflection and delegates to the
  * resolver — no match statement or case-by-case dispatch needed.
- *
- * @example
- * #[ResolvesTo(RandomIdResolver::class)]
- * case random_id = 'random_id';
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
 #[HopWeight(1)]

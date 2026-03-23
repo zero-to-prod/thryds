@@ -22,7 +22,7 @@ use ZeroToProd\Thryds\ViewModels\RegisterViewModel;
 /**
  * Blade template identifiers. Each case maps to templates/{value}.blade.php.
  *
- * Pass the value to Blade::make(view: View::name->value).
+ * Pass the value to the view factory's make method.
  * For views with view-model data, pass the ViewModel via view_key as the array key.
  */
 #[ClosedSet(
@@ -111,7 +111,7 @@ enum View: string
         return $cache[$class] ??= new ReflectionClass(objectOrClass: $class)->getProperties();
     }
 
-    /** @return class-string[] ViewModel classes declared via #[ReceivesViewModel]. */
+    /** @return class-string[] ViewModel classes declared via the view model declaration attribute. */
     public function viewModels(): array
     {
         /** @var array<string, class-string[]> */

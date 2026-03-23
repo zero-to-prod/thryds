@@ -10,10 +10,6 @@ use Attribute;
  * Declares the HTML page title for a view.
  *
  * Applied to View enum cases. Replaces @section('title', '...') as the structural metadata source.
- *
- * @example
- * #[PageTitle('Register — Thryds')]
- * case register = 'register';
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
 readonly class PageTitle

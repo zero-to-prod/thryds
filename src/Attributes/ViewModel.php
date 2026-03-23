@@ -10,14 +10,13 @@ use Attribute;
  * Declares a class as a Blade view model with a named template variable key.
  *
  * The key parameter makes the Blade variable name visible in the attribute graph,
- * so agents can discover view–data bindings without reading runtime code.
+ * so agents can discover view-data bindings without reading runtime code.
  *
  * Effects enforced by Rector ({@see \Utils\Rector\Rector\AddViewKeyConstantRector}):
  *   - Adds `public const string view_key = 'ShortClassName';`
  *   - Sets the key parameter on this attribute to match
  *
- * The view_key constant is used as the Blade template variable key:
- *   $Blade->make(view: View::error, data: [ErrorViewModel::view_key => $vm])
+ * The view_key constant is used as the Blade template variable key when rendering views.
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 readonly class ViewModel

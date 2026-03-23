@@ -7,7 +7,7 @@ namespace ZeroToProd\Thryds\Attributes;
 use Attribute;
 
 /**
- * Marks a DataType that requires a $values list on its #[Column].
+ * Marks a DataType that requires a $values list on its column definition attribute.
  *
  * Applies to: ENUM, SET.
  */

@@ -7,7 +7,7 @@ namespace ZeroToProd\Thryds\Attributes;
 use Attribute;
 
 /**
- * Marks a DataType that supports $auto_increment on its #[Column].
+ * Marks a DataType that supports $auto_increment on its column definition attribute.
  *
  * Applies to: BIGINT, INT, SMALLINT, TINYINT.
  */

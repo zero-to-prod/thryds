@@ -11,27 +11,6 @@ use Attribute;
  *
  * Rector rules discover these classes via reflection to auto-configure themselves.
  * AI agents read the source and access parameters to understand how the class is used.
- *
- * @example
- * #[KeyRegistry(
- *     Source::http_headers,
- *     addKey: '1. Add constant. 2. Reference via Header::NAME where needed.',
- * )]
- * readonly class Header
- * {
- *     public const string content_type = 'Content-Type';
- * }
- *
- * @example
- * #[KeyRegistry(
- *     Source::server_env,
- *     superglobals: ['_SERVER', '_ENV'],
- *     addKey: '1. Add constant. 2. Add to compose.yaml environment section if needed.',
- * )]
- * readonly class Env
- * {
- *     public const string APP_ENV = 'APP_ENV';
- * }
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 #[HopWeight(0)]

@@ -16,22 +16,9 @@ use ZeroToProd\Thryds\Tables\TableName;
  * Each enum case represents one column. The case name is the PHP identifier;
  * the backed string value is the SQL column name used in queries and DDL.
  *
- * Place this on the enum class. Column-level details go on each case via #[Column].
- * Indexes go on the enum class via #[Index] (repeatable).
- * The primary key goes on the relevant case via #[PrimaryKey].
- *
- * @example
- * #[Table(name: 'users')]
- * #[Index(columns: ['email'], unique: true)]
- * enum UserTable: string
- * {
- *     #[Column(type: DataType::BigInt, unsigned: true, autoIncrement: true)]
- *     #[PrimaryKey]
- *     case id = 'id';
- *
- *     #[Column(type: DataType::VarChar, length: 255)]
- *     case email = 'email';
- * }
+ * Place this on the enum class. Column-level details go on each case via the column definition attribute.
+ * Indexes go on the enum class via the index attribute (repeatable).
+ * The primary key goes on the relevant case via the primary key attribute.
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 #[HopWeight(0)]
