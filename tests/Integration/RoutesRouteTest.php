@@ -7,16 +7,17 @@ namespace ZeroToProd\Thryds\Tests\Integration;
 use PHPUnit\Framework\Attributes\Test;
 use ZeroToProd\Thryds\Attributes\CoversRoute;
 use ZeroToProd\Thryds\Attributes\Route;
+use ZeroToProd\Thryds\Routes\DevRouteList;
 use ZeroToProd\Thryds\Routes\RouteList;
 use ZeroToProd\Thryds\Routes\RouteManifest;
 
-#[CoversRoute(RouteList::routes)]
+#[CoversRoute(DevRouteList::routes)]
 final class RoutesRouteTest extends IntegrationTestCase
 {
     #[Test]
     public function returnsJsonManifestOfNonDevRoutes(): void
     {
-        $ResponseInterface = $this->get(RouteList::routes);
+        $ResponseInterface = $this->get(DevRouteList::routes);
 
         $this->assertSame(200, $ResponseInterface->getStatusCode());
         $this->assertStringContainsString(self::APPLICATION_JSON, $ResponseInterface->getHeaderLine('Content-Type'));
@@ -26,7 +27,7 @@ final class RoutesRouteTest extends IntegrationTestCase
 
         $paths = array_column(array: $entries, column_key: RouteManifest::path);
         $this->assertContains(RouteList::home->value, haystack: $paths);
-        $this->assertNotContains(RouteList::routes->value, haystack: $paths);
+        $this->assertNotContains(DevRouteList::routes->value, haystack: $paths);
 
         $first = $entries[0];
         $this->assertArrayHasKey(RouteManifest::name, array: $first);

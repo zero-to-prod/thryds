@@ -481,14 +481,8 @@ return static function (RectorConfig $rectorConfig): void {
         'mode' => 'warn',
         'message' => "TODO: [ForbidDuplicateRouteRegistrationRector] Each route declares once — duplicate registration: '%s %s' was already registered above.",
     ]);
-    $rectorConfig->ruleWithConfiguration(RequireAllRouteCasesRegisteredRector::class, [
-        'enumClass' => \ZeroToProd\Thryds\Routes\RouteList::class,
-        'methods' => ['map'],
-        'argPosition' => 1,
-        'scanDir' => __DIR__ . '/src',
-        'mode' => 'warn',
-        'message' => "TODO: [RequireAllRouteCasesRegisteredRector] Enumerations define sets — route case '%s' is defined but never registered in any router map() call.",
-    ]);
+    // RequireAllRouteCasesRegisteredRector disabled — registration is now via RouteSource,
+    // which the rule cannot trace statically. RouteSource is the enforcement mechanism.
     $rectorConfig->ruleWithConfiguration(RequireRouteTestRector::class, [
         'enumClass' => \ZeroToProd\Thryds\Routes\RouteList::class,
         'testDir' => __DIR__ . '/tests',
@@ -546,6 +540,7 @@ return static function (RectorConfig $rectorConfig): void {
         'enumClasses' => [
             View::class,
             \ZeroToProd\Thryds\Routes\RouteList::class,
+            \ZeroToProd\Thryds\Routes\DevRouteList::class,
             HttpMethod::class,
             \ZeroToProd\Thryds\AppEnv::class,
             LogLevel::class,
@@ -558,6 +553,7 @@ return static function (RectorConfig $rectorConfig): void {
         'enumClasses' => [
             \ZeroToProd\Thryds\AppEnv::class,
             \ZeroToProd\Thryds\Routes\RouteList::class,
+            \ZeroToProd\Thryds\Routes\DevRouteList::class,
             HttpMethod::class,
             LogLevel::class,
             View::class,

@@ -39,9 +39,18 @@ $Prop              = $inventoryConfig['attributes']['prop'];
 $ClosedSet         = $inventoryConfig['attributes']['closed_set'];
 
 // Resolve enum classes from config.
-$Route     = $inventoryConfig['enums']['route'];
-$View      = $inventoryConfig['enums']['view'];
-$Component = $inventoryConfig['enums']['component'];
+$Route       = $inventoryConfig['enums']['route'];
+$RouteSource = $inventoryConfig['enums']['route_source'];
+$View        = $inventoryConfig['enums']['view'];
+$Component   = $inventoryConfig['enums']['component'];
+
+/** Collect all route cases across all route sources. */
+$allRouteCases = [];
+foreach ($RouteSource::cases() as $source) {
+    foreach ($source->enumClass()::cases() as $case) {
+        $allRouteCases[] = $case;
+    }
+}
 
 // Resolve namespaces and paths from config.
 $controllersNamespace     = $inventoryConfig['namespaces']['controllers'];
@@ -78,7 +87,7 @@ foreach (glob($controllersDir . '/*.php') ?: [] as $controllerFile) {
     $controllerRef = new ReflectionClass($controllerFqcn);
     $handlesRouteAttrs = $controllerRef->getAttributes($HandlesRoute);
     if ($handlesRouteAttrs !== []) {
-        $handledRoute = $handlesRouteAttrs[0]->newInstance()->RouteList;
+        $handledRoute = $handlesRouteAttrs[0]->newInstance()->BackedEnum;
         $explicitControllers[$handledRoute->name] = $controllerClassName;
     }
 }
@@ -118,7 +127,7 @@ foreach (glob($tablesDir . '/*.php') ?: [] as $tableFile) {
 }
 
 // Walk each route.
-foreach ($Route::cases() as $routeCase) {
+foreach ($allRouteCases as $routeCase) {
     $routeId = 'route:' . $routeCase->name;
     $guard = \ZeroToProd\Thryds\Attributes\Guarded::of($routeCase);
     $addNode($routeId, 'route', $routeCase->value . ($guard !== null ? ' [' . $guard->name . ']' : ''));
@@ -173,7 +182,7 @@ foreach ($explicitControllers as $controllerName) {
         }
     }
     foreach ($ref->getAttributes($RedirectsTo) as $attr) {
-        $route   = $attr->newInstance()->RouteList;
+        $route   = $attr->newInstance()->BackedEnum;
         $routeId = 'route:' . $route->name;
         if (isset($nodes[$routeId])) {
             $addEdge('controller:' . $controllerName, $routeId, 'redirects_to');
@@ -474,7 +483,7 @@ foreach (glob($testsDir . '/*Test.php') ?: [] as $testFile) {
 }
 
 $routeDescriptions = [];
-foreach ($Route::cases() as $routeCase) {
+foreach ($allRouteCases as $routeCase) {
     $routeDescriptions[$routeCase->name] = \ZeroToProd\Thryds\Attributes\Route::descriptionOf($routeCase);
 }
 
@@ -533,9 +542,15 @@ function buildYamlManifest(array $decoratedNodes, array $edges, array $inventory
     $yaml .= "# Sync: ./run sync:manifest (scaffold missing code)\n";
 
     // === Routes ===
-    $routeClass = $inventoryConfig['enums']['route'];
+    $RouteSource = $inventoryConfig['enums']['route_source'];
+    $allRouteCases = [];
+    foreach ($RouteSource::cases() as $src) {
+        foreach ($src->enumClass()::cases() as $c) {
+            $allRouteCases[] = $c;
+        }
+    }
     $routeData = [];
-    foreach ($routeClass::cases() as $routeCase) {
+    foreach ($allRouteCases as $routeCase) {
         $routeId = 'route:' . $routeCase->name;
         $entry = [];
         $entry['path'] = $routeCase->value;
@@ -595,7 +610,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges, array $inventory
                 $routeCaseName = substr($e['from'], strlen('route:'));
                 $entry['route'] = $routeCaseName;
                 $routeEnum = null;
-                foreach ($routeClass::cases() as $r) {
+                foreach ($allRouteCases as $r) {
                     if ($r->name === $routeCaseName) {
                         $routeEnum = $r;
                         break;

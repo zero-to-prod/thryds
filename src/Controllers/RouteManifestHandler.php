@@ -9,31 +9,39 @@ use ZeroToProd\Thryds\Attributes\Guarded;
 use ZeroToProd\Thryds\Attributes\HandlesRoute;
 use ZeroToProd\Thryds\Attributes\Route;
 use ZeroToProd\Thryds\Attributes\RouteParam;
-use ZeroToProd\Thryds\Routes\RouteList;
+use ZeroToProd\Thryds\Routes\DevRouteList;
 use ZeroToProd\Thryds\Routes\RouteManifest;
+use ZeroToProd\Thryds\Routes\RouteSource;
 
-#[HandlesRoute(RouteList::routes)]
+#[HandlesRoute(DevRouteList::routes)]
 readonly class RouteManifestHandler
 {
     public function __invoke(): JsonResponse
     {
-        return new JsonResponse(
-            data: array_values(array_map(
-                static fn(RouteList $RouteList): array => [
-                    RouteManifest::name        => $RouteList->name,
-                    RouteManifest::path        => $RouteList->value,
-                    RouteManifest::description => Route::descriptionOf($RouteList),
+        $entries = [];
+
+        foreach (RouteSource::cases() as $source) {
+            foreach ($source->enumClass()::cases() as $route) {
+                if (Guarded::of(BackedEnum: $route) !== null || RouteParam::on(BackedEnum: $route) !== []) {
+                    continue;
+                }
+
+                $entries[] = [
+                    RouteManifest::name        => $route->name,
+                    RouteManifest::path        => $route->value,
+                    RouteManifest::description => Route::descriptionOf(BackedEnum: $route),
                     RouteManifest::operations  => array_map(
                         static fn(Route $Route): array => [
                             RouteManifest::method      => $Route->HttpMethod->value,
                             RouteManifest::description => $Route->description,
                             RouteManifest::strategy    => $Route->actionName(),
                         ],
-                        Route::on($RouteList),
+                        Route::on(BackedEnum: $route),
                     ),
-                ],
-                array_filter(RouteList::cases(), static fn(RouteList $RouteList): bool => Guarded::of($RouteList) === null && RouteParam::on($RouteList) === []),
-            )),
-        );
+                ];
+            }
+        }
+
+        return new JsonResponse(data: $entries);
     }
 }

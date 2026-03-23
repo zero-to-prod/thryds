@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
+use BackedEnum;
 use ReflectionAttribute;
 use ReflectionEnumUnitCase;
-use ZeroToProd\Thryds\Routes\RouteList;
 
 /**
  * Declares a URL parameter on a Route enum case.
@@ -23,14 +23,14 @@ readonly class RouteParam
     ) {}
 
     /** @return string[] Parameter names declared on a route case. */
-    public static function on(RouteList $RouteList): array
+    public static function on(BackedEnum $BackedEnum): array
     {
         /** @var array<string, string[]> $cache */
         static $cache = [];
 
-        return $cache[$RouteList->name] ??= array_map(
+        return $cache[$BackedEnum::class . '::' . $BackedEnum->name] ??= array_map(
             static fn(ReflectionAttribute $ReflectionAttribute): string => $ReflectionAttribute->newInstance()->name,
-            new ReflectionEnumUnitCase(RouteList::class, $RouteList->name)
+            new ReflectionEnumUnitCase($BackedEnum::class, $BackedEnum->name)
                 ->getAttributes(self::class),
         );
     }

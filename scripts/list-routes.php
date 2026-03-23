@@ -18,25 +18,29 @@ require __DIR__ . '/../vendor/autoload.php';
 use ZeroToProd\Thryds\Attributes\Guarded;
 use ZeroToProd\Thryds\Attributes\Route;
 use ZeroToProd\Thryds\Attributes\RouteParam;
-use ZeroToProd\Thryds\Routes\RouteList;
+use ZeroToProd\Thryds\Routes\RouteSource;
 
-$routes = array_map(
-    fn(RouteList $RouteList): array => [
-        'name'        => $RouteList->name,
-        'path'        => $RouteList->value,
-        'params'      => RouteParam::on($RouteList),
-        'guard'       => Guarded::of($RouteList)?->name,
-        'description' => Route::descriptionOf($RouteList),
-        'operations'  => array_map(
-            fn(Route $op): array => [
-                'method'      => $op->HttpMethod->value,
-                'description' => $op->description,
-                'action'      => $op->actionName(),
-            ],
-            Route::on($RouteList),
-        ),
-    ],
-    RouteList::cases(),
-);
+$routes = [];
+
+foreach (RouteSource::cases() as $source) {
+    foreach ($source->enumClass()::cases() as $route) {
+        $routes[] = [
+            'name'        => $route->name,
+            'path'        => $route->value,
+            'source'      => $source->name,
+            'params'      => RouteParam::on($route),
+            'guard'       => Guarded::of($route)?->name,
+            'description' => Route::descriptionOf($route),
+            'operations'  => array_map(
+                fn(Route $op): array => [
+                    'method'      => $op->HttpMethod->value,
+                    'description' => $op->description,
+                    'action'      => $op->actionName(),
+                ],
+                Route::on($route),
+            ),
+        ];
+    }
+}
 
 echo json_encode($routes, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n";

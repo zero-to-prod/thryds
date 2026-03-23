@@ -12,6 +12,7 @@ namespaces:
 
 source_paths:
   route: src/Routes/RouteList.php
+  route_dev: src/Routes/DevRouteList.php
   view: src/Blade/View.php
   component: src/Blade/Component.php
   controllers: src/Controllers
@@ -42,5 +43,7 @@ attributes:
 
 enums:
   route: ZeroToProd\Thryds\Routes\RouteList
+  route_dev: ZeroToProd\Thryds\Routes\DevRouteList
+  route_source: ZeroToProd\Thryds\Routes\RouteSource
   view: ZeroToProd\Thryds\Blade\View
   component: ZeroToProd\Thryds\Blade\Component

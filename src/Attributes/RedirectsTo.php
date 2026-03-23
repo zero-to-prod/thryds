@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
-use ZeroToProd\Thryds\Routes\RouteList;
+use BackedEnum;
 
 /**
  * Declares the route a controller redirects to on success.
@@ -15,5 +15,5 @@ use ZeroToProd\Thryds\Routes\RouteList;
 #[HopWeight(0)]
 readonly class RedirectsTo
 {
-    public function __construct(public RouteList $RouteList) {}
+    public function __construct(public BackedEnum $BackedEnum) {}
 }

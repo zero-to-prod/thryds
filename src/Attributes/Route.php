@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
+use BackedEnum;
 use Closure;
 use LogicException;
 use ReflectionAttribute;
@@ -15,7 +16,6 @@ use ZeroToProd\Thryds\Routes\Actions\Form;
 use ZeroToProd\Thryds\Routes\Actions\StaticView;
 use ZeroToProd\Thryds\Routes\Actions\Validated;
 use ZeroToProd\Thryds\Routes\HttpMethod;
-use ZeroToProd\Thryds\Routes\RouteList;
 
 /**
  * Declares one HTTP operation on a Route enum case.
@@ -54,50 +54,52 @@ readonly class Route
     }
 
     /** @return self[] All HTTP operations declared on a route case. */
-    public static function on(RouteList $RouteList): array
+    public static function on(BackedEnum $BackedEnum): array
     {
         /** @var array<string, self[]> $cache */
         static $cache = [];
 
-        return $cache[$RouteList->name] ??= array_map(
+        return $cache[$BackedEnum::class . '::' . $BackedEnum->name] ??= array_map(
             static fn(ReflectionAttribute $ReflectionAttribute): self => $ReflectionAttribute->newInstance(),
-            new ReflectionEnumUnitCase(RouteList::class, $RouteList->name)
+            new ReflectionEnumUnitCase($BackedEnum::class, $BackedEnum->name)
                 ->getAttributes(self::class),
         );
     }
 
     /** Returns the route-level description from the first operation with a non-null description. */
-    public static function descriptionOf(RouteList $RouteList): string
+    public static function descriptionOf(BackedEnum $BackedEnum): string
     {
         /** @var array<string, string> $cache */
         static $cache = [];
 
-        return $cache[$RouteList->name] ??= (static function () use ($RouteList): string {
-            foreach (self::on($RouteList) as $op) {
+        return $cache[$BackedEnum::class . '::' . $BackedEnum->name] ??= (static function () use ($BackedEnum): string {
+            foreach (self::on($BackedEnum) as $op) {
                 if ($op->description !== null) {
                     return $op->description;
                 }
             }
-            throw new LogicException("Route::{$RouteList->name} has no operation with a description.");
+            throw new LogicException($BackedEnum::class . '::' . $BackedEnum->name . ' has no operation with a description.');
         })();
     }
 
     /** Returns the View from the first action that carries one, or null. */
-    public static function viewOf(RouteList $RouteList): ?View
+    public static function viewOf(BackedEnum $BackedEnum): ?View
     {
         /** @var array<string, ?View> $cache */
         static $cache = [];
 
-        if (!array_key_exists($RouteList->name, array: $cache)) {
-            $cache[$RouteList->name] = null;
-            foreach (self::on($RouteList) as $op) {
+        $key = $BackedEnum::class . '::' . $BackedEnum->name;
+
+        if (!array_key_exists($key, array: $cache)) {
+            $cache[$key] = null;
+            foreach (self::on($BackedEnum) as $op) {
                 if ($op->action instanceof StaticView || $op->action instanceof Form) {
-                    $cache[$RouteList->name] = $op->action->View;
+                    $cache[$key] = $op->action->View;
                     break;
                 }
             }
         }
 
-        return $cache[$RouteList->name];
+        return $cache[$key];
     }
 }

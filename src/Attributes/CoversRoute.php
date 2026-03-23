@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
-use ZeroToProd\Thryds\Routes\RouteList;
+use BackedEnum;
 
 /**
  * Declares which routes a test class covers.
@@ -15,10 +15,10 @@ use ZeroToProd\Thryds\Routes\RouteList;
 #[Attribute(Attribute::TARGET_CLASS)]
 readonly class CoversRoute
 {
-    /** @var RouteList[] */
+    /** @var BackedEnum[] */
     public array $routes;
 
-    public function __construct(RouteList ...$routes)
+    public function __construct(BackedEnum ...$routes)
     {
         $this->routes = $routes;
     }

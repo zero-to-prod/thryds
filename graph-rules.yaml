@@ -68,6 +68,8 @@ node:
       - src/Attributes/OnDelete.php
       - src/Attributes/OnUpdate.php
       - src/Attributes/RouteParam.php
+      # Middleware infrastructure — wired in RouteRegistrar, applied when routes need middleware
+      - src/Attributes/Middleware.php
       - src/Attributes/ValidateWith.php
       - src/Validation/ValidationRule.php
     assert: used_as_attribute

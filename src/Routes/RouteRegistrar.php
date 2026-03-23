@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Routes;
 
+use BackedEnum;
 use Closure;
 use Laminas\Diactoros\Response\HtmlResponse;
 use League\Route\Router;
@@ -14,6 +15,7 @@ use ReflectionClass;
 use ZeroToProd\Thryds\Attributes\Guarded;
 use ZeroToProd\Thryds\Attributes\HandlesMethod;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
+use ZeroToProd\Thryds\Attributes\Middleware;
 use ZeroToProd\Thryds\Attributes\Route;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Requests\InputField;
@@ -27,23 +29,31 @@ readonly class RouteRegistrar
 {
     public static function register(Router $Router, Config $Config): void
     {
-        foreach (RouteList::cases() as $Route) {
-            if (Guarded::of(RouteList: $Route)?->passes($Config) === false) {
-                continue;
-            }
+        foreach (RouteSource::cases() as $RouteSource) {
+            foreach ($RouteSource->enumClass()::cases() as $BackedEnum) {
+                if (Guarded::of($BackedEnum)?->passes($Config) === false) {
+                    continue;
+                }
 
-            foreach (Route::on(RouteList: $Route) as $op) {
-                $Router->map(
-                    $op->HttpMethod->value,
-                    $Route->value,
-                    handler: self::handler(RouteList: $Route, Route: $op),
-                );
+                $middleware_stack = Middleware::of($BackedEnum);
+
+                foreach (Route::on($BackedEnum) as $Route) {
+                    $Route = $Router->map(
+                        $Route->HttpMethod->value,
+                        (string) $BackedEnum->value,
+                        handler: self::handler($BackedEnum, $Route),
+                    );
+
+                    foreach ($middleware_stack as $middlewareClass) {
+                        $Route->lazyMiddleware(middleware: $middlewareClass);
+                    }
+                }
             }
         }
     }
 
     /** Dispatch to the handler strategy declared on the route operation attribute. */
-    private static function handler(RouteList $RouteList, Route $Route): callable
+    private static function handler(BackedEnum $BackedEnum, Route $Route): callable
     {
         $action = $Route->action;
 
@@ -51,7 +61,7 @@ readonly class RouteRegistrar
             $action instanceof StaticView  => self::staticView(StaticView: $action),
             $action instanceof Form        => self::formView(Form: $action),
             $action instanceof Validated   => self::withValidation(
-                $RouteList,
+                $BackedEnum,
                 Validated: $action,
                 handler: self::resolveCallable($action->controller, $Route->HttpMethod),
             ),
@@ -103,9 +113,9 @@ readonly class RouteRegistrar
     }
 
     /** Wrap a POST handler with action-driven validation and error re-rendering. */
-    private static function withValidation(RouteList $RouteList, Validated $Validated, callable $handler): Closure
+    private static function withValidation(BackedEnum $BackedEnum, Validated $Validated, callable $handler): Closure
     {
-        return static function (ServerRequestInterface $ServerRequestInterface) use ($RouteList, $Validated, $handler): ResponseInterface {
+        return static function (ServerRequestInterface $ServerRequestInterface) use ($BackedEnum, $Validated, $handler): ResponseInterface {
             $requestObject = $Validated->request::from($ServerRequestInterface->getParsedBody());
 
             $errors = Validator::validate(model: $requestObject);
@@ -115,15 +125,15 @@ readonly class RouteRegistrar
 
             // Find the Form action on the same route to get the View for re-rendering.
             $form_action = null;
-            foreach (Route::on($RouteList) as $op) {
-                if ($op->action instanceof Form) {
-                    $form_action = $op->action;
+            foreach (Route::on($BackedEnum) as $RouteOp) {
+                if ($RouteOp->action instanceof Form) {
+                    $form_action = $RouteOp->action;
                     break;
                 }
             }
 
             if ($form_action === null) {
-                throw new LogicException("Route::{$RouteList->name} has a Validated action but no Form action to re-render on validation failure.");
+                throw new LogicException($BackedEnum::class . '::' . $BackedEnum->name . ' has a Validated action but no Form action to re-render on validation failure.');
             }
 
             return self::renderForm(Form: $form_action, data: [...$requestObject->toArray(), $Validated->view_model::errors => $errors]);

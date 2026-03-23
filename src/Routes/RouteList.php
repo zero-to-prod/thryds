@@ -5,13 +5,9 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Routes;
 
 use ZeroToProd\Thryds\Attributes\ClosedSet;
-use ZeroToProd\Thryds\Attributes\Guarded;
 use ZeroToProd\Thryds\Attributes\Route;
 use ZeroToProd\Thryds\Blade\View;
-use ZeroToProd\Thryds\Controllers\OpcacheScriptsHandler;
-use ZeroToProd\Thryds\Controllers\OpcacheStatusHandler;
 use ZeroToProd\Thryds\Controllers\RegisterController;
-use ZeroToProd\Thryds\Controllers\RouteManifestHandler;
 use ZeroToProd\Thryds\Requests\RegisterRequest;
 use ZeroToProd\Thryds\Routes\Actions\Form;
 use ZeroToProd\Thryds\Routes\Actions\StaticView;
@@ -71,36 +67,4 @@ enum RouteList: string
         null,
     )]
     case register = '/register';
-
-    #[Guarded(RouteGuard::devOnly)]
-    #[Route(
-        HttpMethod::GET,
-        OpcacheStatusHandler::class,
-        'OPcache runtime statistics'
-    )]
-    case opcache_status = '/_opcache/status';
-
-    #[Guarded(RouteGuard::devOnly)]
-    #[Route(
-        HttpMethod::GET,
-        OpcacheScriptsHandler::class,
-        'Scripts loaded in OPcache'
-    )]
-    case opcache_scripts = '/_opcache/scripts';
-
-    #[Guarded(RouteGuard::devOnly)]
-    #[Route(
-        HttpMethod::GET,
-        new StaticView(View::styleguide),
-        'UI component and design token reference'
-    )]
-    case styleguide = '/_styleguide';
-
-    #[Guarded(RouteGuard::devOnly)]
-    #[Route(
-        HttpMethod::GET,
-        RouteManifestHandler::class,
-        'Machine-readable manifest of all registered routes'
-    )]
-    case routes = '/_routes';
 }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
-use ZeroToProd\Thryds\Routes\RouteList;
+use BackedEnum;
 
 /**
  * Declares which route a controller handles.
@@ -17,5 +17,5 @@ use ZeroToProd\Thryds\Routes\RouteList;
 #[HopWeight(0)]
 readonly class HandlesRoute
 {
-    public function __construct(public RouteList $RouteList) {}
+    public function __construct(public BackedEnum $BackedEnum) {}
 }

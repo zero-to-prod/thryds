@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Tests\Integration;
 
+use BackedEnum;
 use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\ServerRequest;
 use Laminas\Diactoros\Uri;
@@ -20,7 +21,6 @@ use ZeroToProd\Thryds\DatabaseConfig;
 use ZeroToProd\Thryds\Header;
 use ZeroToProd\Thryds\RequestId;
 use ZeroToProd\Thryds\Routes\HttpMethod;
-use ZeroToProd\Thryds\Routes\RouteList;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 /**
@@ -62,12 +62,12 @@ abstract class IntegrationTestCase extends TestCase
     }
 
     /** @param array<string, string[]> $headers */
-    protected function dispatch(RouteList $RouteList, array $headers = [], HttpMethod $HttpMethod = HttpMethod::GET): ResponseInterface
+    protected function dispatch(BackedEnum $BackedEnum, array $headers = [], HttpMethod $HttpMethod = HttpMethod::GET): ResponseInterface
     {
         $ServerRequest = new ServerRequest(
             serverParams: [],
             uploadedFiles: [],
-            uri: new Uri($RouteList->value),
+            uri: new Uri((string) $BackedEnum->value),
             method: $HttpMethod->value,
             headers: $headers,
         );
@@ -79,25 +79,25 @@ abstract class IntegrationTestCase extends TestCase
     /**
      * @throws InvalidArgumentException
      */
-    protected function get(RouteList $RouteList): ResponseInterface
+    protected function get(BackedEnum $BackedEnum): ResponseInterface
     {
         return $this->App->Router->dispatch(
-            new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($RouteList->value), method: HttpMethod::GET->value),
+            new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri((string) $BackedEnum->value), method: HttpMethod::GET->value),
         );
     }
 
-    protected function post(RouteList $RouteList): ResponseInterface
+    protected function post(BackedEnum $BackedEnum): ResponseInterface
     {
         return $this->App->Router->dispatch(
-            new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($RouteList->value), method: HttpMethod::POST->value),
+            new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri((string) $BackedEnum->value), method: HttpMethod::POST->value),
         );
     }
 
-    protected function assertErrorResponse(int $expected_status, string $expected_message, RouteList $RouteList, HttpMethod $HttpMethod = HttpMethod::GET): void
+    protected function assertErrorResponse(int $expected_status, string $expected_message, BackedEnum $BackedEnum, HttpMethod $HttpMethod = HttpMethod::GET): void
     {
         try {
             $this->App->Router->dispatch(
-                new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri($RouteList->value), method: $HttpMethod->value),
+                new ServerRequest(serverParams: [], uploadedFiles: [], uri: new Uri((string) $BackedEnum->value), method: $HttpMethod->value),
             );
             $this->fail("Expected HttpException with status $expected_status, but no exception was thrown.");
         } catch (HttpException $HttpException) {
