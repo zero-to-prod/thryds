@@ -15,26 +15,30 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use Symfony\Component\Yaml\Yaml;
 use ZeroToProd\Framework\Attributes\Guarded;
 use ZeroToProd\Framework\Attributes\Route;
-use ZeroToProd\Framework\Attributes\RouteParam;
-use ZeroToProd\Thryds\Routes\RouteSource;
+use ZeroToProd\Framework\Routes\RouteUrl;
+
+$inventoryConfig = Yaml::parseFile(__DIR__ . '/inventory-config.yaml');
+$routeProviders = $inventoryConfig['route_providers'];
 
 $routes = [];
 
-foreach (RouteSource::cases() as $source) {
-    foreach (\ZeroToProd\Framework\Attributes\RouteEnum::of($source)::cases() as $route) {
+foreach ($routeProviders as $providerClass) {
+    $shortName = new ReflectionEnum($providerClass)->getShortName();
+    foreach ($providerClass::cases() as $route) {
         $routes[] = [
             'name'        => $route->name,
             'path'        => $route->value,
-            'source'      => $source->name,
-            'params'      => RouteParam::on($route),
+            'source'      => $shortName,
+            'params'      => RouteUrl::paramsOf($route),
             'guard'       => Guarded::of($route)?->name,
             'description' => Route::descriptionOf($route),
             'operations'  => array_map(
                 fn(Route $op): array => [
-                    'method'      => $op->HttpMethod->value,
-                    'description' => $op->description,
+                    'method'      => $op->method()->value,
+                    'description' => $op->description(),
                     'action'      => $op->actionName(),
                 ],
                 Route::on($route),

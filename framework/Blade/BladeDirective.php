@@ -12,6 +12,7 @@ use ZeroToProd\Framework\Blade\Registrars\EnvRegistrar;
 use ZeroToProd\Framework\Blade\Registrars\HotReloadRegistrar;
 use ZeroToProd\Framework\Blade\Registrars\HtmxRegistrar;
 use ZeroToProd\Framework\Blade\Registrars\ProductionRegistrar;
+use ZeroToProd\Framework\Blade\Registrars\RouteUrlRegistrar;
 use ZeroToProd\Framework\Blade\Registrars\ViteRegistrar;
 use ZeroToProd\Framework\Config;
 use ZeroToProd\Thryds\UI\Domain;
@@ -36,6 +37,9 @@ enum BladeDirective: string
 
     #[ResolvesTo(HotReloadRegistrar::class)]
     case hotReload = 'hotReload';
+
+    #[ResolvesTo(RouteUrlRegistrar::class)]
+    case route = 'route';
 
     public function register(Blade $Blade, Config $Config, Vite $Vite): void
     {

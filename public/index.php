@@ -11,11 +11,14 @@ use ZeroToProd\Framework\App;
 use ZeroToProd\Framework\Env;
 use ZeroToProd\Framework\Header;
 use ZeroToProd\Framework\RequestId;
+use ZeroToProd\Framework\Routes\FrameworkDevRouteList;
+use ZeroToProd\Thryds\Routes\DevRouteList;
+use ZeroToProd\Thryds\Routes\RouteList;
 
 // Worker boots once; its in-memory object graph persists for the process lifetime.
 // In development, file changes trigger a worker restart that re-initializes this state.
 // See HOT-001, PERF-001
-$App = App::boot($base_dir);
+$App = App::boot($base_dir, routeProviders: [RouteList::class, FrameworkDevRouteList::class, DevRouteList::class]);
 
 // Request handler — called for each incoming request
 $handler = static function () use ($App): void {

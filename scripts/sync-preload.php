@@ -24,7 +24,10 @@ use ZeroToProd\Framework\AppEnv;
 use ZeroToProd\Framework\Blade\Vite;
 use ZeroToProd\Framework\Config;
 use ZeroToProd\Framework\ConfigKey;
+use ZeroToProd\Framework\Routes\FrameworkDevRouteList;
 use ZeroToProd\Framework\Routes\RouteRegistrar;
+use ZeroToProd\Thryds\Routes\DevRouteList;
+use ZeroToProd\Thryds\Routes\RouteList;
 
 $preload_config = Yaml::parseFile(__DIR__ . '/preload-config.yaml');
 
@@ -51,7 +54,7 @@ $Blade = App::bootBlade($Config, $Vite);
 // Direct instantiation is intentional: this script runs at build time, not in the request path.
 // ForbidDirectRouterInstantiationRector only applies to src/, public/, tests/.
 $Router = new Router();
-RouteRegistrar::register($Router, $Config);
+RouteRegistrar::register($Router, $Config, [RouteList::class, FrameworkDevRouteList::class, DevRouteList::class]);
 
 // Compile all templates to blade cache and load view-layer dependencies
 echo "Compiling templates...\n";

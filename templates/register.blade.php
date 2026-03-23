@@ -15,7 +15,7 @@
 @section('body')
     <x-card>
         <h1 class="text-2xl font-bold text-text mb-6">Create an account</h1>
-        <form method="{{ HttpMethod::POST->value }}" action="{{ RouteList::register->value }}">
+        <form method="{{ HttpMethod::POST->value }}" action="@route(RouteList::register)">
             @foreach ($fields as $field)
                 <x-form-group :label="$field->label" :error="$field->error($RegisterViewModel)">
                     <x-input
@@ -29,6 +29,6 @@
             @endforeach
             <x-button :variant="ButtonVariant::primary->value" type="submit">Register</x-button>
         </form>
-        <p class="mt-4"><a href="{{ RouteList::login->value }}" class="text-primary hover:text-primary-hover">Already have an account? Login</a></p>
+        <p class="mt-4"><a href="@route(RouteList::login)" class="text-primary hover:text-primary-hover">Already have an account? Login</a></p>
     </x-card>
 @endsection

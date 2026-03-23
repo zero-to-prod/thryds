@@ -483,8 +483,8 @@ return static function (RectorConfig $rectorConfig): void {
         'mode' => 'warn',
         'message' => "TODO: [ForbidDuplicateRouteRegistrationRector] Each route declares once — duplicate registration: '%s %s' was already registered above.",
     ]);
-    // RequireAllRouteCasesRegisteredRector disabled — registration is now via RouteSource,
-    // which the rule cannot trace statically. RouteSource is the enforcement mechanism.
+    // RequireAllRouteCasesRegisteredRector disabled — registration is via the route providers
+    // array passed to App::boot(), which the rule cannot trace statically.
     $rectorConfig->ruleWithConfiguration(RequireRouteTestRector::class, [
         'enumClass' => \ZeroToProd\Thryds\Routes\RouteList::class,
         'testDir' => __DIR__ . '/tests',
@@ -494,7 +494,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RequireRoutePatternConstRector::class, [
         'classSuffix' => 'Route',
         'constName' => 'pattern',
-        'excludedClasses' => ['ZeroToProd\Framework\Attributes\CoversRoute', 'ZeroToProd\Framework\Attributes\HandlesRoute', 'ZeroToProd\Framework\Attributes\Route'],
+        'excludedClasses' => ['ZeroToProd\Framework\Attributes\CoversRoute', 'ZeroToProd\Thryds\Attributes\HandlesRoute', 'ZeroToProd\Framework\Attributes\Route'],
         'mode' => 'warn',
         'message' => "TODO: [RequireRoutePatternConstRector] Constants name things — route class '%s' is missing a '%s' constant. Define: public const string %s = '/...'.",
     ]);
@@ -543,6 +543,7 @@ return static function (RectorConfig $rectorConfig): void {
             View::class,
             \ZeroToProd\Thryds\Routes\RouteList::class,
             \ZeroToProd\Thryds\Routes\DevRouteList::class,
+            \ZeroToProd\Framework\Routes\FrameworkDevRouteList::class,
             HttpMethod::class,
             \ZeroToProd\Framework\AppEnv::class,
             LogLevel::class,
@@ -556,6 +557,7 @@ return static function (RectorConfig $rectorConfig): void {
             \ZeroToProd\Framework\AppEnv::class,
             \ZeroToProd\Thryds\Routes\RouteList::class,
             \ZeroToProd\Thryds\Routes\DevRouteList::class,
+            \ZeroToProd\Framework\Routes\FrameworkDevRouteList::class,
             HttpMethod::class,
             LogLevel::class,
             View::class,
@@ -760,7 +762,7 @@ return static function (RectorConfig $rectorConfig): void {
 
     $rectorConfig->ruleWithConfiguration(RequireHandlesRouteAttributeRector::class, [
         'mode' => 'warn',
-        'attributeClass' => \ZeroToProd\Framework\Attributes\HandlesRoute::class,
+        'attributeClass' => \ZeroToProd\Thryds\Attributes\HandlesRoute::class,
         'controllerSuffixes' => ['Controller', 'Handler'],
         'controllersNamespace' => 'ZeroToProd\\Thryds\\Controllers',
         'message' => 'TODO: [RequireHandlesRouteAttributeRector] Attributes define properties — %s in Controllers/ is missing #[HandlesRoute]. Every controller must declare which route it handles so the router can discover it via reflection. See: utils/rector/docs/RequireHandlesRouteAttributeRector.md',
@@ -777,6 +779,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(ForbidInterfaceRector::class, [
         'mode' => 'warn',
         'message' => 'TODO: [ForbidInterfaceRector] Interfaces define implicit contracts — use PHP attributes to declare properties explicitly. Attributes are discoverable, enforceable, and composable without coupling. See: utils/rector/docs/ForbidInterfaceRector.md',
+        'allowList' => [],
     ]);
 
     $rectorConfig->ruleWithConfiguration(ForbidClassInheritanceRector::class, [

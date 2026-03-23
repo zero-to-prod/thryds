@@ -222,6 +222,9 @@ tests:
   HOT004Test:
     type: integration
     covers_routes: []
+  ClosureActionRouteTest:
+    type: integration
+    covers_routes: []
   HomeRouteTest:
     type: integration
     covers_routes: [home]
@@ -240,6 +243,9 @@ tests:
   RoutesRouteTest:
     type: integration
     covers_routes: [routes]
+  StringMethodRouteTest:
+    type: integration
+    covers_routes: []
   StyleguideRouteTest:
     type: integration
     covers_routes: [styleguide]

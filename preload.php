@@ -13,7 +13,10 @@ opcache_compile_file(__DIR__ . '/framework/Routes/HttpMethod.php');
 opcache_compile_file(__DIR__ . '/framework/Routes/Actions/StaticView.php');
 opcache_compile_file(__DIR__ . '/framework/Routes/Actions/Form.php');
 opcache_compile_file(__DIR__ . '/framework/Routes/Actions/Validated.php');
+opcache_compile_file(__DIR__ . '/framework/Routes/ControllerDispatch.php');
+opcache_compile_file(__DIR__ . '/framework/Routes/FrameworkDevRouteList.php');
 opcache_compile_file(__DIR__ . '/framework/Routes/RouteGuard.php');
+opcache_compile_file(__DIR__ . '/framework/Routes/RouteUrl.php');
 
 // ViewModels
 opcache_compile_file(__DIR__ . '/src/ViewModels/ErrorViewModel.php');
@@ -42,8 +45,9 @@ opcache_compile_file(__DIR__ . '/framework/Blade/Registrars/EnvRegistrar.php');
 opcache_compile_file(__DIR__ . '/framework/Blade/Registrars/ViteRegistrar.php');
 opcache_compile_file(__DIR__ . '/framework/Blade/Registrars/HtmxRegistrar.php');
 opcache_compile_file(__DIR__ . '/framework/Blade/Registrars/HotReloadRegistrar.php');
+opcache_compile_file(__DIR__ . '/framework/Blade/Registrars/RouteUrlRegistrar.php');
 opcache_compile_file(__DIR__ . '/framework/Attributes/TemplateDirectory.php');
-opcache_compile_file(__DIR__ . '/framework/Attributes/RouteEnum.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/AttributeCache.php');
 opcache_compile_file(__DIR__ . '/framework/Attributes/Guarded.php');
 opcache_compile_file(__DIR__ . '/framework/Attributes/Middleware.php');
 opcache_compile_file(__DIR__ . '/framework/Attributes/Route.php');
@@ -63,7 +67,6 @@ opcache_compile_file(__DIR__ . '/framework/RequestId.php');
 
 // App
 opcache_compile_file(__DIR__ . '/src/Blade/Component.php');
-opcache_compile_file(__DIR__ . '/src/Routes/RouteSource.php');
 opcache_compile_file(__DIR__ . '/src/Routes/RouteList.php');
 opcache_compile_file(__DIR__ . '/src/Blade/View.php');
 opcache_compile_file(__DIR__ . '/src/Controllers/RegisterController.php');

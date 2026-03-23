@@ -18,32 +18,26 @@ use ZeroToProd\Framework\Routes\RouteGuard;
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_CLASS_CONSTANT)]
 readonly class Guarded
 {
+    use AttributeCache;
+
     public function __construct(public RouteGuard $RouteGuard) {}
 
     /** Resolve guard: case-level wins, then class-level, then null. */
     public static function of(BackedEnum $BackedEnum): ?RouteGuard
     {
-        /** @var array<string, ?RouteGuard> $cache */
-        static $cache = [];
-
-        $key = $BackedEnum::class . '::' . $BackedEnum->name;
-
-        if (!array_key_exists($key, array: $cache)) {
+        return self::cachedNullable('of', $BackedEnum::class . '::' . $BackedEnum->name, static function () use ($BackedEnum): ?RouteGuard {
             $ReflectionEnumUnitCase = new ReflectionEnumUnitCase($BackedEnum::class, $BackedEnum->name);
 
             // Case-level takes precedence.
             $attrs = $ReflectionEnumUnitCase->getAttributes(self::class);
             if ($attrs !== []) {
-                $cache[$key] = $attrs[0]->newInstance()->RouteGuard;
-
-                return $cache[$key];
+                return $attrs[0]->newInstance()->RouteGuard;
             }
 
             // Class-level (inherited by all cases).
             $attrs = $ReflectionEnumUnitCase->getEnum()->getAttributes(self::class);
-            $cache[$key] = $attrs === [] ? null : $attrs[0]->newInstance()->RouteGuard;
-        }
 
-        return $cache[$key];
+            return $attrs === [] ? null : $attrs[0]->newInstance()->RouteGuard;
+        });
     }
 }

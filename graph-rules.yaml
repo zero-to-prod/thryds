@@ -67,7 +67,6 @@ node:
       - framework/Attributes/Index.php
       - framework/Attributes/OnDelete.php
       - framework/Attributes/OnUpdate.php
-      - framework/Attributes/RouteParam.php
       # Middleware infrastructure — wired in RouteRegistrar, applied when routes need middleware
       - framework/Attributes/Middleware.php
       - framework/Attributes/ValidateWith.php

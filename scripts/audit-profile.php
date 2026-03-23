@@ -26,8 +26,8 @@ $base_url = 'http://localhost:' . ltrim(getenv('SERVER_NAME') ?: ':80', ':');
 $samples  = max(5, (int) ($argv[1] ?? 20));
 
 $publicRoutes = [];
-foreach (\ZeroToProd\Thryds\Routes\RouteSource::cases() as $source) {
-    foreach (\ZeroToProd\Framework\Attributes\RouteEnum::of($source)::cases() as $r) {
+foreach ($config['route_providers'] as $providerClass) {
+    foreach ($providerClass::cases() as $r) {
         if (\ZeroToProd\Framework\Attributes\Guarded::of($r) === null) {
             $publicRoutes[] = $r;
         }

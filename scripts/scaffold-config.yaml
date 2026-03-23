@@ -20,7 +20,7 @@ directories:
 attributes:
   viewmodel: ZeroToProd\Framework\Attributes\ViewModel
   data_model: ZeroToProd\Framework\Attributes\DataModel
-  handles_route: ZeroToProd\Framework\Attributes\HandlesRoute
+  handles_route: ZeroToProd\Thryds\Attributes\HandlesRoute
   covers_route: ZeroToProd\Framework\Attributes\CoversRoute
   persists: ZeroToProd\Framework\Attributes\Persists
   redirects_to: ZeroToProd\Framework\Attributes\RedirectsTo

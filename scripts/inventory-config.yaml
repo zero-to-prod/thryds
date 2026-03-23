@@ -36,7 +36,7 @@ source_paths:
   tests_integration: tests/Integration
 
 attributes:
-  handles_route: ZeroToProd\Framework\Attributes\HandlesRoute
+  handles_route: ZeroToProd\Thryds\Attributes\HandlesRoute
   covers_route: ZeroToProd\Framework\Attributes\CoversRoute
   extends_layout: ZeroToProd\Framework\Attributes\ExtendsLayout
   page_title: ZeroToProd\Framework\Attributes\PageTitle
@@ -58,6 +58,10 @@ attributes:
 enums:
   route: ZeroToProd\Thryds\Routes\RouteList
   route_dev: ZeroToProd\Thryds\Routes\DevRouteList
-  route_source: ZeroToProd\Thryds\Routes\RouteSource
   view: ZeroToProd\Thryds\Blade\View
   component: ZeroToProd\Thryds\Blade\Component
+
+route_providers:
+  - ZeroToProd\Thryds\Routes\RouteList
+  - ZeroToProd\Framework\Routes\FrameworkDevRouteList
+  - ZeroToProd\Thryds\Routes\DevRouteList

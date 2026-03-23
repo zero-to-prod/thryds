@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Framework;
 
+use BackedEnum;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\View\Engines\CompilerEngine;
@@ -79,8 +80,9 @@ readonly class App
         return $Blade;
     }
 
+    /** @param list<class-string<BackedEnum>> $routeProviders */
     #[Requirement('PERF-001')]
-    public static function boot(string $base_dir, ?Config $Config = null): self
+    public static function boot(string $base_dir, array $routeProviders, ?Config $Config = null): self
     {
         $Config ??= Config::fromEnv($base_dir);
         $Blade = self::bootBlade($Config, new Vite($Config, baseDir: $base_dir, entry_css: [
@@ -93,8 +95,8 @@ readonly class App
         $Database = new Database($Config->DatabaseConfig);
 
         $Router = new CachedRouter(
-            builder: static function (Router $Router) use ($Config): Router {
-                RouteRegistrar::register($Router, $Config);
+            builder: static function (Router $Router) use ($Config, $routeProviders): Router {
+                RouteRegistrar::register($Router, $Config, $routeProviders);
 
                 return $Router;
             },

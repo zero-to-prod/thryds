@@ -7,12 +7,14 @@ namespace ZeroToProd\Framework\Routes;
 use BackedEnum;
 use InvalidArgumentException;
 use Stringable;
+use ZeroToProd\Framework\Attributes\AttributeCache;
 use ZeroToProd\Framework\Attributes\Infrastructure;
-use ZeroToProd\Framework\Attributes\RouteParam;
 
 #[Infrastructure]
 readonly class RouteUrl implements Stringable
 {
+    use AttributeCache;
+
     /**
      * @param array<string, string> $params
      * @param array<string, string> $query
@@ -32,9 +34,19 @@ readonly class RouteUrl implements Stringable
         return new self($BackedEnum, $params, $query);
     }
 
+    /** @return string[] Extract parameter names from {placeholders} in a route path. */
+    public static function paramsOf(BackedEnum $BackedEnum): array
+    {
+        return self::cached('paramsOf', $BackedEnum::class . '::' . $BackedEnum->name, static function () use ($BackedEnum): array {
+            preg_match_all('/\{(\w+)\}/', (string) $BackedEnum->value, $matches);
+
+            return $matches[1];
+        });
+    }
+
     public function render(): string
     {
-        $expected = RouteParam::on($this->BackedEnum);
+        $expected = self::paramsOf($this->BackedEnum);
         $provided = array_keys($this->params);
 
         $missing = array_diff($expected, $provided);

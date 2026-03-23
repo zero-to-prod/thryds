@@ -63,7 +63,7 @@ enum Domain: string
     case route_guards = 'route_guards';
 
     #[Group(EdgeKind::navigation)]
-    case route_sources = 'route_sources';
+    case framework_dev_routes = 'framework_dev_routes';
 
     #[Group(EdgeKind::type_system)]
     case error_messages = 'error_messages';

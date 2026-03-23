@@ -40,14 +40,14 @@ $ClosedSet         = $inventoryConfig['attributes']['closed_set'];
 
 // Resolve enum classes from config.
 $Route       = $inventoryConfig['enums']['route'];
-$RouteSource = $inventoryConfig['enums']['route_source'];
 $View        = $inventoryConfig['enums']['view'];
 $Component   = $inventoryConfig['enums']['component'];
+$routeProviders = $inventoryConfig['route_providers'];
 
-/** Collect all route cases across all route sources. */
+/** Collect all route cases across all route providers. */
 $allRouteCases = [];
-foreach ($RouteSource::cases() as $source) {
-    foreach (\ZeroToProd\Framework\Attributes\RouteEnum::of($source)::cases() as $case) {
+foreach ($routeProviders as $providerClass) {
+    foreach ($providerClass::cases() as $case) {
         $allRouteCases[] = $case;
     }
 }
@@ -141,7 +141,7 @@ foreach ($allRouteCases as $routeCase) {
     $routeId = 'route:' . $routeCase->name;
     $guard = \ZeroToProd\Framework\Attributes\Guarded::of($routeCase);
     $addNode($routeId, 'route', $routeCase->value . ($guard !== null ? ' [' . $guard->name . ']' : ''));
-    $nodes[$routeId]['methods'] = array_map(fn($op): string => $op->HttpMethod->value, \ZeroToProd\Framework\Attributes\Route::on($routeCase));
+    $nodes[$routeId]['methods'] = array_map(fn($op): string => $op->method()->value, \ZeroToProd\Framework\Attributes\Route::on($routeCase));
     $nodes[$routeId]['guard']   = $guard?->name;
 
     $controller = $explicitControllers[$routeCase->name] ?? null;
@@ -158,7 +158,7 @@ foreach ($allRouteCases as $routeCase) {
         if ($controllerFqcn !== null && class_exists($controllerFqcn)) {
             $rvAttrs = new ReflectionClass($controllerFqcn)->getAttributes($RendersView);
             if ($rvAttrs !== []) {
-                $controllerView = $rvAttrs[0]->newInstance()->View;
+                $controllerView = $rvAttrs[0]->newInstance()->BackedEnum;
                 $viewId = 'view:' . $controllerView->value;
                 $addNode($viewId, 'view', $controllerView->value);
                 $addEdge($controllerId, $viewId, 'renders');
@@ -591,10 +591,9 @@ function buildYamlManifest(array $decoratedNodes, array $edges, array $inventory
     $yaml .= "# Sync: ./run sync:manifest (scaffold missing code)\n";
 
     // === Routes ===
-    $RouteSource = $inventoryConfig['enums']['route_source'];
     $allRouteCases = [];
-    foreach ($RouteSource::cases() as $src) {
-        foreach (\ZeroToProd\Framework\Attributes\RouteEnum::of($src)::cases() as $c) {
+    foreach ($inventoryConfig['route_providers'] as $providerClass) {
+        foreach ($providerClass::cases() as $c) {
             $allRouteCases[] = $c;
         }
     }
@@ -607,7 +606,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges, array $inventory
         $entry['guard'] = \ZeroToProd\Framework\Attributes\Guarded::of($routeCase)?->name;
         $ops = [];
         foreach (\ZeroToProd\Framework\Attributes\Route::on($routeCase) as $op) {
-            $ops[$op->HttpMethod->value] = ['description' => $op->description, 'strategy' => $op->actionName()];
+            $ops[$op->method()->value] = ['description' => $op->description(), 'strategy' => $op->actionName()];
         }
         $entry['operations'] = $ops;
 
@@ -668,7 +667,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges, array $inventory
                 if ($routeEnum !== null) {
                     $ops = [];
                     foreach (\ZeroToProd\Framework\Attributes\Route::on($routeEnum) as $op) {
-                        $ops[$op->HttpMethod->value] = ['description' => $op->description, 'strategy' => $op->actionName()];
+                        $ops[$op->method()->value] = ['description' => $op->description(), 'strategy' => $op->actionName()];
                     }
                     $entry['operations'] = $ops;
                 }

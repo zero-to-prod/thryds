@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ZeroToProd\Framework\Attributes;
 
 use Attribute;
-use ZeroToProd\Thryds\Blade\View;
+use BackedEnum;
 
 /**
  * Declares which Blade view a controller renders.
@@ -18,5 +18,5 @@ use ZeroToProd\Thryds\Blade\View;
 #[HopWeight(0)]
 readonly class RendersView
 {
-    public function __construct(public View $View) {}
+    public function __construct(public BackedEnum $BackedEnum) {}
 }

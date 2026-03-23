@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace ZeroToProd\Framework\Controllers;
 
 use Laminas\Diactoros\Response\JsonResponse;
-use ZeroToProd\Framework\Attributes\HandlesRoute;
 use ZeroToProd\Framework\OpcacheStatus;
-use ZeroToProd\Thryds\Routes\DevRouteList;
+use ZeroToProd\Framework\Routes\FrameworkDevRouteList;
+use ZeroToProd\Thryds\Attributes\HandlesRoute;
 
-#[HandlesRoute(DevRouteList::opcache_scripts)]
+#[HandlesRoute(FrameworkDevRouteList::opcache_scripts)]
 readonly class OpcacheScriptsHandler
 {
     public function __invoke(): JsonResponse

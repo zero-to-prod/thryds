@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace ZeroToProd\Framework\Attributes;
+namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
 use BackedEnum;
+use ZeroToProd\Framework\Attributes\HopWeight;
 
 /**
  * Declares which route a controller handles.

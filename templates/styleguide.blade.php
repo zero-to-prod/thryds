@@ -81,6 +81,6 @@
             </div>
         </section>
 
-        <p class="text-sm text-text-muted"><a href="{{ RouteList::home->value }}" class="text-primary hover:text-primary-hover">Home</a></p>
+        <p class="text-sm text-text-muted"><a href="@route(RouteList::home)" class="text-primary hover:text-primary-hover">Home</a></p>
     </div>
 @endsection

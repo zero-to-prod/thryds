@@ -20,6 +20,8 @@ use ReflectionEnumUnitCase;
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_CLASS_CONSTANT)]
 readonly class Middleware
 {
+    use AttributeCache;
+
     /** @var list<class-string<MiddlewareInterface>> */
     public array $middleware;
 
@@ -36,10 +38,7 @@ readonly class Middleware
      */
     public static function of(BackedEnum $BackedEnum): array
     {
-        /** @var array<string, list<class-string<MiddlewareInterface>>> $cache */
-        static $cache = [];
-
-        return $cache[$BackedEnum::class . '::' . $BackedEnum->name] ??= (static function () use ($BackedEnum): array {
+        return self::cached('of', $BackedEnum::class . '::' . $BackedEnum->name, static function () use ($BackedEnum): array {
             $ReflectionEnumUnitCase = new ReflectionEnumUnitCase($BackedEnum::class, $BackedEnum->name);
             $stack = [];
 
@@ -54,6 +53,6 @@ readonly class Middleware
             }
 
             return $stack;
-        })();
+        });
     }
 }

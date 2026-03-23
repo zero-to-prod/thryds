@@ -7,7 +7,6 @@ namespace ZeroToProd\Thryds\Tests\Unit;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use ZeroToProd\Framework\Attributes\RouteParam;
 use ZeroToProd\Framework\Routes\RouteUrl;
 use ZeroToProd\Thryds\Routes\RouteList;
 
@@ -19,8 +18,8 @@ final class RouteParamsTest extends TestCase
     #[Test]
     public function returnsEmptyArrayForStaticRoutes(): void
     {
-        $this->assertSame([], RouteParam::on(RouteList::home));
-        $this->assertSame([], RouteParam::on(RouteList::about));
+        $this->assertSame([], RouteUrl::paramsOf(RouteList::home));
+        $this->assertSame([], RouteUrl::paramsOf(RouteList::about));
     }
 
     #[Test]

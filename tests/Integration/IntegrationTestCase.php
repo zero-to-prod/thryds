@@ -19,8 +19,11 @@ use ZeroToProd\Framework\ConfigKey;
 use ZeroToProd\Framework\DatabaseConfig;
 use ZeroToProd\Framework\Header;
 use ZeroToProd\Framework\RequestId;
+use ZeroToProd\Framework\Routes\FrameworkDevRouteList;
 use ZeroToProd\Framework\Routes\HttpMethod;
 use ZeroToProd\Thryds\Blade\View;
+use ZeroToProd\Thryds\Routes\DevRouteList;
+use ZeroToProd\Thryds\Routes\RouteList;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 /**
@@ -45,7 +48,7 @@ abstract class IntegrationTestCase extends TestCase
     {
         $this->cache_dir = sys_get_temp_dir() . '/thryds_test_' . uniqid('', more_entropy: true);
         mkdir($this->cache_dir, 0o755, recursive: true);
-        $this->App = App::boot(self::base_dir, Config::from([
+        $this->App = App::boot(self::base_dir, [RouteList::class, FrameworkDevRouteList::class, DevRouteList::class], Config::from([
             ConfigKey::AppEnv->value => AppEnv::development->value,
             ConfigKey::blade_cache_dir->value => $this->cache_dir,
             ConfigKey::template_dir->value => self::base_dir . '/templates',

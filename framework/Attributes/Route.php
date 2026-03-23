@@ -15,7 +15,6 @@ use ZeroToProd\Framework\Routes\Actions\Form;
 use ZeroToProd\Framework\Routes\Actions\StaticView;
 use ZeroToProd\Framework\Routes\Actions\Validated;
 use ZeroToProd\Framework\Routes\HttpMethod;
-use ZeroToProd\Thryds\Blade\View;
 
 /**
  * Declares one HTTP operation on a Route enum case.
@@ -35,12 +34,34 @@ use ZeroToProd\Thryds\Blade\View;
 #[HopWeight(0)]
 readonly class Route
 {
+    use AttributeCache;
+
+    public const string ACTION_NAME_CLOSURE = 'Closure';
+
     /** @param StaticView|Form|Validated|class-string|array{class-string, string}|Closure $action */
     public function __construct(
-        public HttpMethod $HttpMethod,
+        public HttpMethod|string $HttpMethod,
         public StaticView|Form|Validated|string|array|Closure $action,
-        public ?string $description,
+        public string|BackedEnum|null $description,
     ) {}
+
+    /** Resolve the HTTP method, converting a string to HttpMethod if needed. */
+    public function method(): HttpMethod
+    {
+        return $this->HttpMethod instanceof HttpMethod
+            ? $this->HttpMethod
+            : HttpMethod::from($this->HttpMethod);
+    }
+
+    /** Resolve description to a string, extracting the value from a BackedEnum if needed. */
+    public function description(): ?string
+    {
+        return match (true) {
+            $this->description === null            => null,
+            $this->description instanceof BackedEnum => (string) $this->description->value,
+            default                                 => $this->description,
+        };
+    }
 
     /** Short name describing the action type for manifests and diagnostics. */
     public function actionName(): string
@@ -49,57 +70,45 @@ readonly class Route
             $this->action instanceof Stringable => (string) $this->action,
             is_string($this->action)             => basename(str_replace('\\', '/', $this->action)),
             is_array($this->action)              => basename(str_replace('\\', '/', $this->action[0])) . '::' . $this->action[1],
-            $this->action instanceof Closure     => 'Closure',
+            $this->action instanceof Closure     => self::ACTION_NAME_CLOSURE,
         };
     }
 
     /** @return self[] All HTTP operations declared on a route case. */
     public static function on(BackedEnum $BackedEnum): array
     {
-        /** @var array<string, self[]> $cache */
-        static $cache = [];
-
-        return $cache[$BackedEnum::class . '::' . $BackedEnum->name] ??= array_map(
+        return self::cached('on', $BackedEnum::class . '::' . $BackedEnum->name, static fn(): array => array_map(
             static fn(ReflectionAttribute $ReflectionAttribute): self => $ReflectionAttribute->newInstance(),
             new ReflectionEnumUnitCase($BackedEnum::class, $BackedEnum->name)
                 ->getAttributes(self::class),
-        );
+        ));
     }
 
     /** Returns the route-level description from the first operation with a non-null description. */
     public static function descriptionOf(BackedEnum $BackedEnum): string
     {
-        /** @var array<string, string> $cache */
-        static $cache = [];
-
-        return $cache[$BackedEnum::class . '::' . $BackedEnum->name] ??= (static function () use ($BackedEnum): string {
+        return self::cached('descriptionOf', $BackedEnum::class . '::' . $BackedEnum->name, static function () use ($BackedEnum): string {
             foreach (self::on($BackedEnum) as $op) {
-                if ($op->description !== null) {
-                    return $op->description;
+                $description = $op->description();
+                if ($description !== null) {
+                    return $description;
                 }
             }
             throw new LogicException($BackedEnum::class . '::' . $BackedEnum->name . ' has no operation with a description.');
-        })();
+        });
     }
 
     /** Returns the View from the first action that carries one, or null. */
-    public static function viewOf(BackedEnum $BackedEnum): ?View
+    public static function viewOf(BackedEnum $BackedEnum): ?BackedEnum
     {
-        /** @var array<string, ?View> $cache */
-        static $cache = [];
-
-        $key = $BackedEnum::class . '::' . $BackedEnum->name;
-
-        if (!array_key_exists($key, array: $cache)) {
-            $cache[$key] = null;
+        return self::cachedNullable('viewOf', $BackedEnum::class . '::' . $BackedEnum->name, static function () use ($BackedEnum): ?BackedEnum {
             foreach (self::on($BackedEnum) as $op) {
                 if ($op->action instanceof StaticView || $op->action instanceof Form) {
-                    $cache[$key] = $op->action->View;
-                    break;
+                    return $op->action->BackedEnum;
                 }
             }
-        }
 
-        return $cache[$key];
+            return null;
+        });
     }
 }
