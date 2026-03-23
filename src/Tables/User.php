@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Tables;
 
-use ZeroToProd\Thryds\Attributes\ClosedSet;
-use ZeroToProd\Thryds\Attributes\Connection;
-use ZeroToProd\Thryds\Attributes\DataModel;
-use ZeroToProd\Thryds\Attributes\HasTableName;
-use ZeroToProd\Thryds\Attributes\SchemaSync;
-use ZeroToProd\Thryds\Attributes\Table;
-use ZeroToProd\Thryds\Database;
-use ZeroToProd\Thryds\Schema\Charset;
-use ZeroToProd\Thryds\Schema\Collation;
-use ZeroToProd\Thryds\Schema\Engine;
-use ZeroToProd\Thryds\Schema\SchemaSource;
+use ZeroToProd\Framework\Attributes\ClosedSet;
+use ZeroToProd\Framework\Attributes\Connection;
+use ZeroToProd\Framework\Attributes\DataModel;
+use ZeroToProd\Framework\Attributes\HasTableName;
+use ZeroToProd\Framework\Attributes\SchemaSync;
+use ZeroToProd\Framework\Attributes\Table;
+use ZeroToProd\Framework\Database;
+use ZeroToProd\Framework\Schema\Charset;
+use ZeroToProd\Framework\Schema\Collation;
+use ZeroToProd\Framework\Schema\Engine;
+use ZeroToProd\Framework\Schema\SchemaSource;
 use ZeroToProd\Thryds\UI\Domain;
 
 #[ClosedSet(

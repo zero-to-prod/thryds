@@ -1,15 +1,16 @@
 parameters:
     level: 9
     paths:
+        - framework
         - src
     ignoreErrors:
         -
             identifier: property.uninitializedReadonly
             paths:
-                - src/Config.php
-                - src/DatabaseConfig.php
-                - src/MigrationStatusRow.php
-                - src/Tables/Migration.php
+                - framework/Config.php
+                - framework/DatabaseConfig.php
+                - framework/MigrationStatusRow.php
+                - framework/Tables/Migration.php
                 - src/Tables/User.php
                 - src/Requests/RegisterRequest.php
                 - src/ViewModels/ErrorViewModel.php

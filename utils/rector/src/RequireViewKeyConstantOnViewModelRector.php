@@ -45,7 +45,7 @@ final class RequireViewKeyConstantOnViewModelRector extends AbstractRector imple
             [
                 new ConfiguredCodeSample(
                     <<<'CODE_SAMPLE'
-use ZeroToProd\Thryds\Attributes\ViewModel;
+use ZeroToProd\Framework\Attributes\ViewModel;
 
 #[ViewModel]
 readonly class UserViewModel
@@ -54,7 +54,7 @@ readonly class UserViewModel
 }
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-use ZeroToProd\Thryds\Attributes\ViewModel;
+use ZeroToProd\Framework\Attributes\ViewModel;
 
 #[ViewModel]
 readonly class UserViewModel

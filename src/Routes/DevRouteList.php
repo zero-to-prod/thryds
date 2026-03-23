@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Routes;
 
-use ZeroToProd\Thryds\Attributes\ClosedSet;
-use ZeroToProd\Thryds\Attributes\Guarded;
-use ZeroToProd\Thryds\Attributes\Route;
+use ZeroToProd\Framework\Attributes\ClosedSet;
+use ZeroToProd\Framework\Attributes\Guarded;
+use ZeroToProd\Framework\Attributes\Route;
+use ZeroToProd\Framework\Controllers\OpcacheScriptsHandler;
+use ZeroToProd\Framework\Controllers\OpcacheStatusHandler;
+use ZeroToProd\Framework\Routes\Actions\StaticView;
+use ZeroToProd\Framework\Routes\HttpMethod;
+use ZeroToProd\Framework\Routes\RouteGuard;
 use ZeroToProd\Thryds\Blade\View;
-use ZeroToProd\Thryds\Controllers\OpcacheScriptsHandler;
-use ZeroToProd\Thryds\Controllers\OpcacheStatusHandler;
 use ZeroToProd\Thryds\Controllers\RouteManifestHandler;
-use ZeroToProd\Thryds\Routes\Actions\StaticView;
 use ZeroToProd\Thryds\UI\Domain;
 
 #[ClosedSet(

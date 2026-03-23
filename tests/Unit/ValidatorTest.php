@@ -6,8 +6,8 @@ namespace ZeroToProd\Thryds\Tests\Unit;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ZeroToProd\Framework\Validation\Validator;
 use ZeroToProd\Thryds\Requests\RegisterRequest;
-use ZeroToProd\Thryds\Validation\Validator;
 
 final class ValidatorTest extends TestCase
 {

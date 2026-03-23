@@ -6,7 +6,7 @@ namespaces:
   routes: ZeroToProd\Thryds\Routes
   blade: ZeroToProd\Thryds\Blade
   enums: ZeroToProd\Thryds\UI
-  schema: ZeroToProd\Thryds\Schema
+  schema: ZeroToProd\Framework\Schema
 
 directories:
   templates: templates
@@ -18,16 +18,16 @@ directories:
   enums: src/UI
 
 attributes:
-  viewmodel: ZeroToProd\Thryds\Attributes\ViewModel
-  data_model: ZeroToProd\Thryds\Attributes\DataModel
-  handles_route: ZeroToProd\Thryds\Attributes\HandlesRoute
-  covers_route: ZeroToProd\Thryds\Attributes\CoversRoute
-  persists: ZeroToProd\Thryds\Attributes\Persists
-  redirects_to: ZeroToProd\Thryds\Attributes\RedirectsTo
-  renders_view: ZeroToProd\Thryds\Attributes\RendersView
-  closed_set: ZeroToProd\Thryds\Attributes\ClosedSet
-  schema_sync: ZeroToProd\Thryds\Attributes\SchemaSync
-  table: ZeroToProd\Thryds\Attributes\Table
-  has_table_name: ZeroToProd\Thryds\Attributes\HasTableName
-  column: ZeroToProd\Thryds\Attributes\Column
-  primary_key: ZeroToProd\Thryds\Attributes\PrimaryKey
+  viewmodel: ZeroToProd\Framework\Attributes\ViewModel
+  data_model: ZeroToProd\Framework\Attributes\DataModel
+  handles_route: ZeroToProd\Framework\Attributes\HandlesRoute
+  covers_route: ZeroToProd\Framework\Attributes\CoversRoute
+  persists: ZeroToProd\Framework\Attributes\Persists
+  redirects_to: ZeroToProd\Framework\Attributes\RedirectsTo
+  renders_view: ZeroToProd\Framework\Attributes\RendersView
+  closed_set: ZeroToProd\Framework\Attributes\ClosedSet
+  schema_sync: ZeroToProd\Framework\Attributes\SchemaSync
+  table: ZeroToProd\Framework\Attributes\Table
+  has_table_name: ZeroToProd\Framework\Attributes\HasTableName
+  column: ZeroToProd\Framework\Attributes\Column
+  primary_key: ZeroToProd\Framework\Attributes\PrimaryKey

@@ -1,6 +1,6 @@
 <?php
 
-use ZeroToProd\Thryds\Attributes\Segment;
+use ZeroToProd\Framework\Attributes\Segment;
 
 enum Layer: string
 {

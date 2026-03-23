@@ -13,10 +13,10 @@ component_dir: templates/components
 cache_dir: var/cache/blade
 
 namespaces:
-  app: ZeroToProd\Thryds\App
+  app: ZeroToProd\Framework\App
   view: ZeroToProd\Thryds\Blade\View
   component: ZeroToProd\Thryds\Blade\Component
-  vite: ZeroToProd\Thryds\Blade\Vite
-  config: ZeroToProd\Thryds\Config
-  config_key: ZeroToProd\Thryds\ConfigKey
-  app_env: ZeroToProd\Thryds\AppEnv
+  vite: ZeroToProd\Framework\Blade\Vite
+  config: ZeroToProd\Framework\Config
+  config_key: ZeroToProd\Framework\ConfigKey
+  app_env: ZeroToProd\Framework\AppEnv

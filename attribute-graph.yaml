@@ -5,21 +5,21 @@
 
 # Attribute marking an enum as a closed set of allowed values.
 closedset:
-  class: ZeroToProd\Thryds\Attributes\ClosedSet
+  class: ZeroToProd\Framework\Attributes\ClosedSet
   domain_property: Domain
 
 # Attribute grouping enum cases under a companion enum.
 group:
-  class: ZeroToProd\Thryds\Attributes\Group
+  class: ZeroToProd\Framework\Attributes\Group
   value_property: BackedEnum
 
 # Edge kind enum for semantic classification of graph edges.
 edge_kind:
-  class: ZeroToProd\Thryds\Attributes\EdgeKind
+  class: ZeroToProd\Framework\Attributes\EdgeKind
   default: data-flow
 
 # Layer enum mapping namespace segments to graph layers.
 layer:
-  class: ZeroToProd\Thryds\Attributes\Layer
-  segment_attribute: ZeroToProd\Thryds\Attributes\Segment
+  class: ZeroToProd\Framework\Attributes\Layer
+  segment_attribute: ZeroToProd\Framework\Attributes\Segment
   segment_property: namespace

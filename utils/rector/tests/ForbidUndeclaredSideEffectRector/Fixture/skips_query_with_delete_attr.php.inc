@@ -2,7 +2,7 @@
 
 namespace Utils\Rector\Tests\ForbidUndeclaredSideEffectRector\Fixture;
 
-use ZeroToProd\Thryds\Attributes\DeletesFrom;
+use ZeroToProd\Framework\Attributes\DeletesFrom;
 use ZeroToProd\Thryds\Database;
 
 #[DeletesFrom(table: 'SomeTable', where: ['id'])]

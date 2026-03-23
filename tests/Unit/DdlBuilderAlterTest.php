@@ -8,8 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionException;
-use ZeroToProd\Thryds\Schema\DdlBuilder;
-use ZeroToProd\Thryds\Schema\Driver;
+use ZeroToProd\Framework\Schema\DdlBuilder;
+use ZeroToProd\Framework\Schema\Driver;
 use ZeroToProd\Thryds\Tables\User;
 
 final class DdlBuilderAlterTest extends TestCase

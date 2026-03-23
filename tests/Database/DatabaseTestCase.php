@@ -6,8 +6,8 @@ namespace ZeroToProd\Thryds\Tests\Database;
 
 use PDOException;
 use PHPUnit\Framework\TestCase;
-use ZeroToProd\Thryds\Database;
-use ZeroToProd\Thryds\DatabaseConfig;
+use ZeroToProd\Framework\Database;
+use ZeroToProd\Framework\DatabaseConfig;
 
 /**
  * Base class for database tests. Each test runs inside a transaction that is

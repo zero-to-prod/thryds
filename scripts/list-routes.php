@@ -15,15 +15,15 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use ZeroToProd\Thryds\Attributes\Guarded;
-use ZeroToProd\Thryds\Attributes\Route;
-use ZeroToProd\Thryds\Attributes\RouteParam;
+use ZeroToProd\Framework\Attributes\Guarded;
+use ZeroToProd\Framework\Attributes\Route;
+use ZeroToProd\Framework\Attributes\RouteParam;
 use ZeroToProd\Thryds\Routes\RouteSource;
 
 $routes = [];
 
 foreach (RouteSource::cases() as $source) {
-    foreach (\ZeroToProd\Thryds\Attributes\RouteEnum::of($source)::cases() as $route) {
+    foreach (\ZeroToProd\Framework\Attributes\RouteEnum::of($source)::cases() as $route) {
         $routes[] = [
             'name'        => $route->name,
             'path'        => $route->value,

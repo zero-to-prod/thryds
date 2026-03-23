@@ -68,7 +68,7 @@ CODE_SAMPLE,
 if ($Config->AppEnv === AppEnv::production) { }
 CODE_SAMPLE,
                     [
-                        'enumClasses' => [\ZeroToProd\Thryds\AppEnv::class],
+                        'enumClasses' => [\ZeroToProd\Framework\AppEnv::class],
                         'mode' => 'auto',
                     ],
                 ),

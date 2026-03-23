@@ -7,9 +7,9 @@ namespace ZeroToProd\Thryds\Tests\Unit;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use ZeroToProd\Thryds\Attributes\RouteParam;
+use ZeroToProd\Framework\Attributes\RouteParam;
+use ZeroToProd\Framework\Routes\RouteUrl;
 use ZeroToProd\Thryds\Routes\RouteList;
-use ZeroToProd\Thryds\Routes\RouteUrl;
 
 final class RouteParamsTest extends TestCase
 {

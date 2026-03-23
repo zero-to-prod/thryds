@@ -6,10 +6,10 @@ namespace ZeroToProd\Thryds\Tests\Database;
 
 use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
-use ZeroToProd\Thryds\MigrationStatus;
-use ZeroToProd\Thryds\MigrationStatusRow;
-use ZeroToProd\Thryds\Migrator;
-use ZeroToProd\Thryds\Tables\Migration;
+use ZeroToProd\Framework\MigrationStatus;
+use ZeroToProd\Framework\MigrationStatusRow;
+use ZeroToProd\Framework\Migrator;
+use ZeroToProd\Framework\Tables\Migration;
 
 /**
  * Tests the Migrator infrastructure: table creation, apply, rollback, and

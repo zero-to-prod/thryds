@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Migrations;
 
-use ZeroToProd\Thryds\Attributes\CreateTable;
-use ZeroToProd\Thryds\Attributes\Migration;
+use ZeroToProd\Framework\Attributes\CreateTable;
+use ZeroToProd\Framework\Attributes\Migration;
 use ZeroToProd\Thryds\Tables\User;
 
 #[Migration(

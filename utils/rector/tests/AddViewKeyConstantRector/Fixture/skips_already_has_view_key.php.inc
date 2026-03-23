@@ -1,7 +1,7 @@
 <?php
 
-use ZeroToProd\Thryds\Attributes\DataModel;
-use ZeroToProd\Thryds\Attributes\ViewModel;
+use ZeroToProd\Framework\Attributes\DataModel;
+use ZeroToProd\Framework\Attributes\ViewModel;
 
 #[ViewModel]
 readonly class AlreadyHasKeyViewModel
@@ -17,8 +17,8 @@ readonly class AlreadyHasKeyViewModel
 -----
 <?php
 
-use ZeroToProd\Thryds\Attributes\DataModel;
-use ZeroToProd\Thryds\Attributes\ViewModel;
+use ZeroToProd\Framework\Attributes\DataModel;
+use ZeroToProd\Framework\Attributes\ViewModel;
 
 #[ViewModel(key: 'AlreadyHasKeyViewModel')]
 readonly class AlreadyHasKeyViewModel

@@ -6,15 +6,15 @@ namespace ZeroToProd\Thryds\Blade;
 
 use ReflectionEnum;
 use Tempest\Blade\Blade;
-use ZeroToProd\Thryds\Attributes\ClosedSet;
-use ZeroToProd\Thryds\Attributes\Prop;
-use ZeroToProd\Thryds\Attributes\TemplateDirectory;
-use ZeroToProd\Thryds\UI\AlertVariant;
-use ZeroToProd\Thryds\UI\ButtonSize;
-use ZeroToProd\Thryds\UI\ButtonVariant;
+use ZeroToProd\Framework\Attributes\ClosedSet;
+use ZeroToProd\Framework\Attributes\Prop;
+use ZeroToProd\Framework\Attributes\TemplateDirectory;
+use ZeroToProd\Framework\UI\AlertVariant;
+use ZeroToProd\Framework\UI\ButtonSize;
+use ZeroToProd\Framework\UI\ButtonVariant;
+use ZeroToProd\Framework\UI\InputType;
+use ZeroToProd\Framework\UI\Props;
 use ZeroToProd\Thryds\UI\Domain;
-use ZeroToProd\Thryds\UI\InputType;
-use ZeroToProd\Thryds\UI\Props;
 
 /**
  * Blade component identifiers. Each case maps to templates/components/{value}.blade.php.

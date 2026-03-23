@@ -33,7 +33,7 @@ use Symfony\Component\Yaml\Yaml;
 $format = 'yaml';
 $output = null;
 $configPath = null;
-$dirs = ['src'];
+$dirs = ['framework', 'src'];
 $filterNodes = [];
 $filterLayers = [];
 $filterKinds = [];
@@ -396,7 +396,7 @@ function resolveHopWeight(string $attributeClass): ?int
         return $cache[$attributeClass] = null;
     }
     $ref = new ReflectionClass($attributeClass);
-    $attrs = $ref->getAttributes(\ZeroToProd\Thryds\Attributes\HopWeight::class);
+    $attrs = $ref->getAttributes(\ZeroToProd\Framework\Attributes\HopWeight::class);
     if ($attrs === []) {
         return $cache[$attributeClass] = null;
     }
@@ -439,8 +439,11 @@ function resolveRootNamespace(string $projectRoot, string $dir): ?string
     $composer = json_decode(file_get_contents($composerPath), true);
     $psr4 = array_merge($composer['autoload']['psr-4'] ?? [], $composer['autoload-dev']['psr-4'] ?? []);
     foreach ($psr4 as $namespace => $path) {
-        if (rtrim($path, '/') === rtrim($dir, '/')) {
-            return $namespace;
+        $paths = is_array($path) ? $path : [$path];
+        foreach ($paths as $p) {
+            if (rtrim($p, '/') === rtrim($dir, '/')) {
+                return $namespace;
+            }
         }
     }
     return null;

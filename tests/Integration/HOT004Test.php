@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Tests\Integration;
 
 use PHPUnit\Framework\Attributes\Test;
-use ZeroToProd\Thryds\Env;
+use ZeroToProd\Framework\Env;
 use ZeroToProd\Thryds\Routes\RouteList;
 
 final class HOT004Test extends IntegrationTestCase

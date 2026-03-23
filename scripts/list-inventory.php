@@ -47,14 +47,14 @@ $Component   = $inventoryConfig['enums']['component'];
 /** Collect all route cases across all route sources. */
 $allRouteCases = [];
 foreach ($RouteSource::cases() as $source) {
-    foreach (\ZeroToProd\Thryds\Attributes\RouteEnum::of($source)::cases() as $case) {
+    foreach (\ZeroToProd\Framework\Attributes\RouteEnum::of($source)::cases() as $case) {
         $allRouteCases[] = $case;
     }
 }
 
 // Resolve namespaces and paths from config.
-$controllersNamespace     = $inventoryConfig['namespaces']['controllers'];
-$tablesNamespace          = $inventoryConfig['namespaces']['tables'];
+$controllersNamespaces    = (array) $inventoryConfig['namespaces']['controllers'];
+$tablesNamespaces         = (array) $inventoryConfig['namespaces']['tables'];
 $viewmodelsNamespace      = $inventoryConfig['namespaces']['viewmodels'];
 $uiNamespace              = $inventoryConfig['namespaces']['ui'];
 $testsIntegrationNamespace = $inventoryConfig['namespaces']['tests_integration'];
@@ -77,18 +77,23 @@ $templatesDir = $projectRoot . $inventoryConfig['template_dir'];
 
 /** Controllers discovered via #[HandlesRoute] attribute (route name → short class name). */
 $explicitControllers = [];
-$controllersDir = $projectRoot . $inventoryConfig['controllers_dir'];
-foreach (glob($controllersDir . '/*.php') ?: [] as $controllerFile) {
-    $controllerClassName = basename($controllerFile, '.php');
-    $controllerFqcn = $controllersNamespace . '\\' . $controllerClassName;
-    if (!class_exists($controllerFqcn)) {
-        continue;
-    }
-    $controllerRef = new ReflectionClass($controllerFqcn);
-    $handlesRouteAttrs = $controllerRef->getAttributes($HandlesRoute);
-    if ($handlesRouteAttrs !== []) {
-        $handledRoute = $handlesRouteAttrs[0]->newInstance()->BackedEnum;
-        $explicitControllers[$handledRoute->name] = $controllerClassName;
+$controllersDirs = $inventoryConfig['controllers_dirs'] ?? [['dir' => $inventoryConfig['controllers_dir'] ?? 'src/Controllers', 'namespace' => $controllersNamespaces[0]]];
+foreach ($controllersDirs as $entry) {
+    $dirPath = is_array($entry) ? $entry['dir'] : $entry;
+    $dirNs = is_array($entry) ? ($entry['namespace'] ?? $controllersNamespaces[0]) : $controllersNamespaces[0];
+    $controllersDir = $projectRoot . $dirPath;
+    foreach (glob($controllersDir . '/*.php') ?: [] as $controllerFile) {
+        $controllerClassName = basename($controllerFile, '.php');
+        $controllerFqcn = $dirNs . '\\' . $controllerClassName;
+        if (!class_exists($controllerFqcn)) {
+            continue;
+        }
+        $controllerRef = new ReflectionClass($controllerFqcn);
+        $handlesRouteAttrs = $controllerRef->getAttributes($HandlesRoute);
+        if ($handlesRouteAttrs !== []) {
+            $handledRoute = $handlesRouteAttrs[0]->newInstance()->BackedEnum;
+            $explicitControllers[$handledRoute->name] = $controllerClassName;
+        }
     }
 }
 
@@ -111,31 +116,36 @@ foreach ($Component::cases() as $componentCase) {
 }
 
 // Scan Table classes (models) — each carries its own schema via #[Column] attributes.
-$tablesDir = $projectRoot . $inventoryConfig['tables_dir'];
-foreach (glob($tablesDir . '/*.php') ?: [] as $tableFile) {
-    $className = basename($tableFile, '.php');
-    $fqcn      = $tablesNamespace . '\\' . $className;
-    if (! class_exists($fqcn)) {
-        continue;
+$tablesDirs = $inventoryConfig['tables_dirs'] ?? [['dir' => $inventoryConfig['tables_dir'] ?? 'src/Tables', 'namespace' => $tablesNamespaces[0]]];
+foreach ($tablesDirs as $entry) {
+    $dirPath = is_array($entry) ? $entry['dir'] : $entry;
+    $dirNs = is_array($entry) ? ($entry['namespace'] ?? $tablesNamespaces[0]) : $tablesNamespaces[0];
+    $tablesDir = $projectRoot . $dirPath;
+    foreach (glob($tablesDir . '/*.php') ?: [] as $tableFile) {
+        $className = basename($tableFile, '.php');
+        $fqcn      = $dirNs . '\\' . $className;
+        if (! class_exists($fqcn)) {
+            continue;
+        }
+        $ref        = new ReflectionClass($fqcn);
+        $tableAttrs = $ref->getAttributes($TableAttr);
+        if ($tableAttrs === []) {
+            continue;
+        }
+        $addNode('model:' . $className, 'model', $className);
     }
-    $ref        = new ReflectionClass($fqcn);
-    $tableAttrs = $ref->getAttributes($TableAttr);
-    if ($tableAttrs === []) {
-        continue;
-    }
-    $addNode('model:' . $className, 'model', $className);
 }
 
 // Walk each route.
 foreach ($allRouteCases as $routeCase) {
     $routeId = 'route:' . $routeCase->name;
-    $guard = \ZeroToProd\Thryds\Attributes\Guarded::of($routeCase);
+    $guard = \ZeroToProd\Framework\Attributes\Guarded::of($routeCase);
     $addNode($routeId, 'route', $routeCase->value . ($guard !== null ? ' [' . $guard->name . ']' : ''));
-    $nodes[$routeId]['methods'] = array_map(fn($op): string => $op->HttpMethod->value, \ZeroToProd\Thryds\Attributes\Route::on($routeCase));
+    $nodes[$routeId]['methods'] = array_map(fn($op): string => $op->HttpMethod->value, \ZeroToProd\Framework\Attributes\Route::on($routeCase));
     $nodes[$routeId]['guard']   = $guard?->name;
 
     $controller = $explicitControllers[$routeCase->name] ?? null;
-    $view       = \ZeroToProd\Thryds\Attributes\Route::viewOf($routeCase);
+    $view       = \ZeroToProd\Framework\Attributes\Route::viewOf($routeCase);
 
     if ($controller !== null) {
         $nodes[$routeId]['registration'] = 'explicit';
@@ -144,8 +154,8 @@ foreach ($allRouteCases as $routeCase) {
         $addEdge($routeId, $controllerId, 'handled_by');
 
         // Controller→View edge comes from #[RendersView] on the controller class.
-        $controllerFqcn = $controllersNamespace . '\\' . $controller;
-        if (class_exists($controllerFqcn)) {
+        $controllerFqcn = resolveClass($controllersNamespaces, $controller);
+        if ($controllerFqcn !== null && class_exists($controllerFqcn)) {
             $rvAttrs = new ReflectionClass($controllerFqcn)->getAttributes($RendersView);
             if ($rvAttrs !== []) {
                 $controllerView = $rvAttrs[0]->newInstance()->View;
@@ -168,8 +178,8 @@ foreach ($allRouteCases as $routeCase) {
 
 // Wire persists and redirects_to edges from controllers via attributes.
 foreach ($explicitControllers as $controllerName) {
-    $fqcn = $controllersNamespace . '\\' . $controllerName;
-    if (! class_exists($fqcn)) {
+    $fqcn = resolveClass($controllersNamespaces, $controllerName);
+    if ($fqcn === null || ! class_exists($fqcn)) {
         continue;
     }
     $ref = new ReflectionClass($fqcn);
@@ -268,6 +278,32 @@ function docblockDescription(string|false $doc): string
     return '';
 }
 
+/** Resolves a FQCN by trying multiple namespace prefixes. Returns the first existing class, or null. */
+function resolveClass(array $namespaces, string $shortName): ?string
+{
+    foreach ($namespaces as $ns) {
+        $fqcn = $ns . '\\' . $shortName;
+        if (class_exists($fqcn) || enum_exists($fqcn)) {
+            return $fqcn;
+        }
+    }
+
+    return null;
+}
+
+/** Resolves a source file from multiple candidate directories. Returns the first existing path, or the first candidate if none exist. */
+function resolveSourceFile(string $projectRoot, array $dirs, string $className): string
+{
+    foreach ($dirs as $dir) {
+        $path = $projectRoot . $dir . '/' . $className . '.php';
+        if (file_exists($path)) {
+            return $path;
+        }
+    }
+
+    return $projectRoot . $dirs[0] . '/' . $className . '.php';
+}
+
 /** Returns the 1-based line number of `case <name>` in a PHP enum source file. */
 function findCaseLine(string $filePath, string $caseName): ?int
 {
@@ -347,12 +383,14 @@ function decorateNode(array $node, string $projectRoot, string $templatesDir, ar
             break;
 
         case 'controller':
-            $fqcn = $inventoryConfig['namespaces']['controllers'] . '\\' . $label;
-            $node['description'] = class_exists($fqcn)
+            $fqcn = resolveClass((array) $inventoryConfig['namespaces']['controllers'], $label);
+            $node['description'] = ($fqcn !== null && class_exists($fqcn))
                 ? docblockDescription(new ReflectionClass($fqcn)->getDocComment())
                 : '';
+            $cDirs = array_map(fn($e) => is_array($e) ? $e['dir'] : $e, $inventoryConfig['controllers_dirs'] ?? [$inventoryConfig['source_paths']['controllers']]);
+            $controllerFile = resolveSourceFile($projectRoot, $cDirs, $label);
             $node['sources'] = [
-                $source('class', $projectRoot . $inventoryConfig['source_paths']['controllers'] . '/' . $label . '.php'),
+                $source('class', $controllerFile),
             ];
             break;
 
@@ -388,8 +426,16 @@ function decorateNode(array $node, string $projectRoot, string $templatesDir, ar
             break;
 
         case 'ui_enum':
-            $fqcn = $inventoryConfig['namespaces']['ui'] . '\\' . $label;
-            if (enum_exists($fqcn)) {
+            $uiNamespaces = (array) $inventoryConfig['namespaces']['ui'];
+            $fqcn = null;
+            foreach ($uiNamespaces as $ns) {
+                $candidate = $ns . '\\' . $label;
+                if (enum_exists($candidate)) {
+                    $fqcn = $candidate;
+                    break;
+                }
+            }
+            if ($fqcn !== null) {
                 $ref                 = new ReflectionEnum($fqcn);
                 $node['description'] = docblockDescription($ref->getDocComment());
                 $node['cases']       = array_map(fn($case) => $case->getBackingValue(), $ref->getCases());
@@ -397,14 +443,15 @@ function decorateNode(array $node, string $projectRoot, string $templatesDir, ar
                 $node['description'] = '';
                 $node['cases']       = [];
             }
+            $uiFile = resolveSourceFile($projectRoot, ['framework/UI', $inventoryConfig['source_paths']['ui']], $label);
             $node['sources'] = [
-                $source('definition', $projectRoot . $inventoryConfig['source_paths']['ui'] . '/' . $label . '.php'),
+                $source('definition', $uiFile),
             ];
             break;
 
         case 'model':
-            $fqcn = $inventoryConfig['namespaces']['tables'] . '\\' . $label;
-            if (class_exists($fqcn)) {
+            $fqcn = resolveClass((array) $inventoryConfig['namespaces']['tables'], $label);
+            if ($fqcn !== null && class_exists($fqcn)) {
                 $ref                 = new ReflectionClass($fqcn);
                 $node['description'] = docblockDescription($ref->getDocComment());
                 $tableAttr           = $ref->getAttributes($inventoryConfig['attributes']['table'])[0] ?? null;
@@ -432,8 +479,10 @@ function decorateNode(array $node, string $projectRoot, string $templatesDir, ar
                 $node['table_name']  = '';
                 $node['fields']      = [];
             }
+            $tDirs = array_map(fn($e) => is_array($e) ? $e['dir'] : $e, $inventoryConfig['tables_dirs'] ?? [$inventoryConfig['source_paths']['tables']]);
+            $tableFile = resolveSourceFile($projectRoot, $tDirs, $label);
             $node['sources'] = [
-                $source('class', $projectRoot . $inventoryConfig['source_paths']['tables'] . '/' . $label . '.php'),
+                $source('class', $tableFile),
             ];
             break;
 
@@ -484,7 +533,7 @@ foreach (glob($testsDir . '/*Test.php') ?: [] as $testFile) {
 
 $routeDescriptions = [];
 foreach ($allRouteCases as $routeCase) {
-    $routeDescriptions[$routeCase->name] = \ZeroToProd\Thryds\Attributes\Route::descriptionOf($routeCase);
+    $routeDescriptions[$routeCase->name] = \ZeroToProd\Framework\Attributes\Route::descriptionOf($routeCase);
 }
 
 $decoratedNodes = array_map(
@@ -545,7 +594,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges, array $inventory
     $RouteSource = $inventoryConfig['enums']['route_source'];
     $allRouteCases = [];
     foreach ($RouteSource::cases() as $src) {
-        foreach (\ZeroToProd\Thryds\Attributes\RouteEnum::of($src)::cases() as $c) {
+        foreach (\ZeroToProd\Framework\Attributes\RouteEnum::of($src)::cases() as $c) {
             $allRouteCases[] = $c;
         }
     }
@@ -554,10 +603,10 @@ function buildYamlManifest(array $decoratedNodes, array $edges, array $inventory
         $routeId = 'route:' . $routeCase->name;
         $entry = [];
         $entry['path'] = $routeCase->value;
-        $entry['description'] = \ZeroToProd\Thryds\Attributes\Route::descriptionOf($routeCase);
-        $entry['guard'] = \ZeroToProd\Thryds\Attributes\Guarded::of($routeCase)?->name;
+        $entry['description'] = \ZeroToProd\Framework\Attributes\Route::descriptionOf($routeCase);
+        $entry['guard'] = \ZeroToProd\Framework\Attributes\Guarded::of($routeCase)?->name;
         $ops = [];
-        foreach (\ZeroToProd\Thryds\Attributes\Route::on($routeCase) as $op) {
+        foreach (\ZeroToProd\Framework\Attributes\Route::on($routeCase) as $op) {
             $ops[$op->HttpMethod->value] = ['description' => $op->description, 'strategy' => $op->actionName()];
         }
         $entry['operations'] = $ops;
@@ -618,7 +667,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges, array $inventory
                 }
                 if ($routeEnum !== null) {
                     $ops = [];
-                    foreach (\ZeroToProd\Thryds\Attributes\Route::on($routeEnum) as $op) {
+                    foreach (\ZeroToProd\Framework\Attributes\Route::on($routeEnum) as $op) {
                         $ops[$op->HttpMethod->value] = ['description' => $op->description, 'strategy' => $op->actionName()];
                     }
                     $entry['operations'] = $ops;
@@ -748,7 +797,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges, array $inventory
             continue;
         }
         $label = $n['label'];
-        $fqcn = $inventoryConfig['namespaces']['tables'] . '\\' . $label;
+        $fqcn = resolveClass((array) $inventoryConfig['namespaces']['tables'], $label);
         $entry = [];
         $entry['table'] = $n['table_name'] ?? '';
 

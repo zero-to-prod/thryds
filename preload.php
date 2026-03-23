@@ -8,15 +8,12 @@ declare(strict_types=1);
 opcache_compile_file(__DIR__ . '/vendor/autoload.php');
 
 // Routes
-opcache_compile_file(__DIR__ . '/src/Routes/RouteRegistrar.php');
-opcache_compile_file(__DIR__ . '/src/Routes/RouteSource.php');
-opcache_compile_file(__DIR__ . '/src/Routes/RouteList.php');
-opcache_compile_file(__DIR__ . '/src/Routes/HttpMethod.php');
-opcache_compile_file(__DIR__ . '/src/Routes/Actions/StaticView.php');
-opcache_compile_file(__DIR__ . '/src/Routes/Actions/Form.php');
-opcache_compile_file(__DIR__ . '/src/Routes/Actions/Validated.php');
-opcache_compile_file(__DIR__ . '/src/Routes/DevRouteList.php');
-opcache_compile_file(__DIR__ . '/src/Routes/RouteGuard.php');
+opcache_compile_file(__DIR__ . '/framework/Routes/RouteRegistrar.php');
+opcache_compile_file(__DIR__ . '/framework/Routes/HttpMethod.php');
+opcache_compile_file(__DIR__ . '/framework/Routes/Actions/StaticView.php');
+opcache_compile_file(__DIR__ . '/framework/Routes/Actions/Form.php');
+opcache_compile_file(__DIR__ . '/framework/Routes/Actions/Validated.php');
+opcache_compile_file(__DIR__ . '/framework/Routes/RouteGuard.php');
 
 // ViewModels
 opcache_compile_file(__DIR__ . '/src/ViewModels/ErrorViewModel.php');
@@ -25,48 +22,53 @@ opcache_compile_file(__DIR__ . '/src/ViewModels/RegisterViewModel.php');
 // Entrypoint
 opcache_compile_file(__DIR__ . '/public/index.php');
 
-// Core
-opcache_compile_file(__DIR__ . '/src/functions.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/DataModel.php');
-opcache_compile_file(__DIR__ . '/src/Config.php');
-opcache_compile_file(__DIR__ . '/src/ConfigKey.php');
-opcache_compile_file(__DIR__ . '/src/AppEnv.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/Describe.php');
-opcache_compile_file(__DIR__ . '/src/DatabaseConfig.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/EnvVar.php');
-opcache_compile_file(__DIR__ . '/src/Schema/Driver.php');
-opcache_compile_file(__DIR__ . '/src/Blade/Vite.php');
-opcache_compile_file(__DIR__ . '/src/App.php');
-opcache_compile_file(__DIR__ . '/src/Blade/BladeDirectives.php');
-opcache_compile_file(__DIR__ . '/src/Blade/BladeDirective.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/ResolvesTo.php');
-opcache_compile_file(__DIR__ . '/src/Blade/Registrars/ProductionRegistrar.php');
-opcache_compile_file(__DIR__ . '/src/Blade/Registrars/EnvRegistrar.php');
-opcache_compile_file(__DIR__ . '/src/Blade/Registrars/ViteRegistrar.php');
-opcache_compile_file(__DIR__ . '/src/Blade/Registrars/HtmxRegistrar.php');
-opcache_compile_file(__DIR__ . '/src/Blade/Registrars/HotReloadRegistrar.php');
+// Framework
+opcache_compile_file(__DIR__ . '/framework/functions.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/DataModel.php');
+opcache_compile_file(__DIR__ . '/framework/Config.php');
+opcache_compile_file(__DIR__ . '/framework/ConfigKey.php');
+opcache_compile_file(__DIR__ . '/framework/AppEnv.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/Describe.php');
+opcache_compile_file(__DIR__ . '/framework/DatabaseConfig.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/EnvVar.php');
+opcache_compile_file(__DIR__ . '/framework/Schema/Driver.php');
+opcache_compile_file(__DIR__ . '/framework/Blade/Vite.php');
+opcache_compile_file(__DIR__ . '/framework/App.php');
+opcache_compile_file(__DIR__ . '/framework/Blade/BladeDirectives.php');
+opcache_compile_file(__DIR__ . '/framework/Blade/BladeDirective.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/ResolvesTo.php');
+opcache_compile_file(__DIR__ . '/framework/Blade/Registrars/ProductionRegistrar.php');
+opcache_compile_file(__DIR__ . '/framework/Blade/Registrars/EnvRegistrar.php');
+opcache_compile_file(__DIR__ . '/framework/Blade/Registrars/ViteRegistrar.php');
+opcache_compile_file(__DIR__ . '/framework/Blade/Registrars/HtmxRegistrar.php');
+opcache_compile_file(__DIR__ . '/framework/Blade/Registrars/HotReloadRegistrar.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/TemplateDirectory.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/RouteEnum.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/Guarded.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/Middleware.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/Route.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/HandlesMethod.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/ReceivesViewModel.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/StubValue.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/ViewModel.php');
+opcache_compile_file(__DIR__ . '/framework/UI/InputType.php');
+opcache_compile_file(__DIR__ . '/framework/UI/ButtonVariant.php');
+opcache_compile_file(__DIR__ . '/framework/UI/ButtonSize.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/HasValidationErrors.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/Column.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/PrimaryKey.php');
+opcache_compile_file(__DIR__ . '/framework/Attributes/PageTitle.php');
+opcache_compile_file(__DIR__ . '/framework/UI/AlertVariant.php');
+opcache_compile_file(__DIR__ . '/framework/RequestId.php');
+
+// App
 opcache_compile_file(__DIR__ . '/src/Blade/Component.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/TemplateDirectory.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/RouteEnum.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/Guarded.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/Middleware.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/Route.php');
+opcache_compile_file(__DIR__ . '/src/Routes/RouteSource.php');
+opcache_compile_file(__DIR__ . '/src/Routes/RouteList.php');
 opcache_compile_file(__DIR__ . '/src/Blade/View.php');
 opcache_compile_file(__DIR__ . '/src/Controllers/RegisterController.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/HandlesMethod.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/ReceivesViewModel.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/StubValue.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/ViewModel.php');
-opcache_compile_file(__DIR__ . '/src/UI/InputType.php');
-opcache_compile_file(__DIR__ . '/src/UI/ButtonVariant.php');
-opcache_compile_file(__DIR__ . '/src/UI/ButtonSize.php');
+opcache_compile_file(__DIR__ . '/src/Routes/DevRouteList.php');
 opcache_compile_file(__DIR__ . '/src/Tables/UserColumns.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/HasValidationErrors.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/Column.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/PrimaryKey.php');
-opcache_compile_file(__DIR__ . '/src/Attributes/PageTitle.php');
-opcache_compile_file(__DIR__ . '/src/UI/AlertVariant.php');
-opcache_compile_file(__DIR__ . '/src/RequestId.php');
 
 // Vendor
 opcache_compile_file(__DIR__ . '/vendor/composer/autoload_real.php');

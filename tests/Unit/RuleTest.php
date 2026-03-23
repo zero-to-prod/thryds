@@ -6,8 +6,8 @@ namespace ZeroToProd\Thryds\Tests\Unit;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ZeroToProd\Framework\Validation\Rule;
 use ZeroToProd\Thryds\Requests\RegisterRequest;
-use ZeroToProd\Thryds\Validation\Rule;
 
 final class RuleTest extends TestCase
 {

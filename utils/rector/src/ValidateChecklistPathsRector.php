@@ -132,7 +132,7 @@ final class ValidateChecklistPathsRector extends AbstractRector implements Confi
         }
 
         // Try common subdirectories
-        foreach (['scripts/', 'src/', 'public/', 'templates/'] as $prefix) {
+        foreach (['scripts/', 'framework/', 'src/', 'public/', 'templates/'] as $prefix) {
             if (file_exists($this->projectDir . '/' . $prefix . $path)) {
                 return true;
             }

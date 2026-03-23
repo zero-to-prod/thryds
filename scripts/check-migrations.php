@@ -16,10 +16,10 @@ $base_dir = dirname(__DIR__);
 
 require $base_dir . '/vendor/autoload.php';
 
-use ZeroToProd\Thryds\Database;
-use ZeroToProd\Thryds\DatabaseConfig;
-use ZeroToProd\Thryds\MigrationStatus;
-use ZeroToProd\Thryds\Migrator;
+use ZeroToProd\Framework\Database;
+use ZeroToProd\Framework\DatabaseConfig;
+use ZeroToProd\Framework\MigrationStatus;
+use ZeroToProd\Framework\Migrator;
 
 try {
     $Migrator = Migrator::create(

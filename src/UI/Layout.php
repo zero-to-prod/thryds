@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\UI;
 
-use ZeroToProd\Thryds\Attributes\ClosedSet;
+use ZeroToProd\Framework\Attributes\ClosedSet;
 
 /** Available layout templates for views. */
 #[ClosedSet(

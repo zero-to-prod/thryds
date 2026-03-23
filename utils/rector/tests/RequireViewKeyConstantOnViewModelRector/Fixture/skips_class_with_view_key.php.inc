@@ -1,6 +1,6 @@
 <?php
 
-use ZeroToProd\Thryds\Attributes\ViewModel;
+use ZeroToProd\Framework\Attributes\ViewModel;
 
 #[ViewModel]
 readonly class UserViewModel

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\ViewModels;
 
-use ZeroToProd\Thryds\Attributes\ClosedSet;
+use ZeroToProd\Framework\Attributes\ClosedSet;
 use ZeroToProd\Thryds\UI\Domain;
 
 #[ClosedSet(

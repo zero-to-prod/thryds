@@ -19,12 +19,12 @@ require $base_dir . '/vendor/autoload.php';
 
 use League\Route\Router;
 use Symfony\Component\Yaml\Yaml;
-use ZeroToProd\Thryds\App;
-use ZeroToProd\Thryds\AppEnv;
-use ZeroToProd\Thryds\Blade\Vite;
-use ZeroToProd\Thryds\Config;
-use ZeroToProd\Thryds\ConfigKey;
-use ZeroToProd\Thryds\Routes\RouteRegistrar;
+use ZeroToProd\Framework\App;
+use ZeroToProd\Framework\AppEnv;
+use ZeroToProd\Framework\Blade\Vite;
+use ZeroToProd\Framework\Config;
+use ZeroToProd\Framework\ConfigKey;
+use ZeroToProd\Framework\Routes\RouteRegistrar;
 
 $preload_config = Yaml::parseFile(__DIR__ . '/preload-config.yaml');
 

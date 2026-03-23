@@ -8,8 +8,8 @@ use PDOException;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
-use ZeroToProd\Thryds\Database;
-use ZeroToProd\Thryds\DatabaseConfig;
+use ZeroToProd\Framework\Database;
+use ZeroToProd\Framework\DatabaseConfig;
 
 final class DatabaseTest extends TestCase
 {

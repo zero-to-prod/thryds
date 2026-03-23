@@ -1,7 +1,7 @@
 <?php
 
 use Zerotoprod\DataModel\DataModel;
-use ZeroToProd\Thryds\Attributes\Describe;
+use ZeroToProd\Framework\Attributes\Describe;
 
 /**
  * @method static self from(array{errors?: ?array} $data)
@@ -22,7 +22,7 @@ class GenericArrayViewModel
 <?php
 
 use Zerotoprod\DataModel\DataModel;
-use ZeroToProd\Thryds\Attributes\Describe;
+use ZeroToProd\Framework\Attributes\Describe;
 
 /**
  * @method static self from(array{errors?: ?array<string, string>} $data)

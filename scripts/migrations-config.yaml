@@ -1,7 +1,7 @@
 directory: migrations
 namespace: ZeroToProd\Thryds\Migrations
 imports:
-  - ZeroToProd\Thryds\Attributes\Migration
-  - ZeroToProd\Thryds\Attributes\RawSql
+  - ZeroToProd\Framework\Attributes\Migration
+  - ZeroToProd\Framework\Attributes\RawSql
 attribute: Migration
 action: RawSql

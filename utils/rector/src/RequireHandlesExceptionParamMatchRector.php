@@ -114,7 +114,7 @@ final class RequireHandlesExceptionParamMatchRector extends AbstractRector imple
             [
                 new ConfiguredCodeSample(
                     <<<'CODE_SAMPLE'
-use ZeroToProd\Thryds\Attributes\HandlesException;
+use ZeroToProd\Framework\Attributes\HandlesException;
 use League\Route\Http\Exception as HttpException;
 use Throwable;
 
@@ -125,7 +125,7 @@ class ExceptionHandler
 }
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-use ZeroToProd\Thryds\Attributes\HandlesException;
+use ZeroToProd\Framework\Attributes\HandlesException;
 use League\Route\Http\Exception as HttpException;
 use Throwable;
 

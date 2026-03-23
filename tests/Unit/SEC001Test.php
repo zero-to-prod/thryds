@@ -7,7 +7,7 @@ namespace ZeroToProd\Thryds\Tests\Unit;
 use Laminas\Diactoros\ServerRequest;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use ZeroToProd\Thryds\RequestId;
+use ZeroToProd\Framework\RequestId;
 
 final class SEC001Test extends TestCase
 {

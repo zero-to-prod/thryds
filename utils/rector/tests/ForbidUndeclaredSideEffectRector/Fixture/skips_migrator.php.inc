@@ -2,7 +2,7 @@
 
 namespace Utils\Rector\Tests\ForbidUndeclaredSideEffectRector\Fixture;
 
-use ZeroToProd\Thryds\Attributes\MigrationsSource;
+use ZeroToProd\Framework\Attributes\MigrationsSource;
 use ZeroToProd\Thryds\Database;
 
 #[MigrationsSource(directory: 'migrations')]

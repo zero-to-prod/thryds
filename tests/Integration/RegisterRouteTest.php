@@ -7,10 +7,10 @@ namespace ZeroToProd\Thryds\Tests\Integration;
 use Laminas\Diactoros\ServerRequest;
 use Laminas\Diactoros\Uri;
 use PHPUnit\Framework\Attributes\Test;
-use ZeroToProd\Thryds\Attributes\CoversRoute;
-use ZeroToProd\Thryds\Header;
+use ZeroToProd\Framework\Attributes\CoversRoute;
+use ZeroToProd\Framework\Header;
+use ZeroToProd\Framework\Routes\HttpMethod;
 use ZeroToProd\Thryds\Requests\RegisterRequest;
-use ZeroToProd\Thryds\Routes\HttpMethod;
 use ZeroToProd\Thryds\Routes\RouteList;
 
 #[CoversRoute(RouteList::register)]

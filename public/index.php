@@ -7,10 +7,10 @@ $base_dir = dirname(__DIR__);
 require __DIR__ . '/../vendor/autoload.php';
 
 use Laminas\Diactoros\ServerRequestFactory;
-use ZeroToProd\Thryds\App;
-use ZeroToProd\Thryds\Env;
-use ZeroToProd\Thryds\Header;
-use ZeroToProd\Thryds\RequestId;
+use ZeroToProd\Framework\App;
+use ZeroToProd\Framework\Env;
+use ZeroToProd\Framework\Header;
+use ZeroToProd\Framework\RequestId;
 
 // Worker boots once; its in-memory object graph persists for the process lifetime.
 // In development, file changes trigger a worker restart that re-initializes this state.

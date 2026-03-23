@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Queries;
 
-use ZeroToProd\Thryds\Attributes\Infrastructure;
-use ZeroToProd\Thryds\Attributes\SelectsFrom;
-use ZeroToProd\Thryds\Schema\SortDirection;
+use ZeroToProd\Framework\Attributes\Infrastructure;
+use ZeroToProd\Framework\Attributes\SelectsFrom;
+use ZeroToProd\Framework\Queries\DbRead;
+use ZeroToProd\Framework\Schema\SortDirection;
 use ZeroToProd\Thryds\Tables\User;
 
 /**

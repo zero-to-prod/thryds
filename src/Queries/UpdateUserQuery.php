@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Queries;
 
-use ZeroToProd\Thryds\Attributes\Infrastructure;
-use ZeroToProd\Thryds\Attributes\UpdatesIn;
+use ZeroToProd\Framework\Attributes\Infrastructure;
+use ZeroToProd\Framework\Attributes\UpdatesIn;
+use ZeroToProd\Framework\Queries\DbUpdate;
 use ZeroToProd\Thryds\Tables\User;
 
 /**

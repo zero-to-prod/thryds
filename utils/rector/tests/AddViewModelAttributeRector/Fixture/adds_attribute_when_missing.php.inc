@@ -3,7 +3,7 @@ namespace ZeroToProd\Thryds\ViewModels;
 
 readonly class UserViewModel
 {
-    use \ZeroToProd\Thryds\Attributes\DataModel;
+    use \ZeroToProd\Framework\Attributes\DataModel;
     public const string view_key = 'UserViewModel';
     public string $name;
 }
@@ -12,8 +12,8 @@ readonly class UserViewModel
 <?php
 namespace ZeroToProd\Thryds\ViewModels;
 
-use ZeroToProd\Thryds\Attributes\ViewModel;
-use ZeroToProd\Thryds\Attributes\DataModel;
+use ZeroToProd\Framework\Attributes\ViewModel;
+use ZeroToProd\Framework\Attributes\DataModel;
 
 #[ViewModel]
 readonly class UserViewModel

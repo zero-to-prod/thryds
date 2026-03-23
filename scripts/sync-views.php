@@ -18,12 +18,12 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use Symfony\Component\Yaml\Yaml;
 use Tempest\Blade\Blade;
-use ZeroToProd\Thryds\App;
-use ZeroToProd\Thryds\AppEnv;
+use ZeroToProd\Framework\App;
+use ZeroToProd\Framework\AppEnv;
+use ZeroToProd\Framework\Blade\Vite;
+use ZeroToProd\Framework\Config;
+use ZeroToProd\Framework\ConfigKey;
 use ZeroToProd\Thryds\Blade\View;
-use ZeroToProd\Thryds\Blade\Vite;
-use ZeroToProd\Thryds\Config;
-use ZeroToProd\Thryds\ConfigKey;
 
 /**
  * Compiles all Blade templates by rendering every View case with stub data.

@@ -2,7 +2,7 @@
 
 namespace Utils\Rector\Tests\RequireHandlesExceptionParamMatchRector\Fixture;
 
-use ZeroToProd\Thryds\Attributes\HandlesException;
+use ZeroToProd\Framework\Attributes\HandlesException;
 
 class CorrectHandler
 {

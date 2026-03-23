@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\UI;
 
-use ZeroToProd\Thryds\Attributes\ClosedSet;
-use ZeroToProd\Thryds\Attributes\EdgeKind;
-use ZeroToProd\Thryds\Attributes\Group;
+use ZeroToProd\Framework\Attributes\ClosedSet;
+use ZeroToProd\Framework\Attributes\EdgeKind;
+use ZeroToProd\Framework\Attributes\Group;
 
 #[ClosedSet(
     Domain::closed_set_domains,

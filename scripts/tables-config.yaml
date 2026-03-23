@@ -1,7 +1,7 @@
 directory: src/Tables
 namespace: ZeroToProd\Thryds\Tables
 table_name_enum: TableName
-data_type_enum: ZeroToProd\Thryds\Schema\DataType
+data_type_enum: ZeroToProd\Framework\Schema\DataType
 data_type_map:
   bigint: BIGINT
   binary: BINARY
@@ -29,16 +29,16 @@ data_type_map:
   varchar: VARCHAR
   year: YEAR
 imports:
-  - ZeroToProd\Thryds\Attributes\ClosedSet
-  - ZeroToProd\Thryds\Attributes\Column
-  - ZeroToProd\Thryds\Attributes\DataModel
-  - ZeroToProd\Thryds\Attributes\HasTableName
-  - ZeroToProd\Thryds\Attributes\PrimaryKey
-  - ZeroToProd\Thryds\Attributes\SchemaSync
-  - ZeroToProd\Thryds\Attributes\Table
-  - ZeroToProd\Thryds\Schema\Charset
-  - ZeroToProd\Thryds\Schema\Collation
-  - ZeroToProd\Thryds\Schema\DataType
-  - ZeroToProd\Thryds\Schema\Engine
-  - ZeroToProd\Thryds\Schema\SchemaSource
+  - ZeroToProd\Framework\Attributes\ClosedSet
+  - ZeroToProd\Framework\Attributes\Column
+  - ZeroToProd\Framework\Attributes\DataModel
+  - ZeroToProd\Framework\Attributes\HasTableName
+  - ZeroToProd\Framework\Attributes\PrimaryKey
+  - ZeroToProd\Framework\Attributes\SchemaSync
+  - ZeroToProd\Framework\Attributes\Table
+  - ZeroToProd\Framework\Schema\Charset
+  - ZeroToProd\Framework\Schema\Collation
+  - ZeroToProd\Framework\Schema\DataType
+  - ZeroToProd\Framework\Schema\Engine
+  - ZeroToProd\Framework\Schema\SchemaSource
   - ZeroToProd\Thryds\UI\Domain

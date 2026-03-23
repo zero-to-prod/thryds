@@ -8,6 +8,7 @@ services:
         hot_reload
         worker {
           file /app/public/index.php
+          watch /app/framework/**/*.php
           watch /app/src/**/*.php
           watch /app/public/**/*.php
           watch /app/templates/**/*.php

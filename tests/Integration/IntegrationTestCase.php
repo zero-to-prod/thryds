@@ -12,15 +12,15 @@ use League\Route\Http\Exception as HttpException;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\SimpleCache\InvalidArgumentException;
-use ZeroToProd\Thryds\App;
-use ZeroToProd\Thryds\AppEnv;
+use ZeroToProd\Framework\App;
+use ZeroToProd\Framework\AppEnv;
+use ZeroToProd\Framework\Config;
+use ZeroToProd\Framework\ConfigKey;
+use ZeroToProd\Framework\DatabaseConfig;
+use ZeroToProd\Framework\Header;
+use ZeroToProd\Framework\RequestId;
+use ZeroToProd\Framework\Routes\HttpMethod;
 use ZeroToProd\Thryds\Blade\View;
-use ZeroToProd\Thryds\Config;
-use ZeroToProd\Thryds\ConfigKey;
-use ZeroToProd\Thryds\DatabaseConfig;
-use ZeroToProd\Thryds\Header;
-use ZeroToProd\Thryds\RequestId;
-use ZeroToProd\Thryds\Routes\HttpMethod;
 use ZeroToProd\Thryds\ViewModels\ErrorViewModel;
 
 /**

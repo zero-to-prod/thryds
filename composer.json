@@ -18,13 +18,14 @@
     },
     "autoload": {
         "psr-4": {
+            "ZeroToProd\\Framework\\": "framework/",
             "ZeroToProd\\Thryds\\": "src/"
         },
         "classmap": [
             "migrations/"
         ],
         "files": [
-            "src/functions.php"
+            "framework/functions.php"
         ]
     },
     "autoload-dev": {

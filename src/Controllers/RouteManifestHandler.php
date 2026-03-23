@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Controllers;
 
 use Laminas\Diactoros\Response\JsonResponse;
-use ZeroToProd\Thryds\Attributes\Guarded;
-use ZeroToProd\Thryds\Attributes\HandlesRoute;
-use ZeroToProd\Thryds\Attributes\Route;
-use ZeroToProd\Thryds\Attributes\RouteEnum;
-use ZeroToProd\Thryds\Attributes\RouteParam;
+use ZeroToProd\Framework\Attributes\Guarded;
+use ZeroToProd\Framework\Attributes\HandlesRoute;
+use ZeroToProd\Framework\Attributes\Route;
+use ZeroToProd\Framework\Attributes\RouteEnum;
+use ZeroToProd\Framework\Attributes\RouteParam;
+use ZeroToProd\Framework\Routes\RouteManifest;
 use ZeroToProd\Thryds\Routes\DevRouteList;
-use ZeroToProd\Thryds\Routes\RouteManifest;
 use ZeroToProd\Thryds\Routes\RouteSource;
 
 #[HandlesRoute(DevRouteList::routes)]

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Routes;
 
-use ZeroToProd\Thryds\Attributes\ClosedSet;
-use ZeroToProd\Thryds\Attributes\RouteEnum;
+use ZeroToProd\Framework\Attributes\ClosedSet;
+use ZeroToProd\Framework\Attributes\RouteEnum;
 use ZeroToProd\Thryds\UI\Domain;
 
 /**

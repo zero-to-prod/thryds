@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Migrations;
 
-use ZeroToProd\Thryds\Attributes\Migration;
-use ZeroToProd\Thryds\Attributes\RawSql;
+use ZeroToProd\Framework\Attributes\Migration;
+use ZeroToProd\Framework\Attributes\RawSql;
 
 /**
  * Test fixture migration. Uses DML only (no DDL) so that it can run inside a

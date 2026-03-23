@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+namespace ZeroToProd\Framework\Attributes;
+
+use Attribute;
+use ZeroToProd\Framework\Queries\Persist;
+
+/**
+ * Declares a column with a persistence hook — generation or transformation.
+ *
+ * @see Persist
+ */
+#[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
+#[HopWeight(0)]
+readonly class PersistColumn
+{
+    public function __construct(
+        public string $column,
+        public Persist $Persist,
+    ) {}
+}

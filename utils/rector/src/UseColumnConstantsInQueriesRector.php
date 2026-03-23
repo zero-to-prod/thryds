@@ -21,7 +21,7 @@ use ReflectionClass;
 use ReflectionClassConstant;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use ZeroToProd\Thryds\Attributes\Table;
+use ZeroToProd\Framework\Attributes\Table;
 
 /**
  * Replaces magic string column names and table names in Database query calls

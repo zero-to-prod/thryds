@@ -1,9 +1,9 @@
 @php
     use ZeroToProd\Thryds\Blade\View;
-    use ZeroToProd\Thryds\Requests\InputField;
-    use ZeroToProd\Thryds\Routes\HttpMethod;
+    use ZeroToProd\Framework\Requests\InputField;
+    use ZeroToProd\Framework\Routes\HttpMethod;
     use ZeroToProd\Thryds\Routes\RouteList;
-    use ZeroToProd\Thryds\UI\ButtonVariant;
+    use ZeroToProd\Framework\UI\ButtonVariant;
     use ZeroToProd\Thryds\ViewModels\RegisterViewModel;
     /** @var RegisterViewModel $RegisterViewModel */
     /** @var list<InputField> $fields */

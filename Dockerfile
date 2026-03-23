@@ -42,6 +42,7 @@ COPY --from=vendor /app/vendor /app/vendor
 COPY --from=node /app/public/build /app/public/build
 
 COPY public/index.php /app/public/index.php
+COPY framework/ /app/framework/
 COPY src/ /app/src/
 COPY templates/ /app/templates/
 COPY migrations/ /app/migrations/

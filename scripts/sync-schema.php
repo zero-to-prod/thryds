@@ -24,14 +24,14 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use Symfony\Component\Yaml\Yaml;
-use ZeroToProd\Thryds\Attributes\Column;
-use ZeroToProd\Thryds\Attributes\SchemaSync;
-use ZeroToProd\Thryds\Attributes\Table;
-use ZeroToProd\Thryds\Database;
-use ZeroToProd\Thryds\DatabaseConfig;
-use ZeroToProd\Thryds\Schema\DataType;
-use ZeroToProd\Thryds\Schema\DdlBuilder;
-use ZeroToProd\Thryds\Schema\SchemaSource;
+use ZeroToProd\Framework\Attributes\Column;
+use ZeroToProd\Framework\Attributes\SchemaSync;
+use ZeroToProd\Framework\Attributes\Table;
+use ZeroToProd\Framework\Database;
+use ZeroToProd\Framework\DatabaseConfig;
+use ZeroToProd\Framework\Schema\DataType;
+use ZeroToProd\Framework\Schema\DdlBuilder;
+use ZeroToProd\Framework\Schema\SchemaSource;
 
 $tables_config  = Yaml::parseFile(__DIR__ . '/tables-config.yaml');
 $tables_dir     = $tables_config['directory'];

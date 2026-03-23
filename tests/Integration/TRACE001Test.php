@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Tests\Integration;
 
 use PHPUnit\Framework\Attributes\Test;
-use ZeroToProd\Thryds\Header;
-use ZeroToProd\Thryds\RequestId;
+use ZeroToProd\Framework\Header;
+use ZeroToProd\Framework\RequestId;
 use ZeroToProd\Thryds\Routes\RouteList;
 
 final class TRACE001Test extends IntegrationTestCase

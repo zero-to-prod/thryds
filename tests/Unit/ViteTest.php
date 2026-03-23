@@ -6,10 +6,10 @@ namespace ZeroToProd\Thryds\Tests\Unit;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use ZeroToProd\Thryds\AppEnv;
-use ZeroToProd\Thryds\Blade\Vite;
-use ZeroToProd\Thryds\Config;
-use ZeroToProd\Thryds\ConfigKey;
+use ZeroToProd\Framework\AppEnv;
+use ZeroToProd\Framework\Blade\Vite;
+use ZeroToProd\Framework\Config;
+use ZeroToProd\Framework\ConfigKey;
 
 final class ViteTest extends TestCase
 {

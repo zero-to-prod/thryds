@@ -1,13 +1,27 @@
 template_dir: templates
-controllers_dir: src/Controllers
-tables_dir: src/Tables
+controllers_dirs:
+  - dir: framework/Controllers
+    namespace: ZeroToProd\Framework\Controllers
+  - dir: src/Controllers
+    namespace: ZeroToProd\Thryds\Controllers
+tables_dirs:
+  - dir: framework/Tables
+    namespace: ZeroToProd\Framework\Tables
+  - dir: src/Tables
+    namespace: ZeroToProd\Thryds\Tables
 tests_dir: tests/Integration
 
 namespaces:
-  controllers: ZeroToProd\Thryds\Controllers
-  tables: ZeroToProd\Thryds\Tables
+  controllers:
+    - ZeroToProd\Framework\Controllers
+    - ZeroToProd\Thryds\Controllers
+  tables:
+    - ZeroToProd\Framework\Tables
+    - ZeroToProd\Thryds\Tables
   viewmodels: ZeroToProd\Thryds\ViewModels
-  ui: ZeroToProd\Thryds\UI
+  ui:
+    - ZeroToProd\Framework\UI
+    - ZeroToProd\Thryds\UI
   tests_integration: ZeroToProd\Thryds\Tests\Integration
 
 source_paths:
@@ -22,24 +36,24 @@ source_paths:
   tests_integration: tests/Integration
 
 attributes:
-  handles_route: ZeroToProd\Thryds\Attributes\HandlesRoute
-  covers_route: ZeroToProd\Thryds\Attributes\CoversRoute
-  extends_layout: ZeroToProd\Thryds\Attributes\ExtendsLayout
-  page_title: ZeroToProd\Thryds\Attributes\PageTitle
-  receives_viewmodel: ZeroToProd\Thryds\Attributes\ReceivesViewModel
-  renders_view: ZeroToProd\Thryds\Attributes\RendersView
-  uses_component: ZeroToProd\Thryds\Attributes\UsesComponent
-  view_model: ZeroToProd\Thryds\Attributes\ViewModel
-  table: ZeroToProd\Thryds\Attributes\Table
-  column: ZeroToProd\Thryds\Attributes\Column
-  primary_key: ZeroToProd\Thryds\Attributes\PrimaryKey
-  index: ZeroToProd\Thryds\Attributes\Index
-  schema_sync: ZeroToProd\Thryds\Attributes\SchemaSync
-  persists: ZeroToProd\Thryds\Attributes\Persists
-  redirects_to: ZeroToProd\Thryds\Attributes\RedirectsTo
-  route_operation: ZeroToProd\Thryds\Attributes\Route
-  prop: ZeroToProd\Thryds\Attributes\Prop
-  closed_set: ZeroToProd\Thryds\Attributes\ClosedSet
+  handles_route: ZeroToProd\Framework\Attributes\HandlesRoute
+  covers_route: ZeroToProd\Framework\Attributes\CoversRoute
+  extends_layout: ZeroToProd\Framework\Attributes\ExtendsLayout
+  page_title: ZeroToProd\Framework\Attributes\PageTitle
+  receives_viewmodel: ZeroToProd\Framework\Attributes\ReceivesViewModel
+  renders_view: ZeroToProd\Framework\Attributes\RendersView
+  uses_component: ZeroToProd\Framework\Attributes\UsesComponent
+  view_model: ZeroToProd\Framework\Attributes\ViewModel
+  table: ZeroToProd\Framework\Attributes\Table
+  column: ZeroToProd\Framework\Attributes\Column
+  primary_key: ZeroToProd\Framework\Attributes\PrimaryKey
+  index: ZeroToProd\Framework\Attributes\Index
+  schema_sync: ZeroToProd\Framework\Attributes\SchemaSync
+  persists: ZeroToProd\Framework\Attributes\Persists
+  redirects_to: ZeroToProd\Framework\Attributes\RedirectsTo
+  route_operation: ZeroToProd\Framework\Attributes\Route
+  prop: ZeroToProd\Framework\Attributes\Prop
+  closed_set: ZeroToProd\Framework\Attributes\ClosedSet
 
 enums:
   route: ZeroToProd\Thryds\Routes\RouteList

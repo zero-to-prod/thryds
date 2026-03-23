@@ -6,15 +6,15 @@ namespace ZeroToProd\Thryds\Controllers;
 
 use Laminas\Diactoros\Response\RedirectResponse;
 use Psr\Http\Message\ResponseInterface;
-use ZeroToProd\Thryds\Attributes\HandlesMethod;
-use ZeroToProd\Thryds\Attributes\HandlesRoute;
-use ZeroToProd\Thryds\Attributes\Persists;
-use ZeroToProd\Thryds\Attributes\RedirectsTo;
-use ZeroToProd\Thryds\Attributes\RendersView;
+use ZeroToProd\Framework\Attributes\HandlesMethod;
+use ZeroToProd\Framework\Attributes\HandlesRoute;
+use ZeroToProd\Framework\Attributes\Persists;
+use ZeroToProd\Framework\Attributes\RedirectsTo;
+use ZeroToProd\Framework\Attributes\RendersView;
+use ZeroToProd\Framework\Routes\HttpMethod;
 use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Queries\CreateUserQuery;
 use ZeroToProd\Thryds\Requests\RegisterRequest;
-use ZeroToProd\Thryds\Routes\HttpMethod;
 use ZeroToProd\Thryds\Routes\RouteList;
 use ZeroToProd\Thryds\Tables\User;
 

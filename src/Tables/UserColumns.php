@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Tables;
 
-use ZeroToProd\Thryds\Attributes\Column;
-use ZeroToProd\Thryds\Attributes\Describe;
-use ZeroToProd\Thryds\Attributes\PrimaryKey;
-use ZeroToProd\Thryds\Attributes\StubValue;
-use ZeroToProd\Thryds\Schema\DataType;
+use ZeroToProd\Framework\Attributes\Column;
+use ZeroToProd\Framework\Attributes\Describe;
+use ZeroToProd\Framework\Attributes\PrimaryKey;
+use ZeroToProd\Framework\Attributes\StubValue;
+use ZeroToProd\Framework\Schema\DataType;
 
 trait UserColumns
 {

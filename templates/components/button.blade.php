@@ -1,4 +1,4 @@
-@php use ZeroToProd\Thryds\UI\ButtonVariant; use ZeroToProd\Thryds\UI\ButtonSize; @endphp
+@php use ZeroToProd\Framework\UI\ButtonVariant; use ZeroToProd\Framework\UI\ButtonSize; @endphp
 @props([
     'variant' => ButtonVariant::primary->value,
     'size' => ButtonSize::md->value,

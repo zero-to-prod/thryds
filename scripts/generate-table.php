@@ -17,10 +17,10 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use Symfony\Component\Yaml\Yaml;
-use ZeroToProd\Thryds\Attributes\Column;
-use ZeroToProd\Thryds\Database;
-use ZeroToProd\Thryds\DatabaseConfig;
-use ZeroToProd\Thryds\Schema\DataType;
+use ZeroToProd\Framework\Attributes\Column;
+use ZeroToProd\Framework\Database;
+use ZeroToProd\Framework\DatabaseConfig;
+use ZeroToProd\Framework\Schema\DataType;
 
 $tables_config  = Yaml::parseFile(__DIR__ . '/tables-config.yaml');
 $tables_dir     = $tables_config['directory'];

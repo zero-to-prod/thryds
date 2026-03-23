@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Routes;
 
-use ZeroToProd\Thryds\Attributes\ClosedSet;
-use ZeroToProd\Thryds\Attributes\Route;
+use ZeroToProd\Framework\Attributes\ClosedSet;
+use ZeroToProd\Framework\Attributes\Route;
+use ZeroToProd\Framework\Routes\Actions\Form;
+use ZeroToProd\Framework\Routes\Actions\StaticView;
+use ZeroToProd\Framework\Routes\Actions\Validated;
+use ZeroToProd\Framework\Routes\HttpMethod;
 use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Controllers\RegisterController;
 use ZeroToProd\Thryds\Requests\RegisterRequest;
-use ZeroToProd\Thryds\Routes\Actions\Form;
-use ZeroToProd\Thryds\Routes\Actions\StaticView;
-use ZeroToProd\Thryds\Routes\Actions\Validated;
 use ZeroToProd\Thryds\UI\Domain;
 use ZeroToProd\Thryds\ViewModels\RegisterViewModel;
 

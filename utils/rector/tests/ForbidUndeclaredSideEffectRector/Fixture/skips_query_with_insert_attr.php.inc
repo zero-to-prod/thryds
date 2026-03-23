@@ -2,7 +2,7 @@
 
 namespace Utils\Rector\Tests\ForbidUndeclaredSideEffectRector\Fixture;
 
-use ZeroToProd\Thryds\Attributes\InsertsInto;
+use ZeroToProd\Framework\Attributes\InsertsInto;
 use ZeroToProd\Thryds\Database;
 
 #[InsertsInto(table: 'SomeTable', columns: ['name'])]

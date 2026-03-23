@@ -11,9 +11,9 @@
 discovery:
   # Every PHP class in src/ must carry at least one attribute
   unclaimed-src-class:
-    glob: "src/**/*.php"
+    glob: "{framework,src}/**/*.php"
     exclude:
-      - "src/functions.php"
+      - "framework/functions.php"
     claimed_by:
       strategy: node_file
     message: "PHP file not in attribute graph — no attributes found"
@@ -56,22 +56,22 @@ node:
       is_attribute: true
     exclude:
       # Used in tests/ and migrations/ (outside the graph scan scope)
-      - src/Attributes/AddColumn.php
-      - src/Attributes/CoversRoute.php
-      - src/Attributes/CreateTable.php
-      - src/Attributes/DropColumn.php
-      - src/Attributes/Migration.php
-      - src/Attributes/RawSql.php
+      - framework/Attributes/AddColumn.php
+      - framework/Attributes/CoversRoute.php
+      - framework/Attributes/CreateTable.php
+      - framework/Attributes/DropColumn.php
+      - framework/Attributes/Migration.php
+      - framework/Attributes/RawSql.php
       # Schema attributes — defined for future table columns
-      - src/Attributes/ForeignKey.php
-      - src/Attributes/Index.php
-      - src/Attributes/OnDelete.php
-      - src/Attributes/OnUpdate.php
-      - src/Attributes/RouteParam.php
+      - framework/Attributes/ForeignKey.php
+      - framework/Attributes/Index.php
+      - framework/Attributes/OnDelete.php
+      - framework/Attributes/OnUpdate.php
+      - framework/Attributes/RouteParam.php
       # Middleware infrastructure — wired in RouteRegistrar, applied when routes need middleware
-      - src/Attributes/Middleware.php
-      - src/Attributes/ValidateWith.php
-      - src/Validation/ValidationRule.php
+      - framework/Attributes/Middleware.php
+      - framework/Attributes/ValidateWith.php
+      - framework/Validation/ValidationRule.php
     assert: used_as_attribute
     message: "Attribute definition is never applied to any class, property, method, or case"
     fix: "Apply this attribute somewhere in the codebase, or remove the unused attribute class"

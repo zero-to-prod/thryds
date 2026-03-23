@@ -110,29 +110,30 @@ use Utils\Rector\Rector\ForbidUndeclaredSideEffectRector;
 use Utils\Rector\Rector\ForbidHardcodedCodeReferencesInCommentsRector;
 use Rector\CodeQuality\Rector\FuncCall\SortCallLikeNamedArgsRector;
 use Rector\CodeQuality\Rector\Attribute\SortAttributeNamedArgsRector;
-use ZeroToProd\Thryds\Attributes\Requirement;
+use ZeroToProd\Framework\Attributes\Requirement;
 use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DataModel\Describe;
-use ZeroToProd\Thryds\Env;
-use ZeroToProd\Thryds\Attributes\ClosedSet;
-use ZeroToProd\Thryds\Attributes\KeyRegistry;
-use ZeroToProd\Thryds\Attributes\SourceOfTruth;
-use ZeroToProd\Thryds\Attributes\ViewModel;
+use ZeroToProd\Framework\Env;
+use ZeroToProd\Framework\Attributes\ClosedSet;
+use ZeroToProd\Framework\Attributes\KeyRegistry;
+use ZeroToProd\Framework\Attributes\SourceOfTruth;
+use ZeroToProd\Framework\Attributes\ViewModel;
 use ZeroToProd\Thryds\Blade\View;
-use ZeroToProd\Thryds\UI\AlertVariant;
-use ZeroToProd\Thryds\UI\ButtonSize;
-use ZeroToProd\Thryds\UI\ButtonVariant;
-use ZeroToProd\Thryds\UI\InputType;
-use ZeroToProd\Thryds\Log;
-use ZeroToProd\Thryds\LogContext;
-use ZeroToProd\Thryds\LogLevel;
-use ZeroToProd\Thryds\OpcacheStatus;
-use ZeroToProd\Thryds\Routes\HttpMethod;
-use ZeroToProd\Thryds\Tables\Migration;
+use ZeroToProd\Framework\UI\AlertVariant;
+use ZeroToProd\Framework\UI\ButtonSize;
+use ZeroToProd\Framework\UI\ButtonVariant;
+use ZeroToProd\Framework\UI\InputType;
+use ZeroToProd\Framework\Log;
+use ZeroToProd\Framework\LogContext;
+use ZeroToProd\Framework\LogLevel;
+use ZeroToProd\Framework\OpcacheStatus;
+use ZeroToProd\Framework\Routes\HttpMethod;
+use ZeroToProd\Framework\Tables\Migration;
 use ZeroToProd\Thryds\Tables\User;
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->paths([
+        __DIR__ . '/framework',
         __DIR__ . '/src',
         __DIR__ . '/public',
         __DIR__ . '/tests',
@@ -142,6 +143,7 @@ return static function (RectorConfig $rectorConfig): void {
     // scope-resolution bug (PhpParser\Node\Attribute missing scope). These files are
     // pure schema declarations — no executable logic for Rector to transform.
     $rectorConfig->skip([
+        __DIR__ . '/framework/Tables',
         __DIR__ . '/src/Tables',
         // Intentionally minimal fixture files trigger Rector's scope-resolution bug
         __DIR__ . '/tests/Database/Fixtures/MigrationsSkip',
@@ -149,9 +151,9 @@ return static function (RectorConfig $rectorConfig): void {
         __DIR__ . '/tests/Database/Fixtures/MigrationsNotInterface',
         // Migration files repeat table names across up()/down() by design;
         // SQL generation layer uses hardcoded SQL type strings as output, not references to enum cases
-        SuggestDuplicateStringConstantRector::class => [__DIR__ . '/migrations', __DIR__ . '/src/Schema/Driver.php'],
-        DetectParallelBladePhpBehaviorRector::class => [__DIR__ . '/src/Schema/Driver.php', __DIR__ . '/src/Schema/DdlBuilder.php'],
-        ForbidCrossFileStringDuplicationRector::class => [__DIR__ . '/src/Schema/Driver.php', __DIR__ . '/src/Schema/DdlBuilder.php'],
+        SuggestDuplicateStringConstantRector::class => [__DIR__ . '/migrations', __DIR__ . '/framework/Schema/Driver.php'],
+        DetectParallelBladePhpBehaviorRector::class => [__DIR__ . '/framework/Schema/Driver.php', __DIR__ . '/framework/Schema/DdlBuilder.php'],
+        ForbidCrossFileStringDuplicationRector::class => [__DIR__ . '/framework/Schema/Driver.php', __DIR__ . '/framework/Schema/DdlBuilder.php'],
         // Test infrastructure legitimately calls Database write methods
         ForbidUndeclaredSideEffectRector::class => [__DIR__ . '/tests'],
     ]);
@@ -282,11 +284,11 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(SuggestEnumForStringPropertyRector::class, [
         'dataModelTraits' => [
             DataModel::class,
-            \ZeroToProd\Thryds\Attributes\DataModel::class,
+            \ZeroToProd\Framework\Attributes\DataModel::class,
         ],
         'describeAttrs' => [
             Describe::class,
-            \ZeroToProd\Thryds\Attributes\Describe::class,
+            \ZeroToProd\Framework\Attributes\Describe::class,
         ],
         'excludedFiles' => ['View.php'],
         'mode' => 'warn',
@@ -384,7 +386,7 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
     $rectorConfig->ruleWithConfiguration(RequireViewModelAttributeOnDataModelRector::class, [
         'traitClasses' => [
-            \ZeroToProd\Thryds\Attributes\DataModel::class,
+            \ZeroToProd\Framework\Attributes\DataModel::class,
             DataModel::class,
         ],
         'constantName' => 'view_key',
@@ -394,7 +396,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(SuggestAttributeForRepeatedPropertyPatternRector::class, [
         'patterns' => [
             [
-                'trait' => \ZeroToProd\Thryds\Attributes\DataModel::class,
+                'trait' => \ZeroToProd\Framework\Attributes\DataModel::class,
                 'constant' => 'view_key',
                 'attribute' => ViewModel::class,
             ],
@@ -412,7 +414,7 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
     $rectorConfig->ruleWithConfiguration(AddViewKeyConstantRector::class, [
         'dataModelTraits' => [
-            \ZeroToProd\Thryds\Attributes\DataModel::class,
+            \ZeroToProd\Framework\Attributes\DataModel::class,
         ],
         'viewModelAttribute' => ViewModel::class,
         'mode' => 'auto',
@@ -424,14 +426,14 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RequireMethodAnnotationForDataModelRector::class, [
         'dataModelTraits' => [
             DataModel::class,
-            \ZeroToProd\Thryds\Attributes\DataModel::class,
+            \ZeroToProd\Framework\Attributes\DataModel::class,
         ],
         'mode' => 'auto',
     ]);
     $rectorConfig->ruleWithConfiguration(ReplaceFullyQualifiedNameRector::class, [
         'replacements' => [
-            DataModel::class => \ZeroToProd\Thryds\Attributes\DataModel::class,
-            Describe::class => \ZeroToProd\Thryds\Attributes\Describe::class,
+            DataModel::class => \ZeroToProd\Framework\Attributes\DataModel::class,
+            Describe::class => \ZeroToProd\Framework\Attributes\Describe::class,
         ],
         'mode' => 'auto',
     ]);
@@ -492,7 +494,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RequireRoutePatternConstRector::class, [
         'classSuffix' => 'Route',
         'constName' => 'pattern',
-        'excludedClasses' => ['ZeroToProd\Thryds\Attributes\CoversRoute', 'ZeroToProd\Thryds\Attributes\HandlesRoute', 'ZeroToProd\Thryds\Attributes\Route'],
+        'excludedClasses' => ['ZeroToProd\Framework\Attributes\CoversRoute', 'ZeroToProd\Framework\Attributes\HandlesRoute', 'ZeroToProd\Framework\Attributes\Route'],
         'mode' => 'warn',
         'message' => "TODO: [RequireRoutePatternConstRector] Constants name things — route class '%s' is missing a '%s' constant. Define: public const string %s = '/...'.",
     ]);
@@ -512,7 +514,7 @@ return static function (RectorConfig $rectorConfig): void {
         'methods' => ['map'],
         'argPosition' => 1,
         'namespace' => 'ZeroToProd\\Thryds\\Routes',
-        'outputDir' => __DIR__ . '/src/Routes',
+        'outputDir' => __DIR__ . '/framework/Routes',
         'mode' => 'warn',
         'message' => 'TODO: [ExtractRoutePatternToRouteClassRector] Constants name things — extract inline route string to a Route class constant.',
     ]);
@@ -542,7 +544,7 @@ return static function (RectorConfig $rectorConfig): void {
             \ZeroToProd\Thryds\Routes\RouteList::class,
             \ZeroToProd\Thryds\Routes\DevRouteList::class,
             HttpMethod::class,
-            \ZeroToProd\Thryds\AppEnv::class,
+            \ZeroToProd\Framework\AppEnv::class,
             LogLevel::class,
         ],
         'mode' => 'auto',
@@ -551,7 +553,7 @@ return static function (RectorConfig $rectorConfig): void {
 
     $rectorConfig->ruleWithConfiguration(ForbidStringComparisonOnEnumPropertyRector::class, [
         'enumClasses' => [
-            \ZeroToProd\Thryds\AppEnv::class,
+            \ZeroToProd\Framework\AppEnv::class,
             \ZeroToProd\Thryds\Routes\RouteList::class,
             \ZeroToProd\Thryds\Routes\DevRouteList::class,
             HttpMethod::class,
@@ -576,7 +578,7 @@ return static function (RectorConfig $rectorConfig): void {
         'attributeClass' => KeyRegistry::class,
         'minConstants' => 3,
         'excludedTraits' => [
-            \ZeroToProd\Thryds\Attributes\DataModel::class,
+            \ZeroToProd\Framework\Attributes\DataModel::class,
             DataModel::class,
         ],
         'excludedAttributes' => [
@@ -613,7 +615,7 @@ return static function (RectorConfig $rectorConfig): void {
     // --- Enum Value Arg Safety ---
     $rectorConfig->ruleWithConfiguration(ForbidStringArgForEnumParamRector::class, [
         'enumClasses' => [
-            \ZeroToProd\Thryds\AppEnv::class,
+            \ZeroToProd\Framework\AppEnv::class,
             HttpMethod::class,
             \ZeroToProd\Thryds\Routes\RouteList::class,
             View::class,
@@ -711,14 +713,14 @@ return static function (RectorConfig $rectorConfig): void {
 
     $rectorConfig->ruleWithConfiguration(RouteOperationRequiredRector::class, [
         'enumClass'      => 'ZeroToProd\\Thryds\\Routes\\RouteList',
-        'attributeClass' => 'ZeroToProd\\Thryds\\Attributes\\Route',
+        'attributeClass' => 'ZeroToProd\\Framework\\Attributes\\Route',
         'mode'           => 'warn',
         'message'        => "TODO: [RouteOperationRequiredRector] Attributes define properties — route case '%s' must declare at least one #[RouteOperation] so the inventory graph can emit HTTP methods for this route.",
     ]);
 
     $rectorConfig->ruleWithConfiguration(RequirePersistsOnTableReferenceRector::class, [
         'tablesNamespace'      => 'ZeroToProd\\Thryds\\Tables',
-        'attributeClass'       => 'ZeroToProd\\Thryds\\Attributes\\Persists',
+        'attributeClass'       => 'ZeroToProd\\Framework\\Attributes\\Persists',
         'controllersNamespace' => 'ZeroToProd\\Thryds\\Controllers',
         'mode'                 => 'warn',
         'message'              => "TODO: [RequirePersistsOnTableReferenceRector] Attributes define properties — '%s' imports '%s' from the tables namespace but is missing #[Persists(%s::class)]. Add it so the inventory graph shows the persistence edge.",
@@ -733,7 +735,7 @@ return static function (RectorConfig $rectorConfig): void {
 
     // --- Exception Handler ---
     $rectorConfig->ruleWithConfiguration(RequireHandlesExceptionParamMatchRector::class, [
-        'attributeClass' => \ZeroToProd\Thryds\Attributes\HandlesException::class,
+        'attributeClass' => \ZeroToProd\Framework\Attributes\HandlesException::class,
         'mode' => 'auto',
         'message' => "TODO: [RequireHandlesExceptionParamMatchRector] Attributes define properties — #[HandlesException] declares %s but the method parameter type is %s. The attribute must match the parameter type.",
     ]);
@@ -741,7 +743,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(RequireHandlesExceptionOnPublicHandlerMethodRector::class, [
         'mode' => 'warn',
         'message' => 'TODO: [RequireHandlesExceptionOnPublicHandlerMethodRector] Public method %s::%s accepts a Throwable subtype but is missing #[HandlesException] — it will never be dispatched. See: utils/rector/docs/RequireHandlesExceptionOnPublicHandlerMethodRector.md',
-        'handlerAttributeClass' => 'ZeroToProd\\Thryds\\Attributes\\HandlesException',
+        'handlerAttributeClass' => 'ZeroToProd\\Framework\\Attributes\\HandlesException',
         'throwableClass' => 'Throwable',
         'excludeMethods' => ['handle'],
     ]);
@@ -758,7 +760,7 @@ return static function (RectorConfig $rectorConfig): void {
 
     $rectorConfig->ruleWithConfiguration(RequireHandlesRouteAttributeRector::class, [
         'mode' => 'warn',
-        'attributeClass' => \ZeroToProd\Thryds\Attributes\HandlesRoute::class,
+        'attributeClass' => \ZeroToProd\Framework\Attributes\HandlesRoute::class,
         'controllerSuffixes' => ['Controller', 'Handler'],
         'controllersNamespace' => 'ZeroToProd\\Thryds\\Controllers',
         'message' => 'TODO: [RequireHandlesRouteAttributeRector] Attributes define properties — %s in Controllers/ is missing #[HandlesRoute]. Every controller must declare which route it handles so the router can discover it via reflection. See: utils/rector/docs/RequireHandlesRouteAttributeRector.md',
@@ -767,7 +769,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->ruleWithConfiguration(EnforceLayerCoverageRector::class, [
         'layerEnum' => 'Layer',
         'segmentAttribute' => 'Segment',
-        'srcDir' => 'src',
+        'srcDir' => ['framework', 'src'],
         'mode' => 'warn',
         'message' => 'TODO: [EnforceLayerCoverageRector] Namespace segment "%s" has no corresponding Layer enum case — add one to ensure attribute graph visibility. See: utils/rector/docs/EnforceLayerCoverageRector.md',
     ]);

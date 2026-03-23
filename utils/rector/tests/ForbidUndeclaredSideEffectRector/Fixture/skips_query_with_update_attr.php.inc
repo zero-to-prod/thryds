@@ -2,7 +2,7 @@
 
 namespace Utils\Rector\Tests\ForbidUndeclaredSideEffectRector\Fixture;
 
-use ZeroToProd\Thryds\Attributes\UpdatesIn;
+use ZeroToProd\Framework\Attributes\UpdatesIn;
 use ZeroToProd\Thryds\Database;
 
 #[UpdatesIn(table: 'SomeTable', columns: ['name'], where: ['id'])]

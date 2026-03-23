@@ -6,8 +6,8 @@ namespace ZeroToProd\Thryds\Tests\Database;
 
 use Illuminate\Container\Container;
 use PHPUnit\Framework\Attributes\Test;
+use ZeroToProd\Framework\Database;
 use ZeroToProd\Thryds\Controllers\RegisterController;
-use ZeroToProd\Thryds\Database;
 use ZeroToProd\Thryds\Requests\RegisterRequest;
 use ZeroToProd\Thryds\Routes\RouteList;
 use ZeroToProd\Thryds\Tables\User;

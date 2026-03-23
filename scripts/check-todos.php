@@ -24,7 +24,7 @@ $pattern = '/(?:\/\/|#|\/\*|\*|{{--)\s*(' . $markerGroup . ')[\s:]+(.*)$/i';
 $extensions = $config['extensions'];
 $extensionPattern = '/\.(' . implode('|', array_map(fn(string $ext): string => preg_quote($ext, '/'), $extensions)) . ')$/';
 
-$directories = ['src', 'tests'];
+$directories = ['framework', 'src', 'tests'];
 
 $violations = [];
 

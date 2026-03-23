@@ -2,7 +2,7 @@
 
 namespace ZeroToProd\Thryds;
 
-use ZeroToProd\Thryds\Attributes\Requirement;
+use ZeroToProd\Framework\Attributes\Requirement;
 
 #[Requirement('TEST-001')]
 class SomeClass

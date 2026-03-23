@@ -16,8 +16,8 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use ZeroToProd\Thryds\Database;
-use ZeroToProd\Thryds\DatabaseConfig;
+use ZeroToProd\Framework\Database;
+use ZeroToProd\Framework\DatabaseConfig;
 
 $sql = $argv[1] ?? '';
 

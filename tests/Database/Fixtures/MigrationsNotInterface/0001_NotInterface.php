@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Migrations;
 
-use ZeroToProd\Thryds\Attributes\Migration;
+use ZeroToProd\Framework\Attributes\Migration;
 
 // Intentionally has no MigrationAction attribute so that resolveMigrationAction()
 // throws a RuntimeException when migrate() or rollback() tries to use it.

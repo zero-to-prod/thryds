@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\ViewModels;
 
-use ZeroToProd\Thryds\Attributes\DataModel;
-use ZeroToProd\Thryds\Attributes\Describe;
-use ZeroToProd\Thryds\Attributes\HasValidationErrors;
-use ZeroToProd\Thryds\Attributes\StubValue;
-use ZeroToProd\Thryds\Attributes\ViewModel;
+use ZeroToProd\Framework\Attributes\DataModel;
+use ZeroToProd\Framework\Attributes\Describe;
+use ZeroToProd\Framework\Attributes\HasValidationErrors;
+use ZeroToProd\Framework\Attributes\StubValue;
+use ZeroToProd\Framework\Attributes\ViewModel;
 use ZeroToProd\Thryds\Requests\RegisterRequest;
 use ZeroToProd\Thryds\Tables\UserColumns;
 

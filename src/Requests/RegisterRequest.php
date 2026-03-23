@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Requests;
 
-use ZeroToProd\Thryds\Attributes\DataModel;
-use ZeroToProd\Thryds\Attributes\Describe;
-use ZeroToProd\Thryds\Attributes\Field;
-use ZeroToProd\Thryds\Attributes\Matches;
+use ZeroToProd\Framework\Attributes\DataModel;
+use ZeroToProd\Framework\Attributes\Describe;
+use ZeroToProd\Framework\Attributes\Field;
+use ZeroToProd\Framework\Attributes\Matches;
+use ZeroToProd\Framework\UI\InputType;
+use ZeroToProd\Framework\Validation\Rule;
 use ZeroToProd\Thryds\Tables\User;
-use ZeroToProd\Thryds\UI\InputType;
-use ZeroToProd\Thryds\Validation\Rule;
 
 /**
  * Parsed registration form submission.

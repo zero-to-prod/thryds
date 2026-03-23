@@ -19,7 +19,8 @@ final class EnforceLayerCoverageRector extends AbstractRector implements Configu
 
     private string $segmentAttribute = 'Segment';
 
-    private string $srcDir = 'src';
+    /** @var list<string> */
+    private array $srcDirs = ['src'];
 
     private string $mode = 'warn';
 
@@ -29,7 +30,12 @@ final class EnforceLayerCoverageRector extends AbstractRector implements Configu
     {
         $this->layerEnum = $configuration['layerEnum'] ?? $this->layerEnum;
         $this->segmentAttribute = $configuration['segmentAttribute'] ?? $this->segmentAttribute;
-        $this->srcDir = $configuration['srcDir'] ?? $this->srcDir;
+        $srcDir = $configuration['srcDir'] ?? null;
+        if (is_array($srcDir)) {
+            $this->srcDirs = $srcDir;
+        } elseif (is_string($srcDir)) {
+            $this->srcDirs = str_contains($srcDir, ',') ? explode(',', $srcDir) : [$srcDir];
+        }
         $this->mode = $configuration['mode'] ?? $this->mode;
         $this->message = $configuration['message'] ?? $this->message;
     }
@@ -137,41 +143,44 @@ CODE_SAMPLE,
     }
 
     /**
-     * Discovers first-level subdirectories under srcDir that contain PHP files.
+     * Discovers first-level subdirectories under each srcDir that contain PHP files.
      *
      * @return list<string>
      */
     private function discoverNamespaceSegments(): array
     {
-        $srcPath = $this->resolveSrcPath();
-
-        if (! is_dir($srcPath)) {
-            return [];
-        }
-
         $segments = [];
 
-        /** @var \DirectoryIterator $entry */
-        foreach (new \DirectoryIterator($srcPath) as $entry) {
-            if ($entry->isDot() || ! $entry->isDir()) {
+        foreach ($this->srcDirs as $srcDir) {
+            $srcPath = $this->resolveSrcPath($srcDir);
+
+            if (! is_dir($srcPath)) {
                 continue;
             }
 
-            $segments[] = $entry->getFilename();
+            /** @var \DirectoryIterator $entry */
+            foreach (new \DirectoryIterator($srcPath) as $entry) {
+                if ($entry->isDot() || ! $entry->isDir()) {
+                    continue;
+                }
+
+                $segments[] = $entry->getFilename();
+            }
         }
 
+        $segments = array_unique($segments);
         sort($segments);
 
         return $segments;
     }
 
     /**
-     * Resolves srcDir to an absolute path using the processed file's location as anchor.
+     * Resolves a single srcDir to an absolute path using the processed file's location as anchor.
      */
-    private function resolveSrcPath(): string
+    private function resolveSrcPath(string $srcDir): string
     {
-        if (str_starts_with($this->srcDir, '/')) {
-            return $this->srcDir;
+        if (str_starts_with($srcDir, '/')) {
+            return $srcDir;
         }
 
         // Walk up from the file being processed to find the project root containing srcDir.
@@ -179,14 +188,14 @@ CODE_SAMPLE,
         $dir = dirname($filePath);
 
         while ($dir !== '/' && $dir !== '.') {
-            $candidate = $dir . '/' . $this->srcDir;
+            $candidate = $dir . '/' . $srcDir;
             if (is_dir($candidate)) {
                 return $candidate;
             }
             $dir = dirname($dir);
         }
 
-        return $this->srcDir;
+        return $srcDir;
     }
 
     private function addTodoComments(Enum_ $node, array $uncovered): Enum_

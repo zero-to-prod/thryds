@@ -2,8 +2,8 @@ source_dirs:
   - /app/src
   - /app/vendor
 route_class: ZeroToProd\Thryds\Routes\RouteList
-status_class: ZeroToProd\Thryds\OpcacheStatus
-dev_path_enum: ZeroToProd\Thryds\DevPath
+status_class: ZeroToProd\Framework\OpcacheStatus
+dev_path_enum: ZeroToProd\Framework\DevPath
 status_endpoint: /_opcache/status
 scripts_endpoint: /_opcache/scripts
 preload_marker: $PRELOAD$

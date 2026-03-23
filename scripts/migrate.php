@@ -19,10 +19,10 @@ $base_dir = dirname(__DIR__);
 
 require $base_dir . '/vendor/autoload.php';
 
-use ZeroToProd\Thryds\Database;
-use ZeroToProd\Thryds\DatabaseConfig;
-use ZeroToProd\Thryds\Migrator;
-use ZeroToProd\Thryds\Tables\Migration;
+use ZeroToProd\Framework\Database;
+use ZeroToProd\Framework\DatabaseConfig;
+use ZeroToProd\Framework\Migrator;
+use ZeroToProd\Framework\Tables\Migration;
 
 $Migrator = Migrator::create(
     Database: new Database(DatabaseConfig::fromEnv()),
