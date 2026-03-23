@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Requests;
 
 use ReflectionClass;
+use ZeroToProd\Thryds\Attributes\Field;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
-use ZeroToProd\Thryds\Attributes\Input;
-use ZeroToProd\Thryds\Attributes\Validates;
 use ZeroToProd\Thryds\UI\InputType;
+use ZeroToProd\Thryds\Validation\FieldRules;
 use ZeroToProd\Thryds\Validation\Rule;
 use ZeroToProd\Thryds\Validation\Validator;
 
 /**
  * Reflected input field metadata from a request class property.
  *
- * @see Input
+ * @see Field
  */
 #[Infrastructure]
 readonly class InputField
@@ -53,7 +53,7 @@ readonly class InputField
     }
 
     /**
-     * Reflect all properties with {@see Input} attributes from a request class.
+     * Reflect all properties with {@see Field} attributes from a request class.
      *
      * @param class-string $class
      * @return list<self>
@@ -63,42 +63,30 @@ readonly class InputField
         $fields = [];
         $ReflectionClass = new ReflectionClass(objectOrClass: $class);
 
-        /** @var array<string, list<Validates>> */
-        $class_validation_map = [];
-        foreach ($ReflectionClass->getAttributes(Validates::class) as $attribute) {
-            /** @var Validates $Validates */
-            $Validates = $attribute->newInstance();
-            $class_validation_map[$Validates->property][] = $Validates;
-        }
-
         foreach ($ReflectionClass->getProperties() as $property) {
-            $input_attributes = $property->getAttributes(Input::class);
-            if ($input_attributes === []) {
+            $field_attrs = $property->getAttributes(Field::class);
+            if ($field_attrs === []) {
                 continue;
             }
 
-            /** @var Input $Input */
-            $Input = $input_attributes[0]->newInstance();
+            /** @var Field $Field */
+            $Field = $field_attrs[0]->newInstance();
+            $resolved_rules = FieldRules::resolve($Field);
 
-            $name = $property->getName();
             $required = false;
-
-            foreach ($class_validation_map[$name] ?? [] as $Validates) {
-                foreach ($Validates->rules as [$rule]) {
-                    if ($rule !== Rule::required) {
-                        continue;
-                    }
+            foreach ($resolved_rules as [$rule]) {
+                if ($rule === Rule::required) {
                     $required = true;
-                    break 2;
+                    break;
                 }
             }
 
             $fields[] = new self(
-                $name,
-                InputType: $Input->InputType,
-                label: $Input->label,
+                $property->getName(),
+                InputType: $Field->InputType,
+                label: $Field->label,
                 required: $required,
-                order: $Input->order,
+                order: $Field->order,
             );
         }
 

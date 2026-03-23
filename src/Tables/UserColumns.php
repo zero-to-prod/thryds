@@ -6,11 +6,9 @@ namespace ZeroToProd\Thryds\Tables;
 
 use ZeroToProd\Thryds\Attributes\Column;
 use ZeroToProd\Thryds\Attributes\Describe;
-use ZeroToProd\Thryds\Attributes\Input;
 use ZeroToProd\Thryds\Attributes\PrimaryKey;
 use ZeroToProd\Thryds\Attributes\StubValue;
 use ZeroToProd\Thryds\Schema\DataType;
-use ZeroToProd\Thryds\UI\InputType;
 
 trait UserColumns
 {
@@ -47,7 +45,6 @@ trait UserColumns
         values: null,
         comment: 'Display name',
     )]
-    #[Input(InputType::text, 'Name', order: 1)]
     #[Describe(['nullable' => true])]
     #[StubValue('')]
     public readonly ?string $name;
@@ -66,7 +63,6 @@ trait UserColumns
         values: null,
         comment: 'Unique public username',
     )]
-    #[Input(InputType::text, 'Handle', order: 2)]
     #[Describe(['nullable' => true])]
     #[StubValue('')]
     public readonly ?string $handle;
@@ -85,7 +81,6 @@ trait UserColumns
         values: null,
         comment: 'Contact email address',
     )]
-    #[Input(InputType::email, 'Email', order: 3)]
     #[Describe(['nullable' => true])]
     #[StubValue('')]
     public readonly ?string $email;
@@ -122,7 +117,6 @@ trait UserColumns
         values: null,
         comment: 'Hashed password',
     )]
-    #[Input(InputType::password, 'Password', order: 4)]
     #[Describe(['nullable' => true])]
     #[StubValue('')]
     public readonly ?string $password;

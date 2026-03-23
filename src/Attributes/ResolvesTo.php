@@ -7,11 +7,10 @@ namespace ZeroToProd\Thryds\Attributes;
 use Attribute;
 
 /**
- * Declares the resolver class for a persistence hook enum case.
+ * Declares the resolver class for an enum case.
  *
- * The resolver class must carry the persist resolver attribute. At runtime, the
- * Persist enum reads this attribute via reflection and delegates to the
- * resolver — no match statement or case-by-case dispatch needed.
+ * At runtime, the owning enum reads this attribute via reflection and delegates
+ * to the resolver — no match statement or case-by-case dispatch needed.
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
 #[HopWeight(1)]

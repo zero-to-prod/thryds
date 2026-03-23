@@ -6,9 +6,9 @@ namespace ZeroToProd\Thryds\Validation;
 
 use ReflectionClass;
 use ReflectionException;
+use ZeroToProd\Thryds\Attributes\Field;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\Matches;
-use ZeroToProd\Thryds\Attributes\Validates;
 use ZeroToProd\Thryds\Attributes\ValidateWith;
 
 #[Infrastructure]
@@ -30,33 +30,27 @@ final readonly class Validator
         $errors = [];
         $ReflectionClass = new ReflectionClass(objectOrClass: $model);
 
-        /** @var array<string, list<Validates>> $class_validation_map */
-        $class_validation_map = [];
-        foreach ($ReflectionClass->getAttributes(Validates::class) as $attribute) {
-            /** @var Validates $Validates */
-            $Validates = $attribute->newInstance();
-            $class_validation_map[$Validates->property][] = $Validates;
-        }
-
         foreach ($ReflectionClass->getProperties() as $property) {
             $name = $property->getName();
-            $class_validates = $class_validation_map[$name] ?? [];
+            $field_attrs = $property->getAttributes(Field::class);
             $validate_with_attributes = $property->getAttributes(ValidateWith::class);
             $matches_attributes = $property->getAttributes(Matches::class);
 
-            if ($class_validates === [] && $validate_with_attributes === [] && $matches_attributes === []) {
+            if ($field_attrs === [] && $validate_with_attributes === [] && $matches_attributes === []) {
                 continue;
             }
 
             $value = $property->getValue(object: $model);
 
-            foreach ($class_validates as $Validates) {
-                foreach ($Validates->rules as [$rule, $config]) {
+            if ($field_attrs !== []) {
+                $resolved_rules = FieldRules::resolve($field_attrs[0]->newInstance());
+
+                foreach ($resolved_rules as [$rule, $config]) {
                     if ($rule->passes($value, $config)) {
                         continue;
                     }
                     $errors[self::errorKey(property: $name)] = $rule->message(field: $name, config: $config);
-                    break 2;
+                    break;
                 }
             }
 

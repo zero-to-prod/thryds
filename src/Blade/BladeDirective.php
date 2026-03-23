@@ -4,43 +4,48 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Blade;
 
+use ReflectionEnumBackedCase;
 use Tempest\Blade\Blade;
-use ZeroToProd\Thryds\AppEnv;
 use ZeroToProd\Thryds\Attributes\ClosedSet;
+use ZeroToProd\Thryds\Attributes\ResolvesTo;
+use ZeroToProd\Thryds\Blade\Registrars\EnvRegistrar;
+use ZeroToProd\Thryds\Blade\Registrars\HotReloadRegistrar;
+use ZeroToProd\Thryds\Blade\Registrars\HtmxRegistrar;
+use ZeroToProd\Thryds\Blade\Registrars\ProductionRegistrar;
+use ZeroToProd\Thryds\Blade\Registrars\ViteRegistrar;
 use ZeroToProd\Thryds\Config;
-use ZeroToProd\Thryds\Env;
 use ZeroToProd\Thryds\UI\Domain;
 
 #[ClosedSet(
     Domain::blade_directives,
-    addCase: <<<TEXT
-    1. Add enum case.
-    2. Add match arm in register().
-    TEXT
+    addCase: 'Add enum case with #[ResolvesTo] attribute pointing to a class carrying #[BladeRegistrar].'
 )]
 enum BladeDirective: string
 {
+    #[ResolvesTo(ProductionRegistrar::class)]
     case production = 'production';
+
+    #[ResolvesTo(EnvRegistrar::class)]
     case env = 'env';
+
+    #[ResolvesTo(ViteRegistrar::class)]
     case vite = 'vite';
+
+    #[ResolvesTo(HtmxRegistrar::class)]
     case htmx = 'htmx';
+
+    #[ResolvesTo(HotReloadRegistrar::class)]
     case hotReload = 'hotReload';
 
     public function register(Blade $Blade, Config $Config, Vite $Vite): void
     {
-        match ($this) {
-            self::production => $Blade->if($this->value, fn(): bool => $Config->AppEnv === AppEnv::production),
-            self::env => $Blade->if($this->value, fn(string ...$environments): bool => in_array($Config->AppEnv->value, haystack: $environments, strict: true)),
-            self::vite => $Blade->directive($this->value, static fn(): string => $Vite->directivePhp(Vite::app_entry)),
-            self::htmx => $Blade->directive($this->value, static fn(): string => $Vite->directivePhp(Vite::htmx_entry)),
-            // FRANKENPHP_HOT_RELOAD is read inside the generated PHP string, not captured at registration time.
-            // The value is injected by Caddy per-connection and must be evaluated at each render,
-            // not once at boot. Do not hoist this to a variable outside the generated string.
-            self::hotReload => $Blade->directive($this->value, static fn(): string => '<?php if (isset($_SERVER[\'' . Env::FRANKENPHP_HOT_RELOAD . '\'])): ?>'
-                . '<meta name="frankenphp-hot-reload:url" content="<?= $_SERVER[\'' . Env::FRANKENPHP_HOT_RELOAD . '\'] ?>">'
-                . '<script src="https://cdn.jsdelivr.net/npm/idiomorph" defer></script>'
-                . '<script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>'
-                . '<?php endif; ?>'),
-        };
+        $registrar = new ReflectionEnumBackedCase(self::class, $this->name)
+            ->getAttributes(ResolvesTo::class)[0]
+            ->newInstance()
+            ->newResolver();
+
+        assert(method_exists(object_or_class: $registrar, method: 'register'));
+
+        $registrar->register($this->value, $Blade, $Config, $Vite);
     }
 }

@@ -11,7 +11,7 @@ use ZeroToProd\Thryds\Config;
 #[KeyRegistry(
     KeySource::vite_entry_points,
     superglobals: [],
-    addKey: '1. Add constant. 2. Add enum case and match arm in BladeDirective. 3. Add entry to vite.config.js input array.'
+    addKey: '1. Add constant. 2. Add BladeDirective enum case with #[ResolvesTo] pointing to a class carrying #[BladeRegistrar]. 3. Add entry to vite.config.js input array.'
 )]
 #[KeyRegistry(
     KeySource::vite_config,
