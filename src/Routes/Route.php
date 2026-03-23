@@ -16,7 +16,12 @@ use ZeroToProd\Thryds\Controllers\OpcacheScriptsHandler;
 use ZeroToProd\Thryds\Controllers\OpcacheStatusHandler;
 use ZeroToProd\Thryds\Controllers\RegisterController;
 use ZeroToProd\Thryds\Controllers\RouteManifestHandler;
+use ZeroToProd\Thryds\Requests\RegisterRequest;
+use ZeroToProd\Thryds\Routes\Actions\Form;
+use ZeroToProd\Thryds\Routes\Actions\StaticView;
+use ZeroToProd\Thryds\Routes\Actions\Validated;
 use ZeroToProd\Thryds\UI\Domain;
+use ZeroToProd\Thryds\ViewModels\RegisterViewModel;
 
 #[ClosedSet(
     Domain::url_routes,
@@ -31,93 +36,75 @@ enum Route: string
 {
     #[RouteOperation(
         HttpMethod::GET,
-        'Marketing home page',
-        HandlerStrategy::static_view,
-        info: 'Home',
-        controller: null,
-        View: View::home,
+        new StaticView(View::home),
+        'Marketing home page'
     )]
     case home = '/';
 
     #[RouteOperation(
         HttpMethod::GET,
-        'Company and product information',
-        HandlerStrategy::static_view,
-        info: 'About',
-        controller: null,
-        View: View::about,
+        new StaticView(View::about),
+        'Company and product information'
     )]
     case about = '/about';
 
     #[RouteOperation(
         HttpMethod::GET,
-        'User authentication form',
-        HandlerStrategy::static_view,
-        info: 'Login',
-        controller: null,
-        View: View::login,
+        new StaticView(View::login),
+        'User authentication form'
     )]
     case login = '/login';
 
     #[RouteOperation(
         HttpMethod::GET,
+        new Form(
+            View::register,
+            controller: RegisterController::class,
+            request: RegisterRequest::class,
+            view_model: RegisterViewModel::class,
+        ),
         'New user registration form',
-        HandlerStrategy::form,
-        info: 'Register',
-        controller: RegisterController::class,
-        View: View::register,
     )]
     #[RouteOperation(
         HttpMethod::POST,
-        'Handle registration submission',
-        HandlerStrategy::validated,
-        info: null,
-        controller: null,
-        View: null,
+        new Validated(
+            controller: RegisterController::class,
+            request: RegisterRequest::class,
+            view_model: RegisterViewModel::class,
+        ),
+        null,
     )]
     case register = '/register';
 
     #[DevOnly]
     #[RouteOperation(
         HttpMethod::GET,
-        'OPcache runtime statistics',
-        HandlerStrategy::controller,
-        info: 'OPcache status',
-        controller: OpcacheStatusHandler::class,
-        View: null,
+        OpcacheStatusHandler::class,
+        'OPcache runtime statistics'
     )]
     case opcache_status = '/_opcache/status';
 
     #[DevOnly]
     #[RouteOperation(
         HttpMethod::GET,
-        'Scripts loaded in OPcache',
-        HandlerStrategy::controller,
-        info: 'OPcache scripts',
-        controller: OpcacheScriptsHandler::class,
-        View: null,
+        OpcacheScriptsHandler::class,
+        'Scripts loaded in OPcache'
     )]
     case opcache_scripts = '/_opcache/scripts';
 
     #[DevOnly]
     #[RouteOperation(
         HttpMethod::GET,
-        'UI component and design token reference',
-        HandlerStrategy::static_view,
-        info: 'Style guide',
-        controller: null,
-        View: View::styleguide,
+        new StaticView(View::styleguide),
+        'UI component and design token reference'
     )]
     case styleguide = '/_styleguide';
 
     #[DevOnly]
     #[RouteOperation(
         HttpMethod::GET,
-        'Machine-readable manifest of all registered routes',
-        HandlerStrategy::controller,
-        info: 'Routes',
-        controller: RouteManifestHandler::class,
-        View: null,
+        RouteManifestHandler::class,
+        'Machine-readable manifest of all registered routes'
     )]
     case routes = '/_routes';
 
@@ -131,7 +118,7 @@ enum Route: string
         );
     }
 
-    /** Returns the route-level description from the first #[RouteOperation] with a non-null info. */
+    /** Returns the route-level description from the first #[RouteOperation] with a non-null description. */
     public function description(): string
     {
         /** @var array<string, string> $cache */
@@ -139,11 +126,11 @@ enum Route: string
 
         return $cache[$this->name] ??= (function (): string {
             foreach ($this->operations() as $op) {
-                if ($op->info !== null) {
-                    return $op->info;
+                if ($op->description !== null) {
+                    return $op->description;
                 }
             }
-            throw new LogicException("Route::{$this->name} has no #[RouteOperation] with an info parameter.");
+            throw new LogicException("Route::{$this->name} has no #[RouteOperation] with a description.");
         })();
     }
 
@@ -160,7 +147,7 @@ enum Route: string
         );
     }
 
-    /** Returns the View from the first #[RouteOperation] with a non-null View, or null. */
+    /** Returns the View from the first action that carries a View, or null. */
     public function rendersView(): ?View
     {
         /** @var array<string, ?View> $cache */
@@ -169,8 +156,8 @@ enum Route: string
         if (!array_key_exists($this->name, array: $cache)) {
             $cache[$this->name] = null;
             foreach ($this->operations() as $op) {
-                if ($op->View !== null) {
-                    $cache[$this->name] = $op->View;
+                if ($op->action instanceof StaticView || $op->action instanceof Form) {
+                    $cache[$this->name] = $op->action->View;
                     break;
                 }
             }
@@ -179,7 +166,7 @@ enum Route: string
         return $cache[$this->name];
     }
 
-    /** Returns the controller from the first #[RouteOperation] with a non-null controller, or null. */
+    /** Returns the controller from the first action that carries a controller, or null. */
     public function controller(): ?object
     {
         /** @var array<string, ?object> $cache */
@@ -188,8 +175,14 @@ enum Route: string
         if (!array_key_exists($this->name, array: $cache)) {
             $cache[$this->name] = null;
             foreach ($this->operations() as $op) {
-                if ($op->controller !== null) {
-                    $cache[$this->name] = new ($op->controller)();
+                $class = match (true) {
+                    $op->action instanceof Form, $op->action instanceof Validated => $op->action->controller,
+                    is_string($op->action)                                        => $op->action,
+                    is_array($op->action)                                         => $op->action[0],
+                    default                                                       => null,
+                };
+                if ($class !== null) {
+                    $cache[$this->name] = new $class();
                     break;
                 }
             }

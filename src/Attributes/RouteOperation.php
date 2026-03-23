@@ -5,33 +5,53 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
-use ZeroToProd\Thryds\Blade\View;
-use ZeroToProd\Thryds\Routes\HandlerStrategy;
+use Closure;
+use ZeroToProd\Thryds\Routes\Actions\Form;
+use ZeroToProd\Thryds\Routes\Actions\StaticView;
+use ZeroToProd\Thryds\Routes\Actions\Validated;
 use ZeroToProd\Thryds\Routes\HttpMethod;
 
 /**
  * Declares one HTTP operation on a Route enum case.
  * Apply multiple times to register more than one method on the same path.
  *
- * Resource-level properties (info, controller, View) need only appear on one
- * operation per route case — the resolver takes the first non-null value.
+ * The $action parameter accepts strategy objects or callable references:
+ * - new StaticView(View::home)                          — render a view
+ * - new Form(View::register, controller: ..., ...)      — form with validation
+ * - new Validated(controller: ..., request: ..., ...)    — validate then delegate
+ * - InvokableController::class                          — class-string (invokable)
+ * - [SomeController::class, 'method']                   — array callable
+ * - SomeController::method(...)                         — first-class callable
  *
  * @example
- * #[RouteOperation(HttpMethod::GET,  'Render login form',        HandlerStrategy::form, info: 'Login', controller: LoginController::class, View: View::login)]
- * #[RouteOperation(HttpMethod::POST, 'Handle login submission',  HandlerStrategy::validated, info: null, controller: null, View: null)]
- * case login = '/login';
+ * #[RouteOperation(HttpMethod::GET, new StaticView(View::home), 'Marketing home page')]
+ * #[RouteOperation(HttpMethod::GET, new Form(...), 'New user registration form')]
+ * #[RouteOperation(HttpMethod::POST, new Validated(...))]
+ * #[RouteOperation(HttpMethod::GET, OpcacheStatusHandler::class, 'OPcache runtime statistics')]
+ *
+ * @param StaticView|Form|Validated|class-string|array{class-string, string}|Closure $action
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT | Attribute::IS_REPEATABLE)]
 #[HopWeight(0)]
 readonly class RouteOperation
 {
-    /** @param class-string|null $controller */
+    /** @param StaticView|Form|Validated|class-string|array{class-string, string}|Closure $action */
     public function __construct(
         public HttpMethod $HttpMethod,
-        public string $description,
-        public HandlerStrategy $HandlerStrategy,
-        public ?string $info,
-        public ?string $controller,
-        public ?View $View,
+        public StaticView|Form|Validated|string|array|Closure $action,
+        public ?string $description,
     ) {}
+
+    /** Short name describing the action type for manifests and diagnostics. */
+    public function actionName(): string
+    {
+        return match (true) {
+            $this->action instanceof StaticView,
+            $this->action instanceof Form,
+            $this->action instanceof Validated  => basename(str_replace('\\', '/', $this->action::class)),
+            is_string($this->action)            => basename(str_replace('\\', '/', $this->action)),
+            is_array($this->action)             => basename(str_replace('\\', '/', $this->action[0])) . '::' . $this->action[1],
+            $this->action instanceof Closure    => 'Closure',
+        };
+    }
 }

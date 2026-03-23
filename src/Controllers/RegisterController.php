@@ -11,20 +11,14 @@ use ZeroToProd\Thryds\Attributes\HandlesRoute;
 use ZeroToProd\Thryds\Attributes\Persists;
 use ZeroToProd\Thryds\Attributes\RedirectsTo;
 use ZeroToProd\Thryds\Attributes\RendersView;
-use ZeroToProd\Thryds\Attributes\ValidatesRequest;
 use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Queries\CreateUserQuery;
 use ZeroToProd\Thryds\Requests\RegisterRequest;
 use ZeroToProd\Thryds\Routes\HttpMethod;
 use ZeroToProd\Thryds\Routes\Route;
 use ZeroToProd\Thryds\Tables\User;
-use ZeroToProd\Thryds\ViewModels\RegisterViewModel;
 
 #[HandlesRoute(Route::register)]
-#[ValidatesRequest(
-    RegisterRequest::class,
-    view_model: RegisterViewModel::class
-)]
 #[RendersView(View::register)]
 #[Persists(User::class)]
 #[RedirectsTo(Route::login)]

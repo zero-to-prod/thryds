@@ -5,90 +5,90 @@
 routes:
   about:
     path: /about
-    description: About
+    description: 'Company and product information'
     dev_only: false
     operations:
-      GET: { description: 'Company and product information', strategy: static_view }
+      GET: { description: 'Company and product information', strategy: StaticView }
     view: about
   home:
     path: /
-    description: Home
+    description: 'Marketing home page'
     dev_only: false
     operations:
-      GET: { description: 'Marketing home page', strategy: static_view }
+      GET: { description: 'Marketing home page', strategy: StaticView }
     view: home
   login:
     path: /login
-    description: Login
+    description: 'User authentication form'
     dev_only: false
     operations:
-      GET: { description: 'User authentication form', strategy: static_view }
+      GET: { description: 'User authentication form', strategy: StaticView }
     view: login
   opcache_scripts:
     path: /_opcache/scripts
-    description: 'OPcache scripts'
+    description: 'Scripts loaded in OPcache'
     dev_only: true
     operations:
-      GET: { description: 'Scripts loaded in OPcache', strategy: controller }
+      GET: { description: 'Scripts loaded in OPcache', strategy: OpcacheScriptsHandler }
     controller: OpcacheScriptsHandler
   opcache_status:
     path: /_opcache/status
-    description: 'OPcache status'
+    description: 'OPcache runtime statistics'
     dev_only: true
     operations:
-      GET: { description: 'OPcache runtime statistics', strategy: controller }
+      GET: { description: 'OPcache runtime statistics', strategy: OpcacheStatusHandler }
     controller: OpcacheStatusHandler
   register:
     path: /register
-    description: Register
+    description: 'New user registration form'
     dev_only: false
     operations:
-      GET: { description: 'New user registration form', strategy: form }
-      POST: { description: 'Handle registration submission', strategy: validated }
+      GET: { description: 'New user registration form', strategy: Form }
+      POST: { description: ~, strategy: Validated }
     controller: RegisterController
     view: register
   routes:
     path: /_routes
-    description: Routes
+    description: 'Machine-readable manifest of all registered routes'
     dev_only: true
     operations:
-      GET: { description: 'Machine-readable manifest of all registered routes', strategy: controller }
+      GET: { description: 'Machine-readable manifest of all registered routes', strategy: RouteManifestHandler }
     controller: RouteManifestHandler
   styleguide:
     path: /_styleguide
-    description: 'Style guide'
+    description: 'UI component and design token reference'
     dev_only: true
     operations:
-      GET: { description: 'UI component and design token reference', strategy: static_view }
+      GET: { description: 'UI component and design token reference', strategy: StaticView }
     view: styleguide
 
 controllers:
   OpcacheScriptsHandler:
     route: opcache_scripts
     operations:
-      GET: { description: 'Scripts loaded in OPcache', strategy: controller }
+      GET: { description: 'Scripts loaded in OPcache', strategy: OpcacheScriptsHandler }
     renders: ~
     persists: []
     redirects_to: []
   OpcacheStatusHandler:
     route: opcache_status
     operations:
-      GET: { description: 'OPcache runtime statistics', strategy: controller }
+      GET: { description: 'OPcache runtime statistics', strategy: OpcacheStatusHandler }
     renders: ~
     persists: []
     redirects_to: []
   RegisterController:
     route: register
     operations:
-      GET: { description: 'New user registration form', strategy: form }
-      POST: { description: 'Handle registration submission', strategy: validated }
+      GET: { description: 'New user registration form', strategy: Form }
+      POST: { description: ~, strategy: Validated }
     renders: register
     persists: [User]
     redirects_to: [login]
   RouteManifestHandler:
     route: routes
     operations:
-      GET: { description: 'Machine-readable manifest of all registered routes', strategy: controller }
+      GET: { description: 'Machine-readable manifest of all registered routes', strategy: RouteManifestHandler }
     renders: ~
     persists: []
     redirects_to: []

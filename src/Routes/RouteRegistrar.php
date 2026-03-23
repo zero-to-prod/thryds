@@ -14,9 +14,11 @@ use ReflectionClass;
 use ZeroToProd\Thryds\Attributes\HandlesMethod;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\RouteOperation;
-use ZeroToProd\Thryds\Attributes\ValidatesRequest;
 use ZeroToProd\Thryds\Config;
 use ZeroToProd\Thryds\Requests\InputField;
+use ZeroToProd\Thryds\Routes\Actions\Form;
+use ZeroToProd\Thryds\Routes\Actions\StaticView;
+use ZeroToProd\Thryds\Routes\Actions\Validated;
 use ZeroToProd\Thryds\Validation\Validator;
 
 #[Infrastructure]
@@ -33,71 +35,53 @@ readonly class RouteRegistrar
                 $Router->map(
                     $op->HttpMethod->value,
                     $Route->value,
-                    handler: self::handler($Route, RouteOperation: $op, controller: $Route->controller()),
+                    handler: self::handler($Route, RouteOperation: $op),
                 );
             }
         }
     }
 
     /** Dispatch to the handler strategy declared on the #[RouteOperation]. */
-    private static function handler(Route $Route, RouteOperation $RouteOperation, ?object $controller): callable
+    private static function handler(Route $Route, RouteOperation $RouteOperation): callable
     {
-        return match ($RouteOperation->HandlerStrategy) {
-            HandlerStrategy::static_view => self::staticView($Route),
-            HandlerStrategy::controller  => self::controllerHandler($controller, $RouteOperation),
-            HandlerStrategy::form        => self::formView($Route, self::validatesRequest($controller)),
-            HandlerStrategy::validated   => self::withValidation(
+        $action = $RouteOperation->action;
+
+        return match (true) {
+            $action instanceof StaticView  => self::staticView(StaticView: $action),
+            $action instanceof Form        => self::formView(Form: $action),
+            $action instanceof Validated   => self::withValidation(
                 $Route,
-                self::validatesRequest($controller),
-                handler: self::controllerHandler($controller, $RouteOperation),
+                Validated: $action,
+                handler: self::resolveCallable($action->controller, $RouteOperation->HttpMethod),
             ),
+            $action instanceof Closure     => $action,
+            is_string(value: $action)             => self::resolveCallable(class: $action, HttpMethod: $RouteOperation->HttpMethod),
+            is_array(value: $action)              => new $action[0]()->{$action[1]}(...),
         };
     }
 
     /** Render a Blade view with no controller. */
-    private static function staticView(Route $Route): Closure
+    private static function staticView(StaticView $StaticView): Closure
     {
         return static fn(): ResponseInterface => new HtmlResponse(
-            html: blade()->make(view: ($Route->rendersView()
-                ?? throw new LogicException("Route::{$Route->name} has HandlerStrategy::static_view but no view parameter on #[RouteOperation]."))->value)->render(),
+            html: blade()->make(view: $StaticView->View->value)->render(),
         );
     }
 
     /**
-     * Resolve the controller callable — either __invoke or a #[HandlesMethod]-annotated method.
+     * Resolve a class-string to a callable — invokable or #[HandlesMethod]-annotated.
      *
+     * @param class-string $class
      * @return callable
      */
-    private static function controllerHandler(?object $controller, RouteOperation $RouteOperation): callable
+    private static function resolveCallable(string $class, HttpMethod $HttpMethod): callable
     {
-        if ($controller === null) {
-            throw new LogicException("RouteOperation declares HandlerStrategy::{$RouteOperation->HandlerStrategy->name} but no #[RouteOperation] has a controller parameter.");
-        }
+        $controller = new $class();
 
         if (is_callable(value: $controller)) {
             return $controller;
         }
 
-        return self::resolveMethod($controller, HttpMethod: $RouteOperation->HttpMethod);
-    }
-
-    /** Read the #[ValidatesRequest] attribute from a controller, or throw if absent. */
-    private static function validatesRequest(?object $controller): ValidatesRequest
-    {
-        if ($controller === null) {
-            throw new LogicException('HandlerStrategy::form or ::validated requires a #[RouteOperation] controller parameter with #[ValidatesRequest].');
-        }
-
-        $attrs = new ReflectionClass(objectOrClass: $controller)->getAttributes(ValidatesRequest::class);
-
-        return $attrs !== []
-            ? $attrs[0]->newInstance()
-            : throw new LogicException($controller::class . ' must declare #[ValidatesRequest] for the form/validated handler strategy.');
-    }
-
-    /** Resolve a controller method by its declared #[HandlesMethod] attribute. */
-    private static function resolveMethod(object $controller, HttpMethod $HttpMethod): Closure
-    {
         foreach (new ReflectionClass(objectOrClass: $controller)->getMethods() as $method) {
             $attrs = $method->getAttributes(HandlesMethod::class);
             if ($attrs !== [] && $attrs[0]->newInstance()->HttpMethod === $HttpMethod) {
@@ -106,43 +90,54 @@ readonly class RouteRegistrar
         }
 
         throw new LogicException(
-            $controller::class . ' has no method with #[HandlesMethod(' . $HttpMethod->name . ')]. '
+            $class . ' has no method with #[HandlesMethod(' . $HttpMethod->name . ')]. '
             . 'Add #[HandlesMethod(HttpMethod::' . $HttpMethod->name . ')] to the handler method.'
         );
     }
 
-    /** Render an empty form view derived from #[ValidatesRequest] and #[RendersView]. */
-    private static function formView(Route $Route, ValidatesRequest $ValidatesRequest): Closure
+    /** Render an empty form view derived from the Form action. */
+    private static function formView(Form $Form): Closure
     {
-        return static fn(): ResponseInterface => self::renderForm($Route, $ValidatesRequest, data: []);
+        return static fn(): ResponseInterface => self::renderForm($Form, data: []);
     }
 
-    /** Wrap a POST handler with attribute-driven validation and error re-rendering. */
-    private static function withValidation(Route $Route, ValidatesRequest $ValidatesRequest, callable $handler): Closure
+    /** Wrap a POST handler with action-driven validation and error re-rendering. */
+    private static function withValidation(Route $Route, Validated $Validated, callable $handler): Closure
     {
-        return static function (ServerRequestInterface $ServerRequestInterface) use ($Route, $ValidatesRequest, $handler): ResponseInterface {
-            $requestObject = $ValidatesRequest->request::from($ServerRequestInterface->getParsedBody());
+        return static function (ServerRequestInterface $ServerRequestInterface) use ($Route, $Validated, $handler): ResponseInterface {
+            $requestObject = $Validated->request::from($ServerRequestInterface->getParsedBody());
 
             $errors = Validator::validate(model: $requestObject);
             if ($errors === []) {
                 return $handler($requestObject);
             }
 
-            return self::renderForm($Route, $ValidatesRequest, data: [...$requestObject->toArray(), $ValidatesRequest->view_model::errors => $errors]);
+            // Find the Form action on the same route to get the View for re-rendering.
+            $form_action = null;
+            foreach ($Route->operations() as $op) {
+                if ($op->action instanceof Form) {
+                    $form_action = $op->action;
+                    break;
+                }
+            }
+
+            if ($form_action === null) {
+                throw new LogicException("Route::{$Route->name} has a Validated action but no Form action to re-render on validation failure.");
+            }
+
+            return self::renderForm(Form: $form_action, data: [...$requestObject->toArray(), $Validated->view_model::errors => $errors]);
         };
     }
 
     /** @param array<string, mixed> $data */
-    private static function renderForm(Route $Route, ValidatesRequest $ValidatesRequest, array $data): HtmlResponse
+    private static function renderForm(Form $Form, array $data): HtmlResponse
     {
-        $View = $Route->rendersView()
-            ?? throw new LogicException("Route::{$Route->name} has #[ValidatesRequest] but no view parameter on #[RouteOperation].");
-        $view_model_class = $ValidatesRequest->view_model;
+        $view_model_class = $Form->view_model;
 
         return new HtmlResponse(
-            html: blade()->make(view: $View->value, data: [
+            html: blade()->make(view: $Form->View->value, data: [
                 $view_model_class::view_key => $view_model_class::from($data),
-                InputField::fields => InputField::reflect(class: $ValidatesRequest->request),
+                InputField::fields => InputField::reflect(class: $Form->request),
             ])->render()
         );
     }
