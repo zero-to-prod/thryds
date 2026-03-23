@@ -16,7 +16,7 @@ final class RequireDownMigrationRector extends AbstractRector implements Configu
 {
     private string $mode = 'warn';
 
-    private string $message = 'TODO: [RequireDownMigrationRector] Migration class has no MigrationAction attribute — add #[CreateTable], #[AddColumn], #[DropColumn], or #[RawSql]. See: utils/rector/docs/RequireDownMigrationRector.md';
+    private string $message = 'TODO: [RequireDownMigrationRector] Migration class is missing a down() method — add it to support rollback. See: utils/rector/docs/RequireDownMigrationRector.md';
 
     public function configure(array $configuration): void
     {
@@ -27,7 +27,7 @@ final class RequireDownMigrationRector extends AbstractRector implements Configu
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
-            'Flags migration classes that have no MigrationAction attribute',
+            'Flags migration classes that are missing a down() method',
             [
                 new ConfiguredCodeSample(
                     <<<'CODE_SAMPLE'
@@ -35,7 +35,7 @@ final class RequireDownMigrationRector extends AbstractRector implements Configu
 final class CreateUsersTable {}
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
-// TODO: [RequireDownMigrationRector] Migration class has no MigrationAction attribute — add #[CreateTable], #[AddColumn], #[DropColumn], or #[RawSql]. See: utils/rector/docs/RequireDownMigrationRector.md
+// TODO: [RequireDownMigrationRector] Migration class is missing a down() method — add it to support rollback. See: utils/rector/docs/RequireDownMigrationRector.md
 #[Migration(id: '0001', description: 'Create users table')]
 final class CreateUsersTable {}
 CODE_SAMPLE,

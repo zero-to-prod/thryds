@@ -19,7 +19,7 @@ class Migration
     public function __construct(public string $id, public string $description) {}
 }
 
-// TODO: [RequireDownMigrationRector] Migration class has no MigrationAction attribute — add #[CreateTable], #[AddColumn], #[DropColumn], or #[RawSql]. See: utils/rector/docs/RequireDownMigrationRector.md
+// TODO: [RequireDownMigrationRector] Migration class is missing a down() method — add it to support rollback. See: utils/rector/docs/RequireDownMigrationRector.md
 #[Migration(id: '0001', description: 'Create users table')]
 final class CreateUsersTable {}
 
