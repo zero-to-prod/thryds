@@ -6,11 +6,16 @@ namespace ZeroToProd\Thryds\Attributes;
 
 use Attribute;
 use Closure;
+use LogicException;
+use ReflectionAttribute;
+use ReflectionEnumUnitCase;
 use Stringable;
+use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Routes\Actions\Form;
 use ZeroToProd\Thryds\Routes\Actions\StaticView;
 use ZeroToProd\Thryds\Routes\Actions\Validated;
 use ZeroToProd\Thryds\Routes\HttpMethod;
+use ZeroToProd\Thryds\Routes\RouteList;
 
 /**
  * Declares one HTTP operation on a Route enum case.
@@ -46,5 +51,53 @@ readonly class Route
             is_array($this->action)              => basename(str_replace('\\', '/', $this->action[0])) . '::' . $this->action[1],
             $this->action instanceof Closure     => 'Closure',
         };
+    }
+
+    /** @return self[] All HTTP operations declared on a route case. */
+    public static function on(RouteList $RouteList): array
+    {
+        /** @var array<string, self[]> $cache */
+        static $cache = [];
+
+        return $cache[$RouteList->name] ??= array_map(
+            static fn(ReflectionAttribute $ReflectionAttribute): self => $ReflectionAttribute->newInstance(),
+            new ReflectionEnumUnitCase(RouteList::class, $RouteList->name)
+                ->getAttributes(self::class),
+        );
+    }
+
+    /** Returns the route-level description from the first operation with a non-null description. */
+    public static function descriptionOf(RouteList $RouteList): string
+    {
+        /** @var array<string, string> $cache */
+        static $cache = [];
+
+        return $cache[$RouteList->name] ??= (static function () use ($RouteList): string {
+            foreach (self::on($RouteList) as $op) {
+                if ($op->description !== null) {
+                    return $op->description;
+                }
+            }
+            throw new LogicException("Route::{$RouteList->name} has no operation with a description.");
+        })();
+    }
+
+    /** Returns the View from the first action that carries one, or null. */
+    public static function viewOf(RouteList $RouteList): ?View
+    {
+        /** @var array<string, ?View> $cache */
+        static $cache = [];
+
+        if (!array_key_exists($RouteList->name, array: $cache)) {
+            $cache[$RouteList->name] = null;
+            foreach (self::on($RouteList) as $op) {
+                if ($op->action instanceof StaticView || $op->action instanceof Form) {
+                    $cache[$RouteList->name] = $op->action->View;
+                    break;
+                }
+            }
+        }
+
+        return $cache[$RouteList->name];
     }
 }

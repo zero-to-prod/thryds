@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace ZeroToProd\Thryds\Controllers;
 
 use Laminas\Diactoros\Response\JsonResponse;
+use ZeroToProd\Thryds\Attributes\Guarded;
 use ZeroToProd\Thryds\Attributes\HandlesRoute;
 use ZeroToProd\Thryds\Attributes\Route;
+use ZeroToProd\Thryds\Attributes\RouteParam;
 use ZeroToProd\Thryds\Routes\RouteList;
 use ZeroToProd\Thryds\Routes\RouteManifest;
 
@@ -20,17 +22,17 @@ readonly class RouteManifestHandler
                 static fn(RouteList $RouteList): array => [
                     RouteManifest::name        => $RouteList->name,
                     RouteManifest::path        => $RouteList->value,
-                    RouteManifest::description => $RouteList->description(),
+                    RouteManifest::description => Route::descriptionOf($RouteList),
                     RouteManifest::operations  => array_map(
                         static fn(Route $Route): array => [
                             RouteManifest::method      => $Route->HttpMethod->value,
                             RouteManifest::description => $Route->description,
                             RouteManifest::strategy    => $Route->actionName(),
                         ],
-                        $RouteList->operations(),
+                        Route::on($RouteList),
                     ),
                 ],
-                array_filter(RouteList::cases(), static fn(RouteList $RouteList): bool => !$RouteList->isDevOnly() && $RouteList->params() === []),
+                array_filter(RouteList::cases(), static fn(RouteList $RouteList): bool => Guarded::of($RouteList) === null && RouteParam::on($RouteList) === []),
             )),
         );
     }

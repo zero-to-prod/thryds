@@ -10,8 +10,8 @@ that cannot be generated automatically.
 
 ## Rationale
 
-The inventory graph reads `$Route->operations()` to populate the `methods` field on
-route nodes. A case without `#[RouteOperation]` causes `operations()` to return an
+The inventory graph reads `Route::on($RouteList)` to populate the `methods` field on
+route nodes. A case without `#[Route]` causes `Route::on()` to return an
 empty array, leaving the graph with no HTTP method for that route. An AI agent
 cannot reason about whether a route is a read or write operation without this.
 

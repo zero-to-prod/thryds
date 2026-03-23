@@ -576,11 +576,11 @@ Each `Route` enum case carries one or more `#[RouteOperation]` attributes — th
 case login = '/login';
 ```
 
-`Route::operations()` returns `RouteOperation[]`. `Route::description()` returns the first non-null `info` across operations. There is no `Route::method()` — always use `$Route->operations()[0]->HttpMethod->value` for single-method routes, or loop `$Route->operations()` for multi-method.
+`Route::on($RouteList)` returns `Route[]`. `Route::descriptionOf($RouteList)` returns the first non-null description across operations. There is no per-route `method()` — always use `Route::on($RouteList)[0]->HttpMethod->value` for single-method routes, or loop `Route::on($RouteList)` for multi-method.
 
 ### `ForbidDuplicateRouteRegistrationRector` known limitation
 
-This rule resolves the HTTP method from the first argument of `$Router->map()` by walking a property-fetch chain. It cannot parse the current call shape `->operations()[0]->HttpMethod->value` (a method-call chain). As a result, duplicate registration detection is silently disabled for all routes registered via `operations()`. This is a known gap — the rule does not fail `check:all`, it just does not detect duplicates. If this matters, the rule needs updating to handle the deeper chain.
+This rule resolves the HTTP method from the first argument of `$Router->map()` by walking a property-fetch chain. It cannot parse the current call shape `Route::on($Route)[0]->HttpMethod->value` (a static-call chain). As a result, duplicate registration detection is silently disabled for all routes registered via `Route::on()`. This is a known gap — the rule does not fail `check:all`, it just does not detect duplicates. If this matters, the rule needs updating to handle the deeper chain.
 
 ### `StringArgToClassConstRector` config
 

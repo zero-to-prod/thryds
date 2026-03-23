@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Routes;
 
-use LogicException;
-use ReflectionAttribute;
-use ReflectionEnumUnitCase;
 use ZeroToProd\Thryds\Attributes\ClosedSet;
-use ZeroToProd\Thryds\Attributes\DevOnly;
+use ZeroToProd\Thryds\Attributes\Guarded;
 use ZeroToProd\Thryds\Attributes\Route;
-use ZeroToProd\Thryds\Attributes\RouteParam;
 use ZeroToProd\Thryds\Blade\View;
 use ZeroToProd\Thryds\Controllers\OpcacheScriptsHandler;
 use ZeroToProd\Thryds\Controllers\OpcacheStatusHandler;
@@ -76,7 +72,7 @@ enum RouteList: string
     )]
     case register = '/register';
 
-    #[DevOnly]
+    #[Guarded(RouteGuard::devOnly)]
     #[Route(
         HttpMethod::GET,
         OpcacheStatusHandler::class,
@@ -84,7 +80,7 @@ enum RouteList: string
     )]
     case opcache_status = '/_opcache/status';
 
-    #[DevOnly]
+    #[Guarded(RouteGuard::devOnly)]
     #[Route(
         HttpMethod::GET,
         OpcacheScriptsHandler::class,
@@ -92,7 +88,7 @@ enum RouteList: string
     )]
     case opcache_scripts = '/_opcache/scripts';
 
-    #[DevOnly]
+    #[Guarded(RouteGuard::devOnly)]
     #[Route(
         HttpMethod::GET,
         new StaticView(View::styleguide),
@@ -100,116 +96,11 @@ enum RouteList: string
     )]
     case styleguide = '/_styleguide';
 
-    #[DevOnly]
+    #[Guarded(RouteGuard::devOnly)]
     #[Route(
         HttpMethod::GET,
         RouteManifestHandler::class,
         'Machine-readable manifest of all registered routes'
     )]
     case routes = '/_routes';
-
-    public function isDevOnly(): bool
-    {
-        /** @var array<string, bool> $cache */
-        static $cache = [];
-
-        return $cache[$this->name] ??= !empty(
-            new ReflectionEnumUnitCase(self::class, $this->name)->getAttributes(DevOnly::class)
-        );
-    }
-
-    /** Returns the route-level description from the first route operation with a non-null description. */
-    public function description(): string
-    {
-        /** @var array<string, string> $cache */
-        static $cache = [];
-
-        return $cache[$this->name] ??= (function (): string {
-            foreach ($this->operations() as $op) {
-                if ($op->description !== null) {
-                    return $op->description;
-                }
-            }
-            throw new LogicException("Route::{$this->name} has no #[RouteOperation] with a description.");
-        })();
-    }
-
-    /** @return Route[] HTTP operations declared on this route via the route operation attribute. */
-    public function operations(): array
-    {
-        /** @var array<string, Route[]> $cache */
-        static $cache = [];
-
-        return $cache[$this->name] ??= array_map(
-            static fn(ReflectionAttribute $ReflectionAttribute): Route => $ReflectionAttribute->newInstance(),
-            new ReflectionEnumUnitCase(self::class, $this->name)
-                ->getAttributes(Route::class),
-        );
-    }
-
-    /** Returns the View from the first action that carries a View, or null. */
-    public function rendersView(): ?View
-    {
-        /** @var array<string, ?View> $cache */
-        static $cache = [];
-
-        if (!array_key_exists($this->name, array: $cache)) {
-            $cache[$this->name] = null;
-            foreach ($this->operations() as $op) {
-                if ($op->action instanceof StaticView || $op->action instanceof Form) {
-                    $cache[$this->name] = $op->action->View;
-                    break;
-                }
-            }
-        }
-
-        return $cache[$this->name];
-    }
-
-    /** Returns the controller from the first action that carries a controller, or null. */
-    public function controller(): ?object
-    {
-        /** @var array<string, ?object> $cache */
-        static $cache = [];
-
-        if (!array_key_exists($this->name, array: $cache)) {
-            $cache[$this->name] = null;
-            foreach ($this->operations() as $op) {
-                $class = match (true) {
-                    $op->action instanceof Form, $op->action instanceof Validated => $op->action->controller,
-                    is_string($op->action)                                        => $op->action,
-                    is_array($op->action)                                         => $op->action[0],
-                    default                                                       => null,
-                };
-                if ($class !== null) {
-                    $cache[$this->name] = new $class();
-                    break;
-                }
-            }
-        }
-
-        return $cache[$this->name];
-    }
-
-    /** @return string[] Parameter names declared via the route parameter attribute on this case. */
-    public function params(): array
-    {
-        /** @var array<string, string[]> $cache */
-        static $cache = [];
-
-        return $cache[$this->name] ??= array_map(
-            static fn(ReflectionAttribute $ReflectionAttribute): string => $ReflectionAttribute->newInstance()->name,
-            new ReflectionEnumUnitCase(self::class, $this->name)
-                ->getAttributes(RouteParam::class),
-        );
-    }
-
-    /**
-     * @param array<string, string> $params
-     * @param array<string, string> $query
-     */
-    public function with(array $params = [], array $query = []): RouteUrl
-    {
-        return new RouteUrl(RouteList: $this, params: $params, query: $query);
-    }
 }

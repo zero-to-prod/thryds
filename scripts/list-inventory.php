@@ -120,12 +120,13 @@ foreach (glob($tablesDir . '/*.php') ?: [] as $tableFile) {
 // Walk each route.
 foreach ($Route::cases() as $routeCase) {
     $routeId = 'route:' . $routeCase->name;
-    $addNode($routeId, 'route', $routeCase->value . ($routeCase->isDevOnly() ? ' [dev]' : ''));
-    $nodes[$routeId]['methods']  = array_map(fn($op): string => $op->HttpMethod->value, $routeCase->operations());
-    $nodes[$routeId]['dev_only'] = $routeCase->isDevOnly();
+    $guard = \ZeroToProd\Thryds\Attributes\Guarded::of($routeCase);
+    $addNode($routeId, 'route', $routeCase->value . ($guard !== null ? ' [' . $guard->name . ']' : ''));
+    $nodes[$routeId]['methods'] = array_map(fn($op): string => $op->HttpMethod->value, \ZeroToProd\Thryds\Attributes\Route::on($routeCase));
+    $nodes[$routeId]['guard']   = $guard?->name;
 
     $controller = $explicitControllers[$routeCase->name] ?? null;
-    $view       = $routeCase->rendersView();
+    $view       = \ZeroToProd\Thryds\Attributes\Route::viewOf($routeCase);
 
     if ($controller !== null) {
         $nodes[$routeId]['registration'] = 'explicit';
@@ -474,7 +475,7 @@ foreach (glob($testsDir . '/*Test.php') ?: [] as $testFile) {
 
 $routeDescriptions = [];
 foreach ($Route::cases() as $routeCase) {
-    $routeDescriptions[$routeCase->name] = $routeCase->description();
+    $routeDescriptions[$routeCase->name] = \ZeroToProd\Thryds\Attributes\Route::descriptionOf($routeCase);
 }
 
 $decoratedNodes = array_map(
@@ -538,10 +539,10 @@ function buildYamlManifest(array $decoratedNodes, array $edges, array $inventory
         $routeId = 'route:' . $routeCase->name;
         $entry = [];
         $entry['path'] = $routeCase->value;
-        $entry['description'] = $routeCase->description();
-        $entry['dev_only'] = $routeCase->isDevOnly();
+        $entry['description'] = \ZeroToProd\Thryds\Attributes\Route::descriptionOf($routeCase);
+        $entry['guard'] = \ZeroToProd\Thryds\Attributes\Guarded::of($routeCase)?->name;
         $ops = [];
-        foreach ($routeCase->operations() as $op) {
+        foreach (\ZeroToProd\Thryds\Attributes\Route::on($routeCase) as $op) {
             $ops[$op->HttpMethod->value] = ['description' => $op->description, 'strategy' => $op->actionName()];
         }
         $entry['operations'] = $ops;
@@ -602,7 +603,7 @@ function buildYamlManifest(array $decoratedNodes, array $edges, array $inventory
                 }
                 if ($routeEnum !== null) {
                     $ops = [];
-                    foreach ($routeEnum->operations() as $op) {
+                    foreach (\ZeroToProd\Thryds\Attributes\Route::on($routeEnum) as $op) {
                         $ops[$op->HttpMethod->value] = ['description' => $op->description, 'strategy' => $op->actionName()];
                     }
                     $entry['operations'] = $ops;

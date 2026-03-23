@@ -11,6 +11,7 @@ use LogicException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use ReflectionClass;
+use ZeroToProd\Thryds\Attributes\Guarded;
 use ZeroToProd\Thryds\Attributes\HandlesMethod;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
 use ZeroToProd\Thryds\Attributes\Route;
@@ -27,11 +28,11 @@ readonly class RouteRegistrar
     public static function register(Router $Router, Config $Config): void
     {
         foreach (RouteList::cases() as $Route) {
-            if ($Route->isDevOnly() && $Config->isProduction()) {
+            if (Guarded::of(RouteList: $Route)?->passes($Config) === false) {
                 continue;
             }
 
-            foreach ($Route->operations() as $op) {
+            foreach (Route::on(RouteList: $Route) as $op) {
                 $Router->map(
                     $op->HttpMethod->value,
                     $Route->value,
@@ -114,7 +115,7 @@ readonly class RouteRegistrar
 
             // Find the Form action on the same route to get the View for re-rendering.
             $form_action = null;
-            foreach ($RouteList->operations() as $op) {
+            foreach (Route::on($RouteList) as $op) {
                 if ($op->action instanceof Form) {
                     $form_action = $op->action;
                     break;

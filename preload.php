@@ -14,6 +14,7 @@ opcache_compile_file(__DIR__ . '/src/Routes/HttpMethod.php');
 opcache_compile_file(__DIR__ . '/src/Routes/Actions/StaticView.php');
 opcache_compile_file(__DIR__ . '/src/Routes/Actions/Form.php');
 opcache_compile_file(__DIR__ . '/src/Routes/Actions/Validated.php');
+opcache_compile_file(__DIR__ . '/src/Routes/RouteGuard.php');
 
 // ViewModels
 opcache_compile_file(__DIR__ . '/src/ViewModels/ErrorViewModel.php');
@@ -38,6 +39,7 @@ opcache_compile_file(__DIR__ . '/src/Blade/BladeDirectives.php');
 opcache_compile_file(__DIR__ . '/src/Blade/BladeDirective.php');
 opcache_compile_file(__DIR__ . '/src/Blade/Component.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/TemplateDirectory.php');
+opcache_compile_file(__DIR__ . '/src/Attributes/Guarded.php');
 opcache_compile_file(__DIR__ . '/src/Attributes/Route.php');
 opcache_compile_file(__DIR__ . '/src/Blade/View.php');
 opcache_compile_file(__DIR__ . '/src/Controllers/RegisterController.php');

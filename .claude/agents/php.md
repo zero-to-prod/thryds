@@ -39,17 +39,16 @@ case login = '/login';
 case login = '/login';
 ```
 
-Key accessors on the enum:
-- `$Route->operations(): RouteOperation[]` — all HTTP operations (via `#[RouteOperation]` reflection)
-- `$Route->description(): string` — route-level info (first non-null `info` across operations)
-- `$Route->rendersView(): ?View` — first non-null `view` across operations
-- `$Route->controller(): ?object` — first non-null `controller` across operations
-- `$Route->params(): string[]` — `{placeholder}` names extracted from the path
-- `$Route->with(params, query): RouteUrl` — builds a typed URL
-- `$Route->isDevOnly(): bool` — true when `#[DevOnly]` is present
+Attributes read themselves — static readers on each attribute class:
+- `Route::on($RouteList): Route[]` — all HTTP operations declared on a route case
+- `Route::descriptionOf($RouteList): string` — first non-null description across operations
+- `Route::viewOf($RouteList): ?View` — first View from StaticView/Form actions
+- `RouteParam::on($RouteList): string[]` — parameter names from `#[RouteParam]`
+- `Guarded::of($RouteList): ?RouteGuard` — registration guard, or null if unguarded
+- `RouteUrl::for($RouteList, params, query): RouteUrl` — builds a typed URL
 
-There is **no** `Route::method()` — use `$Route->operations()[0]->HttpMethod->value` for single-method routes, or loop `$Route->operations()` for multi-method.
+`RouteList` is a pure declaration enum with no methods.
 
-`RouteRegistrar::register()` maps each operation by reading `$Route->operations()`. The `/_routes` endpoint returns an OpenAPI-shaped manifest: `[{name, path, description, operations: [{method, description}]}]`, with JSON keys defined as constants on `RouteManifest`.
+`RouteRegistrar::register()` maps each operation by reading `Route::on()`. The `/_routes` endpoint returns an OpenAPI-shaped manifest: `[{name, path, description, operations: [{method, description}]}]`, with JSON keys defined as constants on `RouteManifest`.
 
 Adding a new route: follow the `addCase` checklist in `#[ClosedSet]` on the `Route` enum — it is authoritative.

@@ -12,7 +12,7 @@
         "properties": {
           "path": { "type": "string" },
           "description": { "type": "string" },
-          "dev_only": { "type": "boolean", "default": false },
+          "guard": { "type": ["string", "null"], "default": null },
           "operations": {
             "type": "object",
             "additionalProperties": { "type": "string" }

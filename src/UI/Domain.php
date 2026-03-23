@@ -59,6 +59,9 @@ enum Domain: string
     #[Group(EdgeKind::navigation)]
     case url_routes = 'url_routes';
 
+    #[Group(EdgeKind::navigation)]
+    case route_guards = 'route_guards';
+
     #[Group(EdgeKind::type_system)]
     case error_messages = 'error_messages';
 

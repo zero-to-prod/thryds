@@ -6,6 +6,7 @@ namespace ZeroToProd\Thryds\Tests\Integration;
 
 use PHPUnit\Framework\Attributes\Test;
 use ZeroToProd\Thryds\Attributes\CoversRoute;
+use ZeroToProd\Thryds\Attributes\Route;
 use ZeroToProd\Thryds\Routes\RouteList;
 use ZeroToProd\Thryds\Routes\RouteManifest;
 
@@ -37,7 +38,7 @@ final class RoutesRouteTest extends IntegrationTestCase
         $firstOp = $first[RouteManifest::operations][0];
         $this->assertArrayHasKey(RouteManifest::method, array: $firstOp);
         $this->assertArrayHasKey(RouteManifest::description, array: $firstOp);
-        $this->assertSame(RouteList::home->operations()[0]->HttpMethod->value, $firstOp[RouteManifest::method]);
-        $this->assertSame(RouteList::home->description(), $first[RouteManifest::description]);
+        $this->assertSame(Route::on(RouteList::home)[0]->HttpMethod->value, $firstOp[RouteManifest::method]);
+        $this->assertSame(Route::descriptionOf(RouteList::home), $first[RouteManifest::description]);
     }
 }

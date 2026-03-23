@@ -7,7 +7,9 @@ namespace ZeroToProd\Thryds\Tests\Unit;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ZeroToProd\Thryds\Attributes\RouteParam;
 use ZeroToProd\Thryds\Routes\RouteList;
+use ZeroToProd\Thryds\Routes\RouteUrl;
 
 final class RouteParamsTest extends TestCase
 {
@@ -17,21 +19,21 @@ final class RouteParamsTest extends TestCase
     #[Test]
     public function returnsEmptyArrayForStaticRoutes(): void
     {
-        $this->assertSame([], RouteList::home->params());
-        $this->assertSame([], RouteList::about->params());
+        $this->assertSame([], RouteParam::on(RouteList::home));
+        $this->assertSame([], RouteParam::on(RouteList::about));
     }
 
     #[Test]
     public function rendersStaticRouteWithoutParams(): void
     {
-        $this->assertSame('/', RouteList::home->with()->render());
-        $this->assertSame('/about', RouteList::about->with()->render());
+        $this->assertSame('/', RouteUrl::for(RouteList::home)->render());
+        $this->assertSame('/about', RouteUrl::for(RouteList::about)->render());
     }
 
     #[Test]
     public function rendersQueryStringOnStaticRoute(): void
     {
-        $this->assertSame('/about?sort=asc', RouteList::about->with(query: [self::sort => 'asc'])->render());
+        $this->assertSame('/about?sort=asc', RouteUrl::for(RouteList::about, query: [self::sort => 'asc'])->render());
     }
 
     #[Test]
@@ -40,6 +42,6 @@ final class RouteParamsTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('does not accept params');
 
-        RouteList::home->with(params: [self::id => '1'])->render();
+        RouteUrl::for(RouteList::home, params: [self::id => '1'])->render();
     }
 }

@@ -6,42 +6,42 @@ routes:
   about:
     path: /about
     description: 'Company and product information'
-    dev_only: false
+    guard: ~
     operations:
       GET: { description: 'Company and product information', strategy: StaticView }
     view: about
   home:
     path: /
     description: 'Marketing home page'
-    dev_only: false
+    guard: ~
     operations:
       GET: { description: 'Marketing home page', strategy: StaticView }
     view: home
   login:
     path: /login
     description: 'User authentication form'
-    dev_only: false
+    guard: ~
     operations:
       GET: { description: 'User authentication form', strategy: StaticView }
     view: login
   opcache_scripts:
     path: /_opcache/scripts
     description: 'Scripts loaded in OPcache'
-    dev_only: true
+    guard: devOnly
     operations:
       GET: { description: 'Scripts loaded in OPcache', strategy: OpcacheScriptsHandler }
     controller: OpcacheScriptsHandler
   opcache_status:
     path: /_opcache/status
     description: 'OPcache runtime statistics'
-    dev_only: true
+    guard: devOnly
     operations:
       GET: { description: 'OPcache runtime statistics', strategy: OpcacheStatusHandler }
     controller: OpcacheStatusHandler
   register:
     path: /register
     description: 'New user registration form'
-    dev_only: false
+    guard: ~
     operations:
       GET: { description: 'New user registration form', strategy: Form }
       POST: { description: ~, strategy: Validated }
@@ -50,14 +50,14 @@ routes:
   routes:
     path: /_routes
     description: 'Machine-readable manifest of all registered routes'
-    dev_only: true
+    guard: devOnly
     operations:
       GET: { description: 'Machine-readable manifest of all registered routes', strategy: RouteManifestHandler }
     controller: RouteManifestHandler
   styleguide:
     path: /_styleguide
     description: 'UI component and design token reference'
-    dev_only: true
+    guard: devOnly
     operations:
       GET: { description: 'UI component and design token reference', strategy: StaticView }
     view: styleguide

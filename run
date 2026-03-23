@@ -69,7 +69,7 @@ GENERATE (scaffold new files)
 DATABASE (read-only)
   db:query         Execute a SELECT statement and print results as JSON
                    Pass -- "<sql>" to specify the query
-  list:routes      Print all registered routes as JSON (name, path, dev_only, description, operations)
+  list:routes      Print all registered routes as JSON (name, path, guard, description, operations)
   list:inventory   Dependency graph: routes→controllers→views→components; JSON (default) or DOT (pass -- --format=dot)
 
 AUDIT (read-only)

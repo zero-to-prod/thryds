@@ -7,6 +7,7 @@ namespace ZeroToProd\Thryds\Routes;
 use InvalidArgumentException;
 use Stringable;
 use ZeroToProd\Thryds\Attributes\Infrastructure;
+use ZeroToProd\Thryds\Attributes\RouteParam;
 
 #[Infrastructure]
 readonly class RouteUrl implements Stringable
@@ -21,9 +22,18 @@ readonly class RouteUrl implements Stringable
         public array $query = [],
     ) {}
 
+    /**
+     * @param array<string, string> $params
+     * @param array<string, string> $query
+     */
+    public static function for(RouteList $RouteList, array $params = [], array $query = []): self
+    {
+        return new self($RouteList, $params, $query);
+    }
+
     public function render(): string
     {
-        $expected = $this->RouteList->params();
+        $expected = RouteParam::on($this->RouteList);
         $provided = array_keys($this->params);
 
         $missing = array_diff($expected, $provided);

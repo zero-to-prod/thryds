@@ -25,7 +25,7 @@ $routeClass = $config['route_class'];
 $base_url = 'http://localhost:' . ltrim(getenv('SERVER_NAME') ?: ':80', ':');
 $samples  = max(5, (int) ($argv[1] ?? 20));
 
-$publicRoutes = array_values(array_filter($routeClass::cases(), fn($r) => !$r->isDevOnly()));
+$publicRoutes = array_values(array_filter($routeClass::cases(), fn($r) => \ZeroToProd\Thryds\Attributes\Guarded::of($r) === null));
 
 echo "\n=== Endpoint Profiler ===\n";
 echo "Base URL: {$base_url}\n";
