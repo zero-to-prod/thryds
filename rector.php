@@ -90,11 +90,9 @@ use Utils\Rector\Rector\VerticalAttributeArgsRector;
 use Utils\Rector\Rector\DetectStaleCodeReferencesRector;
 use Utils\Rector\Rector\RemoveDefaultsAndApplyAtCallsiteRector;
 use Utils\Rector\Rector\ForbidHardcodedNamespacePrefixRector;
-use Utils\Rector\Rector\RouteInfoRequiredRector;
 use Utils\Rector\Rector\RouteOperationRequiredRector;
 use Utils\Rector\Rector\RequirePersistsOnTableReferenceRector;
 use Utils\Rector\Rector\RequireViewModelDataInMakeCallRector;
-use Utils\Rector\Rector\RouteOperationRequiresRouteInfoRector;
 use Utils\Rector\Rector\AddViewModelAttributeRector;
 use Utils\Rector\Rector\RequireViewKeyConstantOnViewModelRector;
 use Utils\Rector\Rector\UseColumnConstantsInQueriesRector;
@@ -714,26 +712,11 @@ return static function (RectorConfig $rectorConfig): void {
         'message' => 'TODO: [ForbidHardcodedNamespacePrefixRector] Declarations over hardcoding — namespace prefix should be passed in as configuration.',
     ]);
 
-    $rectorConfig->ruleWithConfiguration(RouteInfoRequiredRector::class, [
-        'enumClass' => 'ZeroToProd\\Thryds\\Routes\\Route',
-        'attributeClass' => 'ZeroToProd\\Thryds\\Attributes\\RouteInfo',
-        'mode' => 'warn',
-        'message' => "TODO: [RouteInfoRequiredRector] Attributes define properties — route case '%s' must declare #[RouteInfo] so the inventory graph can emit a description for this route.",
-    ]);
-
     $rectorConfig->ruleWithConfiguration(RouteOperationRequiredRector::class, [
         'enumClass'      => 'ZeroToProd\\Thryds\\Routes\\Route',
         'attributeClass' => 'ZeroToProd\\Thryds\\Attributes\\RouteOperation',
         'mode'           => 'warn',
         'message'        => "TODO: [RouteOperationRequiredRector] Attributes define properties — route case '%s' must declare at least one #[RouteOperation] so the inventory graph can emit HTTP methods for this route.",
-    ]);
-
-    $rectorConfig->ruleWithConfiguration(RouteOperationRequiresRouteInfoRector::class, [
-        'enumClass'              => 'ZeroToProd\\Thryds\\Routes\\Route',
-        'triggerAttributeClass'  => 'ZeroToProd\\Thryds\\Attributes\\RouteOperation',
-        'requiredAttributeClass' => 'ZeroToProd\\Thryds\\Attributes\\RouteInfo',
-        'mode'                   => 'warn',
-        'message'                => "TODO: [RouteOperationRequiresRouteInfoRector] Attributes define properties — route case '%s' declares #[RouteOperation] but is missing #[RouteInfo]. Both are required together: #[RouteOperation] declares HTTP methods, #[RouteInfo] declares the description.",
     ]);
 
     $rectorConfig->ruleWithConfiguration(RequirePersistsOnTableReferenceRector::class, [

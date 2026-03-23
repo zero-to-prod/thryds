@@ -59,7 +59,7 @@ readonly class RouteRegistrar
     {
         return static fn(): ResponseInterface => new HtmlResponse(
             html: blade()->make(view: ($Route->rendersView()
-                ?? throw new LogicException("Route::{$Route->name} has HandlerStrategy::static_view but no #[RendersView]."))->value)->render(),
+                ?? throw new LogicException("Route::{$Route->name} has HandlerStrategy::static_view but no view parameter on #[RouteOperation]."))->value)->render(),
         );
     }
 
@@ -71,7 +71,7 @@ readonly class RouteRegistrar
     private static function controllerHandler(?object $controller, RouteOperation $RouteOperation): callable
     {
         if ($controller === null) {
-            throw new LogicException("RouteOperation declares HandlerStrategy::{$RouteOperation->HandlerStrategy->name} but route has no #[HandledBy] controller.");
+            throw new LogicException("RouteOperation declares HandlerStrategy::{$RouteOperation->HandlerStrategy->name} but no #[RouteOperation] has a controller parameter.");
         }
 
         if (is_callable(value: $controller)) {
@@ -85,7 +85,7 @@ readonly class RouteRegistrar
     private static function validatesRequest(?object $controller): ValidatesRequest
     {
         if ($controller === null) {
-            throw new LogicException('HandlerStrategy::form or ::validated requires a #[HandledBy] controller with #[ValidatesRequest].');
+            throw new LogicException('HandlerStrategy::form or ::validated requires a #[RouteOperation] controller parameter with #[ValidatesRequest].');
         }
 
         $attrs = new ReflectionClass(objectOrClass: $controller)->getAttributes(ValidatesRequest::class);
@@ -136,7 +136,7 @@ readonly class RouteRegistrar
     private static function renderForm(Route $Route, ValidatesRequest $ValidatesRequest, array $data): HtmlResponse
     {
         $View = $Route->rendersView()
-            ?? throw new LogicException("Route::{$Route->name} has #[ValidatesRequest] but no #[RendersView].");
+            ?? throw new LogicException("Route::{$Route->name} has #[ValidatesRequest] but no view parameter on #[RouteOperation].");
         $view_model_class = $ValidatesRequest->view_model;
 
         return new HtmlResponse(

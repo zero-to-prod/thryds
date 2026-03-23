@@ -566,19 +566,17 @@ When working on a Route Safety rule, identify which model it belongs to before r
 
 ### Route enum attribute pattern
 
-Each `Route` enum case carries two stacked attributes:
+Each `Route` enum case carries one or more `#[RouteOperation]` attributes — the single entry point for defining a route:
 
-- `#[RouteInfo(string $description)]` — path/resource level description (one per case)
-- `#[RouteOperation(HttpMethod $HttpMethod, string $description)]` — operation level; `IS_REPEATABLE`, one per supported HTTP method
+- `#[RouteOperation(HttpMethod, string $description, HandlerStrategy, ?string $info, ?string $controller, ?View $view)]` — `IS_REPEATABLE`, one per supported HTTP method. Resource-level properties (`info`, `controller`, `view`) need only appear on one operation per case.
 
 ```php
-#[RouteInfo('Login')]
-#[RouteOperation(HttpMethod::GET,  'User authentication form')]
-#[RouteOperation(HttpMethod::POST, 'Handle login submission')]
+#[RouteOperation(HttpMethod::GET,  'Render login form',       HandlerStrategy::form, info: 'Login', controller: LoginController::class, view: View::login)]
+#[RouteOperation(HttpMethod::POST, 'Handle login submission', HandlerStrategy::validated)]
 case login = '/login';
 ```
 
-`Route::operations()` returns `RouteOperation[]`. `Route::description()` returns the `RouteInfo` description. There is no `Route::method()` — always use `$Route->operations()[0]->HttpMethod->value` for single-method routes, or loop `$Route->operations()` for multi-method.
+`Route::operations()` returns `RouteOperation[]`. `Route::description()` returns the first non-null `info` across operations. There is no `Route::method()` — always use `$Route->operations()[0]->HttpMethod->value` for single-method routes, or loop `$Route->operations()` for multi-method.
 
 ### `ForbidDuplicateRouteRegistrationRector` known limitation
 

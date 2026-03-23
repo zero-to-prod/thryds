@@ -23,27 +23,27 @@ You are a specialist in PHP 8.5. Use the project documentation for language feat
 
 ## Routing Pattern
 
-Routes are defined as a backed enum (`src/Routes/Route.php`). Each case represents a URL path and carries two stacked PHP attributes:
+Routes are defined as a backed enum (`src/Routes/Route.php`). Each case carries one or more `#[RouteOperation]` attributes — the single entry point for defining a route:
 
-- `#[RouteInfo(string $description)]` — path/resource level description (one per case, `TARGET_CLASS_CONSTANT`)
-- `#[RouteOperation(HttpMethod $HttpMethod, string $description)]` — one HTTP operation; repeatable (`TARGET_CLASS_CONSTANT | IS_REPEATABLE`)
+- `#[RouteOperation(HttpMethod, string $description, HandlerStrategy, ?string $info, ?string $controller, ?View $view)]`
+- Repeatable (`TARGET_CLASS_CONSTANT | IS_REPEATABLE`). Resource-level properties (`info`, `controller`, `view`) need only appear on one operation per case.
 
 ```php
 // Single-method route (most routes)
-#[RouteInfo('Login')]
-#[RouteOperation(HttpMethod::GET, 'User authentication form')]
+#[RouteOperation(HttpMethod::GET, 'User authentication form', HandlerStrategy::static_view, info: 'Login', view: View::login)]
 case login = '/login';
 
-// Multi-method route
-#[RouteInfo('Login')]
-#[RouteOperation(HttpMethod::GET,  'User authentication form')]
-#[RouteOperation(HttpMethod::POST, 'Handle login submission')]
+// Multi-method route — resource-level properties on the first operation
+#[RouteOperation(HttpMethod::GET,  'Render login form',       HandlerStrategy::form, info: 'Login', controller: LoginController::class, view: View::login)]
+#[RouteOperation(HttpMethod::POST, 'Handle login submission', HandlerStrategy::validated)]
 case login = '/login';
 ```
 
 Key accessors on the enum:
 - `$Route->operations(): RouteOperation[]` — all HTTP operations (via `#[RouteOperation]` reflection)
-- `$Route->description(): string` — route-level description (via `#[RouteInfo]` reflection)
+- `$Route->description(): string` — route-level info (first non-null `info` across operations)
+- `$Route->rendersView(): ?View` — first non-null `view` across operations
+- `$Route->controller(): ?object` — first non-null `controller` across operations
 - `$Route->params(): string[]` — `{placeholder}` names extracted from the path
 - `$Route->with(params, query): RouteUrl` — builds a typed URL
 - `$Route->isDevOnly(): bool` — true when `#[DevOnly]` is present

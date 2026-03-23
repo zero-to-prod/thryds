@@ -145,7 +145,7 @@ foreach ($Route::cases() as $routeCase) {
             }
         }
     } elseif ($view !== null) {
-        // View-only route: #[RendersView] on the Route case.
+        // View-only route: view parameter on #[RouteOperation].
         $nodes[$routeId]['registration'] = 'attribute';
         $viewId = 'view:' . $view->value;
         $addNode($viewId, 'view', $view->value);

@@ -66,6 +66,14 @@ CODE_SAMPLE
     {
         $hasChanged = false;
 
+        $expectedNameCounts = [];
+        foreach ($node->params as $param) {
+            $typeName = $this->resolveTypeShortName($param);
+            if ($typeName !== null) {
+                $expectedNameCounts[$typeName] = ($expectedNameCounts[$typeName] ?? 0) + 1;
+            }
+        }
+
         foreach ($node->params as $param) {
             if ($param->variadic) {
                 continue;
@@ -80,6 +88,10 @@ CODE_SAMPLE
             $currentName = $this->getName($param);
 
             if ($currentName === null || $currentName === $expectedName) {
+                continue;
+            }
+
+            if ($expectedNameCounts[$expectedName] > 1) {
                 continue;
             }
 

@@ -44,23 +44,19 @@ final class RouteOperationRequiredRector extends AbstractRector implements Confi
                     <<<'CODE_SAMPLE'
 enum Route: string
 {
-    #[RouteInfo('Home')]
-    #[RouteOperation(HttpMethod::GET, 'Marketing home page')]
+    #[RouteOperation(HttpMethod::GET, 'Marketing home page', info: 'Home')]
     case home = '/';
 
-    #[RouteInfo('About')]
     case about = '/about';
 }
 CODE_SAMPLE,
                     <<<'CODE_SAMPLE'
 enum Route: string
 {
-    #[RouteInfo('Home')]
-    #[RouteOperation(HttpMethod::GET, 'Marketing home page')]
+    #[RouteOperation(HttpMethod::GET, 'Marketing home page', info: 'Home')]
     case home = '/';
 
     // TODO: [RouteOperationRequiredRector] Route case 'about' must declare at least one #[RouteOperation] so the inventory graph can emit HTTP methods for this route. See: utils/rector/docs/RouteOperationRequiredRector.md
-    #[RouteInfo('About')]
     case about = '/about';
 }
 CODE_SAMPLE,

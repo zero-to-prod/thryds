@@ -22,7 +22,7 @@ use Attribute;
  * readonly class ClosedSet { ... }
  *
  * #[HopWeight(1)]  // semantic — must read target to understand source
- * readonly class HandledBy { ... }
+ * readonly class ValidatesRequest { ... }
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 readonly class HopWeight

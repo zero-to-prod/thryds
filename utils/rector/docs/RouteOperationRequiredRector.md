@@ -15,8 +15,9 @@ route nodes. A case without `#[RouteOperation]` causes `operations()` to return 
 empty array, leaving the graph with no HTTP method for that route. An AI agent
 cannot reason about whether a route is a read or write operation without this.
 
-`#[RouteOperation]` also carries a human-readable operation description used by
-`list:routes` and the `/_routes` manifest. A missing attribute means both the graph
+`#[RouteOperation]` is the single entry point for defining a route — it carries the
+HTTP method, operation description, handler strategy, and optional resource-level
+properties (info, controller, view). A missing attribute means both the graph
 and the route manifest are incomplete for that case.
 
 ## What It Detects
@@ -26,7 +27,6 @@ A `Route` enum case that has zero `#[RouteOperation]` attributes:
 ```php
 enum Route: string
 {
-    #[RouteInfo('About')]
     case about = '/about';  // ← flagged: no #[RouteOperation]
 }
 ```
@@ -35,9 +35,8 @@ A case with multiple operations (e.g. GET + POST) is valid — at least one is a
 that is required:
 
 ```php
-#[RouteInfo('Login')]
-#[RouteOperation(HttpMethod::GET,  'Render login form')]
-#[RouteOperation(HttpMethod::POST, 'Handle login submission')]
+#[RouteOperation(HttpMethod::GET,  'Render login form',       HandlerStrategy::form, info: 'Login', controller: LoginController::class, view: View::login)]
+#[RouteOperation(HttpMethod::POST, 'Handle login submission', HandlerStrategy::validated)]
 case login = '/login';  // ← fine
 ```
 
@@ -49,7 +48,6 @@ A TODO comment is prepended to the offending case:
 
 ```php
 // TODO: [RouteOperationRequiredRector] Route case 'about' must declare at least one #[RouteOperation] so the inventory graph can emit HTTP methods for this route.
-#[RouteInfo('About')]
 case about = '/about';
 ```
 
@@ -72,11 +70,9 @@ is present.
 ```php
 enum Route: string
 {
-    #[RouteInfo('Home')]
-    #[RouteOperation(HttpMethod::GET, 'Marketing home page')]
+    #[RouteOperation(HttpMethod::GET, 'Marketing home page', HandlerStrategy::static_view, info: 'Home', view: View::home)]
     case home = '/';
 
-    #[RouteInfo('About')]
     case about = '/about';
 }
 ```
@@ -86,12 +82,10 @@ enum Route: string
 ```php
 enum Route: string
 {
-    #[RouteInfo('Home')]
-    #[RouteOperation(HttpMethod::GET, 'Marketing home page')]
+    #[RouteOperation(HttpMethod::GET, 'Marketing home page', HandlerStrategy::static_view, info: 'Home', view: View::home)]
     case home = '/';
 
     // TODO: [RouteOperationRequiredRector] Route case 'about' must declare at least one #[RouteOperation] so the inventory graph can emit HTTP methods for this route.
-    #[RouteInfo('About')]
     case about = '/about';
 }
 ```
@@ -101,11 +95,7 @@ enum Route: string
 When you see the TODO comment from this rule:
 
 1. Decide the HTTP method(s) for the route — consult the route's purpose.
-2. Add one `#[RouteOperation(HttpMethod::<METHOD>, '<operation description>')]`
+2. Add one `#[RouteOperation(HttpMethod::<METHOD>, '<operation description>', HandlerStrategy::<strategy>, info: '<route name>')]`
    per supported method above the enum case.
 3. Run `./run fix:rector` — the TODO comment is removed automatically once the
    attribute is present.
-
-## Related Rules
-
-- `RouteInfoRequiredRector` — enforces `#[RouteInfo]` on every Route case.

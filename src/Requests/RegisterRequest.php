@@ -49,7 +49,8 @@ readonly class RegisterRequest
     public const string password_confirmation = 'password_confirmation';
     #[Input(
         InputType::password,
-        'Confirm Password'
+        'Confirm Password',
+        order: 5,
     )]
     #[Matches(User::password)]
     public string $password_confirmation;

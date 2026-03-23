@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace ZeroToProd\Thryds\Routes;
 
+use LogicException;
 use ReflectionAttribute;
 use ReflectionEnumUnitCase;
 use ZeroToProd\Thryds\Attributes\ClosedSet;
 use ZeroToProd\Thryds\Attributes\DevOnly;
-use ZeroToProd\Thryds\Attributes\HandledBy;
-use ZeroToProd\Thryds\Attributes\RendersView;
-use ZeroToProd\Thryds\Attributes\RouteInfo;
 use ZeroToProd\Thryds\Attributes\RouteOperation;
 use ZeroToProd\Thryds\Attributes\RouteParam;
 use ZeroToProd\Thryds\Blade\View;
@@ -31,86 +29,96 @@ use ZeroToProd\Thryds\UI\Domain;
 )]
 enum Route: string
 {
-    #[RouteInfo('Home')]
     #[RouteOperation(
         HttpMethod::GET,
         'Marketing home page',
-        HandlerStrategy::static_view
+        HandlerStrategy::static_view,
+        info: 'Home',
+        controller: null,
+        View: View::home,
     )]
-    #[RendersView(View::home)]
     case home = '/';
 
-    #[RouteInfo('About')]
     #[RouteOperation(
         HttpMethod::GET,
         'Company and product information',
-        HandlerStrategy::static_view
+        HandlerStrategy::static_view,
+        info: 'About',
+        controller: null,
+        View: View::about,
     )]
-    #[RendersView(View::about)]
     case about = '/about';
 
-    #[RouteInfo('Login')]
     #[RouteOperation(
         HttpMethod::GET,
         'User authentication form',
-        HandlerStrategy::static_view
+        HandlerStrategy::static_view,
+        info: 'Login',
+        controller: null,
+        View: View::login,
     )]
-    #[RendersView(View::login)]
     case login = '/login';
 
-    #[RouteInfo('Register')]
     #[RouteOperation(
         HttpMethod::GET,
         'New user registration form',
-        HandlerStrategy::form
+        HandlerStrategy::form,
+        info: 'Register',
+        controller: RegisterController::class,
+        View: View::register,
     )]
     #[RouteOperation(
         HttpMethod::POST,
         'Handle registration submission',
-        HandlerStrategy::validated
+        HandlerStrategy::validated,
+        info: null,
+        controller: null,
+        View: null,
     )]
-    #[HandledBy(RegisterController::class)]
-    #[RendersView(View::register)]
     case register = '/register';
 
     #[DevOnly]
-    #[RouteInfo('OPcache status')]
     #[RouteOperation(
         HttpMethod::GET,
         'OPcache runtime statistics',
-        HandlerStrategy::controller
+        HandlerStrategy::controller,
+        info: 'OPcache status',
+        controller: OpcacheStatusHandler::class,
+        View: null,
     )]
-    #[HandledBy(OpcacheStatusHandler::class)]
     case opcache_status = '/_opcache/status';
 
     #[DevOnly]
-    #[RouteInfo('OPcache scripts')]
     #[RouteOperation(
         HttpMethod::GET,
         'Scripts loaded in OPcache',
-        HandlerStrategy::controller
+        HandlerStrategy::controller,
+        info: 'OPcache scripts',
+        controller: OpcacheScriptsHandler::class,
+        View: null,
     )]
-    #[HandledBy(OpcacheScriptsHandler::class)]
     case opcache_scripts = '/_opcache/scripts';
 
     #[DevOnly]
-    #[RouteInfo('Style guide')]
     #[RouteOperation(
         HttpMethod::GET,
         'UI component and design token reference',
-        HandlerStrategy::static_view
+        HandlerStrategy::static_view,
+        info: 'Style guide',
+        controller: null,
+        View: View::styleguide,
     )]
-    #[RendersView(View::styleguide)]
     case styleguide = '/_styleguide';
 
     #[DevOnly]
-    #[RouteInfo('Routes')]
     #[RouteOperation(
         HttpMethod::GET,
         'Machine-readable manifest of all registered routes',
-        HandlerStrategy::controller
+        HandlerStrategy::controller,
+        info: 'Routes',
+        controller: RouteManifestHandler::class,
+        View: null,
     )]
-    #[HandledBy(RouteManifestHandler::class)]
     case routes = '/_routes';
 
     public function isDevOnly(): bool
@@ -123,16 +131,20 @@ enum Route: string
         );
     }
 
-    /** Returns the route-level description declared via #[RouteInfo]. */
+    /** Returns the route-level description from the first #[RouteOperation] with a non-null info. */
     public function description(): string
     {
         /** @var array<string, string> $cache */
         static $cache = [];
 
-        return $cache[$this->name] ??= new ReflectionEnumUnitCase(self::class, $this->name)
-            ->getAttributes(RouteInfo::class)[0]
-            ->newInstance()
-            ->description;
+        return $cache[$this->name] ??= (function (): string {
+            foreach ($this->operations() as $op) {
+                if ($op->info !== null) {
+                    return $op->info;
+                }
+            }
+            throw new LogicException("Route::{$this->name} has no #[RouteOperation] with an info parameter.");
+        })();
     }
 
     /** @return RouteOperation[] HTTP operations declared on this route via #[RouteOperation]. */
@@ -148,31 +160,39 @@ enum Route: string
         );
     }
 
-    /** Returns the view declared via #[RendersView], or null if this route has no view. */
+    /** Returns the View from the first #[RouteOperation] with a non-null View, or null. */
     public function rendersView(): ?View
     {
         /** @var array<string, ?View> $cache */
         static $cache = [];
 
         if (!array_key_exists($this->name, array: $cache)) {
-            $attrs = new ReflectionEnumUnitCase(self::class, $this->name)
-                ->getAttributes(RendersView::class);
-            $cache[$this->name] = $attrs !== [] ? $attrs[0]->newInstance()->View : null;
+            $cache[$this->name] = null;
+            foreach ($this->operations() as $op) {
+                if ($op->View !== null) {
+                    $cache[$this->name] = $op->View;
+                    break;
+                }
+            }
         }
 
         return $cache[$this->name];
     }
 
-    /** Returns the controller class declared via #[HandledBy], or null if this route has no controller. */
+    /** Returns the controller from the first #[RouteOperation] with a non-null controller, or null. */
     public function controller(): ?object
     {
         /** @var array<string, ?object> $cache */
         static $cache = [];
 
         if (!array_key_exists($this->name, array: $cache)) {
-            $attrs = new ReflectionEnumUnitCase(self::class, $this->name)
-                ->getAttributes(HandledBy::class);
-            $cache[$this->name] = $attrs !== [] ? new ($attrs[0]->newInstance()->controller)() : null;
+            $cache[$this->name] = null;
+            foreach ($this->operations() as $op) {
+                if ($op->controller !== null) {
+                    $cache[$this->name] = new ($op->controller)();
+                    break;
+                }
+            }
         }
 
         return $cache[$this->name];

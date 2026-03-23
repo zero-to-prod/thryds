@@ -21,5 +21,6 @@ readonly class Input
     public function __construct(
         public InputType $InputType,
         public string $label,
+        public int $order,
     ) {}
 }

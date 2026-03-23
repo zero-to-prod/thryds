@@ -47,7 +47,7 @@ trait UserColumns
         values: null,
         comment: 'Display name',
     )]
-    #[Input(InputType::text, 'Name')]
+    #[Input(InputType::text, 'Name', order: 1)]
     #[Describe(['nullable' => true])]
     #[StubValue('')]
     public readonly ?string $name;
@@ -66,7 +66,7 @@ trait UserColumns
         values: null,
         comment: 'Unique public username',
     )]
-    #[Input(InputType::text, 'Handle')]
+    #[Input(InputType::text, 'Handle', order: 2)]
     #[Describe(['nullable' => true])]
     #[StubValue('')]
     public readonly ?string $handle;
@@ -85,7 +85,7 @@ trait UserColumns
         values: null,
         comment: 'Contact email address',
     )]
-    #[Input(InputType::email, 'Email')]
+    #[Input(InputType::email, 'Email', order: 3)]
     #[Describe(['nullable' => true])]
     #[StubValue('')]
     public readonly ?string $email;
@@ -122,7 +122,7 @@ trait UserColumns
         values: null,
         comment: 'Hashed password',
     )]
-    #[Input(InputType::password, 'Password')]
+    #[Input(InputType::password, 'Password', order: 4)]
     #[Describe(['nullable' => true])]
     #[StubValue('')]
     public readonly ?string $password;

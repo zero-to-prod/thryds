@@ -8,13 +8,13 @@ use Attribute;
 use ZeroToProd\Thryds\Blade\View;
 
 /**
- * Declares which Blade view a route or controller renders.
+ * Declares which Blade view a controller renders.
  *
- * Applied to Route enum cases for view-only routes and to controller
- * classes that render a template. The router and inventory graph
- * discover view bindings via this attribute.
+ * Applied to controller classes that render a template. The inventory
+ * graph discovers view bindings via this attribute. Route-level view
+ * bindings are declared via the view parameter on #[RouteOperation].
  */
-#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_CLASS_CONSTANT)]
+#[Attribute(Attribute::TARGET_CLASS)]
 #[HopWeight(0)]
 readonly class RendersView
 {

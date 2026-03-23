@@ -27,6 +27,7 @@ readonly class InputField
         public InputType $InputType,
         public string $label,
         public bool $required,
+        public int $order = 0,
     ) {}
 
     /** Property name for the corresponding error on a view model. */
@@ -97,8 +98,11 @@ readonly class InputField
                 InputType: $Input->InputType,
                 label: $Input->label,
                 required: $required,
+                order: $Input->order,
             );
         }
+
+        usort(array: $fields, callback: static fn(self $a, self $b): int => $a->order <=> $b->order);
 
         return $fields;
     }
